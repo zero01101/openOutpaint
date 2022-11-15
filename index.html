@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8" />
+    <title>openOutpaint 0.0.4</title>
+
+    <style>
+        .container {
+            position: relative;
+        }
+
+        .backgroundCanvas {
+            background-color: #ccc;
+        }
+
+        .maskPaintCanvas {
+            border: 3px dotted #993355C0
+        }
+
+        .overlayCanvas {
+            border: 1px solid #F00;
+        }
+
+        .tempCanvas {
+            border: 3px dotted #007AFFC0;
+        }
+
+        .targetCanvas {
+            border: 2px dashed #0F0;
+        }
+
+        .canvas {
+            border: 2px dotted #00F;
+        }
+
+        .mainHSplit {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: repeat(2, 1fr);
+            grid-column-gap: 5px;
+            grid-row-gap: 5px;
+        }
+
+        .uiWrapper {
+            display: grid;
+            grid-template-columns: 1fr 15fr;
+            grid-template-rows: 1fr;
+            grid-column-gap: 5px;
+            grid-row-gap: 5px;
+        }
+
+        .canvasHolder {
+            position: relative;
+            width: 2560px;
+            height: 1440px;
+        }
+
+        .mainCanvases {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 2560px;
+            height: 1440px;
+        }
+
+        .masks {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: 1fr;
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+        }
+
+        .maskCanvas {
+            position: absolute;
+        }
+
+        .initImgCanvas {
+            position: absolute;
+            left: 600px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="mainHSplit" class="mainHSplit">
+        <div id="uiWrapper" class="uiWrapper">
+            <div id="info" class="info" style="min-width:200px;">
+                <div id="coords">
+                    <label for="mouseX">mouseX:</label>
+                    <span id="mouseX"></span>
+                    <br />
+                    <label for="mouseY">mouseY:</label>
+                    <span id="mouseY"></span>
+                    <br />
+                    <label for="canvasX">canvasX:</label>
+                    <span id="canvasX"></span>
+                    <br />
+                    <label for="canvasY">canvasY:</label>
+                    <span id="canvasY"></span>
+                    <br />
+                    <label for="snapX">snapX:</label>
+                    <span id="snapX"></span>
+                    <br />
+                    <label for="snapY">snapY:</label>
+                    <span id="snapY"></span>
+                    <br />
+                </div>
+                <label for="host">host:</label>
+                <input id="host" value="http://127.0.0.1:7860"><br />
+                <label for="scaleFactor">scale factor:</label>
+                <span id="scaleFactorTxt"></span><br />
+                <input type="range" id="scaleFactor" name="scaleFactor" min="1" max="16" value="8"
+                    onchange="changeScaleFactor()" /><br />
+                <label for="prompt">prompt:</label>
+                <textarea
+                    id="prompt">oceanographic study, underwater wildlife, award winning documentary footage screenshot</textarea><br />
+                <label for="negPrompt">negative prompt:</label>
+                <textarea
+                    id="negPrompt">people, humans, divers, glitch, error, text, watermark, bad quality, blurry</textarea><br />
+                <label for="cbxSnap">snap to grid?</label>
+                <input type="checkbox" id="cbxSnap" onchange="changeSnapMode()"><br />
+                <label for="cbxPaint">mask mode?</label>
+                <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
+                <label for="cbxErase">erase mask?</label>
+                <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
+                <label for="samplerSelect">sampler:</label>
+                <select id="samplerSelect" onchange="changeSampler()">
+                    <option value="DDIM">DDIM</option>
+                    <option value="Euler a">Euler A</option>
+                    <option value="Euler">Euler</option>
+                    <option value="LMS">LMS</option>
+                    <option value="Heun">Heun</option>
+                    <option value="DPM2">DPM2</option>
+                    <option value="DPM2 a">DPM2a</option>
+                    <option value="DPM++ 2S a">DPM++2Sa</option>
+                    <option value="DPM++ 2m">DPM++2m</option>
+                    <option value="DPM fast">DPM fast</option>
+                    <option value="DPM adaptive">DPM adaptive</option>
+                    <option value="LMS Karras">LMS Karras</option>
+                    <option value="DPM2 Karras">DPM2 Karras</option>
+                    <option value="DPM2 a Karras">DPM2a Karras</option>
+                    <option value="DPM++ 2S a Karras">DPM++2Sa Karras</option>
+                    <option value="DPM++ 2M Karras">DPM++2M Karras</option>
+                </select><br />
+                <label for="steps">steps:</label>
+                <span id="stepsTxt"></span><br />
+                <input type="range" id="steps" name="steps" min="1" max="50" value="30"
+                    onchange="changeSteps()" /><br />
+                <label for="cfgScale">CFG scale:</label>
+                <span id="cfgScaleTxt"></span><br />
+                <input type="range" id="cfgScale" name="cfgScale" min="-1" max="25" value="7.5" step="0.1"
+                    list="cfgDetents" onchange="changeCfgScale()" />
+                <datalist id="cfgDetents">
+                    <option value="-1"></option>
+                    <option value="0"></option>
+                    <option value="1"></option>
+                    <option value="2"></option>
+                    <option value="3"></option>
+                    <option value="4"></option>
+                    <option value="5"></option>
+                    <option value="6"></option>
+                    <option value="7"></option>
+                    <option value="7.5"></option>
+                    <option value="8"></option>
+                    <option value="9"></option>
+                    <option value="10"></option>
+                    <option value="11"></option>
+                    <option value="12"></option>
+                    <option value="13"></option>
+                    <option value="14"></option>
+                    <option value="15"></option>
+                    <option value="16"></option>
+                    <option value="17"></option>
+                    <option value="18"></option>
+                    <option value="19"></option>
+                    <option value="20"></option>
+                    <option value="21"></option>
+                    <option value="22"></option>
+                    <option value="23"></option>
+                    <option value="24"></option>
+                </datalist><br />
+                <label for="batchSize">batch size:</label>
+                <span id="batchSizeText"></span><br />
+                <input type="range" id="batchSize" name="batchSize" min="1" max="8" value="2" step="1" list="cfgDetents"
+                    onchange="changeBatchSize()" /><br />
+                <label for="batchCount">batch count:</label>
+                <span id="batchCountText"></span><br />
+                <input type="range" id="batchCount" name="batchCount" min="1" max="8" value="2" step="1"
+                    onchange="changeBatchCount()" /><br />
+                <label for="maskBlur">mask blur:</label>
+                <span id="maskBlurText"></span><br />
+                <input type="number" id="maskBlur" name="maskBlur" min="0" max="64" value="0" step="1"
+                    onchange="changeMaskBlur()" /><br />
+                <button onclick="downloadImage()">dl img</button>
+            </div>
+            <div id="canvasHolder" class="canvasHolder">
+                <canvas id="backgroundCanvas" class="mainCanvases backgroundCanvas" width="2560" height="1440"
+                    style="z-index: 0;">
+                    <!-- gray grid bg canvas -->
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <canvas id="canvas" class="mainCanvases canvas" width="2560" height="1440" style="z-index: 1;">
+                    <!-- normal canvas on which images are drawn -->
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <canvas id="tempCanvas" class="mainCanvases tempCanvas" width="2560" height="1440" style="z-index: 2;">
+                    <!-- temporary canvas on which images being selected/rejected are superimposed -->
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <canvas id="targetCanvas" class="mainCanvases targetCanvas" width="2560" height="1440"
+                    style="z-index: 3;">
+                    <!-- canvas on which "targeting" squares are drawn  -->
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <canvas id="maskPaintCanvas" class="mainCanvases maskPaintCanvas" width="2560" height="1440"
+                    style="z-index: 4;">
+                    <!-- canvas on which masking brush is "painted" -->
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <canvas id="overlayCanvas" class="mainCanvases overlayCanvas" width="2560" height="1440"
+                    style="z-index: 5;">
+                    <!-- canvas on which "cursor" reticle or arc is drawn  -->
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <div id="tempDiv" style="position: relative; z-index: 6;">
+                    <!-- where popup buttons go -->
+                </div>
+
+            </div>
+        </div>
+        <div id="masks" class="masks" hidden="hidden">
+            <div>
+                <canvas id="maskCanvas" class="maskCanvas" width="512" height="512">
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <canvas id="initImgCanvas" class="initImgCanvas" width="512" height="512">
+                    <p>lol ur browser sucks</p>
+                </canvas>
+                <label hidden="hidden">Drawing tool:
+                    <select id="dtool" hidden="hidden">
+                        <option value="SDimg">SDimg</option>
+                        <option value="rect">Rectangle</option>
+                        <option value="pencil">Pencil</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="js/index.js" type="text/javascript"></script>
+</body>
+
+</html>
