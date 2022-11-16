@@ -37,12 +37,14 @@ if it _doesn't_ create an image, check your console output to see if you've got 
 - [ ] BUG: make erase mask actually work, enable the control if you dare
 - [ ] infinite canvas
 - [ ] smart crop downloaded image
+- [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
 - [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out options
 - [ ] global undo/redo
 - [ ] render progress spinner/bar
 - [ ] inpainting sketch tools
 - [ ] something actually similar to a "user interface", hopefully actually pleasant
 - [ ] eventually delete the generated mask display canvases at the bottom of the page, but they're useful for debugging canvas pixel offsets sometimes
+- [ ] see if i can use fewer canvases, seems wasteful, canvas isn't free yknow
 - [ ] honestly probably refactor literally everything
 
 ## pull requests
