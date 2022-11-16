@@ -2,7 +2,7 @@
 
 ![openOutpaint creating some undersea wildlife](docs/01-demo.gif)
 
-this is a completely vanilla javascript and html canvas outpainting convenience built for [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) similar to a few others which certainly have superior functionality.  this simply offers an alternative for my desires:
+this is a completely vanilla javascript and html canvas outpainting convenience doodad built for [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) similar to a few others which certainly have superior functionality.  this simply offers an alternative for my desires:
  - avoiding the overhead of an additional virtual python evnironment or impacting a pre-existing one
  - operates against the API exposed by A1111's webUI
  - no external dependencies, extremely boring vanilla
