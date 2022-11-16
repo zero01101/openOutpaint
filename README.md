@@ -53,3 +53,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 ## pull requests
 **PLEASE SEND PULL REQUESTS**  
 i am begging you, yes you personally reading this, please fix my horrible code and feel free to insult it, but i absolutely refuse to budge on no 3rd party libraries or dependencies, not even jquery, nothing.  vanilla is a very complex and layered flavor if you give it a chance.
+
+## sample 
+generated using 100% openOutpaint UI defaults except for switching to/from mask mode and changing scale factor to adjust the size of the mask blob, there's some neat stuff down there
+![fishies n stuff](docs/02-sample.png)
