@@ -538,6 +538,38 @@ function drawBackground() {
 function downloadImage() {
     var link = document.createElement('a');
     link.download = 'image.png';
-    link.href = imgCanvas.toDataURL('image/png');
+    link.href = cropCanvas(imgCanvas).toDataURL('image/png');
     link.click();
 }
+
+function cropCanvas(sourceCanvas) {
+    var w = sourceCanvas.width;
+    var h = sourceCanvas.height;
+    var pix = {x:[], y:[]};
+    var imageData = sourceCanvas.getContext('2d').getImageData(0, 0, w, h);
+    var x, y, index;
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            index = (y * w + x) * 4;
+            if (imageData.data[index+3] > 0) {
+                pix.x.push(x);
+                pix.y.push(y);
+            }
+        }
+    }
+    pix.x.sort(function(a,b){return a-b});
+    pix.y.sort(function(a,b){return a-b});
+    var n = pix.x.length-1;
+    w = pix.x[n] - pix.x[0];
+    h = pix.y[n] - pix.y[0];
+    
+    var cut = sourceCanvas.getContext('2d').getImageData(pix.x[0], pix.y[0], w, h);
+    var cutCanvas = document.createElement('canvas');
+    cutCanvas.width = w;
+    cutCanvas.height = h;
+    cutCanvas.getContext('2d').putImageData(cut, 0, 0);
+
+    return cutCanvas;
+}
+
