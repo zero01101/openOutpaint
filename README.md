@@ -43,7 +43,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 ### in order of "priority"/likelihood of me doing it
 - [ ] comment basically everything that isn't self documenting (ongoing)
 - [ ] overmask seam of img2img (https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)
-- [ ] split out CSS to its own file (remedial cleanup task)
+- [x] split out CSS to its own file (remedial cleanup task)
 - [ ] split out JS to separation-of-concerns individual files (oh no)
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
