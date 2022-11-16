@@ -1,0 +1,74 @@
+.container {
+    position: relative;
+}
+
+.backgroundCanvas {
+    background-color: #ccc;
+}
+
+.maskPaintCanvas {
+    border: 3px dotted #993355C0
+}
+
+.overlayCanvas {
+    border: 1px solid #F00;
+}
+
+.tempCanvas {
+    border: 3px dotted #007AFFC0;
+}
+
+.targetCanvas {
+    border: 2px dashed #0F0;
+}
+
+.canvas {
+    border: 2px dotted #00F;
+}
+
+.mainHSplit {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, 1fr);
+    grid-column-gap: 5px;
+    grid-row-gap: 5px;
+}
+
+.uiWrapper {
+    display: grid;
+    grid-template-columns: 1fr 15fr;
+    grid-template-rows: 1fr;
+    grid-column-gap: 5px;
+    grid-row-gap: 5px;
+}
+
+.canvasHolder {
+    position: relative;
+    width: 2560px;
+    height: 1440px;
+}
+
+.mainCanvases {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 2560px;
+    height: 1440px;
+}
+
+.masks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.maskCanvas {
+    position: absolute;
+}
+
+.initImgCanvas {
+    position: absolute;
+    left: 600px;
+}
