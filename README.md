@@ -36,6 +36,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] comment basically everything that isn't self documenting
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
+- [ ] render progress spinner/bar
 - [ ] figure out where that stupid 1-pixel offset is happening between approve/reject state and committing to an image, it doesn't affect output but it's _super_ obnoxious  
 - [ ] BUG: make erase mask actually work, enable the control if you dare
 - [ ] infinite canvas
@@ -43,7 +44,6 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out options
 - [ ] smart crop downloaded image
 - [ ] global undo/redo
-- [ ] render progress spinner/bar
 - [ ] inpainting sketch tools
 - [ ] something actually similar to a "user interface", hopefully actually pleasant
 - [ ] eventually delete the generated mask display canvases at the bottom of the page, but they're useful for debugging canvas pixel offsets sometimes
