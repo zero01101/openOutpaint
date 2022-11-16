@@ -37,7 +37,7 @@ if it _doesn't_ create an image, check your console output to see if you've got 
 - [ ] BUG: make erase mask actually work, enable the control if you dare
 - [ ] infinite canvas
 - [ ] smart crop downloaded image
-- [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out optionas
+- [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out options
 - [ ] global undo/redo
 - [ ] render progress spinner/bar
 - [ ] inpainting sketch tools

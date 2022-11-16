@@ -1,10 +1,5 @@
-//TODO VITALLY IMPORTANT SERIOUSLY HOLY SHIT
-//FIND OUT WHY I HAVE TO RESIZE A TEXTBOX AND THEN START USING IT TO AVOID THE 1px WHITE LINE ON LEFT EDGES DURING IMG2IMG
-//lmao did setting min width 200 on info div fix that
-
-//TODO also fix my stupid offset -- what does this mean ??? oh, was that re: when f12 is open, the reticle is offset vertically from where the target location actually is?
-
-//lmao ok auto1111 webui api allows this if you add "null" to the cors allow list which seems like a bad plan so i recommend using a lil webhost 
+//TODO FIND OUT WHY I HAVE TO RESIZE A TEXTBOX AND THEN START USING IT TO AVOID THE 1px WHITE LINE ON LEFT EDGES DURING IMG2IMG
+//...lmao did setting min width 200 on info div fix that accidentally?  once the canvas is infinite and the menu bar is hideable it'll probably be a problem again
 
 window.onload = startup;
 
@@ -71,21 +66,21 @@ var drawThis = {};
 var clicked = false;
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var scaleFactor = 8; //x64 px
-var snapToGrid = true; //yeah that's all it takes sure //TODO make this work somehow
+var snapToGrid = true;
 var paintMode = false;
-var eraseMode = false; //TODO this does absolutely nothing 
+var eraseMode = false; //TODO this is broken, functionality still exists in code but UI element is just naively disabled
 var backupMaskPaintCanvas; //???
-var backupMaskPaintCtx;  //...?
+var backupMaskPaintCtx;  //...? look i am bad at this
 var backupMaskChunk = null;
 var backupMaskX = null;
 var backupMaskY = null;
-var sampler = "DDIM";
-var steps = 30;
-var cfgScale = 7.5;
 var totalImagesReturned;
-var batchSize = 2;
-var batchCount = 2;
-var maskBlur = 0;
+// var sampler = "DDIM"; //like i think all of these from here down are probably unnecessary and i can rely on just the stableDiffusionData object?
+// var steps = 30;
+// var cfgScale = 7.5;
+// var batchSize = 2;
+// var batchCount = 2;
+// var maskBlur = 0;
 
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
 
@@ -208,29 +203,28 @@ function prevImg(evt) {
     if (imageIndex == 0) {
         imageIndex = totalImagesReturned;
     }
-    const img = new Image();
-    tempCtx.clearRect(0, 0, tempCtx.width, tempCtx.height);
-    img.onload = function () {
-        tempCtx.drawImage(img, tmpImgXYWH.x, tmpImgXYWH.y); //imgCtx for actual image, tmp for... holding?
-    }
-    var tmpIndex = document.getElementById("currentImgIndex");
-    imageIndex--;
-    tmpIndex.innerText = imageIndex + 1;
-    // load the image data after defining the closure
-    img.src = "data:image/png;base64," + returnedImages[imageIndex];  //TODO need way to dream batches and select from results
+    changeImg(false);
 }
 
 function nextImg(evt) {
     if (imageIndex == (totalImagesReturned - 1)) {
         imageIndex = -1;
     }
+    changeImg(true);
+}
+
+function changeImg(forward) {
     const img = new Image();
     tempCtx.clearRect(0, 0, tempCtx.width, tempCtx.height);
     img.onload = function () {
         tempCtx.drawImage(img, tmpImgXYWH.x, tmpImgXYWH.y); //imgCtx for actual image, tmp for... holding?
     }
     var tmpIndex = document.getElementById("currentImgIndex");
-    imageIndex++;
+    if (forward) {
+        imageIndex++;
+    } else {
+        imageIndex--;
+    }
     tmpIndex.innerText = imageIndex + 1;
     // load the image data after defining the closure
     img.src = "data:image/png;base64," + returnedImages[imageIndex];  //TODO need way to dream batches and select from results
@@ -269,10 +263,8 @@ function placeImage() {
         tmpImgXYWH = {};
         returnedImages = null;
     }
-    //console.log(data.images[0]);
-
     // load the image data after defining the closure
-    img.src = "data:image/png;base64," + returnedImages[imageIndex];  //TODO need way to dream batches and select from results
+    img.src = "data:image/png;base64," + returnedImages[imageIndex];
 
 }
 
@@ -326,6 +318,7 @@ function mouseMove(evt) {
         if (clicked) {
             // i'm trying to draw, please draw :(             
             if (eraseMode) {
+                // THIS IS SOOOO BROKEN AND I DON'T UNDERSTAND WHY BECAUSE I AM THE BIG DUMB
                 maskPaintCtx.globalCompositeOperation = 'destination-out';
                 // maskPaintCtx.strokeStyle = "#FFFFFF00";
             } else {
@@ -338,7 +331,6 @@ function mouseMove(evt) {
             maskPaintCtx.moveTo(prevMouseX, prevMouseY);
             maskPaintCtx.lineTo(mouseX, mouseY);
             maskPaintCtx.lineJoin = maskPaintCtx.lineCap = 'round';
-            // console.log("moving from " + prevMouseX + ":" + prevMouseY + " to " + mouseX + ":" + mouseY);
             maskPaintCtx.stroke();
         }
         prevMouseX = mouseX;
@@ -469,27 +461,25 @@ function mouseUp(evt) {
             }
             stableDiffusionData.prompt = document.getElementById("prompt").value;
             stableDiffusionData.negative_prompt = document.getElementById("negPrompt").value;
-            stableDiffusionData.sampler_index = sampler;
-            stableDiffusionData.steps = steps;
-            stableDiffusionData.cfg_scale = cfgScale;
+            // stableDiffusionData.sampler_index = sampler;
+            // stableDiffusionData.steps = steps;
+            // stableDiffusionData.cfg_scale = cfgScale;
             stableDiffusionData.width = drawIt.w;
             stableDiffusionData.height = drawIt.h;
-            stableDiffusionData.batch_size = batchSize;
-            stableDiffusionData.n_iter = batchCount;
-            stableDiffusionData.mask_blur = maskBlur;
+            // stableDiffusionData.batch_size = batchSize;
+            // stableDiffusionData.n_iter = batchCount;
+            // stableDiffusionData.mask_blur = maskBlur;
             dream(drawIt.x, drawIt.y, stableDiffusionData);
         }
     }
 }
 
 function changeScaleFactor() {
-    scaleFactor = document.getElementById("scaleFactor").value;
-    document.getElementById("scaleFactorTxt").innerText = scaleFactor;
+    document.getElementById("scaleFactorTxt").innerText = scaleFactor = document.getElementById("scaleFactor").value;
 }
 
 function changeSteps() {
-    steps = document.getElementById("steps").value;
-    document.getElementById("stepsTxt").innerText = steps;
+    document.getElementById("stepsTxt").innerText = stableDiffusionData.steps = document.getElementById("steps").value;
 }
 
 function changePaintMode() {
@@ -505,22 +495,19 @@ function changeEraseMode() {
 }
 
 function changeSampler() {
-    sampler = document.getElementById("samplerSelect").value;
+    stableDiffusionData.sampler_index = document.getElementById("samplerSelect").value;
 }
 
 function changeCfgScale() {
-    cfgScale = document.getElementById("cfgScale").value;
-    document.getElementById("cfgScaleTxt").innerText = cfgScale;
+    document.getElementById("cfgScaleTxt").innerText = stableDiffusionData.cfg_scale = document.getElementById("cfgScale").value;
 }
 
 function changeBatchSize() {
-    batchSize = document.getElementById("batchSize").value;
-    document.getElementById("batchSizeText").innerText = batchSize;
+    document.getElementById("batchSizeText").innerText = stableDiffusionData.batch_size = document.getElementById("batchSize").value;
 }
 
 function changeBatchCount() {
-    batchCount = document.getElementById("batchCount").value;
-    document.getElementById("batchCountText").innerText = batchCount;
+    document.getElementById("batchCountText").innerText = stableDiffusionData.n_iter = document.getElementById("batchCount").value;
 }
 
 function changeSnapMode() {
@@ -528,7 +515,7 @@ function changeSnapMode() {
 }
 
 function changeMaskBlur() {
-    maskBlur = document.getElementById("maskBlur").value;
+    stableDiffusionData.mask_blur = document.getElementById("maskBlur").value;
 }
 
 function isCanvasBlank(x, y, w, h, specifiedCanvas) {
