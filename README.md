@@ -58,7 +58,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] infinite canvas
 - [ ] global undo/redo
 - [ ] inpainting sketch tools
-- [ ] something actually similar to a "user interface", hopefully actually pleasant
+- [ ] something actually similar to a "user interface", preferably visually pleasant and would make my mom say "well that makes sense" if she looked at it
 - [ ] eventually delete the generated mask display canvases at the bottom of the page, but they're useful for debugging canvas pixel offsets sometimes
 - [ ] see if i can use fewer canvases overall; seems wasteful, canvas isn't free yknow
 - [ ] upscaling output canvas??? sure let's make 16k wallpapers that'll be neat
