@@ -3,8 +3,8 @@
 ![openOutpaint creating some undersea wildlife](docs/01-demo.gif)
 
 this is a completely vanilla javascript and html canvas outpainting convenience built for [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) similar to a few others which certainly have superior functionality.  this simply offers an alternative for my desires:
- - avoiding the overhead of a virtual python evnironment or impacting a pre-existing one
- - operates against the API exposed by A111's webUI
+ - avoiding the overhead of an additional virtual python evnironment or impacting a pre-existing one
+ - operates against the API exposed by A1111's webUI
  - no external dependencies, extremely boring vanilla
  - no external connectivity, self-hosted and offline
  - unobfuscated (cough cough)
@@ -12,7 +12,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  - i have never used html canvas for anything before and should try it out
 
  ## operation
- you'll obviously need A111's webUI installed before you can use this.  
+ you'll obviously need A1111's webUI installed before you can use this.  
 
  technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision.  
  i therefore **strongly** recommend using a small webserver such as [simple-http-server](https://github.com/TheWaWaR/simple-http-server) if you don't have a local server already running somewhere.
