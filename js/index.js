@@ -75,12 +75,6 @@ var backupMaskChunk = null;
 var backupMaskX = null;
 var backupMaskY = null;
 var totalImagesReturned;
-// var sampler = "DDIM"; //like i think all of these from here down are probably unnecessary and i can rely on just the stableDiffusionData object?
-// var steps = 30;
-// var cfgScale = 7.5;
-// var batchSize = 2;
-// var batchCount = 2;
-// var maskBlur = 0;
 
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
 
