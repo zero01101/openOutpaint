@@ -24,12 +24,12 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  5. **SELECT AN INPAINTING MODEL (and associated VAE if applicable) IN WEBUI** - [runwayml/stable-diffusion-inpainting](https://huggingface.co/runwayml/stable-diffusion-inpainting) is recommended
  6. open your locally-hosted web server, possibly appending `index.html` if it doesn't automatically serve that
  7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait
- 8. once an image appears, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
+ 8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
  9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
  10. use the mask mode to prepare previously rendered image areas for touchups/inpainting
 11. play around with the available options, click "dl img" to save the entire 2560x1440 canvas, sorry it doesn't smart crop or anything  
 
-if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
+*if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
 
 ## todo
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
