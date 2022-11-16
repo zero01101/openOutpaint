@@ -31,20 +31,23 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 *if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
 
-## todo
+## //todo
+### in order of "priority"/likelihood of me doing it
+- [ ] comment basically everything that isn't self documenting
+- [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
 - [ ] figure out where that stupid 1-pixel offset is happening between approve/reject state and committing to an image, it doesn't affect output but it's _super_ obnoxious  
 - [ ] BUG: make erase mask actually work, enable the control if you dare
 - [ ] infinite canvas
-- [ ] smart crop downloaded image
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
 - [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out options
+- [ ] smart crop downloaded image
 - [ ] global undo/redo
 - [ ] render progress spinner/bar
 - [ ] inpainting sketch tools
 - [ ] something actually similar to a "user interface", hopefully actually pleasant
 - [ ] eventually delete the generated mask display canvases at the bottom of the page, but they're useful for debugging canvas pixel offsets sometimes
-- [ ] see if i can use fewer canvases, seems wasteful, canvas isn't free yknow
+- [ ] see if i can use fewer canvases overall; seems wasteful, canvas isn't free yknow
 - [ ] honestly probably refactor literally everything
 
 ## pull requests
