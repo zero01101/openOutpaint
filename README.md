@@ -19,7 +19,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
  1. clone this repo or just literally download index.html and js/index.js manually and put 'em somewhere
  2. configure whatever local (host or network) webserver you're using to serve the index.html from this repo and execute it (instructions for configuring a web server are outside the scope of this remedial quickstart)
- 3. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1` *(replacing 127.0.0.1 with wherever you're hosting it on your local network if necessary)*
+ 3. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:1234` *(replacing 127.0.0.1:1234 with wherever you're hosting it on your local network if necessary)*
  4. execute your webui-user script and wait for it to be ready
  5. **SELECT AN INPAINTING MODEL (and associated VAE if applicable) IN WEBUI** - [runwayml/stable-diffusion-inpainting](https://huggingface.co/runwayml/stable-diffusion-inpainting) is recommended
  6. open your locally-hosted web server, possibly appending `index.html` if it doesn't automatically serve that
