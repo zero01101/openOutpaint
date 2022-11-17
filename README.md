@@ -41,8 +41,9 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 ## //todo
 ### in order of "priority"/likelihood of me doing it
+- [ ] lots and lots of readme updates (ongoing)
 - [ ] comment basically everything that isn't self documenting (ongoing)
-- [ ] overmask seam of img2img (https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)
+- [ ] _CURRENT TASK_: overmask seam of img2img (https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)
 - [x] split out CSS to its own file (remedial cleanup task)
 - [ ] split out JS to separation-of-concerns individual files (oh no)
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
@@ -68,8 +69,16 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 **PLEASE SEND PULL REQUESTS**  
 i am begging you, yes you personally reading this, please fix my horrible code and feel free to insult it, but i absolutely refuse to budge on no 3rd party libraries or dependencies, not even jquery, nothing.  vanilla is a very complex and layered flavor if you give it a chance.
 
+## bug reports
+please do! kindly indicate your OS, browser, versions of both, any errors in devtools/console output, what you were trying to do, what you expected, what happened unexpectedly or incorrectly, if something caught fire (please call the fire department first), the usual
+
+## warranty
+[lmao](https://github.com/moyix/fauxpilot#support-and-warranty)
+
 ## sample 
-generated using 100% openOutpaint UI defaults except for switching to/from mask mode and changing scale factor to adjust the size of the mask blob, there's some neat stuff down there even if it disregarded the `people, humans, divers` negative prompt but in its defense there is only one singular person, human, diver in there, so according to the no homers club treatise of 1995 it's technically correct _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563acf5cd3cb16a928 for attempted counterattack)_
+generated using 100% openOutpaint UI defaults except for switching to/from mask mode and changing scale factor to adjust the size of the mask blob, there's some neat stuff down there even if it disregarded the `people, humans, divers` negative prompt but in its defense there is only one singular person, human, diver in there, so according to the no homers club treatise of 1995 it's technically correct 
+
+_(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563acf5cd3cb16a928 for attempted counterattack)_
 ![fishies n stuff](docs/02-sample.png)
 
 ## version history
