@@ -17,9 +17,9 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  you'll obviously need A1111's webUI installed before you can use this, thus you're presumed to have an operational python install up and running to boot.  
 
  ### notes 
- -  technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision.  
- - a deliciously simple launch script (thanks [@jasonmhead](https://github.com/jasonmhead)! (https://github.com/zero01101/openOutpaint/pull/1)) is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux.  
- - the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port.  you can of course modify the included launch script to point at a different port than 3456 if desired, as well.
+ -  technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision 
+ - a deliciously simple launch script (thanks [@jasonmhead](https://github.com/jasonmhead)! (https://github.com/zero01101/openOutpaint/pull/1)) is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux 
+ - the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port.  you can of course modify the included launch script to point at a different port than 3456 if desired, as well
 
 ### quickstart
  1. clone this repo to your homelab's webserver (i mean who doesn't have a couple of those lying around?) or somewhere on your local pc
@@ -34,7 +34,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait
  8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
  9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
- 10. use the mask mode to prepare previously rendered image areas for touchups/inpainting
+ 10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
  11. play around with the available options!  
   - scale factor affects the size of both the painting reticle and mask blob 
   - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
