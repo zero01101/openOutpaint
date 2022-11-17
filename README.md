@@ -35,7 +35,11 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
  9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
  10. use the mask mode to prepare previously rendered image areas for touchups/inpainting
-11. play around with the available options, make your click "dl img" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
+ 11. play around with the available options!  
+  - scale factor affects the size of both the painting reticle and mask blob 
+  - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
+ 12. click "dl img" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
+ 13. refresh the page to start a blank canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
 
 *if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
 
@@ -46,8 +50,9 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] _CURRENT TASK_: overmask seam of img2img (https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)
 - [x] split out CSS to its own file (remedial cleanup task)
 - [ ] split out JS to separation-of-concerns individual files (oh no)
+- [ ] ability to blank/new canvas without making the user refresh because that's pretty janky
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
-- [ ] image erase region in case you decide later that you're not too happy with earlier results
+- [ ] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
 - [ ] render progress spinner/bar
 - [ ] ~~smart crop downloaded image~~ 
