@@ -130,7 +130,7 @@
                 <input type="file" id="fileInput" accept="image/*" onchange="loadImage()" /><br /><br />
                 <button onclick="downloadImage()">dl img</button>
             </div>
-            <div id="canvasHolder" class="canvasHolder">
+            <div id="canvasHolder" class="canvasHolder" oncontextmenu="return false;">
                 <canvas id="backgroundCanvas" class="mainCanvases backgroundCanvas" width="2560" height="1440"
                     style="z-index: 0;">
                     <!-- gray grid bg canvas -->
