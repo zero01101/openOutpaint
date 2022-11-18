@@ -75,7 +75,9 @@ var backupMaskChunk = null;
 var backupMaskX = null;
 var backupMaskY = null;
 var totalImagesReturned;
-
+var maskEdgePixels = {};
+var overMask = true; //TODO need toggle IMMEDIATELY for this
+var overMaskPx = 10; //TODO need control IMMEDIATELY for this... once it works.... 
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
 
 // info div, sometimes hidden
@@ -112,6 +114,9 @@ function startup() {
     changeBatchSize();
     changeSnapMode();
     changeMaskBlur();
+    changeSeed();
+    changeOverMask();
+    changeOverMaskPx();
     document.getElementById("overlayCanvas").onmousemove = mouseMove;
     document.getElementById("overlayCanvas").onmousedown = mouseDown;
     document.getElementById("overlayCanvas").onmouseup = mouseUp;
@@ -383,24 +388,39 @@ function mouseUp(evt) {
             // console.log(downX + ":" + downY + " :: " + this.isCanvasBlank(downX, downY));
             if (!isCanvasBlank(drawIt.x, drawIt.y, drawIt.w, drawIt.h, imgCanvas)) {
                 // img2img
-                var ctx = document.getElementById("canvas").getContext("2d");
-                const imgChunk = ctx.getImageData(drawIt.x, drawIt.y, drawIt.w, drawIt.h);
-                const imgChunkData = imgChunk.data;
-                var canvas2 = document.getElementById("maskCanvas");
-                var ctx2 = canvas2.getContext("2d");
-                var canvas3 = document.getElementById("initImgCanvas");
-                var ctx3 = canvas3.getContext("2d");
+                var mainCanvasCtx = document.getElementById("canvas").getContext("2d");
+                const imgChunk = mainCanvasCtx.getImageData(drawIt.x, drawIt.y, drawIt.w, drawIt.h); // imagedata object of the image being outpainted
+                const imgChunkData = imgChunk.data; // imagedata.data object, a big inconvenient uint8clampedarray
+                // these are the 3 mask monitors on the bottom of the page
+                var maskCanvas = document.getElementById("maskCanvasMonitor");
+                var maskCanvasCtx = maskCanvas.getContext("2d");
+                var initImgCanvas = document.getElementById("initImgCanvasMonitor");
+                var initImgCanvasCtx = initImgCanvas.getContext("2d");
+                var overMaskCanvas = document.getElementById("overMaskCanvasMonitor");
+                var overMaskCanvasCtx = overMaskCanvas.getContext("2d");
                 // get blank pixels to use as mask
-                const maskImgData = ctx2.createImageData(drawIt.w, drawIt.h);
-                const initImgData = ctx2.createImageData(drawIt.w, drawIt.h);
+                const maskImgData = maskCanvasCtx.createImageData(drawIt.w, drawIt.h);
+                const initImgData = mainCanvasCtx.createImageData(drawIt.w, drawIt.h);
+                const overMaskImgData = overMaskCanvasCtx.createImageData(drawIt.w, drawIt.h);
+                // cover entire masks in black before adding masked areas
+
                 for (let i = 0; i < imgChunkData.length; i += 4) {
                     // l->r, top->bottom, R G B A pixel values in a big ol array
-                    // make a simple mask
+                    // can i log the x,y of pixels that are transparent so i can easily just add different pixels and get the index via https://stackoverflow.com/questions/45963306/html5-canvas-how-to-get-adjacent-pixels-position-from-the-linearized-imagedata/45969661#45969661 ?
+
+                    // make a simple mask            
                     if (imgChunkData[i + 3] == 0) { // rgba pixel values, 4th one is alpha, if it's 0 there's "nothing there" in the image display canvas and its time to outpaint
                         maskImgData.data[i] = 255; // white mask gets painted over
                         maskImgData.data[i + 1] = 255;
                         maskImgData.data[i + 2] = 255;
                         maskImgData.data[i + 3] = 255;
+
+                        overMaskImgData.data[i] = 255; //lets just set this up now
+                        overMaskImgData.data[i + 1] = 255;
+                        overMaskImgData.data[i + 2] = 255;
+                        overMaskImgData.data[i + 3] = 255;
+
+
                         initImgData.data[i] = 0; // null area on initial image becomes opaque black pixels
                         initImgData.data[i + 1] = 0;
                         initImgData.data[i + 2] = 0;
@@ -410,12 +430,131 @@ function mouseUp(evt) {
                         maskImgData.data[i + 1] = 0;
                         maskImgData.data[i + 2] = 0;
                         maskImgData.data[i + 3] = 255; // but it still needs an opaque alpha channel 
+
+                        overMaskImgData.data[i] = 0;
+                        overMaskImgData.data[i + 1] = 0;
+                        overMaskImgData.data[i + 2] = 0;
+                        overMaskImgData.data[i + 3] = 255;
+
                         initImgData.data[i] = imgChunkData[i]; // put the original picture back in the painted area
                         initImgData.data[i + 1] = imgChunkData[i + 1];
                         initImgData.data[i + 2] = imgChunkData[i + 2];
                         initImgData.data[i + 3] = imgChunkData[i + 3]; //it's still RGBA so we can handily do this in nice chunks'o'4
                     }
                 }
+
+
+                // make a list of all the white pixels to expand so we don't waste time on non-mask pixels
+                let pix = { x: [], y: [], index: [] };
+                var x, y, index;
+                for (y = 0; y < drawIt.h; y++) {
+                    for (x = 0; x < drawIt.w; x++) {
+                        index = ((y * drawIt.w + x) * 4);
+                        if (overMaskImgData.data[index] > 0) {
+                            pix.x.push(x);
+                            pix.y.push(y);
+                            pix.index.push(index);
+                        }
+                    }
+                }
+
+                for (i = 0; i < pix.index.length; i++) {
+                    // get the index in the stupid array
+                    var currentMaskPixelIndex = pix.index[i];
+
+                    // for any horizontal expansion, we need to ensure that the target pixel is in the same Y row
+                    // horizontal left (west) is index-4 per pixel
+                    // horizontal right (east) is index+4 per pixel
+                    var currentMaskPixelY = pix.y[i];
+
+                    // for any vertical expansion, we need to ensure that the target pixel is in the same X column
+                    // vertical up (north) is index-(imagedata.width) per pixel
+                    // vertical down (south) is index+(imagedata.width) per pixel
+                    var currentMaskPixelX = pix.x[i];
+
+                    // i hate uint8clampedarray and math
+                    // primarily math
+                    // actually just my brain  
+                    // ok so now lets check neighbors to see if they're in the same row/column
+                    for (j = overMaskPx; j > 0; j--) { // set a variable to the extreme end of the overmask size and work our way back inwards
+                        // i hate uint8clampedarray and math
+                        // this is so inefficient but i warned you all i'm bad at this
+                        //TODO refactor like all of this, it's horrible and shameful 
+                        // BUT IT WORKS
+                        // but it is crushingly inefficient i'm sure
+                        // BUT IT WORKS and i came up with it all by myself because i'm a big boy
+
+                        // west
+                        var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) - (j * 4);
+                        var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
+                        var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
+                        // ENSURE SAME ROW using the y axis unintuitively
+                        if (potentialPixelY == currentMaskPixelY) {
+                            // ok then 
+                            // ensure it's not already a mask pixel
+                            if (overMaskImgData.data[potentialPixelIndex] != 255) {
+                                // welp fingers crossed
+                                overMaskImgData.data[potentialPixelIndex] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 1] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 2] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 3] = 255;
+                            }
+                        }
+
+                        // east
+                        var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) + (j * 4);
+                        var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
+                        var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
+                        // ENSURE SAME ROW using the y axis unintuitively
+                        if (potentialPixelY == currentMaskPixelY) {
+                            // ok then 
+                            // ensure it's not already a mask pixel
+                            if (overMaskImgData.data[potentialPixelIndex] != 255) {
+                                // welp fingers crossed
+                                overMaskImgData.data[potentialPixelIndex] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 1] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 2] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 3] = 255;
+                            }
+                        }
+
+                        // north
+                        var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) - ((j * drawIt.w) * 4);
+                        var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
+                        var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
+                        // ENSURE SAME COLUMN using the x axis unintuitively
+                        if (potentialPixelX == currentMaskPixelX) {
+                            // ok then 
+                            // ensure it's not already a mask pixel
+                            if (overMaskImgData.data[potentialPixelIndex] != 255) {
+                                // welp fingers crossed
+                                overMaskImgData.data[potentialPixelIndex] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 1] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 2] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 3] = 255;
+                            }
+                        }
+
+                        // south
+                        var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) + ((j * drawIt.w) * 4);
+                        var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
+                        var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
+                        // ENSURE SAME COLUMN using the x axis unintuitively
+                        if (potentialPixelX == currentMaskPixelX) {
+                            // ok then 
+                            // ensure it's not already a mask pixel
+                            if (overMaskImgData.data[potentialPixelIndex] != 255) {
+                                // welp fingers crossed
+                                overMaskImgData.data[potentialPixelIndex] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 1] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 2] = 255;
+                                overMaskImgData.data[potentialPixelIndex + 3] = 255;
+                            }
+                        }
+                    }
+
+                }
+
                 // also check for painted masks in region, add them as white pixels to mask canvas
                 const maskChunk = maskPaintCtx.getImageData(drawIt.x, drawIt.y, drawIt.w, drawIt.h);
                 const maskChunkData = maskChunk.data;
@@ -425,6 +564,10 @@ function mouseUp(evt) {
                         maskImgData.data[i + 1] = 255;
                         maskImgData.data[i + 2] = 255;
                         maskImgData.data[i + 3] = 255;
+                        overMaskImgData.data[i] = 255;
+                        overMaskImgData.data[i + 1] = 255;
+                        overMaskImgData.data[i + 2] = 255;
+                        overMaskImgData.data[i + 3] = 255;
                     }
                 }
                 // backup any painted masks ingested then them, replacable if user doesn't like resultant image
@@ -439,13 +582,17 @@ function mouseUp(evt) {
                 }
                 maskPaintCtx.putImageData(clearArea, drawIt.x, drawIt.y);
                 // mask monitors
-                ctx2.putImageData(maskImgData, 0, 0);
-                var maskBase64 = canvas2.toDataURL();
-                ctx3.putImageData(initImgData, 0, 0);
-                var initImgBase64 = canvas3.toDataURL();
+                maskCanvasCtx.putImageData(maskImgData, 0, 0);
+                var maskBase64 = maskCanvas.toDataURL();
+                overMaskCanvasCtx.putImageData(overMaskImgData, 0, 0); // :pray:
+                var overMaskBase64 = overMaskCanvas.toDataURL();
+                initImgCanvasCtx.putImageData(initImgData, 0, 0);
+                var initImgBase64 = initImgCanvas.toDataURL();
                 // img2img
                 endpoint = "img2img";
-                stableDiffusionData.mask = maskBase64;
+                var selectedMask = overMask ? overMaskBase64 : maskBase64;
+                stableDiffusionData.mask = selectedMask;
+                // stableDiffusionData.mask = maskBase64;
                 stableDiffusionData.init_images = [initImgBase64];
                 // slightly more involved than txt2img
             } else {
@@ -455,14 +602,8 @@ function mouseUp(evt) {
             }
             stableDiffusionData.prompt = document.getElementById("prompt").value;
             stableDiffusionData.negative_prompt = document.getElementById("negPrompt").value;
-            // stableDiffusionData.sampler_index = sampler;
-            // stableDiffusionData.steps = steps;
-            // stableDiffusionData.cfg_scale = cfgScale;
             stableDiffusionData.width = drawIt.w;
             stableDiffusionData.height = drawIt.h;
-            // stableDiffusionData.batch_size = batchSize;
-            // stableDiffusionData.n_iter = batchCount;
-            // stableDiffusionData.mask_blur = maskBlur;
             dream(drawIt.x, drawIt.y, stableDiffusionData);
         }
     }
@@ -512,6 +653,18 @@ function changeMaskBlur() {
     stableDiffusionData.mask_blur = document.getElementById("maskBlur").value;
 }
 
+function changeSeed() {
+    stableDiffusionData.seed = document.getElementById("seed").value;
+}
+
+function changeOverMask() {
+    overMask = document.getElementById("cbxOverMask").checked;
+}
+
+function changeOverMaskPx() {
+    overMaskPx = document.getElementById("overMaskPx").value;
+}
+
 function isCanvasBlank(x, y, w, h, specifiedCanvas) {
     var canvas = document.getElementById(specifiedCanvas.id);
     return !canvas.getContext('2d')
@@ -554,18 +707,23 @@ function cropCanvas(sourceCanvas) {
 
     for (y = 0; y < h; y++) {
         for (x = 0; x < w; x++) {
-            index = (y * w + x) * 4;
+            // lol i need to learn what this part does 
+            index = (y * w + x) * 4; // OHHH OK this is setting the imagedata.data uint8clampeddataarray index for the specified x/y coords
+            //this part i get, this is checking that 4th RGBA byte for opacity
             if (imageData.data[index + 3] > 0) {
                 pix.x.push(x);
                 pix.y.push(y);
             }
         }
     }
+    // ...need to learn what this part does too :badpokerface:
+    // is this just determining the boundaries of non-transparent pixel data?
     pix.x.sort(function (a, b) { return a - b });
     pix.y.sort(function (a, b) { return a - b });
     var n = pix.x.length - 1;
     w = pix.x[n] - pix.x[0];
     h = pix.y[n] - pix.y[0];
+    // yup sure looks like it
 
     try {
         var cut = sourceCanvas.getContext('2d').getImageData(pix.x[0], pix.y[0], w, h);
