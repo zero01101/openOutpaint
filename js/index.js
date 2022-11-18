@@ -275,7 +275,12 @@ function sleep(ms) {
 
 function snap(i) {
     // very cheap test proof of concept but it works surprisingly well
-    var snapOffset = i % basePixelCount;
+    var scaleOffset = 0;
+    if (scaleFactor % 2 != 0) {
+        // odd number, snaps to center of cell, oops
+        scaleOffset = 32;
+    }
+    var snapOffset = i % basePixelCount - scaleOffset;
     if (snapOffset == 0) {
         return snapOffset;
     }
