@@ -103,3 +103,4 @@ _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563
 - 0.0.4 - batch size/batch count, approve/reject system implementations, snap-to-grid, other people are now allowed to see this thing [01f8c6a](https://github.com/zero01101/openOutpaint/commit/01f8c6ab3f49739439a0990d6f5f0967a9a0bf12)
 - 0.0.4.1 - extremely minor revisions [02cb01a](https://github.com/zero01101/openOutpaint/commit/02cb01ac062ef93878ff4161eabcedfa8e125be6)
 - 0.0.4.2 - pull requests (&lt;3), downloaded images now have a timestamped name, css breakout because hopefully this will become halfway attractive enough to benefit from non-inline stylesheets [70ad4fe](https://github.com/zero01101/openOutpaint/commit/70ad4fe081bdbd507afc5af3cc2a4435924b66e3)
+- 0.0.4.3 - overmasking [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
