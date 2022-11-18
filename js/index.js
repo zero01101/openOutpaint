@@ -697,6 +697,26 @@ function downloadImage() {
     }
 }
 
+function loadImage() {
+    // load image from file and draw it into center imgCanvas
+    // preferably we'd allow the user to select a position in the canvas to place the image into but this should do for now
+    var file = document.getElementById("fileInput").files[0];
+    var reader = new FileReader();
+    reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+            var imgCanvasCtx = imgCanvas.getContext("2d");
+            // put the image in the center of the canvas
+            var x = (imgCanvas.width - img.width) / 2;
+            var y = (imgCanvas.height - img.height) / 2;
+            imgCanvasCtx.drawImage(img, x, y);
+
+        }
+        img.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+}
+
 function cropCanvas(sourceCanvas) {
     var w = sourceCanvas.width;
     var h = sourceCanvas.height;

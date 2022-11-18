@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    <!--having the whole UI be a floating anchored div that follows the view would be cool-->
     <div id="mainHSplit" class="mainHSplit">
         <div id="uiWrapper" class="uiWrapper">
             <div id="info" class="info" style="min-width:200px;">
@@ -125,6 +126,8 @@
                 <span id="maskBlurText"></span><br />
                 <input type="number" id="maskBlur" name="maskBlur" min="0" max="64" value="0" step="1"
                     onchange="changeMaskBlur()" /><br />
+                <label for="fileInput">Load image</label><br />
+                <input type="file" id="fileInput" accept="image/*" onchange="loadImage()" /><br /><br />
                 <button onclick="downloadImage()">dl img</button>
             </div>
             <div id="canvasHolder" class="canvasHolder">
