@@ -103,6 +103,7 @@ const bgCanvas = document.getElementById("backgroundCanvas"); // gray bg grid
 const bgCtx = bgCanvas.getContext("2d");
 
 function startup() {
+    loadSettings();
     drawBackground();
     changeScaleFactor();
     changePaintMode();
@@ -611,10 +612,12 @@ function mouseUp(evt) {
 
 function changeScaleFactor() {
     document.getElementById("scaleFactorTxt").innerText = scaleFactor = document.getElementById("scaleFactor").value;
+    localStorage.setItem("scaleFactor", scaleFactor);
 }
 
 function changeSteps() {
     document.getElementById("stepsTxt").innerText = stableDiffusionData.steps = document.getElementById("steps").value;
+    localStorage.setItem("steps", stableDiffusionData.steps);
 }
 
 function changePaintMode() {
@@ -631,18 +634,22 @@ function changeEraseMode() {
 
 function changeSampler() {
     stableDiffusionData.sampler_index = document.getElementById("samplerSelect").value;
+    localStorage.setItem("sampler", stableDiffusionData.sampler_index);
 }
 
 function changeCfgScale() {
     document.getElementById("cfgScaleTxt").innerText = stableDiffusionData.cfg_scale = document.getElementById("cfgScale").value;
+    localStorage.setItem("cfg_scale", stableDiffusionData.cfg_scale);
 }
 
 function changeBatchSize() {
     document.getElementById("batchSizeText").innerText = stableDiffusionData.batch_size = document.getElementById("batchSize").value;
+    localStorage.setItem("batch_size", stableDiffusionData.batch_size);
 }
 
 function changeBatchCount() {
     document.getElementById("batchCountText").innerText = stableDiffusionData.n_iter = document.getElementById("batchCount").value;
+    localStorage.setItem("n_iter", stableDiffusionData.n_iter);
 }
 
 function changeSnapMode() {
@@ -651,6 +658,7 @@ function changeSnapMode() {
 
 function changeMaskBlur() {
     stableDiffusionData.mask_blur = document.getElementById("maskBlur").value;
+    localStorage.setItem("mask_blur", stableDiffusionData.mask_blur);
 }
 
 function changeSeed() {
@@ -691,7 +699,7 @@ function drawBackground() {
 function downloadImage() {
     var link = document.createElement('a');
     link.download = new Date().toISOString().slice(0, 19).replace('T', ' ').replace(':', ' ') + ' openOutpaint image.png';
-    croppedCanvas = cropCanvas(imgCanvas);
+    var croppedCanvas = cropCanvas(imgCanvas);
     if (croppedCanvas != null) {
         link.href = croppedCanvas.toDataURL('image/png');
         link.click();
@@ -739,3 +747,22 @@ function cropCanvas(sourceCanvas) {
     return cutCanvas;
 }
 
+function loadSettings() {
+    // set default values if not set                                    DEFAULTS
+    var _sampler = localStorage.getItem("sampler") == null ?            "DDIM"      : localStorage.getItem("sampler");
+    var _steps = localStorage.getItem("steps") == null ?                30          : localStorage.getItem("steps");
+    var _cfg_scale = localStorage.getItem("cfg_scale") == null ?        7.0         : localStorage.getItem("cfg_scale");
+    var _batch_size = localStorage.getItem("batch_size") == null ?      2           : localStorage.getItem("batch_size");
+    var _n_iter = localStorage.getItem("n_iter") == null ?              2           : localStorage.getItem("n_iter");
+    var _scaleFactor = localStorage.getItem("scaleFactor") == null ?    8           : localStorage.getItem("scaleFactor");
+    var _mask_blur = localStorage.getItem("mask_blur") == null ?        0           : localStorage.getItem("mask_blur");
+
+    // set the values into the UI
+    document.getElementById("samplerSelect").value = String(_sampler);
+    document.getElementById("steps").value = Number(_steps);
+    document.getElementById("cfgScale").value = Number(_cfg_scale);
+    document.getElementById("batchSize").value = Number(_batch_size);
+    document.getElementById("batchCount").value = Number(_n_iter);
+    document.getElementById("scaleFactor").value = Number(_scaleFactor);
+    document.getElementById("maskBlur").value = Number(_mask_blur);
+}
