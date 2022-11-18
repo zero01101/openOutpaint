@@ -663,6 +663,7 @@ function changeMaskBlur() {
 
 function changeSeed() {
     stableDiffusionData.seed = document.getElementById("seed").value;
+    localStorage.setItem("seed", stableDiffusionData.seed);
 }
 
 function changeOverMask() {
@@ -749,13 +750,14 @@ function cropCanvas(sourceCanvas) {
 
 function loadSettings() {
     // set default values if not set                                    DEFAULTS
-    var _sampler = localStorage.getItem("sampler") == null ?            "DDIM"      : localStorage.getItem("sampler");
-    var _steps = localStorage.getItem("steps") == null ?                30          : localStorage.getItem("steps");
-    var _cfg_scale = localStorage.getItem("cfg_scale") == null ?        7.0         : localStorage.getItem("cfg_scale");
-    var _batch_size = localStorage.getItem("batch_size") == null ?      2           : localStorage.getItem("batch_size");
-    var _n_iter = localStorage.getItem("n_iter") == null ?              2           : localStorage.getItem("n_iter");
-    var _scaleFactor = localStorage.getItem("scaleFactor") == null ?    8           : localStorage.getItem("scaleFactor");
-    var _mask_blur = localStorage.getItem("mask_blur") == null ?        0           : localStorage.getItem("mask_blur");
+    var _sampler = localStorage.getItem("sampler") == null ? "DDIM" : localStorage.getItem("sampler");
+    var _steps = localStorage.getItem("steps") == null ? 30 : localStorage.getItem("steps");
+    var _cfg_scale = localStorage.getItem("cfg_scale") == null ? 7.0 : localStorage.getItem("cfg_scale");
+    var _batch_size = localStorage.getItem("batch_size") == null ? 2 : localStorage.getItem("batch_size");
+    var _n_iter = localStorage.getItem("n_iter") == null ? 2 : localStorage.getItem("n_iter");
+    var _scaleFactor = localStorage.getItem("scaleFactor") == null ? 8 : localStorage.getItem("scaleFactor");
+    var _mask_blur = localStorage.getItem("mask_blur") == null ? 0 : localStorage.getItem("mask_blur");
+    var _seed = localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
 
     // set the values into the UI
     document.getElementById("samplerSelect").value = String(_sampler);
@@ -765,4 +767,5 @@ function loadSettings() {
     document.getElementById("batchCount").value = Number(_n_iter);
     document.getElementById("scaleFactor").value = Number(_scaleFactor);
     document.getElementById("maskBlur").value = Number(_mask_blur);
+    document.getElementById("seed").value = Number(_seed);
 }

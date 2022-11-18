@@ -18,6 +18,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - optional grid snapping for precision
   - optional overmasking for better seams between outpaints (suggested by @lifeh2o ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
+  - saves your preferences to browser localstorage for maximum convenience
 
  ## operation
 
@@ -29,10 +30,15 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  - a deliciously simple launch script (thanks [@jasonmhead](https://github.com/jasonmhead)! (https://github.com/zero01101/openOutpaint/pull/1)) is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux 
  - the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port.  you can of course modify the included launch script to point at a different port than 3456 if desired, as well
 
-### quickstart
+### quickstart speedrun
+1. edit your `cors-allow-origins` to include https://zero01101.github.io and run webUI
+2. go to https://zero01101.github.io/openOutpaint/ and fill in the host value with your webUI API address
+3. click things and do stuff
+
+### quickstart normal edition
  1. clone this repo to your homelab's webserver (i mean who doesn't have a couple of those lying around?) or somewhere on your local pc
  2. configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux. 
- 3. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456`
+ 3. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456` 
  4. execute your webui-user script and wait for it to be ready
  5. **APPLY THE FOLLOWING SETTINGS IN A1111 WEBUI ONCE IT IS READY:** 
   - select an inpainting checkpoint/model - ([runwayml/stable-diffusion-inpainting](https://huggingface.co/runwayml/stable-diffusion-inpainting) [3e16efc8] is recommended)
@@ -61,7 +67,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [ ] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
-- [ ] save user-set option values to browser localstorage to persist your preferred, uh, preferences
+- [ ] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
 - [ ] render progress spinner/bar
 - [ ] ~~smart crop downloaded image~~ 
 - [ ] import external image and scale/superimpose at will on canvas for in/outpainting
