@@ -11,6 +11,14 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  - <a name="terrible"></a>i am terrible at javascript and should probably correct that
  - i have never used html canvas for anything before and should try it out
 
+ ## features
+  - a big ol' 2560x1440 canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
+  - inpainting/touchup blob
+  - easily change samplers/steps/CFG/etc options for each "dream" summoned from the latent void 
+  - optional grid snapping for precision
+  - optional overmasking for better seams between outpaints (suggested by @lifeh2o ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
+  - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
+
  ## operation
 
  ### prerequisities
@@ -47,13 +55,13 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 ### in order of "priority"/likelihood of me doing it
 - [ ] lots and lots of readme updates (ongoing)
 - [ ] comment basically everything that isn't self documenting (ongoing)
-- [ ] _CURRENT TASK_: overmask seam of img2img (https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)
+- [x] overmask seam of img2img 
 - [x] split out CSS to its own file (remedial cleanup task)
-- [ ] split out JS to separation-of-concerns individual files (oh no)
-- [ ] ability to blank/new canvas without making the user refresh because that's pretty janky
+- [ ] ability to blank/new canvas without making the user refresh the page because that's pretty janky
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [ ] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
+- [ ] save user-set option values to browser localstorage to persist your preferred, uh, preferences
 - [ ] render progress spinner/bar
 - [ ] ~~smart crop downloaded image~~ 
 - [ ] import external image and scale/superimpose at will on canvas for in/outpainting
@@ -65,6 +73,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] infinite canvas
 - [ ] global undo/redo
 - [ ] inpainting sketch tools
+- [ ] split out JS to separation-of-concerns individual files (oh no)
 - [ ] something actually similar to a "user interface", preferably visually pleasant and would make my mom say "well that makes sense" if she looked at it
 - [ ] eventually delete the generated mask display canvases at the bottom of the page, but they're useful for debugging canvas pixel offsets sometimes
 - [ ] see if i can use fewer canvases overall; seems wasteful, canvas isn't free yknow
