@@ -75,9 +75,9 @@ var backupMaskChunk = null;
 var backupMaskX = null;
 var backupMaskY = null;
 var totalImagesReturned;
-var maskEdgePixels = {};
-var overMask = true; //TODO need toggle IMMEDIATELY for this
-var overMaskPx = 10; //TODO need control IMMEDIATELY for this... once it works.... 
+// var maskEdgePixels = {};
+var overMask = true;
+var overMaskPx = 10;
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
 
 // info div, sometimes hidden
@@ -407,8 +407,6 @@ function mouseUp(evt) {
 
                 for (let i = 0; i < imgChunkData.length; i += 4) {
                     // l->r, top->bottom, R G B A pixel values in a big ol array
-                    // can i log the x,y of pixels that are transparent so i can easily just add different pixels and get the index via https://stackoverflow.com/questions/45963306/html5-canvas-how-to-get-adjacent-pixels-position-from-the-linearized-imagedata/45969661#45969661 ?
-
                     // make a simple mask            
                     if (imgChunkData[i + 3] == 0) { // rgba pixel values, 4th one is alpha, if it's 0 there's "nothing there" in the image display canvas and its time to outpaint
                         maskImgData.data[i] = 255; // white mask gets painted over
@@ -443,8 +441,6 @@ function mouseUp(evt) {
                         initImgData.data[i + 3] = imgChunkData[i + 3]; //it's still RGBA so we can handily do this in nice chunks'o'4
                     }
                 }
-
-
                 // make a list of all the white pixels to expand so we don't waste time on non-mask pixels
                 let pix = { x: [], y: [], index: [] };
                 var x, y, index;
@@ -458,10 +454,10 @@ function mouseUp(evt) {
                         }
                     }
                 }
-
                 for (i = 0; i < pix.index.length; i++) {
                     // get the index in the stupid array
-                    var currentMaskPixelIndex = pix.index[i];
+                    // why? it's unused
+                    // var currentMaskPixelIndex = pix.index[i];
 
                     // for any horizontal expansion, we need to ensure that the target pixel is in the same Y row
                     // horizontal left (west) is index-4 per pixel
@@ -489,7 +485,7 @@ function mouseUp(evt) {
                         var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) - (j * 4);
                         var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
                         var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
-                        // ENSURE SAME ROW using the y axis unintuitively
+                        // west/east: ENSURE SAME ROW using the y axis unintuitively
                         if (potentialPixelY == currentMaskPixelY) {
                             // ok then 
                             // ensure it's not already a mask pixel
@@ -506,12 +502,8 @@ function mouseUp(evt) {
                         var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) + (j * 4);
                         var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
                         var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
-                        // ENSURE SAME ROW using the y axis unintuitively
                         if (potentialPixelY == currentMaskPixelY) {
-                            // ok then 
-                            // ensure it's not already a mask pixel
                             if (overMaskImgData.data[potentialPixelIndex] != 255) {
-                                // welp fingers crossed
                                 overMaskImgData.data[potentialPixelIndex] = 255;
                                 overMaskImgData.data[potentialPixelIndex + 1] = 255;
                                 overMaskImgData.data[potentialPixelIndex + 2] = 255;
@@ -523,12 +515,9 @@ function mouseUp(evt) {
                         var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) - ((j * drawIt.w) * 4);
                         var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
                         var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
-                        // ENSURE SAME COLUMN using the x axis unintuitively
+                        // north/south: ENSURE SAME COLUMN using the x axis unintuitively
                         if (potentialPixelX == currentMaskPixelX) {
-                            // ok then 
-                            // ensure it's not already a mask pixel
                             if (overMaskImgData.data[potentialPixelIndex] != 255) {
-                                // welp fingers crossed
                                 overMaskImgData.data[potentialPixelIndex] = 255;
                                 overMaskImgData.data[potentialPixelIndex + 1] = 255;
                                 overMaskImgData.data[potentialPixelIndex + 2] = 255;
@@ -540,12 +529,8 @@ function mouseUp(evt) {
                         var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) + ((j * drawIt.w) * 4);
                         var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
                         var potentialPixelY = Math.floor((potentialPixelIndex / 4) / drawIt.w);
-                        // ENSURE SAME COLUMN using the x axis unintuitively
                         if (potentialPixelX == currentMaskPixelX) {
-                            // ok then 
-                            // ensure it's not already a mask pixel
                             if (overMaskImgData.data[potentialPixelIndex] != 255) {
-                                // welp fingers crossed
                                 overMaskImgData.data[potentialPixelIndex] = 255;
                                 overMaskImgData.data[potentialPixelIndex + 1] = 255;
                                 overMaskImgData.data[potentialPixelIndex + 2] = 255;
