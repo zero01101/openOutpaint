@@ -9,58 +9,29 @@
 </head>
 
 <body>
-    <div id="mainHSplit" class="mainHSplit">
-        <div id="uiWrapper" class="uiWrapper">
-            <div id="info" class="info" style="min-width:200px;">
-                <div id="coords">
-                    <label for="mouseX">mouseX:</label>
-                    <span id="mouseX"></span>
-                    <br />
-                    <label for="mouseY">mouseY:</label>
-                    <span id="mouseY"></span>
-                    <br />
-                    <label for="canvasX">canvasX:</label>
-                    <span id="canvasX"></span>
-                    <br />
-                    <label for="canvasY">canvasY:</label>
-                    <span id="canvasY"></span>
-                    <br />
-                    <label for="snapX">snapX:</label>
-                    <span id="snapX"></span>
-                    <br />
-                    <label for="snapY">snapY:</label>
-                    <span id="snapY"></span>
-                    <br />
-                </div>
-                <button onclick="newImage()">new image</button><br />
-                <label for="host">host:</label>
-                <input id="host" value="http://127.0.0.1:7860"><br />
-                <label for="scaleFactor">scale factor:</label>
-                <span id="scaleFactorTxt"></span><br />
-                <input type="range" id="scaleFactor" name="scaleFactor" min="1" max="16" value="8"
-                    onchange="changeScaleFactor()" /><br />
-                <label for="prompt">prompt:</label>
+    <div id="infoContainer">
+        <div id="DraggableTitleBar">openOutpaint 🐠</div>
+        <div id="info" class="info" style="min-width:200px;">
+
+            <label for="host">Host</label>
+            <input id="host" value="http://127.0.0.1:7860"><br />
+            
+            <!-- Prompts section -->
+            <button type="button" class="collapsible">Prompts</button>
+            <div class="content">
+                <label for="prompt">Prompt:</label> <br>
                 <textarea id="prompt">oceanographic study, underwater wildlife, award winning</textarea><br />
-                <label for="negPrompt">negative prompt:</label>
+                <label for="negPrompt">Negative prompt:</label> <br>
                 <textarea
                     id="negPrompt">people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry</textarea><br />
-                <label for="seed">seed (-1 for random):</label>
+                <label for="seed">Seed (-1 for random):</label> <br>
                 <input type="number" id="seed" onchange="changeSeed()" min="1" max="9999999999" value="-1"
                     step="1" /><br />
-                <label for="cbxSnap">snap to grid?</label>
-                <input type="checkbox" id="cbxSnap" onchange="changeSnapMode()" checked="checked"><br />
-                <label for="cbxPaint">mask mode?</label>
-                <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
-                <label for="cbxErase"><s>erase mask?</s></label>
-                <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
-                <label for="cbxHRFix">auto txt2img HRfix?</label>
-                <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
-                <label for="cbxOverMask">overmasking?</label>
-                <input type="checkbox" id="cbxOverMask" onchange="changeOverMask()" checked="checked"><br />
-                <label for="overMaskPx">overmask px:</label>
-                <input type="number" id="overMaskPx" onchange="changeOverMaskPx()" min="0" max="128" value="16"
-                    step="1" /><br />
-                <label for="samplerSelect">sampler:</label>
+                <hr>
+            </div>
+            <button type="button" class="collapsible">Stable Diffusion settings</button>
+            <div class="content">
+                <label for="samplerSelect">Sampler:</label>
                 <select id="samplerSelect" onchange="changeSampler()">
                     <option value="DDIM">DDIM</option>
                     <option value="Euler a">Euler A</option>
@@ -79,14 +50,13 @@
                     <option value="DPM++ 2S a Karras">DPM++2Sa Karras</option>
                     <option value="DPM++ 2M Karras">DPM++2M Karras</option>
                 </select><br />
-                <label for="steps">steps:</label>
+                <label for="steps">Steps:</label>
                 <span id="stepsTxt"></span><br />
-                <input type="range" id="steps" name="steps" min="1" max="50" value="30"
-                    onchange="changeSteps()" /><br />
+                <input type="range" id="steps" name="steps" min="1" max="50" value="30" onchange="changeSteps()" /><br />
                 <label for="cfgScale">CFG scale:</label>
                 <span id="cfgScaleTxt"></span><br />
-                <input type="range" id="cfgScale" name="cfgScale" min="-1" max="25" value="7.5" step="0.1"
-                    list="cfgDetents" onchange="changeCfgScale()" />
+                <input type="range" id="cfgScale" name="cfgScale" min="-1" max="25" value="7.5" step="0.1" list="cfgDetents"
+                    onchange="changeCfgScale()" />
                 <datalist id="cfgDetents">
                     <option value="-1"></option>
                     <option value="0"></option>
@@ -116,22 +86,73 @@
                     <option value="23"></option>
                     <option value="24"></option>
                 </datalist><br />
-                <label for="batchSize">batch size:</label>
+                <label for="batchSize">Batch size:</label>
                 <span id="batchSizeText"></span><br />
                 <input type="range" id="batchSize" name="batchSize" min="1" max="8" value="2" step="1"
                     onchange="changeBatchSize()" /><br />
-                <label for="batchCount">batch count:</label>
+                <label for="batchCount">Batch count:</label>
                 <span id="batchCountText"></span><br />
                 <input type="range" id="batchCount" name="batchCount" min="1" max="8" value="2" step="1"
                     onchange="changeBatchCount()" /><br />
-                <label for="maskBlur">mask blur:</label>
-                <span id="maskBlurText"></span><br />
-                <input type="number" id="maskBlur" name="maskBlur" min="0" max="64" value="0" step="1"
-                    onchange="changeMaskBlur()" /><br />
-                <label for="preloadImage">load local image:</label>
-                <input type="file" id="preloadImage" onchange="preloadImage()" accept="image/*" /><br />
-                <button onclick="downloadCanvas()">dl canvas</button>
+                <hr>
             </div>
+            <label for="scaleFactor">Scale factor:</label>
+            <span id="scaleFactorTxt"></span><br />
+            <input type="range" id="scaleFactor" name="scaleFactor" min="1" max="16" value="8"
+                onchange="changeScaleFactor()" /><br />
+            <label for="cbxSnap">Snap to grid?</label>
+            <input type="checkbox" id="cbxSnap" onchange="changeSnapMode()" checked="checked"><br />
+            <label for="cbxPaint">Mask mode?</label>
+            <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
+            <label for="cbxErase"><s>Erase mask?</s></label>
+            <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
+            <label for="cbxHRFix">Auto txt2img HRfix?</label>
+            <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
+            <label for="cbxOverMask">Overmasking?</label>
+            <input type="checkbox" id="cbxOverMask" onchange="changeOverMask()" checked="checked"><br />
+            <label for="overMaskPx">Overmask px:</label>
+            <input type="number" id="overMaskPx" onchange="changeOverMaskPx()" min="0" max="128" value="16"
+                step="1" /><br />
+            
+            <label for="maskBlur">Mask blur:</label>
+            <span id="maskBlurText"></span><br />
+            <input type="number" id="maskBlur" name="maskBlur" min="0" max="64" value="0" step="1"
+                onchange="changeMaskBlur()" /><br />
+            <button type="button" class="collapsible">Save/Load/New image</button>
+            <div class="content">
+                <label for="preloadImage">Load image:</label>
+                <input type="file" id="preloadImage" onchange="preloadImage()" accept="image/*" /
+                    style="width: 200px;"><br />
+                <button onclick="downloadCanvas()">Save canvas</button><br />
+                <button onclick="newImage()">Clear canvas</button>
+            </div>
+            <button type="button" class="collapsible">Debug info</button>
+            <div id="coords" class="content">
+                <label for="mouseX">mouseX:</label>
+                <span id="mouseX"></span>
+                <br />
+                <label for="mouseY">mouseY:</label>
+                <span id="mouseY"></span>
+                <br />
+                <label for="canvasX">canvasX:</label>
+                <span id="canvasX"></span>
+                <br />
+                <label for="canvasY">canvasY:</label>
+                <span id="canvasY"></span>
+                <br />
+                <label for="snapX">snapX:</label>
+                <span id="snapX"></span>
+                <br />
+                <label for="snapY">snapY:</label>
+                <span id="snapY"></span>
+                <br />
+                <hr>
+            </div>
+        </div>
+
+    </div>
+    <div id="mainHSplit" class="mainHSplit">
+        <div id="uiWrapper" class="uiWrapper">
             <div id="canvasHolder" class="canvasHolder" oncontextmenu="return false;">
                 <canvas id="backgroundCanvas" class="mainCanvases backgroundCanvas" width="2560" height="1440"
                     style="z-index: 0;">
@@ -184,6 +205,7 @@
 
 
     <script src="js/index.js" type="text/javascript"></script>
+    <script src="js/settingsbar.js" type="text/javascript"></script>
 </body>
 
 </html>

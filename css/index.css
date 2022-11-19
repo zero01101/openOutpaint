@@ -45,7 +45,80 @@
     grid-template-rows: 1fr;
     grid-column-gap: 5px;
     grid-row-gap: 5px;
+
 }
+
+#infoContainer {
+    position: absolute;
+    width: 250px;
+    height: auto;
+    z-index: 999;
+
+}
+
+#DraggableTitleBar {
+    z-index: 999;
+    cursor: move;
+    background-color: rgba(104, 104, 104, 0.75);
+
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: auto;
+    font-size: 1.5em;
+    color: black;
+    text-align: center;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border: solid;
+    border-bottom: none;
+    border-color: black;
+}
+
+.collapsible {
+    background-color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    text-align: center;
+    outline: none;
+    font-size: 15px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.collapsible:hover {
+    background-color: #777;
+}
+
+.content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+
+.info {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+
+    color: black;
+    border: solid;
+    border-top: none;
+    border-color: black;
+    font-size: medium;
+    text-align: left;
+    max-height: fit-content;
+    overflow: auto;
+    cursor: auto;
+}
+
 
 .canvasHolder {
     position: relative;
