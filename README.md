@@ -56,7 +56,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - snap to grid, uh, snaps to the grid
   - mask mode is practically identical to A1111's inpainting mask, except that...
   - scale factor affects the size of both the painting reticle __and__ mask blob 
-  - overmask and related px value expands the area masked in img2img outpaints to attempt and camouflage the seam between images, it's _partially_ functional currently and correcting the flaws are already in the //todo and issue tracker
+  - overmask and related px value expands the area masked in img2img outpaint requests, so as to attempt to minimize the seam between images; it's _partially_ functional currently and correcting the flaws are already in the //todo and issue tracker
   - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
  12. click "dl canvas" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
  13. click "new image" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
