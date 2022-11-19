@@ -133,7 +133,7 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.4.2 - pull requests (&lt;3), downloaded images now have a timestamped name, css breakout because hopefully this will become halfway attractive enough to benefit from non-inline stylesheets [70ad4fe](https://github.com/zero01101/openOutpaint/commit/70ad4fe081bdbd507afc5af3cc2a4435924b66e3)
 - 0.0.4.3 - overmasking, settings saved to localstorage [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
 - 0.0.5 - import arbitrary image from user's machine, "auto" txt2img hires fix, Very Important "new image" button [3b7f4e3](https://github.com/zero01101/openOutpaint/commit/3b7f4e3759d0d1f3b38eba7249e5b58bc8162c75)
-- 0.0.5.1 - erase rendered imagery with right click, ensure webUI is running on (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/7)) [54577d4](https://github.com/zero01101/openOutpaint/commit/54577d4f15fd7d014aaf2471e0042b3c48735e9c)
+- 0.0.5.1 - erase rendered imagery with right click, ensure webUI is running (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/7)) [54577d4](https://github.com/zero01101/openOutpaint/commit/54577d4f15fd7d014aaf2471e0042b3c48735e9c)
 
 ## what's with the fish?
 deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making a cute little orange fish favicon which led to "ok then, fish is mascot" 
