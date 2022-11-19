@@ -137,10 +137,10 @@ function startup() {
 
 function drop(imageParams) {
     const img = new Image();
-    img.src = arbitraryImageBase64;
-    if (img.complete) {
+    img.onload = function () {
         writeArbitraryImage(img, imageParams.x, imageParams.y)
     }
+    img.src = arbitraryImageBase64;
 }
 
 function writeArbitraryImage(img, x, y) {
