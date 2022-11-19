@@ -119,6 +119,10 @@ _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563
 
 ![imported images that have been _changed_](docs/03-arbimg.png)
 
+imported a transparent clip of a [relatively famous happy lil kitty](https://commons.wikimedia.org/wiki/File:So_happy_smiling_cat.jpg), used default openOutpaint settings except changing the prompt to "a cat on a space station", eventually received this magnificent vision
+
+![many cats on a space station](docs/04-catsonaspacestation.png)
+
 ## version history
 - 0.0.1 - txt2img proof of concept
 - 0.0.2 - img2img outpainting proof of concept
