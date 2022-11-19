@@ -41,13 +41,13 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 ### quickstart normal edition
  1. clone this repo to your homelab's webserver (i mean who doesn't have a couple of those lying around?) or somewhere on your local pc
- 2. configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux. 
- 3. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456` 
- 4. execute your webui-user script and wait for it to be ready
- 5. **APPLY THE FOLLOWING SETTINGS IN A1111 WEBUI ONCE IT IS READY:** 
+ 2. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456` 
+ 3. execute your webui-user script and wait for it to be ready
+ 4. **APPLY THE FOLLOWING SETTINGS IN A1111 WEBUI ONCE IT IS READY:** 
   - select an inpainting checkpoint/model - ([runwayml/stable-diffusion-inpainting](https://huggingface.co/runwayml/stable-diffusion-inpainting) [3e16efc8] is recommended)
   - set your `Inpainting conditioning mask strength` to `1`
   - disable the `Apply color correction to img2img results to match original colors.` option (the last 2 options are found under the stable diffusion category in the settings tab by default unless you've already moved it to your quicksettings list, and if so, you know where to set them already)
+ 5. configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux. 
  6. open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
  7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the "open img" button
  8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again

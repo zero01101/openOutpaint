@@ -435,7 +435,6 @@ function mouseDown(evt) {
 function mouseUp(evt) {
     if (evt.button == 0) { // left click
         if (placingArbitraryImage) {
-            //TODO DO SOMETHING
             // jeez i REALLY need to refactor tons of this to not be duplicated all over, that's definitely my next chore after figuring out that razza frazza overmask fade
             var target = dropTargets[dropTargets.length - 1]; //get the last one... why am i storing all of them?
             snapOffsetX = 0;
