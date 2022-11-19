@@ -18,7 +18,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - optional grid snapping for precision
   - optional overmasking for better seams between outpaints (suggested by @lifeh2o ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
-  - import arbitrary images and superimpose on the canvas wherever you'd like (extra fun with transparent .pngs!) ![imported images that have been _changed_](docs/03-arbimg.png)
+  - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent)) 
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
   - saves your preferences to browser localstorage for maximum convenience
 
@@ -53,7 +53,10 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
  10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
  11. play around with the available options!  
-  - scale factor affects the size of both the painting reticle and mask blob 
+  - snap to grid, uh, snaps to the grid
+  - mask mode is practically identical to A1111's inpainting mask, except that...
+  - scale factor affects the size of both the painting reticle __and__ mask blob 
+  - overmask and related px value expands the area masked in img2img outpaints to attempt and camouflage the seam between images, it's _partially_ functional currently and correcting the flaws are already in the //todo and issue tracker
   - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
  12. click "dl canvas" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
  13. click "new image" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
@@ -106,11 +109,15 @@ please do! kindly indicate your OS, browser, versions of both, any errors in dev
 ## warranty
 [lmao](https://github.com/moyix/fauxpilot#support-and-warranty)
 
-## sample 
+## samples 
 generated using 100% openOutpaint UI defaults except for switching to/from mask mode and changing scale factor to adjust the size of the mask blob, there's some neat stuff down there even if it disregarded the `people, humans, divers` negative prompt but in its defense there is only one singular person, human, diver in there, so according to the no homers club treatise of 1995 it's technically correct 
 
 _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563acf5cd3cb16a928 for attempted counterattack)_
 ![fishies n stuff](docs/02-sample.png)
+
+<a name="arbitrary_transparent"></a>simple transparent PNGs slapped on the canvas twice and default UI settings used on the southern half 
+
+![imported images that have been _changed_](docs/03-arbimg.png)
 
 ## version history
 - 0.0.1 - txt2img proof of concept
