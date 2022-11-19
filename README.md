@@ -17,7 +17,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
   - right-click to erase output image under cursor
   - optional grid snapping for precision
-  - optional overmasking for better seams between outpaints (suggested by @lifeh2o ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
+  - optional overmasking for better seams between outpaints (suggested by [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
   - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent)) 
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
@@ -49,7 +49,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - disable the `Apply color correction to img2img results to match original colors.` option (the last 2 options are found under the stable diffusion category in the settings tab by default unless you've already moved it to your quicksettings list, and if so, you know where to set them already)
  5. configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux. 
  6. open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
- 7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the "open img" button
+ 7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the file selector browse button under "load local image"
  8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
  9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
  10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
@@ -78,7 +78,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
 - [ ] render progress spinner/bar
 - [ ] ~~smart crop downloaded image~~ 
-- [x] import external image and ~~scale/~~superimpose at will on canvas for in/outpainting
+- [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [ ] scaling of imported arbitrary image before superimposition
 - [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
