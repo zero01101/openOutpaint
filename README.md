@@ -103,7 +103,7 @@ please do! kindly indicate your OS, browser, versions of both, any errors in dev
 ## known bugs :(
  - generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying
  - erase mask is like entirely broken
- - odd-numbered scale factors don't snap correctly
+ - ~~odd-numbered scale factors don't snap correctly~~
  - ~~arbitrary "pasted" images require clicking twice to place them and i _don't know why_ [(yes i do)](#terrible), just getting them to be arbitrarily placable was a giant pain because i'm not got the smarts~~
  - selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective
 
