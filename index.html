@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>openOutpaint 0.0.5</title>
+    <title>openOutpaint 0.0.5.1</title>
     <link href="css/index.css" rel="stylesheet" />
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
@@ -132,7 +132,7 @@
                 <input type="file" id="preloadImage" onchange="preloadImage()" accept="image/*" /><br />
                 <button onclick="downloadCanvas()">dl canvas</button>
             </div>
-            <div id="canvasHolder" class="canvasHolder">
+            <div id="canvasHolder" class="canvasHolder" oncontextmenu="return false;">
                 <canvas id="backgroundCanvas" class="mainCanvases backgroundCanvas" width="2560" height="1440"
                     style="z-index: 0;">
                     <!-- gray grid bg canvas -->
