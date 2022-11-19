@@ -69,16 +69,6 @@
     grid-row-gap: 0px;
 }
 
-.maskCanvasMonitor {
+.maskCanvasMonitor .overMaskCanvasMonitor .initImgCanvasMonitor {
     position: absolute;
-}
-
-.overMaskCanvasMonitor {
-    position: absolute;
-    left: 600px;
-}
-
-.initImgCanvasMonitor {
-    position: absolute;
-    left: 1200px;
 }

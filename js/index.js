@@ -314,12 +314,14 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function snap(i) {
+function snap(i, scaled = true) {
     // very cheap test proof of concept but it works surprisingly well
     var scaleOffset = 0;
-    if (scaleFactor % 2 != 0) {
-        // odd number, snaps to center of cell, oops
-        scaleOffset = (basePixelCount / 2);
+    if (scaled) {
+        if (scaleFactor % 2 != 0) {
+            // odd number, snaps to center of cell, oops
+            scaleOffset = (basePixelCount / 2);
+        }
     }
     var snapOffset = i % basePixelCount - scaleOffset;
     if (snapOffset == 0) {
@@ -345,12 +347,12 @@ function mouseMove(evt) {
         snapOffsetX = 0;
         snapOffsetY = 0;
         if (snapToGrid) {
-            snapOffsetX = snap(canvasX);
-            snapOffsetY = snap(canvasY);
+            snapOffsetX = snap(canvasX, false);
+            snapOffsetY = snap(canvasY, false);
         }
         finalX = snapOffsetX + canvasX;
         finalY = snapOffsetY + canvasY;
-        ovCtx.drawImage(arbitraryImage, parseInt(finalX - ((basePixelCount * scaleFactor) / 2)), parseInt(finalY - ((basePixelCount * scaleFactor) / 2)));
+        ovCtx.drawImage(arbitraryImage, finalX, finalY);
     } else if (!paintMode) {
         // draw targeting square reticle thingy cursor
         ovCtx.strokeStyle = "#00000077";
@@ -397,13 +399,17 @@ function mouseMove(evt) {
 
 function mouseDown(evt) {
     const rect = ovCanvas.getBoundingClientRect()
+    var oddOffset = 0;
+    if (scaleFactor % 2 != 0) {
+        oddOffset = basePixelCount / 2;
+    }
     if (evt.button == 0) { // left click
         if (placingArbitraryImage) {
             var nextBox = {};
-            nextBox.x = evt.clientX - ((basePixelCount * scaleFactor) / 2) - rect.left; //origin is middle of the frame 
-            nextBox.y = evt.clientY - ((basePixelCount * scaleFactor) / 2) - rect.top; //TODO make a way to set the origin to numpad dirs?
-            nextBox.w = basePixelCount * scaleFactor;
-            nextBox.h = basePixelCount * scaleFactor;
+            nextBox.x = evt.offsetX;
+            nextBox.y = evt.offsetY;
+            nextBox.w = arbitraryImageData.width;
+            nextBox.h = arbitraryImageData.height;
             dropTargets.push(nextBox);
         } else if (paintMode) {
             //const rect = ovCanvas.getBoundingClientRect() // not-quite pixel offset was driving me insane
@@ -414,10 +420,6 @@ function mouseDown(evt) {
             clicked = true;
         } else {
             //const rect = ovCanvas.getBoundingClientRect()
-            var oddOffset = 0;
-            if (scaleFactor % 2 != 0) {
-                oddOffset = basePixelCount / 2;
-            }
             var nextBox = {};
             nextBox.x = evt.clientX - ((basePixelCount * scaleFactor) / 2) - rect.left + oddOffset; //origin is middle of the frame 
             nextBox.y = evt.clientY - ((basePixelCount * scaleFactor) / 2) - rect.top + oddOffset; //TODO make a way to set the origin to numpad dirs?
@@ -444,8 +446,8 @@ function mouseUp(evt) {
             snapOffsetX = 0;
             snapOffsetY = 0;
             if (snapToGrid) {
-                snapOffsetX = snap(target.x);
-                snapOffsetY = snap(target.y);
+                snapOffsetX = snap(target.x, false);
+                snapOffsetY = snap(target.y, false);
             }
             finalX = snapOffsetX + target.x;
             finalY = snapOffsetY + target.y;
@@ -495,10 +497,12 @@ function mouseUp(evt) {
                     const imgChunkData = imgChunk.data; // imagedata.data object, a big inconvenient uint8clampedarray
                     // these are the 3 mask monitors on the bottom of the page
                     var maskCanvas = document.getElementById("maskCanvasMonitor");
-                    var maskCanvasCtx = maskCanvas.getContext("2d");
                     var initImgCanvas = document.getElementById("initImgCanvasMonitor");
-                    var initImgCanvasCtx = initImgCanvas.getContext("2d");
                     var overMaskCanvas = document.getElementById("overMaskCanvasMonitor");
+                    overMaskCanvas.width = initImgCanvas.width = maskCanvas.width = target.w;
+                    overMaskCanvas.height = initImgCanvas.height = maskCanvas.height = target.h;
+                    var maskCanvasCtx = maskCanvas.getContext("2d");
+                    var initImgCanvasCtx = initImgCanvas.getContext("2d");
                     var overMaskCanvasCtx = overMaskCanvas.getContext("2d");
                     // get blank pixels to use as mask
                     const maskImgData = maskCanvasCtx.createImageData(drawIt.w, drawIt.h);
