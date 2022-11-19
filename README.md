@@ -15,6 +15,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - a big ol' 2560x1440 canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
   - inpainting/touchup blob
   - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
+  - right-click to erase output image under cursor
   - optional grid snapping for precision
   - optional overmasking for better seams between outpaints (suggested by @lifeh2o ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
@@ -72,7 +73,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [x] split out CSS to its own file (remedial cleanup task)
 - [x] ability to blank/new canvas without making the user refresh the page because that's pretty janky
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
-- [ ] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
+- [x] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
 - [ ] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
 - [ ] render progress spinner/bar
@@ -132,8 +133,9 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.4.2 - pull requests (&lt;3), downloaded images now have a timestamped name, css breakout because hopefully this will become halfway attractive enough to benefit from non-inline stylesheets [70ad4fe](https://github.com/zero01101/openOutpaint/commit/70ad4fe081bdbd507afc5af3cc2a4435924b66e3)
 - 0.0.4.3 - overmasking, settings saved to localstorage [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
 - 0.0.5 - import arbitrary image from user's machine, "auto" txt2img hires fix, Very Important "new image" button [3b7f4e3](https://github.com/zero01101/openOutpaint/commit/3b7f4e3759d0d1f3b38eba7249e5b58bc8162c75)
+- 0.0.5.1 - erase rendered imagery with right click, ensure webUI is running on (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/7)) [54577d4](https://github.com/zero01101/openOutpaint/commit/54577d4f15fd7d014aaf2471e0042b3c48735e9c)
 
-## why the fish?
-deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making a cute little orange fish favicon which led to "fish is mascot" 
+## what's with the fish?
+deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making a cute little orange fish favicon which led to "ok then, fish is mascot" 
 
 the end 🐠
