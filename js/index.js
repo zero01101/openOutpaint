@@ -20,6 +20,9 @@ var stableDiffusionData = { //includes img2img data but works for txt2img just f
     init_images: [],
     inpaint_full_res: false,
     inpainting_fill: 2,
+    enable_hr: false,
+    firstphase_width: 0,
+    firstphase_height: 0,
     // here's some more fields that might be useful
 
     // ---txt2img specific:
@@ -79,6 +82,12 @@ var totalImagesReturned;
 var overMask = true;
 var overMaskPx = 10;
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
+var dropTargets = []; // uhhh yeah similar to the above but for arbitrary dropped images
+var arbitraryImage;
+var arbitraryImageData;
+var arbitraryImageBitmap;
+var arbitraryImageBase64; // seriously js cmon work with me here
+var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
 
 // info div, sometimes hidden
 let mouseXInfo = document.getElementById("mouseX");
@@ -118,10 +127,26 @@ function startup() {
     changeSeed();
     changeOverMask();
     changeOverMaskPx();
+    changeHiResFix();
     document.getElementById("overlayCanvas").onmousemove = mouseMove;
     document.getElementById("overlayCanvas").onmousedown = mouseDown;
     document.getElementById("overlayCanvas").onmouseup = mouseUp;
     document.getElementById("scaleFactor").value = scaleFactor;
+}
+
+function drop(imageParams) {
+    const img = new Image();
+    img.src = arbitraryImageBase64;
+    if (img.complete) {
+        writeArbitraryImage(img, imageParams.x, imageParams.y)
+    }
+}
+
+function writeArbitraryImage(img, x, y) {
+    imgCtx.drawImage(img, x, y);
+    blockNewImages = false;
+    placingArbitraryImage = false;
+    document.getElementById("preloadImage").files = null;
 }
 
 function dream(x, y, prompt) {
@@ -178,7 +203,7 @@ function imageAcceptReject(x, y, data) {
     // set the image displayed as the first regardless of batch size/count
     imageIndex = 0;
     // load the image data after defining the closure
-    img.src = "data:image/png;base64," + returnedImages[imageIndex];  //TODO need way to dream batches and select from results
+    img.src = "data:image/png;base64," + returnedImages[imageIndex];
 }
 
 function accept(evt) {
@@ -197,6 +222,12 @@ function reject(evt) {
     clearTargetMask();
     removeChoiceButtons();
     blockNewImages = false;
+}
+
+function newImage(evt) {
+    clearBackupMask();
+    clearTargetMask();
+    clearImgMask();
 }
 
 function prevImg(evt) {
@@ -256,6 +287,10 @@ function clearTargetMask() {
     tgtCtx.clearRect(0, 0, tgtCanvas.width, tgtCanvas.height);
 }
 
+function clearImgMask() {
+    imgCtx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
+}
+
 function placeImage() {
     const img = new Image();
     img.onload = function () {
@@ -278,7 +313,7 @@ function snap(i) {
     var scaleOffset = 0;
     if (scaleFactor % 2 != 0) {
         // odd number, snaps to center of cell, oops
-        scaleOffset = 32;
+        scaleOffset = (basePixelCount / 2);
     }
     var snapOffset = i % basePixelCount - scaleOffset;
     if (snapOffset == 0) {
@@ -299,7 +334,18 @@ function mouseMove(evt) {
     snapXInfo.innerText = canvasX + snap(canvasX);
     snapYInfo.innerText = canvasY + snap(canvasY);
     ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height); // clear out the previous mouse cursor 
-    if (!paintMode) {
+    if (placingArbitraryImage) {
+        // ugh refactor so this isn't duplicated between arbitrary image and dream reticle modes
+        snapOffsetX = 0;
+        snapOffsetY = 0;
+        if (snapToGrid) {
+            snapOffsetX = snap(canvasX);
+            snapOffsetY = snap(canvasY);
+        }
+        finalX = snapOffsetX + canvasX;
+        finalY = snapOffsetY + canvasY;
+        ovCtx.drawImage(arbitraryImage, parseInt(finalX - ((basePixelCount * scaleFactor) / 2)), parseInt(finalY - ((basePixelCount * scaleFactor) / 2)));
+    } else if (!paintMode) {
         // draw targeting square reticle thingy cursor
         ovCtx.strokeStyle = "#00000077";
         snapOffsetX = 0;
@@ -344,15 +390,23 @@ function mouseMove(evt) {
 }
 
 function mouseDown(evt) {
-    if (paintMode) {
-        const rect = ovCanvas.getBoundingClientRect() // not-quite pixel offset was driving me insane
+    const rect = ovCanvas.getBoundingClientRect()
+    if (placingArbitraryImage) {
+        var nextBox = {};
+        nextBox.x = evt.clientX - ((basePixelCount * scaleFactor) / 2) - rect.left; //origin is middle of the frame 
+        nextBox.y = evt.clientY - ((basePixelCount * scaleFactor) / 2) - rect.top; //TODO make a way to set the origin to numpad dirs?
+        nextBox.w = basePixelCount * scaleFactor;
+        nextBox.h = basePixelCount * scaleFactor;
+        dropTargets.push(nextBox);
+    } else if (paintMode) {
+        //const rect = ovCanvas.getBoundingClientRect() // not-quite pixel offset was driving me insane
         const canvasOffsetX = rect.left;
         const canvasOffsetY = rect.top;
         prevMouseX = mouseX = evt.clientX - canvasOffsetX;
         prevMouseY = mouseY = evt.clientY - canvasOffsetY;
         clicked = true;
     } else {
-        const rect = ovCanvas.getBoundingClientRect()
+        //const rect = ovCanvas.getBoundingClientRect()
         var nextBox = {};
         nextBox.x = evt.clientX - ((basePixelCount * scaleFactor) / 2) - rect.left; //origin is middle of the frame 
         nextBox.y = evt.clientY - ((basePixelCount * scaleFactor) / 2) - rect.top; //TODO make a way to set the origin to numpad dirs?
@@ -363,7 +417,26 @@ function mouseDown(evt) {
 }
 
 function mouseUp(evt) {
-    if (paintMode) {
+    if (placingArbitraryImage) {
+        //TODO DO SOMETHING
+        // jeez i REALLY need to refactor tons of this to not be duplicated all over, that's definitely my next chore after figuring out that razza frazza overmask fade
+        var target = dropTargets[dropTargets.length - 1]; //get the last one... why am i storing all of them?
+        snapOffsetX = 0;
+        snapOffsetY = 0;
+        if (snapToGrid) {
+            snapOffsetX = snap(target.x);
+            snapOffsetY = snap(target.y);
+        }
+        finalX = snapOffsetX + target.x;
+        finalY = snapOffsetY + target.y;
+
+        drawThis.x = finalX;
+        drawThis.y = finalY;
+        drawThis.w = target.w;
+        drawThis.h = target.h;
+        drawIt = drawThis; // i still think this is really stupid and redundant and unnecessary and redundant
+        drop(drawIt);
+    } else if (paintMode) {
         clicked = false;
         return;
     } else {
@@ -486,6 +559,10 @@ function mouseUp(evt) {
                         // but it is crushingly inefficient i'm sure
                         // BUT IT WORKS and i came up with it all by myself because i'm a big boy
 
+                        // ... sigh it doesn't work _well_
+                        // just moves the seam 
+                        //TODO find a way to fade/gradient the edge without making weird artifacts or literally crashing the browser with inefficient data storage
+
                         // west
                         var potentialPixelIndex = ((currentMaskPixelY * drawIt.w + currentMaskPixelX) * 4) - (j * 4);
                         var potentialPixelX = (potentialPixelIndex / 4) % drawIt.w;
@@ -543,7 +620,6 @@ function mouseUp(evt) {
                             }
                         }
                     }
-
                 }
 
                 // also check for painted masks in region, add them as white pixels to mask canvas
@@ -595,6 +671,8 @@ function mouseUp(evt) {
             stableDiffusionData.negative_prompt = document.getElementById("negPrompt").value;
             stableDiffusionData.width = drawIt.w;
             stableDiffusionData.height = drawIt.h;
+            stableDiffusionData.firstphase_height = (drawIt.h / 2);
+            stableDiffusionData.firstphase_width = (drawIt.w / 2);
             dream(drawIt.x, drawIt.y, stableDiffusionData);
         }
     }
@@ -664,6 +742,11 @@ function changeOverMaskPx() {
     overMaskPx = document.getElementById("overMaskPx").value;
 }
 
+function changeHiResFix() {
+    stableDiffusionData.enable_hr = Boolean(document.getElementById("cbxHRFix").checked);
+    localStorage.setItem("enable_hr", stableDiffusionData.enable_hr);
+}
+
 function isCanvasBlank(x, y, w, h, specifiedCanvas) {
     var canvas = document.getElementById(specifiedCanvas.id);
     return !canvas.getContext('2d')
@@ -687,7 +770,38 @@ function drawBackground() {
     }
 }
 
-function downloadImage() {
+function preloadImage() {
+    // gonna legit scream 
+    document.getElementById("overlayCanvas").onmousemove = null;
+    document.getElementById("overlayCanvas").onmousedown = null;
+    document.getElementById("overlayCanvas").onmouseup = null;
+
+    var file = document.getElementById("preloadImage").files[0];
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+        var imgCanvas = document.createElement("canvas");
+        var imgCtx = imgCanvas.getContext("2d");
+        arbitraryImage = new Image();
+        arbitraryImage.onload = function () {
+            blockNewImages = true;
+            // now put it into imagedata for canvas fun
+            imgCanvas.width = arbitraryImage.width;
+            imgCanvas.height = arbitraryImage.height;
+            imgCtx.drawImage(arbitraryImage, 0, 0);
+            arbitraryImageData = imgCtx.getImageData(0, 0, arbitraryImage.width, arbitraryImage.height); // can't use that to drawImage on a canvas...
+            arbitraryImageBitmap = createImageBitmap(arbitraryImageData); // apparently that either... maybe just the raw image?
+            arbitraryImageBase64 = imgCanvas.toDataURL();
+            placingArbitraryImage = true;
+            document.getElementById("overlayCanvas").onmousemove = mouseMove;
+            document.getElementById("overlayCanvas").onmousedown = mouseDown;
+            document.getElementById("overlayCanvas").onmouseup = mouseUp;
+        }
+        arbitraryImage.src = evt.target.result;
+    }
+    reader.readAsDataURL(file);
+}
+
+function downloadCanvas() {
     var link = document.createElement('a');
     link.download = new Date().toISOString().slice(0, 19).replace('T', ' ').replace(':', ' ') + ' openOutpaint image.png';
     var croppedCanvas = cropCanvas(imgCanvas);
@@ -748,6 +862,7 @@ function loadSettings() {
     var _scaleFactor = localStorage.getItem("scaleFactor") == null ? 8 : localStorage.getItem("scaleFactor");
     var _mask_blur = localStorage.getItem("mask_blur") == null ? 0 : localStorage.getItem("mask_blur");
     var _seed = localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
+    var _enable_hr = Boolean(localStorage.getItem("enable_hr") == (null || "false") ? false : localStorage.getItem("enable_hr"));
 
     // set the values into the UI
     document.getElementById("samplerSelect").value = String(_sampler);
@@ -758,4 +873,5 @@ function loadSettings() {
     document.getElementById("scaleFactor").value = Number(_scaleFactor);
     document.getElementById("maskBlur").value = Number(_mask_blur);
     document.getElementById("seed").value = Number(_seed);
+    document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
 }
