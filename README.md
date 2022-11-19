@@ -120,4 +120,4 @@ _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563
 - 0.0.4.1 - extremely minor revisions [02cb01a](https://github.com/zero01101/openOutpaint/commit/02cb01ac062ef93878ff4161eabcedfa8e125be6)
 - 0.0.4.2 - pull requests (&lt;3), downloaded images now have a timestamped name, css breakout because hopefully this will become halfway attractive enough to benefit from non-inline stylesheets [70ad4fe](https://github.com/zero01101/openOutpaint/commit/70ad4fe081bdbd507afc5af3cc2a4435924b66e3)
 - 0.0.4.3 - overmasking, settings saved to localstorage [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
-- 0.0.5 - import arbitrary image from user's machine, "auto" txt2img hires fix, Very Important "new image" button 
+- 0.0.5 - import arbitrary image from user's machine, "auto" txt2img hires fix, Very Important "new image" button [3b7f4e3](https://github.com/zero01101/openOutpaint/commit/3b7f4e3759d0d1f3b38eba7249e5b58bc8162c75)
