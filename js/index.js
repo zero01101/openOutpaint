@@ -414,9 +414,13 @@ function mouseDown(evt) {
             clicked = true;
         } else {
             //const rect = ovCanvas.getBoundingClientRect()
+            var oddOffset = 0;
+            if (scaleFactor % 2 != 0) {
+                oddOffset = basePixelCount / 2;
+            }
             var nextBox = {};
-            nextBox.x = evt.clientX - ((basePixelCount * scaleFactor) / 2) - rect.left; //origin is middle of the frame 
-            nextBox.y = evt.clientY - ((basePixelCount * scaleFactor) / 2) - rect.top; //TODO make a way to set the origin to numpad dirs?
+            nextBox.x = evt.clientX - ((basePixelCount * scaleFactor) / 2) - rect.left + oddOffset; //origin is middle of the frame 
+            nextBox.y = evt.clientY - ((basePixelCount * scaleFactor) / 2) - rect.top + oddOffset; //TODO make a way to set the origin to numpad dirs?
             nextBox.w = basePixelCount * scaleFactor;
             nextBox.h = basePixelCount * scaleFactor;
             drawTargets.push(nextBox);
@@ -463,15 +467,18 @@ function mouseUp(evt) {
                 tgtCtx.strokeStyle = "#55000077";
                 var drawIt = {}; //why am i doing this????
                 var target = drawTargets[drawTargets.length - 1]; //get the last one... why am i storing all of them?
-
+                var oddOffset = 0;
+                if (scaleFactor % 2 != 0) {
+                    oddOffset = basePixelCount / 2;
+                }
                 snapOffsetX = 0;
                 snapOffsetY = 0;
                 if (snapToGrid) {
                     snapOffsetX = snap(target.x);
                     snapOffsetY = snap(target.y);
                 }
-                finalX = snapOffsetX + target.x;
-                finalY = snapOffsetY + target.y;
+                finalX = snapOffsetX + target.x - oddOffset;
+                finalY = snapOffsetY + target.y - oddOffset;
 
                 drawThis.x = finalX;
                 drawThis.y = finalY;
