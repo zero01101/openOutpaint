@@ -24,13 +24,13 @@
                 <label for="negPrompt">Negative prompt:</label> <br>
                 <textarea
                     id="negPrompt">people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry</textarea><br />
-                <label for="seed">Seed (-1 for random):</label> <br>
-                <input type="number" id="seed" onchange="changeSeed()" min="1" max="9999999999" value="-1"
-                    step="1" /><br />
                 <hr>
             </div>
             <button type="button" class="collapsible">Stable Diffusion settings</button>
             <div class="content">
+                <label for="seed">Seed (-1 for random):</label> <br>
+                <input type="number" id="seed" onchange="changeSeed()" min="1" max="9999999999" value="-1"
+                    step="1" /><br />
                 <label for="samplerSelect">Sampler:</label>
                 <select id="samplerSelect" onchange="changeSampler()">
                     <option value="DDIM">DDIM</option>
