@@ -225,6 +225,7 @@ function reject(evt) {
 }
 
 function newImage(evt) {
+    clearPaintedMask();
     clearBackupMask();
     clearTargetMask();
     clearImgMask();
@@ -289,6 +290,10 @@ function clearTargetMask() {
 
 function clearImgMask() {
     imgCtx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
+}
+
+function clearPaintedMask() {
+    maskPaintCtx.clearRect(0, 0, maskPaintCanvas.width, maskPaintCanvas.height);
 }
 
 function placeImage() {
