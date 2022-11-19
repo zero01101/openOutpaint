@@ -3,8 +3,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>openOutpaint 0.0.4.3</title>
+    <title>openOutpaint 0.0.5</title>
     <link href="css/index.css" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
 <body>
@@ -31,6 +32,7 @@
                     <span id="snapY"></span>
                     <br />
                 </div>
+                <button onclick="newImage()">new image</button><br />
                 <label for="host">host:</label>
                 <input id="host" value="http://127.0.0.1:7860"><br />
                 <label for="scaleFactor">scale factor:</label>
@@ -38,8 +40,7 @@
                 <input type="range" id="scaleFactor" name="scaleFactor" min="1" max="16" value="8"
                     onchange="changeScaleFactor()" /><br />
                 <label for="prompt">prompt:</label>
-                <textarea
-                    id="prompt">oceanographic study, underwater wildlife, award winning documentary footage screenshot</textarea><br />
+                <textarea id="prompt">oceanographic study, underwater wildlife, award winning</textarea><br />
                 <label for="negPrompt">negative prompt:</label>
                 <textarea
                     id="negPrompt">people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry</textarea><br />
@@ -52,6 +53,8 @@
                 <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
                 <label for="cbxErase"><s>erase mask?</s></label>
                 <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
+                <label for="cbxHRFix">auto txt2img HRfix?</label>
+                <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
                 <label for="cbxOverMask">overmasking?</label>
                 <input type="checkbox" id="cbxOverMask" onchange="changeOverMask()" checked="checked"><br />
                 <label for="overMaskPx">overmask px:</label>
@@ -125,7 +128,9 @@
                 <span id="maskBlurText"></span><br />
                 <input type="number" id="maskBlur" name="maskBlur" min="0" max="64" value="0" step="1"
                     onchange="changeMaskBlur()" /><br />
-                <button onclick="downloadImage()">dl img</button>
+                <label for="preloadImage">load local image:</label>
+                <input type="file" id="preloadImage" onchange="preloadImage()" accept="image/*" /><br />
+                <button onclick="downloadCanvas()">dl canvas</button>
             </div>
             <div id="canvasHolder" class="canvasHolder">
                 <canvas id="backgroundCanvas" class="mainCanvases backgroundCanvas" width="2560" height="1440"
@@ -138,7 +143,7 @@
                     <p>lol ur browser sucks</p>
                 </canvas>
                 <canvas id="tempCanvas" class="mainCanvases tempCanvas" width="2560" height="1440" style="z-index: 2;">
-                    <!-- temporary canvas on which images being selected/rejected are superimposed -->
+                    <!-- temporary canvas on which images being selected/rejected or imported arbitrary images are superimposed -->
                     <p>lol ur browser sucks</p>
                 </canvas>
                 <canvas id="targetCanvas" class="mainCanvases targetCanvas" width="2560" height="1440"

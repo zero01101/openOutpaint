@@ -14,9 +14,11 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  ## features
   - a big ol' 2560x1440 canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
   - inpainting/touchup blob
-  - easily change samplers/steps/CFG/etc options for each "dream" summoned from the latent void 
+  - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
   - optional grid snapping for precision
   - optional overmasking for better seams between outpaints (suggested by @lifeh2o ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
+  - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
+  - import arbitrary images and superimpose on the canvas wherever you'd like (extra fun with transparent .pngs!) ![imported images that have been _changed_](docs/03-arbimg.png)
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
   - saves your preferences to browser localstorage for maximum convenience
 
@@ -29,6 +31,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
  -  technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision 
  - a deliciously simple launch script (thanks [@jasonmhead](https://github.com/jasonmhead)! (https://github.com/zero01101/openOutpaint/pull/1)) is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux 
  - the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port.  you can of course modify the included launch script to point at a different port than 3456 if desired, as well
+ - if your scale factor is > 8 (generating an image larger than 512x512), try the "auto txt2img HR fix" option
 
 ### quickstart speedrun
 1. edit your `cors-allow-origins` to include https://zero01101.github.io and run webUI
@@ -45,15 +48,15 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - set your `Inpainting conditioning mask strength` to `1`
   - disable the `Apply color correction to img2img results to match original colors.` option (the last 2 options are found under the stable diffusion category in the settings tab by default unless you've already moved it to your quicksettings list, and if so, you know where to set them already)
  6. open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
- 7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait
+ 7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the "open img" button
  8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
  9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
  10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
  11. play around with the available options!  
   - scale factor affects the size of both the painting reticle and mask blob 
   - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
- 12. click "dl img" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
- 13. refresh the page to start a blank canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
+ 12. click "dl canvas" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
+ 13. click "new image" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
 
 *if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
 
@@ -61,19 +64,19 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 ### in order of "priority"/likelihood of me doing it
 - [ ] lots and lots of readme updates (ongoing)
 - [ ] comment basically everything that isn't self documenting (ongoing)
-- [x] overmask seam of img2img 
+- [ ] CHORE: refactor all the duplicated JS code (ongoing, guaranteed to get worse before it gets better)
+- [x] overmask seam of img2img - BUG: it kinda sucks currently, just moves the seam instead of fixing it, i want to try to gradient-fade the edge but filter = 'blur(Ypx)' is _awful_ for this and my remedial per-pixel loops crash the browser because i am the embodiment of inefficiency
 - [x] split out CSS to its own file (remedial cleanup task)
-- [ ] ability to blank/new canvas without making the user refresh the page because that's pretty janky
+- [x] ability to blank/new canvas without making the user refresh the page because that's pretty janky
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [ ] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
-- [ ] controls for the rest of API-available options (e.g. hires fix, inpaint fill modes, etc)
+- [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
 - [ ] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
 - [ ] render progress spinner/bar
 - [ ] ~~smart crop downloaded image~~ 
-- [ ] import external image and scale/superimpose at will on canvas for in/outpainting
+- [x] import external image and ~~scale/~~superimpose at will on canvas for in/outpainting
+- [ ] scaling of imported arbitrary image before superimposition
 - [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
-- [ ] BUG: figure out where that stupid 1-pixel offset is happening between approve/reject state and committing to an image, it doesn't affect output but it's _super_ obnoxious  
-- [ ] BUG: make erase mask actually work, enable the control if you dare
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
 - [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out options
 - [ ] infinite canvas
@@ -93,6 +96,13 @@ i am begging you, yes you personally reading this, please fix my horrible code a
 ## bug reports
 please do! kindly indicate your OS, browser, versions of both, any errors in devtools/console output, what you were trying to do, what you expected, what happened unexpectedly or incorrectly, if something caught fire (please call the fire department first), the usual
 
+## known bugs :(
+ - generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying
+ - erase mask is like entirely broken
+ - odd-numbered scale factors don't snap correctly
+ - arbitrary "pasted" images require clicking twice to place them and i _don't know why_ [(yes i do)](#terrible), just getting them to be arbitrarily placable was a giant pain because i'm not got the smarts
+ - selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective
+
 ## warranty
 [lmao](https://github.com/moyix/fauxpilot#support-and-warranty)
 
@@ -109,4 +119,5 @@ _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563
 - 0.0.4 - batch size/batch count, approve/reject system implementations, snap-to-grid, other people are now allowed to see this thing [01f8c6a](https://github.com/zero01101/openOutpaint/commit/01f8c6ab3f49739439a0990d6f5f0967a9a0bf12)
 - 0.0.4.1 - extremely minor revisions [02cb01a](https://github.com/zero01101/openOutpaint/commit/02cb01ac062ef93878ff4161eabcedfa8e125be6)
 - 0.0.4.2 - pull requests (&lt;3), downloaded images now have a timestamped name, css breakout because hopefully this will become halfway attractive enough to benefit from non-inline stylesheets [70ad4fe](https://github.com/zero01101/openOutpaint/commit/70ad4fe081bdbd507afc5af3cc2a4435924b66e3)
-- 0.0.4.3 - overmasking [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
+- 0.0.4.3 - overmasking, settings saved to localstorage [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
+- 0.0.5 - import arbitrary image from user's machine, "auto" txt2img hires fix, Very Important "new image" button 
