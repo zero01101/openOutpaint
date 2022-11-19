@@ -59,7 +59,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - scale factor affects the size of both the painting reticle __and__ mask blob 
   - overmask and related px value expands the area masked in img2img outpaint requests, so as to attempt to minimize the seam between images; it's _partially_ functional currently and correcting the flaws are already in the //todo and issue tracker
   - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
- 12. click "dl canvas" to save the cropped region of outpainted canvas (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
+ 12. click "dl canvas" to save the cropped region of outpainted canvas 
  13. click "new image" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
 
 *if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
@@ -75,19 +75,19 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [x] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
-- [ ] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
+- [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
 - [ ] render progress spinner/bar
-- [ ] ~~smart crop downloaded image~~ 
+- [x] ~~smart crop downloaded image~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [ ] scaling of imported arbitrary image before superimposition
 - [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
-- [ ] floating/togglable menu leftnav bar with categorized/sensibly laid-out options
+- [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~ (holy crap thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/11))
 - [ ] infinite canvas
 - [ ] global undo/redo
 - [ ] inpainting sketch tools
 - [ ] split out JS to separation-of-concerns individual files (oh no)
-- [ ] something actually similar to a "user interface", preferably visually pleasant and would make my mom say "well that makes sense" if she looked at it
+- [x] ~~something actually similar to a "user interface", preferably visually pleasant and would make my mom say "well that makes sense" if she looked at it~~
 - [ ] eventually delete the generated mask display canvases at the bottom of the page, but they're useful for debugging canvas pixel offsets sometimes
 - [ ] see if i can use fewer canvases overall; seems wasteful, canvas isn't free yknow
 - [ ] upscaling output canvas??? sure let's make 16k wallpapers that'll be neat
@@ -135,6 +135,7 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.4.3 - overmasking, settings saved to localstorage [fca2e01](https://github.com/zero01101/openOutpaint/commit/fca2e01b8a4ecfe3d062c4090d5886e1033e8f38)
 - 0.0.5 - import arbitrary image from user's machine, "auto" txt2img hires fix, Very Important "new image" button [3b7f4e3](https://github.com/zero01101/openOutpaint/commit/3b7f4e3759d0d1f3b38eba7249e5b58bc8162c75)
 - 0.0.5.1 - erase rendered imagery with right click, ensure webUI is running (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/7)) [54577d4](https://github.com/zero01101/openOutpaint/commit/54577d4f15fd7d014aaf2471e0042b3c48735e9c)
+- 0.0.5.5 - highly attractive and functional floating control panel which will be extremely useful for infinite canvas [@Kalekki](https://github.com/Kalekki) is literally the best
 
 ## what's with the fish?
 deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making a cute little orange fish favicon which led to "ok then, fish is mascot" 
