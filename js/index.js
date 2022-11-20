@@ -88,6 +88,7 @@ var arbitraryImageData;
 var arbitraryImageBitmap;
 var arbitraryImageBase64; // seriously js cmon work with me here
 var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
+var enableErasing = false; // accidental right-click erase if the user isn't trying to erase is a bad thing
 
 // info div, sometimes hidden
 let mouseXInfo = document.getElementById("mouseX");
@@ -427,7 +428,7 @@ function mouseDown(evt) {
             nextBox.h = basePixelCount * scaleFactor;
             drawTargets.push(nextBox);
         }
-    } else if (evt.button == 2 && !paintMode) { // right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
+    } else if (evt.button == 2 && enableErasing && !paintMode) { // right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
         // erase the canvas underneath the cursor, 
         ctx = imgCanvas.getContext('2d');
         if (snapToGrid) {
@@ -723,9 +724,16 @@ function changePaintMode() {
 }
 
 function changeEraseMode() {
+    //TODO rename/refactor to make it more obvious this is just for painted masks
     eraseMode = document.getElementById("cbxErase").checked;
     clearTargetMask();
     ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+}
+
+function changeEnableErasing() {
+    // yeah because this is for the image layer
+    enableErasing = document.getElementById("cbxEnableErasing").checked;
+    localStorage.setItem("enable_erase", enableErasing);
 }
 
 function changeSampler() {
@@ -902,6 +910,7 @@ function loadSettings() {
     var _mask_blur = localStorage.getItem("mask_blur") == null ? 0 : localStorage.getItem("mask_blur");
     var _seed = localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
     var _enable_hr = Boolean(localStorage.getItem("enable_hr") == (null || "false") ? false : localStorage.getItem("enable_hr"));
+    var _enable_erase = Boolean(localStorage.getItem("enable_erase") == (null || "false") ? false : localStorage.getItem("enable_erase"));
 
     // set the values into the UI
     document.getElementById("samplerSelect").value = String(_sampler);
@@ -913,4 +922,5 @@ function loadSettings() {
     document.getElementById("maskBlur").value = Number(_mask_blur);
     document.getElementById("seed").value = Number(_seed);
     document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
+    document.getElementById("cbxEnableErasing").checked = Boolean(_enable_erase);
 }
