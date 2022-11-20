@@ -130,6 +130,7 @@ function startup() {
     changeOverMask();
     changeOverMaskPx();
     changeHiResFix();
+    changeEnableErasing();
     document.getElementById("overlayCanvas").onmousemove = mouseMove;
     document.getElementById("overlayCanvas").onmousedown = mouseDown;
     document.getElementById("overlayCanvas").onmouseup = mouseUp;
@@ -197,7 +198,7 @@ function imageAcceptReject(x, y, data) {
         div.style.top = parseInt(y + data.parameters.height) + "px";
         div.style.width = "150px";
         div.style.height = "50px";
-        div.innerHTML = "<button onclick=\"prevImg(this)\">&lt;</button><button onclick=\"nextImg(this)\">&gt;</button><span id=\"currentImgIndex\"></span> of <span id=\"totalImgIndex\"></span><button onclick=\"accept(this)\">Y</button><button onclick=\"reject(this)\">N</button>"
+        div.innerHTML = "<button onclick=\"prevImg(this)\">&lt;</button><button onclick=\"nextImg(this)\">&gt;</button><span class=\"strokeText\" id=\"currentImgIndex\"></span><span class=\"strokeText\"> of </span><span class=\"strokeText\" id=\"totalImgIndex\"></span><button onclick=\"accept(this)\">Y</button><button onclick=\"reject(this)\">N</button>"
         document.getElementById("tempDiv").appendChild(div);
         document.getElementById("currentImgIndex").innerText = "1";
         document.getElementById("totalImgIndex").innerText = totalImagesReturned;
