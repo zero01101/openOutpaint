@@ -50,23 +50,24 @@ var stableDiffusionData = { //includes img2img data but works for txt2img just f
 /**
  * Some Utility Functions
  */
-function sliderChangeHandlerFactory(sliderId, textBoxId, dataKey, defaultV) {
+function sliderChangeHandlerFactory(sliderId, textBoxId, dataKey, defaultV, setter = (k, v) => stableDiffusionData[k] = v, getter = (k) => stableDiffusionData[k]) {
     const sliderEl = document.getElementById(sliderId);
     const textBoxEl = document.getElementById(textBoxId);
     const savedValue = localStorage.getItem(dataKey);
 
-    if (savedValue) stableDiffusionData[dataKey] = savedValue || defaultV;
+    if (savedValue) setter(dataKey, savedValue || defaultV);
 
     function changeHandler(evn) {
         const eventSource = evn && evn.srcElement;
         const value = eventSource && Number(eventSource.value);
 
-        if (value) stableDiffusionData[dataKey] = value;
+        if (value) setter(dataKey, value);
 
-        if (!eventSource || eventSource.id === textBoxId) sliderEl.value = stableDiffusionData[dataKey];
-        textBoxEl.value = stableDiffusionData[dataKey] = Number(sliderEl.value);
+        if (!eventSource || eventSource.id === textBoxId) sliderEl.value = getter(dataKey);
+        setter(dataKey, Number(sliderEl.value))
+        textBoxEl.value = getter(dataKey);
 
-        localStorage.setItem(dataKey, stableDiffusionData[dataKey]);
+        localStorage.setItem(dataKey, getter(dataKey));
     }
 
     textBoxEl.onchange = changeHandler
@@ -736,7 +737,7 @@ function mouseUp(evt) {
     }
 }
 
-const changeScaleFactor = sliderChangeHandlerFactory("scaleFactor", "scaleFactorTxt", "scaleFactor", 8);
+const changeScaleFactor = sliderChangeHandlerFactory("scaleFactor", "scaleFactorTxt", "scaleFactor", 8, (k, v) => scaleFactor = v, (k) => scaleFactor);
 const changeSteps = sliderChangeHandlerFactory("steps", "stepsTxt", "steps", 30);
 
 function changePaintMode() {
