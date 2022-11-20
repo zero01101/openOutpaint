@@ -17,11 +17,12 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
   - optional right-click to erase output image under cursor
   - optional grid snapping for precision
-  - optional overmasking for potentially better seams between outpaints and it _sorta_ works currently but it needs fixing - set overmask px value to 0 to disable the feature
+  - optional overmasking for potentially better seams between outpaints - set overmask px value to 0 to disable the feature
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
   - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent)) 
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
   - saves your preferences to browser localstorage for maximum convenience
+  - undo/redo
 
  ## operation
 
@@ -69,7 +70,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] lots and lots of readme updates (ongoing)
 - [ ] comment basically everything that isn't self documenting (ongoing)
 - [ ] CHORE: refactor all the duplicated JS code (ongoing, guaranteed to get worse before it gets better)
-- [x] overmask seam of img2img - BUG: it kinda sucks currently, just moves the seam instead of fixing it, i want to try to gradient-fade the edge but filter = 'blur(Ypx)' is _awful_ for this and my remedial per-pixel loops crash the browser because i am the embodiment of inefficiency
+- [x] overmask seam of img2img ~~BUG: it kinda sucks currently, just moves the seam instead of fixing it, i want to try to gradient-fade the edge but filter = 'blur(Ypx)' is awful for this and my remedial per-pixel loops crash the browser because i am the embodiment of inefficiency~~
 - [x] split out CSS to its own file (remedial cleanup task)
 - [x] ability to blank/new canvas without making the user refresh the page because that's pretty janky
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
@@ -139,12 +140,14 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.5.6 - _FINALLY_ the sliders update their values in realtime, a nice overall start on cleaning up my mess [d9fb87a](https://github.com/zero01101/openOutpaint/commit/d9fb87acec6653f19a9dac7777bd866782303ebc)
 - 0.0.5.7 - the majestic return of mask erasing, removed unnecessary overmask toggle [a96fd11](https://github.com/zero01101/openOutpaint/commit/a96fd116d750e38ce8982104ae5e5c966746fdc4)
 - 0.0.6 - absolutely brilliant undo/redo system, logical and straightforward enough to the point where even i can understand what it's doing [25681b3](https://github.com/zero01101/openOutpaint/commit/25681b3a83bbd7a1d1b3e675f26f141692d77c79)
+- 0.0.6.1 - finally think i've got overmasking working better with a bit of "humanization" to the automated masks, please play around with it and see if it's any better or just sucks in general [8002772](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 
 ## collaborator credits 👑
  - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
  - [@Kalekki](https://github.com/Kalekki) - all SORTS of awesome goodness, legit pull request hero: [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17)
  - [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14),  [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21)
- - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept that is still driving me crazy getting it to work right ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3))
+ - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
+
 
 ## what's with the fish?
 deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making an _"illustration of a bright orange fish, plain blue solid background"_ favicon which led to "ok then, fish is mascot" 
