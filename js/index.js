@@ -623,21 +623,7 @@ function mouseUp(evt) {
               initImgData.data[i + 3] = imgChunkData[i + 3]; //it's still RGBA so we can handily do this in nice chunks'o'4
             }
           }
-          // make a list of all the white pixels to expand so we don't waste time on non-mask pixels
-          let pix = {x: [], y: [], index: []};
-          var x, y, index;
-          for (y = 0; y < drawIt.h; y++) {
-            for (x = 0; x < drawIt.w; x++) {
-              index = (y * drawIt.w + x) * 4;
-              if (overMaskImgData.data[index] > 0) {
-                pix.x.push(x);
-                pix.y.push(y);
-                pix.index.push(index);
-              }
-            }
-          }
-
-          // https://stackoverflow.com/a/30204783 ????
+          // https://stackoverflow.com/a/30204783 ???? !!!!!!!!
           overMaskCanvasCtx.fillStyle = "black";
           overMaskCanvasCtx.fillRect(0, 0, drawIt.w, drawIt.h); // fill with black instead of null to start
           for (i = 0; i < overMaskImgData.data.length; i += 4) {
@@ -720,21 +706,6 @@ function mouseUp(evt) {
   }
 }
 
-const changeScaleFactor = sliderChangeHandlerFactory(
-  "scaleFactor",
-  "scaleFactorTxt",
-  "scaleFactor",
-  8,
-  (k, v) => (scaleFactor = v),
-  (k) => scaleFactor
-);
-const changeSteps = sliderChangeHandlerFactory(
-  "steps",
-  "stepsTxt",
-  "steps",
-  30
-);
-
 function changePaintMode() {
   paintMode = document.getElementById("cbxPaint").checked;
   clearTargetMask();
@@ -742,7 +713,6 @@ function changePaintMode() {
 }
 
 function changeEnableErasing() {
-  // yeah because this is for the image layer
   enableErasing = document.getElementById("cbxEnableErasing").checked;
   localStorage.setItem("enable_erase", enableErasing);
 }
@@ -770,6 +740,20 @@ const changeBatchCount = sliderChangeHandlerFactory(
   "batchCountText",
   "n_iter",
   2
+);
+const changeScaleFactor = sliderChangeHandlerFactory(
+  "scaleFactor",
+  "scaleFactorTxt",
+  "scaleFactor",
+  8,
+  (k, v) => (scaleFactor = v),
+  (k) => scaleFactor
+);
+const changeSteps = sliderChangeHandlerFactory(
+  "steps",
+  "stepsTxt",
+  "steps",
+  30
 );
 
 function changeSnapMode() {
@@ -823,7 +807,8 @@ function drawBackground() {
 }
 
 function preloadImage() {
-  // gonna legit scream
+  // possible firefox-only bug?
+  // attempt to prevent requesting a dream if double-clicking a selected image
   document.getElementById("overlayCanvas").onmousemove = null;
   document.getElementById("overlayCanvas").onmousedown = null;
   document.getElementById("overlayCanvas").onmouseup = null;
