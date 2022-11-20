@@ -646,34 +646,36 @@ function mouseUp(evt) {
 							initImgData.data[i + 3] = imgChunkData[i + 3]; //it's still RGBA so we can handily do this in nice chunks'o'4
 						}
 					}
-					// https://stackoverflow.com/a/30204783 ???? !!!!!!!!
-					overMaskCanvasCtx.fillStyle = "black";
-					overMaskCanvasCtx.fillRect(0, 0, drawIt.w, drawIt.h); // fill with black instead of null to start
-					for (i = 0; i < overMaskImgData.data.length; i += 4) {
-						if (overMaskImgData.data[i] == 255) {
-							// white pixel?
-							// just blotch all over the thing
-							var rando = Math.floor(Math.random() * overMaskPx);
-							overMaskCanvasCtx.beginPath();
-							overMaskCanvasCtx.arc(
-								(i / 4) % overMaskCanvas.width,
-								Math.floor(i / 4 / overMaskCanvas.width),
-								4 * scaleFactor + rando,
-								0,
-								2 * Math.PI,
-								true
-							);
-							overMaskCanvasCtx.fillStyle = "#FFFFFFFF";
-							overMaskCanvasCtx.fill();
+					if (overMaskPx > 0) {
+						// https://stackoverflow.com/a/30204783 ???? !!!!!!!!
+						overMaskCanvasCtx.fillStyle = "black";
+						overMaskCanvasCtx.fillRect(0, 0, drawIt.w, drawIt.h); // fill with black instead of null to start
+						for (i = 0; i < overMaskImgData.data.length; i += 4) {
+							if (overMaskImgData.data[i] == 255) {
+								// white pixel?
+								// just blotch all over the thing
+								var rando = Math.floor(Math.random() * overMaskPx);
+								overMaskCanvasCtx.beginPath();
+								overMaskCanvasCtx.arc(
+									(i / 4) % overMaskCanvas.width,
+									Math.floor(i / 4 / overMaskCanvas.width),
+									scaleFactor + rando, // was 4 * sf + rando, too big
+									0,
+									2 * Math.PI,
+									true
+								);
+								overMaskCanvasCtx.fillStyle = "#FFFFFFFF";
+								overMaskCanvasCtx.fill();
+							}
 						}
+						overMaskImgData = overMaskCanvasCtx.getImageData(
+							0,
+							0,
+							overMaskCanvas.width,
+							overMaskCanvas.height
+						);
+						overMaskCanvasCtx.putImageData(overMaskImgData, 0, 0);
 					}
-					overMaskImgData = overMaskCanvasCtx.getImageData(
-						0,
-						0,
-						overMaskCanvas.width,
-						overMaskCanvas.height
-					);
-					overMaskCanvasCtx.putImageData(overMaskImgData, 0, 0);
 					// also check for painted masks in region, add them as white pixels to mask canvas
 					const maskChunk = maskPaintCtx.getImageData(
 						drawIt.x,
