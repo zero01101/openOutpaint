@@ -176,3 +176,9 @@ button.tool:hover {
 .maskCanvasMonitor .overMaskCanvasMonitor .initImgCanvasMonitor {
     position: absolute;
 }
+
+.strokeText {
+    -webkit-text-stroke: 1px #888;
+    font-size: 150%;
+    color: #000;
+}
