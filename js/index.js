@@ -173,7 +173,11 @@ function drop(imageParams) {
 }
 
 function writeArbitraryImage(img, x, y) {
-    imgCtx.drawImage(img, x, y);
+    commands.runCommand('drawImage', {
+        x,
+        y,
+        image: img,
+    });
     blockNewImages = false;
     placingArbitraryImage = false;
     document.getElementById("preloadImage").files = null;
@@ -329,7 +333,11 @@ function clearPaintedMask() {
 function placeImage() {
     const img = new Image();
     img.onload = function () {
-        imgCtx.drawImage(img, tmpImgXYWH.x, tmpImgXYWH.y);
+        commands.runCommand('drawImage', {
+            x: tmpImgXYWH.x,
+            y: tmpImgXYWH.y,
+            image: img,
+        });
         tmpImgXYWH = {};
         returnedImages = null;
     }

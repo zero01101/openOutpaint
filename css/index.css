@@ -76,6 +76,37 @@
     border-color: black;
 }
 
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+}
+
+.toolbar > .tool {
+    flex: 1;
+}
+
+.toolbar > .tool:not(:last-child) {
+    margin-right: 10px;
+}
+
+button.tool {
+    background-color: rgb(0, 0, 50);
+    color: rgb(255, 255, 255);
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    text-align: center;
+    outline: none;
+    font-size: 15px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+button.tool:hover {
+    background-color: #667;
+}
+
 .collapsible {
     background-color: rgb(0, 0, 0);
     color: rgb(255, 255, 255);
