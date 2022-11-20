@@ -84,7 +84,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
 - [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~ 
 - [ ] infinite canvas
-- [ ] global undo/redo
+- [x] ~~global undo/redo~~
 - [ ] inpainting sketch tools
 - [ ] split out JS to separation-of-concerns individual files (oh no)
 - [x] ~~something actually similar to a "user interface", preferably visually pleasant and would make my mom say "well that makes sense" if she looked at it~~
@@ -138,11 +138,12 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.5.5 - highly attractive and functional floating control panel which will be extremely useful for infinite canvas [dac188d](https://github.com/zero01101/openOutpaint/commit/dac188dbfb086d3063f14b1a6a6a5b3add1aa5f5)
 - 0.0.5.6 - _FINALLY_ the sliders update their values in realtime, a nice overall start on cleaning up my mess [d9fb87a](https://github.com/zero01101/openOutpaint/commit/d9fb87acec6653f19a9dac7777bd866782303ebc)
 - 0.0.5.7 - the majestic return of mask erasing, removed unnecessary overmask toggle [a96fd11](https://github.com/zero01101/openOutpaint/commit/a96fd116d750e38ce8982104ae5e5c966746fdc4)
+- 0.0.6 - absolutely brilliant undo/redo system, logical and straightforward enough to the point where even i can understand what it's doing [25681b3](https://github.com/zero01101/openOutpaint/commit/25681b3a83bbd7a1d1b3e675f26f141692d77c79)
 
 ## collaborator credits 👑
  - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
  - [@Kalekki](https://github.com/Kalekki) - all SORTS of awesome goodness, legit pull request hero: [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17)
- - [@seijihariki](https://github.com/seijihariki) - realtime slider value updates, gracious code cleanup ([14](https://github.com/zero01101/openOutpaint/pull/14))
+ - [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14),  [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21)
  - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept that is still driving me crazy getting it to work right ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3))
 
 ## what's with the fish?
