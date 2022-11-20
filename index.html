@@ -69,10 +69,10 @@
             <input type="checkbox" id="cbxEnableErasing" onchange="changeEnableErasing()"><br />
             <label for="cbxPaint">Mask mode?</label>
             <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
-            <!-- Having to tick a box to erase is jank as fuck, same goes for image erasing
+            <!-- Having to tick a box to erase is a bad user experience, same goes for image erasing( cold be remedied by a temp confirm div) -->
             <label for="cbxErase"><s>Erase mask?</s></label>
             <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
-            -->
+
             <label for="cbxHRFix">Auto txt2img HRfix?</label>
             <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
             <label for="overMaskPx">Overmask px (0 to disable):</label>
