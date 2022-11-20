@@ -15,7 +15,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - a big ol' 2560x1440 canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
   - inpainting/touchup blob
   - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
-  - right-click to erase output image under cursor
+  - optional right-click to erase output image under cursor
   - optional grid snapping for precision
   - optional overmasking for better seams between outpaints (suggested by [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
