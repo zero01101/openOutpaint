@@ -141,6 +141,6 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 
 ![fullres fishy favicon](docs/05-openOutpaintFish.png)
 
-deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making a cute little orange fish favicon which led to "ok then, fish is mascot" 
+deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making an _"illustration of a bright orange fish, plain blue solid background"_ favicon which led to "ok then, fish is mascot" 
 
 the end 🐠
