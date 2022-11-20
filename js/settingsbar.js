@@ -5,7 +5,10 @@ function dragElement(elmnt) {
         p2 = 0,
         p3 = 0,
         p4 = 0;
-    document.getElementById('DraggableTitleBar').onmousedown = dragMouseDown;
+    var draggableElements = document.getElementsByClassName('draggable');
+    for (var i = 0; i < draggableElements.length; i++) {
+        draggableElements[i].onmousedown = dragMouseDown;
+    }
 
     function dragMouseDown(e) {
         e.preventDefault();

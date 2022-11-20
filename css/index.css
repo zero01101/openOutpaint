@@ -55,6 +55,9 @@
     z-index: 999;
 
 }
+#draggable{
+    cursor:move
+}
 
 #DraggableTitleBar {
     z-index: 999;
