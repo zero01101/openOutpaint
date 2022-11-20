@@ -138,6 +138,9 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.5.5 - highly attractive and functional floating control panel which will be extremely useful for infinite canvas, [@Kalekki](https://github.com/Kalekki) is literally the best ([11](https://github.com/zero01101/openOutpaint/pull/11)) [dac188d](https://github.com/zero01101/openOutpaint/commit/dac188dbfb086d3063f14b1a6a6a5b3add1aa5f5)
 
 ## what's with the fish?
+
+![fullres fishy favicon](docs/05-openOutpaintFish.png)
+
 deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making a cute little orange fish favicon which led to "ok then, fish is mascot" 
 
 the end 🐠
