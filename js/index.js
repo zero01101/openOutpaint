@@ -92,6 +92,7 @@ var mouseX = 0;
 var mouseY = 0;
 var canvasX = 0;
 var canvasY = 0;
+var heldButton = 0;
 var snapX = 0;
 var snapY = 0;
 var drawThis = {};
@@ -124,6 +125,7 @@ let canvasXInfo = document.getElementById("canvasX");
 let canvasYInfo = document.getElementById("canvasY");
 let snapXInfo = document.getElementById("snapX");
 let snapYInfo = document.getElementById("snapY");
+let heldButtonInfo = document.getElementById("heldButton");
 
 // canvases and related
 const ovCanvas = document.getElementById("overlayCanvas"); // where mouse cursor renders
@@ -363,12 +365,14 @@ function mouseMove(evt) {
     const rect = ovCanvas.getBoundingClientRect() // not-quite pixel offset was driving me insane
     const canvasOffsetX = rect.left;
     const canvasOffsetY = rect.top;
+    heldButton = evt.buttons;
     mouseXInfo.innerText = mouseX = evt.clientX;
     mouseYInfo.innerText = mouseY = evt.clientY;
     canvasXInfo.innerText = canvasX = parseInt(evt.clientX - rect.left);
     canvasYInfo.innerText = canvasY = parseInt(evt.clientY - rect.top);
     snapXInfo.innerText = canvasX + snap(canvasX);
     snapYInfo.innerText = canvasY + snap(canvasY);
+    heldButtonInfo.innerText = heldButton;
     ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height); // clear out the previous mouse cursor 
     if (placingArbitraryImage) {
         // ugh refactor so this isn't duplicated between arbitrary image and dream reticle modes
@@ -420,6 +424,19 @@ function mouseMove(evt) {
             maskPaintCtx.lineJoin = maskPaintCtx.lineCap = 'round';
             maskPaintCtx.stroke();
         }
+        // Erase mask if right button is held
+        // no reason to have to tick a checkbox for this, more intuitive for both erases (mask and actual images) to just work on right click and inform the user about it
+        if (evt.buttons == 2) {
+            maskPaintCtx.globalCompositeOperation = 'destination-out';
+            maskPaintCtx.beginPath();
+            maskPaintCtx.strokeStyle = "#FFFFFFFF";
+            maskPaintCtx.lineWidth = 8 * scaleFactor;
+            maskPaintCtx.moveTo(prevMouseX, prevMouseY);
+            maskPaintCtx.lineTo(mouseX, mouseY);
+            maskPaintCtx.lineJoin = maskPaintCtx.lineCap = 'round';
+            maskPaintCtx.stroke();
+            
+        }
         prevMouseX = mouseX;
         prevMouseY = mouseY;
     }
@@ -455,13 +472,14 @@ function mouseDown(evt) {
             nextBox.h = basePixelCount * scaleFactor;
             drawTargets.push(nextBox);
         }
-    } else if (evt.button == 2 && enableErasing && !paintMode) { // right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
-        // erase the canvas underneath the cursor, 
-        ctx = imgCanvas.getContext('2d');
-        if (snapToGrid) {
-            ctx.clearRect(canvasX + snap(canvasX) - ((basePixelCount * scaleFactor) / 2), canvasY + snap(canvasY) - ((basePixelCount * scaleFactor) / 2), basePixelCount * scaleFactor, basePixelCount * scaleFactor);
-        } else {
-            ctx.clearRect(canvasX - ((basePixelCount * scaleFactor) / 2), canvasY - ((basePixelCount * scaleFactor) / 2), basePixelCount * scaleFactor, basePixelCount * scaleFactor);
+    } else if (evt.button == 2){
+        if(enableErasing && !paintMode) { // right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
+            ctx = imgCanvas.getContext('2d');
+            if (snapToGrid) {
+                ctx.clearRect(canvasX + snap(canvasX) - ((basePixelCount * scaleFactor) / 2), canvasY + snap(canvasY) - ((basePixelCount * scaleFactor) / 2), basePixelCount * scaleFactor, basePixelCount * scaleFactor);
+            } else {
+                ctx.clearRect(canvasX - ((basePixelCount * scaleFactor) / 2), canvasY - ((basePixelCount * scaleFactor) / 2), basePixelCount * scaleFactor, basePixelCount * scaleFactor);
+            }
         }
     }
 }
