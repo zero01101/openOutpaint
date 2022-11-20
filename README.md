@@ -17,7 +17,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
   - optional right-click to erase output image under cursor
   - optional grid snapping for precision
-  - optional overmasking for better seams between outpaints (suggested by [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) and i think it's a slick idea)
+  - optional overmasking for potentially better seams between outpaints and it _sorta_ works currently but it needs fixing
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
   - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent)) 
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
@@ -30,7 +30,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
  ### notes 
  -  technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision 
- - a deliciously simple launch script (thanks [@jasonmhead](https://github.com/jasonmhead)! (https://github.com/zero01101/openOutpaint/pull/1)) is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux 
+ - a deliciously simple launch script is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux 
  - the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port.  you can of course modify the included launch script to point at a different port than 3456 if desired, as well
  - if your scale factor is > 8 (generating an image larger than 512x512), try the "auto txt2img HR fix" option
 
@@ -75,14 +75,14 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [x] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
-- [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ (thanks [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/5))
+- [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ 
 - [ ] render progress spinner/bar
-- [x] ~~smart crop downloaded image~~ (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/2))
+- [x] ~~smart crop downloaded image~~ 
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [ ] scaling of imported arbitrary image before superimposition
 - [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
-- [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~ (holy crap thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/11))
+- [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~ 
 - [ ] infinite canvas
 - [ ] global undo/redo
 - [ ] inpainting sketch tools
@@ -137,6 +137,11 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.5.1 - erase rendered imagery with right click, ensure webUI is running (thanks again [@Kalekki](https://github.com/Kalekki)! (https://github.com/zero01101/openOutpaint/pull/7)) [54577d4](https://github.com/zero01101/openOutpaint/commit/54577d4f15fd7d014aaf2471e0042b3c48735e9c)
 - 0.0.5.5 - highly attractive and functional floating control panel which will be extremely useful for infinite canvas, [@Kalekki](https://github.com/Kalekki) is literally the best ([11](https://github.com/zero01101/openOutpaint/pull/11)) [dac188d](https://github.com/zero01101/openOutpaint/commit/dac188dbfb086d3063f14b1a6a6a5b3add1aa5f5)
 - 0.0.5.6 - _FINALLY_ the sliders update their values in realtime, a nice overall start on cleaning up my mess (thanks [@seijihariki](https://github.com/seijihariki)!) ([14](https://github.com/zero01101/openOutpaint/pull/14)) [d9fb87a](https://github.com/zero01101/openOutpaint/commit/d9fb87acec6653f19a9dac7777bd866782303ebc)
+
+## collaborator credits 👑
+ - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
+ - [@Kalekki](https://github.com/Kalekki) - all SORTS of awesome goodness, legit pull request hero: [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2),[localstorage](https://github.com/zero01101/openOutpaint/pull/5), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11)
+ - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) - overmasking concept that is still driving me crazy getting it to work right
 
 ## what's with the fish?
 deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making an _"illustration of a bright orange fish, plain blue solid background"_ favicon which led to "ok then, fish is mascot" 
