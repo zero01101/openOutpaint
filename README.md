@@ -17,7 +17,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
   - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
   - optional right-click to erase output image under cursor
   - optional grid snapping for precision
-  - optional overmasking for potentially better seams between outpaints and it _sorta_ works currently but it needs fixing
+  - optional overmasking for potentially better seams between outpaints and it _sorta_ works currently but it needs fixing - set overmask px value to 0 to disable the feature
   - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
   - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent)) 
   - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything

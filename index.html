@@ -73,9 +73,7 @@
             <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
             <label for="cbxHRFix">Auto txt2img HRfix?</label>
             <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
-            <label for="cbxOverMask">Overmasking?</label>
-            <input type="checkbox" id="cbxOverMask" onchange="changeOverMask()" checked="checked"><br />
-            <label for="overMaskPx">Overmask px:</label>
+            <label for="overMaskPx">Overmask px (0 to disable):</label>
             <input type="number" id="overMaskPx" onchange="changeOverMaskPx()" min="0" max="128" value="16"
                 step="1" /><br />
             <label for="maskBlur">Mask blur:</label>
@@ -154,9 +152,9 @@
         </div>
         <div id="masks" class="masks">
             <div>
-                <canvas id="maskCanvasMonitor" class="maskCanvasMonitor" width="512" height="512">
-                    <p>lol ur browser sucks</p>
-                </canvas><br />
+                <!-- <canvas id="maskCanvasMonitor" class="maskCanvasMonitor" width="512" height="512">
+                        <p>lol ur browser sucks</p>
+                    </canvas><br /> -->
                 <canvas id="overMaskCanvasMonitor" class="overMaskCanvasMonitor" width="512" height="512">
                     <p>lol ur browser sucks</p>
                 </canvas><br />
