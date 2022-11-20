@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>openOutpaint 🐠 0.0.5.6</title>
+    <title>openOutpaint 🐠</title>
     <link href="css/index.css" rel="stylesheet" />
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
@@ -70,8 +70,8 @@
             <label for="cbxPaint">Mask mode?</label>
             <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
             <!-- Having to tick a box to erase is a bad user experience, same goes for image erasing( cold be remedied by a temp confirm div) -->
-            <label for="cbxErase"><s>Erase mask?</s></label>
-            <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br />
+            <!-- <label for="cbxErase"><s>Erase mask?</s></label>
+            <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br /> -->
 
             <label for="cbxHRFix">Auto txt2img HRfix?</label>
             <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
@@ -109,9 +109,10 @@
                 <span id="snapX"></span>
                 <br />
                 <label for="snapY">snapY:</label>
-                <span id="snapY"></span><br>
+                <span id="snapY"></span><br />
                 <label for="heldButton">Mouse button:</label>
-                <span id="heldButton"></span>
+                <span id="heldButton"></span><br />
+                <span id="version">Alpha release v0.0.5.7</span>
                 <br />
                 <hr>
             </div>

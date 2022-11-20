@@ -147,7 +147,6 @@ function startup() {
     drawBackground();
     changeScaleFactor();
     changePaintMode();
-    changeEraseMode();
     changeSampler();
     changeSteps();
     changeCfgScale();
@@ -443,7 +442,7 @@ function mouseMove(evt) {
             maskPaintCtx.lineTo(mouseX, mouseY);
             maskPaintCtx.lineJoin = maskPaintCtx.lineCap = 'round';
             maskPaintCtx.stroke();
-            
+
         }
         prevMouseX = mouseX;
         prevMouseY = mouseY;
@@ -480,8 +479,8 @@ function mouseDown(evt) {
             nextBox.h = basePixelCount * scaleFactor;
             drawTargets.push(nextBox);
         }
-    } else if (evt.button == 2){
-        if(enableErasing && !paintMode) { // right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
+    } else if (evt.button == 2) {
+        if (enableErasing && !paintMode) { // right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
             ctx = imgCanvas.getContext('2d');
             if (snapToGrid) {
                 ctx.clearRect(canvasX + snap(canvasX) - ((basePixelCount * scaleFactor) / 2), canvasY + snap(canvasY) - ((basePixelCount * scaleFactor) / 2), basePixelCount * scaleFactor, basePixelCount * scaleFactor);
@@ -744,13 +743,6 @@ const changeSteps = sliderChangeHandlerFactory("steps", "stepsTxt", "steps", 30)
 
 function changePaintMode() {
     paintMode = document.getElementById("cbxPaint").checked;
-    clearTargetMask();
-    ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-}
-
-function changeEraseMode() {
-    //TODO rename/refactor to make it more obvious this is just for painted masks
-    eraseMode = document.getElementById("cbxErase").checked;
     clearTargetMask();
     ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 }

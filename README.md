@@ -102,7 +102,7 @@ please do! kindly indicate your OS, browser, versions of both, any errors in dev
 
 ## known bugs :(
  - generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying
- - erase mask is like entirely broken
+ - ~~erase mask is like entirely broken~~
  - ~~odd-numbered scale factors don't snap correctly~~
  - ~~arbitrary "pasted" images require clicking twice to place them and i _don't know why_ [(yes i do)](#terrible), just getting them to be arbitrarily placable was a giant pain because i'm not got the smarts~~
  - selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective
@@ -137,10 +137,11 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.5.1 - erase rendered imagery with right click, ensure webUI is running [54577d4](https://github.com/zero01101/openOutpaint/commit/54577d4f15fd7d014aaf2471e0042b3c48735e9c)
 - 0.0.5.5 - highly attractive and functional floating control panel which will be extremely useful for infinite canvas [dac188d](https://github.com/zero01101/openOutpaint/commit/dac188dbfb086d3063f14b1a6a6a5b3add1aa5f5)
 - 0.0.5.6 - _FINALLY_ the sliders update their values in realtime, a nice overall start on cleaning up my mess [d9fb87a](https://github.com/zero01101/openOutpaint/commit/d9fb87acec6653f19a9dac7777bd866782303ebc)
+- 0.0.5.7 - the majestic return of mask erasing, removed unnecessary overmask toggle [a96fd11](https://github.com/zero01101/openOutpaint/commit/a96fd116d750e38ce8982104ae5e5c966746fdc4)
 
 ## collaborator credits 👑
  - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
- - [@Kalekki](https://github.com/Kalekki) - all SORTS of awesome goodness, legit pull request hero: [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11)
+ - [@Kalekki](https://github.com/Kalekki) - all SORTS of awesome goodness, legit pull request hero: [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17)
  - [@seijihariki](https://github.com/seijihariki) - realtime slider value updates, gracious code cleanup ([14](https://github.com/zero01101/openOutpaint/pull/14))
  - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept that is still driving me crazy getting it to work right ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3))
 
