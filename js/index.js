@@ -7,15 +7,15 @@ var stableDiffusionData = { //includes img2img data but works for txt2img just f
     prompt: "",
     negative_prompt: "",
     seed: -1,
-    cfg_scale: 7,
+    cfg_scale: null,
     sampler_index: "DDIM",
-    steps: 30,
+    steps: null,
     denoising_strength: 1,
     mask_blur: 0,
-    batch_size: 2,
+    batch_size: null,
     width: 512,
     height: 512,
-    n_iter: 2, // batch count
+    n_iter: null, // batch count
     mask: "",
     init_images: [],
     inpaint_full_res: false,
@@ -45,6 +45,34 @@ var stableDiffusionData = { //includes img2img data but works for txt2img just f
     // "inpainting_mask_invert": 0, // bool??????? wtf
     // "include_init_images": false // ??????
 
+}
+
+/**
+ * Some Utility Functions
+ */
+function sliderChangeHandlerFactory(sliderId, textBoxId, dataKey, defaultV) {
+    const sliderEl = document.getElementById(sliderId);
+    const textBoxEl = document.getElementById(textBoxId);
+    const savedValue = localStorage.getItem(dataKey);
+
+    if (savedValue) stableDiffusionData[dataKey] = savedValue || defaultV;
+
+    function changeHandler(evn) {
+        const eventSource = evn && evn.srcElement;
+        const value = eventSource && Number(eventSource.value);
+
+        if (value) stableDiffusionData[dataKey] = value;
+
+        if (!eventSource || eventSource.id === textBoxId) sliderEl.value = stableDiffusionData[dataKey];
+        textBoxEl.value = stableDiffusionData[dataKey] = Number(sliderEl.value);
+
+        localStorage.setItem(dataKey, stableDiffusionData[dataKey]);
+    }
+
+    textBoxEl.onchange = changeHandler
+    sliderEl.oninput = changeHandler
+
+    return changeHandler
 }
 
 // stuff things use
@@ -708,15 +736,8 @@ function mouseUp(evt) {
     }
 }
 
-function changeScaleFactor() {
-    document.getElementById("scaleFactorTxt").innerText = scaleFactor = document.getElementById("scaleFactor").value;
-    localStorage.setItem("scaleFactor", scaleFactor);
-}
-
-function changeSteps() {
-    document.getElementById("stepsTxt").innerText = stableDiffusionData.steps = document.getElementById("steps").value;
-    localStorage.setItem("steps", stableDiffusionData.steps);
-}
+const changeScaleFactor = sliderChangeHandlerFactory("scaleFactor", "scaleFactorTxt", "scaleFactor", 8);
+const changeSteps = sliderChangeHandlerFactory("steps", "stepsTxt", "steps", 30);
 
 function changePaintMode() {
     paintMode = document.getElementById("cbxPaint").checked;
@@ -742,20 +763,9 @@ function changeSampler() {
     localStorage.setItem("sampler", stableDiffusionData.sampler_index);
 }
 
-function changeCfgScale() {
-    document.getElementById("cfgScaleTxt").innerText = stableDiffusionData.cfg_scale = document.getElementById("cfgScale").value;
-    localStorage.setItem("cfg_scale", stableDiffusionData.cfg_scale);
-}
-
-function changeBatchSize() {
-    document.getElementById("batchSizeText").innerText = stableDiffusionData.batch_size = document.getElementById("batchSize").value;
-    localStorage.setItem("batch_size", stableDiffusionData.batch_size);
-}
-
-function changeBatchCount() {
-    document.getElementById("batchCountText").innerText = stableDiffusionData.n_iter = document.getElementById("batchCount").value;
-    localStorage.setItem("n_iter", stableDiffusionData.n_iter);
-}
+const changeCfgScale = sliderChangeHandlerFactory("cfgScale", "cfgScaleTxt", "cfg_scale", 7.0);
+const changeBatchSize = sliderChangeHandlerFactory("batchSize", "batchSizeText", "batch_size", 2);
+const changeBatchCount = sliderChangeHandlerFactory("batchCount", "batchCountText", "n_iter", 2);
 
 function changeSnapMode() {
     snapToGrid = document.getElementById("cbxSnap").checked;
@@ -903,11 +913,6 @@ function checkIfWebuiIsRunning() {
 function loadSettings() {
     // set default values if not set                                    DEFAULTS
     var _sampler = localStorage.getItem("sampler") == null ? "DDIM" : localStorage.getItem("sampler");
-    var _steps = localStorage.getItem("steps") == null ? 30 : localStorage.getItem("steps");
-    var _cfg_scale = localStorage.getItem("cfg_scale") == null ? 7.0 : localStorage.getItem("cfg_scale");
-    var _batch_size = localStorage.getItem("batch_size") == null ? 2 : localStorage.getItem("batch_size");
-    var _n_iter = localStorage.getItem("n_iter") == null ? 2 : localStorage.getItem("n_iter");
-    var _scaleFactor = localStorage.getItem("scaleFactor") == null ? 8 : localStorage.getItem("scaleFactor");
     var _mask_blur = localStorage.getItem("mask_blur") == null ? 0 : localStorage.getItem("mask_blur");
     var _seed = localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
     var _enable_hr = Boolean(localStorage.getItem("enable_hr") == (null || "false") ? false : localStorage.getItem("enable_hr"));
@@ -915,11 +920,6 @@ function loadSettings() {
 
     // set the values into the UI
     document.getElementById("samplerSelect").value = String(_sampler);
-    document.getElementById("steps").value = Number(_steps);
-    document.getElementById("cfgScale").value = Number(_cfg_scale);
-    document.getElementById("batchSize").value = Number(_batch_size);
-    document.getElementById("batchCount").value = Number(_n_iter);
-    document.getElementById("scaleFactor").value = Number(_scaleFactor);
     document.getElementById("maskBlur").value = Number(_mask_blur);
     document.getElementById("seed").value = Number(_seed);
     document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
