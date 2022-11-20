@@ -107,9 +107,7 @@ var backupMaskChunk = null;
 var backupMaskX = null;
 var backupMaskY = null;
 var totalImagesReturned;
-// var maskEdgePixels = {};
-var overMask = true;
-var overMaskPx = 10;
+var overMaskPx = 16;
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
 var dropTargets = []; // uhhh yeah similar to the above but for arbitrary dropped images
 var arbitraryImage;
@@ -156,7 +154,6 @@ function startup() {
     changeSnapMode();
     changeMaskBlur();
     changeSeed();
-    changeOverMask();
     changeOverMaskPx();
     changeHiResFix();
     changeEnableErasing();
@@ -522,21 +519,18 @@ function mouseUp(evt) {
                 //check if there's image data already there
                 // console.log(downX + ":" + downY + " :: " + this.isCanvasBlank(downX, downY));
                 if (!isCanvasBlank(drawIt.x, drawIt.y, drawIt.w, drawIt.h, imgCanvas)) {
-                    // img2img
+                    // image exists, set up for img2img
                     var mainCanvasCtx = document.getElementById("canvas").getContext("2d");
                     const imgChunk = mainCanvasCtx.getImageData(drawIt.x, drawIt.y, drawIt.w, drawIt.h); // imagedata object of the image being outpainted
                     const imgChunkData = imgChunk.data; // imagedata.data object, a big inconvenient uint8clampedarray
                     // these are the 3 mask monitors on the bottom of the page
-                    var maskCanvas = document.getElementById("maskCanvasMonitor");
                     var initImgCanvas = document.getElementById("initImgCanvasMonitor");
                     var overMaskCanvas = document.getElementById("overMaskCanvasMonitor");
-                    overMaskCanvas.width = initImgCanvas.width = maskCanvas.width = target.w;
-                    overMaskCanvas.height = initImgCanvas.height = maskCanvas.height = target.h;
-                    var maskCanvasCtx = maskCanvas.getContext("2d");
+                    overMaskCanvas.width = initImgCanvas.width = target.w; //maskCanvas.width = target.w;
+                    overMaskCanvas.height = initImgCanvas.height = target.h; //maskCanvas.height = target.h;
                     var initImgCanvasCtx = initImgCanvas.getContext("2d");
                     var overMaskCanvasCtx = overMaskCanvas.getContext("2d");
                     // get blank pixels to use as mask
-                    const maskImgData = maskCanvasCtx.createImageData(drawIt.w, drawIt.h);
                     const initImgData = mainCanvasCtx.createImageData(drawIt.w, drawIt.h);
                     const overMaskImgData = overMaskCanvasCtx.createImageData(drawIt.w, drawIt.h);
                     // cover entire masks in black before adding masked areas
@@ -545,12 +539,7 @@ function mouseUp(evt) {
                         // l->r, top->bottom, R G B A pixel values in a big ol array
                         // make a simple mask            
                         if (imgChunkData[i + 3] == 0) { // rgba pixel values, 4th one is alpha, if it's 0 there's "nothing there" in the image display canvas and its time to outpaint
-                            maskImgData.data[i] = 255; // white mask gets painted over
-                            maskImgData.data[i + 1] = 255;
-                            maskImgData.data[i + 2] = 255;
-                            maskImgData.data[i + 3] = 255;
-
-                            overMaskImgData.data[i] = 255; //lets just set this up now
+                            overMaskImgData.data[i] = 255; // white mask gets painted over
                             overMaskImgData.data[i + 1] = 255;
                             overMaskImgData.data[i + 2] = 255;
                             overMaskImgData.data[i + 3] = 255;
@@ -561,15 +550,10 @@ function mouseUp(evt) {
                             initImgData.data[i + 2] = 0;
                             initImgData.data[i + 3] = 255;
                         } else { // leave these pixels alone 
-                            maskImgData.data[i] = 0; // black mask gets ignored for in/outpainting
-                            maskImgData.data[i + 1] = 0;
-                            maskImgData.data[i + 2] = 0;
-                            maskImgData.data[i + 3] = 255; // but it still needs an opaque alpha channel 
-
-                            overMaskImgData.data[i] = 0;
+                            overMaskImgData.data[i] = 0; // black mask gets ignored for in/outpainting
                             overMaskImgData.data[i + 1] = 0;
                             overMaskImgData.data[i + 2] = 0;
-                            overMaskImgData.data[i + 3] = 255;
+                            overMaskImgData.data[i + 3] = 255; // but it still needs an opaque alpha channel 
 
                             initImgData.data[i] = imgChunkData[i]; // put the original picture back in the painted area
                             initImgData.data[i + 1] = imgChunkData[i + 1];
@@ -685,10 +669,6 @@ function mouseUp(evt) {
                     const maskChunkData = maskChunk.data;
                     for (let i = 0; i < maskChunkData.length; i += 4) {
                         if (maskChunkData[i + 3] != 0) {
-                            maskImgData.data[i] = 255;
-                            maskImgData.data[i + 1] = 255;
-                            maskImgData.data[i + 2] = 255;
-                            maskImgData.data[i + 3] = 255;
                             overMaskImgData.data[i] = 255;
                             overMaskImgData.data[i + 1] = 255;
                             overMaskImgData.data[i + 2] = 255;
@@ -707,21 +687,17 @@ function mouseUp(evt) {
                     }
                     maskPaintCtx.putImageData(clearArea, drawIt.x, drawIt.y);
                     // mask monitors
-                    maskCanvasCtx.putImageData(maskImgData, 0, 0);
-                    var maskBase64 = maskCanvas.toDataURL();
                     overMaskCanvasCtx.putImageData(overMaskImgData, 0, 0); // :pray:
                     var overMaskBase64 = overMaskCanvas.toDataURL();
                     initImgCanvasCtx.putImageData(initImgData, 0, 0);
                     var initImgBase64 = initImgCanvas.toDataURL();
-                    // img2img
+                    // anyway all that to say NOW let's run img2img
                     endpoint = "img2img";
-                    var selectedMask = overMask ? overMaskBase64 : maskBase64;
-                    stableDiffusionData.mask = selectedMask;
-                    // stableDiffusionData.mask = maskBase64;
+                    stableDiffusionData.mask = overMaskBase64;
                     stableDiffusionData.init_images = [initImgBase64];
                     // slightly more involved than txt2img
                 } else {
-                    // txt2img
+                    // time to run txt2img
                     endpoint = "txt2img";
                     // easy enough
                 }
@@ -782,12 +758,9 @@ function changeSeed() {
     localStorage.setItem("seed", stableDiffusionData.seed);
 }
 
-function changeOverMask() {
-    overMask = document.getElementById("cbxOverMask").checked;
-}
-
 function changeOverMaskPx() {
     overMaskPx = document.getElementById("overMaskPx").value;
+    localStorage.setItem("overmask_px", overMaskPx);
 }
 
 function changeHiResFix() {
@@ -912,12 +885,13 @@ function checkIfWebuiIsRunning() {
 }
 
 function loadSettings() {
-    // set default values if not set                                    DEFAULTS
+    // set default values if not set
     var _sampler = localStorage.getItem("sampler") == null ? "DDIM" : localStorage.getItem("sampler");
     var _mask_blur = localStorage.getItem("mask_blur") == null ? 0 : localStorage.getItem("mask_blur");
     var _seed = localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
     var _enable_hr = Boolean(localStorage.getItem("enable_hr") == (null || "false") ? false : localStorage.getItem("enable_hr"));
     var _enable_erase = Boolean(localStorage.getItem("enable_erase") == (null || "false") ? false : localStorage.getItem("enable_erase"));
+    var _overmask_px = localStorage.getItem("overmask_px") == null ? 0 : localStorage.getItem("overmask_px");
 
     // set the values into the UI
     document.getElementById("samplerSelect").value = String(_sampler);
@@ -925,4 +899,5 @@ function loadSettings() {
     document.getElementById("seed").value = Number(_seed);
     document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
     document.getElementById("cbxEnableErasing").checked = Boolean(_enable_erase);
+    document.getElementById("overMaskPx").value = Number(_overmask_px);
 }
