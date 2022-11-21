@@ -9,8 +9,9 @@
 </head>
 
 <body>
-    <div id="infoContainer">
-        <div id="DraggableTitleBar" class="draggable">openOutpaint 🐠</div>
+    <!-- Main Toolbar -->
+    <div id="infoContainer" class="uiContainer">
+        <div id="infoTitleBar" class="draggable uiTitleBar">openOutpaint 🐠</div>
         <div id="info" class="info" style="min-width:200px;">
 
             <label for="host">Host</label>
@@ -112,6 +113,17 @@
                 <span id="version">Alpha release v0.0.6.1</span>
                 <br />
                 <hr>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- History Toolbar -->
+    <div id="historyContainer"  class="uiContainer" style="right: 0;">
+        <div id="historyTitleBar" class="draggable uiTitleBar">History</div>
+        <div class="info" style="min-width:200px;">
+            <div id="history" class="history">
+
             </div>
             <div class="toolbar">
                 <button type="button" onclick="commands.undo()" class="tool">undo</button>
