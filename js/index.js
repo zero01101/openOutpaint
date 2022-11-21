@@ -430,6 +430,9 @@ function mouseMove(evt) {
     }
 }
 
+/**
+ * Mask implementation
+ */
 mouse.listen.canvas.onmousemove.on((evn) => {
     if (paintMode) {
         // draw big translucent red blob cursor
@@ -456,16 +459,6 @@ mouse.listen.canvas.left.onpaint.on((evn) => {
 
 mouse.listen.canvas.right.onpaint.on((evn) => {
     if (paintMode) {
-        ovCtx.beginPath();
-        ovCtx.arc(evn.x, evn.y, 4 * scaleFactor, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-        ovCtx.fillStyle = '#00FF00';
-        ovCtx.fill();
-
-        ovCtx.beginPath();
-        ovCtx.arc(evn.px, evn.py, 4 * scaleFactor, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-        ovCtx.fillStyle = '#0000FF';
-        ovCtx.fill();
-
         maskPaintCtx.globalCompositeOperation = 'destination-out';
         maskPaintCtx.strokeStyle = '#FFFFFFFF';
 

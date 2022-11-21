@@ -12,23 +12,23 @@
 }
 
 .maskPaintCanvas {
-    border: 3px dotted #993355C0
+    border: 3px dotted #993355c0;
 }
 
 .overlayCanvas {
-    border: 1px solid #F00;
+    border: 1px solid #f00;
 }
 
 .tempCanvas {
-    border: 3px dotted #007AFFC0;
+    border: 3px dotted #007affc0;
 }
 
 .targetCanvas {
-    border: 2px dashed #0F0;
+    border: 2px dashed #0f0;
 }
 
 .canvas {
-    border: 2px dotted #00F;
+    border: 2px dotted #00f;
 }
 
 .mainHSplit {
@@ -45,7 +45,6 @@
     grid-template-rows: 1fr;
     grid-column-gap: 5px;
     grid-row-gap: 5px;
-
 }
 
 #infoContainer {
@@ -53,10 +52,9 @@
     width: 250px;
     height: auto;
     z-index: 999;
-
 }
-#draggable{
-    cursor:move
+#draggable {
+    cursor: move;
 }
 
 #DraggableTitleBar {
@@ -153,7 +151,6 @@ button.tool:hover {
     cursor: auto;
 }
 
-
 .canvasHolder {
     position: relative;
     width: 2560px;
@@ -178,6 +175,10 @@ button.tool:hover {
 
 .maskCanvasMonitor .overMaskCanvasMonitor .initImgCanvasMonitor {
     position: absolute;
+}
+
+.maskPaintCanvas {
+    filter: opacity(40%);
 }
 
 .strokeText {
