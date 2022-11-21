@@ -14,24 +14,8 @@ body{
     background-color: #ccc;
 }
 
-.maskPaintCanvas {
-    border: 3px dotted #993355C0
-}
-
-.overlayCanvas {
-    border: 1px solid #F00;
-}
-
-.tempCanvas {
-    border: 3px dotted #007AFFC0;
-}
-
-.targetCanvas {
-    border: 2px dashed #0F0;
-}
-
 .canvas {
-    border: 2px dotted #00F;
+    border: 1px black solid;
 }
 
 .mainHSplit {
