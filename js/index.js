@@ -429,7 +429,7 @@ function mouseMove(evt) {
 		ovCtx.drawImage(arbitraryImage, finalX, finalY);
 	} else if (!paintMode) {
 		// draw targeting square reticle thingy cursor
-		ovCtx.strokeStyle = "#00000077";
+		ovCtx.strokeStyle = "#FFFFFF";
 		snapOffsetX = 0;
 		snapOffsetY = 0;
 		if (snapToGrid) {
@@ -816,18 +816,14 @@ function isCanvasBlank(x, y, w, h, specifiedCanvas) {
 }
 
 function drawBackground() {
-	bgCtx.lineWidth = 1;
-	bgCtx.strokeStyle = "#999";
-	var gridbox = bgCanvas.getBoundingClientRect();
-	for (var i = 0; i < gridbox.width; i += 64) {
-		bgCtx.moveTo(i, 0);
-		bgCtx.lineTo(i, bgCanvas.height);
-		bgCtx.stroke();
-	}
-	for (var i = 0; i < gridbox.height; i += 64) {
-		bgCtx.moveTo(0, i);
-		bgCtx.lineTo(gridbox.width, i);
-		bgCtx.stroke();
+	// Checkerboard
+	let darkTileColor = "#333";
+	let lightTileColor = "#555";
+	for (var x = 0; x < bgCanvas.width; x += 64) {
+		for (var y = 0; y < bgCanvas.height; y += 64) {
+			bgCtx.fillStyle = (x + y) % 128 === 0 ? lightTileColor : darkTileColor;
+			bgCtx.fillRect(x, y, 64, 64);
+		}
 	}
 }
 
