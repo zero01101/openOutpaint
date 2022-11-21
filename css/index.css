@@ -2,6 +2,9 @@
 	font-size: 100%;
 	font-family: Arial, Helvetica, sans-serif;
 }
+body{
+    margin:0px;
+}
 
 .container {
 	position: relative;
@@ -11,24 +14,8 @@
 	background-color: #ccc;
 }
 
-.maskPaintCanvas {
-	border: 3px dotted #993355c0;
-}
-
-.overlayCanvas {
-	border: 1px solid #f00;
-}
-
-.tempCanvas {
-	border: 3px dotted #007affc0;
-}
-
-.targetCanvas {
-	border: 2px dashed #0f0;
-}
-
 .canvas {
-	border: 2px dotted #00f;
+    border: 1px black solid;
 }
 
 .mainHSplit {
@@ -58,6 +45,12 @@
 	z-index: 999;
 	cursor: move;
 	background-color: rgba(104, 104, 104, 0.75);
+    position: absolute;
+    top: 68px;
+    left: 68px;
+    width: 250px;
+    height: auto;
+    z-index: 999;
 
 	user-select: none;
 
