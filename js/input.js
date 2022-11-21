@@ -130,7 +130,7 @@ window.onmousedown = (evn) => {
 
 		["window", "canvas", "world"].forEach((ctx) => {
 			mouse.buttons[key] = time;
-			mouse[ctx].dragging[key] = {};
+			mouse[ctx].dragging[key] = {target: evn.target};
 			Object.assign(mouse[ctx].dragging[key], mouse[ctx].pos);
 
 			// onpaintstart event
@@ -181,6 +181,7 @@ window.onmouseup = (evn) => {
 			// onpaintend event
 			mouse.listen[ctx][key].onpaintend.emit({
 				target: evn.target,
+				initialTarget: mouse[ctx].dragging[key].target,
 				buttonId: evn.button,
 				x: mouse[ctx].pos.x,
 				y: mouse[ctx].pos.y,
@@ -191,6 +192,7 @@ window.onmouseup = (evn) => {
 			if (mouse[ctx].dragging[key].drag)
 				mouse.listen[ctx][key].ondragend.emit({
 					target: evn.target,
+					initialTarget: mouse[ctx].dragging[key].target,
 					buttonId: evn.button,
 					x: mouse[ctx].pos.x,
 					y: mouse[ctx].pos.y,
@@ -244,6 +246,7 @@ window.onmousemove = (evn) => {
 			if (mouse[ctx].dragging[key] && mouse[ctx].dragging[key].drag)
 				mouse.listen[ctx][key].ondrag.emit({
 					target: evn.target,
+					initialTarget: mouse[ctx].dragging[key].target,
 					px: mouse[ctx].prev.x,
 					py: mouse[ctx].prev.y,
 					x: mouse[ctx].pos.x,
@@ -255,6 +258,7 @@ window.onmousemove = (evn) => {
 			if (mouse[ctx].dragging[key])
 				mouse.listen[ctx][key].onpaint.emit({
 					target: evn.target,
+					initialTarget: mouse[ctx].dragging[key].target,
 					px: mouse[ctx].prev.x,
 					py: mouse[ctx].prev.y,
 					x: mouse[ctx].pos.x,

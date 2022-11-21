@@ -461,7 +461,7 @@ mouse.listen.canvas.onmousemove.on((evn) => {
 });
 
 mouse.listen.canvas.left.onpaint.on((evn) => {
-	if (paintMode && evn.target.id === "overlayCanvas") {
+	if (paintMode && evn.initialTarget.id === "overlayCanvas") {
 		maskPaintCtx.globalCompositeOperation = "source-over";
 		maskPaintCtx.strokeStyle = "#FF6A6A";
 
@@ -475,7 +475,7 @@ mouse.listen.canvas.left.onpaint.on((evn) => {
 });
 
 mouse.listen.canvas.right.onpaint.on((evn) => {
-	if (paintMode && evn.target.id === "overlayCanvas") {
+	if (paintMode && evn.initialTarget.id === "overlayCanvas") {
 		maskPaintCtx.globalCompositeOperation = "destination-out";
 		maskPaintCtx.strokeStyle = "#FFFFFFFF";
 
