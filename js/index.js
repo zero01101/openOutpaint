@@ -444,42 +444,49 @@ function mouseMove(evt) {
 			basePixelCount * scaleFactor,
 			basePixelCount * scaleFactor
 		); //origin is middle of the frame
-	} else {
-		// draw big translucent red blob cursor
-		ovCtx.beginPath();
-		ovCtx.arc(canvasX, canvasY, 4 * scaleFactor, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-		ovCtx.fillStyle = "#FF6A6A50";
-		ovCtx.fill();
-		// in case i'm trying to draw
-		mouseX = parseInt(evt.clientX - canvasOffsetX);
-		mouseY = parseInt(evt.clientY - canvasOffsetY);
-		if (clicked) {
-			// i'm trying to draw, please draw :(
-			maskPaintCtx.globalCompositeOperation = "source-over";
-			maskPaintCtx.strokeStyle = "#FF6A6A10";
-			maskPaintCtx.lineWidth = 8 * scaleFactor;
-			maskPaintCtx.beginPath();
-			maskPaintCtx.moveTo(prevMouseX, prevMouseY);
-			maskPaintCtx.lineTo(mouseX, mouseY);
-			maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
-			maskPaintCtx.stroke();
-		}
-		// Erase mask if right button is held
-		// no reason to have to tick a checkbox for this, more intuitive for both erases (mask and actual images) to just work on right click and inform the user about it
-		if (evt.buttons == 2) {
-			maskPaintCtx.globalCompositeOperation = "destination-out";
-			maskPaintCtx.beginPath();
-			maskPaintCtx.strokeStyle = "#FFFFFFFF";
-			maskPaintCtx.lineWidth = 8 * scaleFactor;
-			maskPaintCtx.moveTo(prevMouseX, prevMouseY);
-			maskPaintCtx.lineTo(mouseX, mouseY);
-			maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
-			maskPaintCtx.stroke();
-		}
-		prevMouseX = mouseX;
-		prevMouseY = mouseY;
 	}
 }
+
+/**
+ * Mask implementation
+ */
+mouse.listen.canvas.onmousemove.on((evn) => {
+	if (paintMode && evn.target.id === "overlayCanvas") {
+		// draw big translucent red blob cursor
+		ovCtx.beginPath();
+		ovCtx.arc(evn.x, evn.y, 4 * scaleFactor, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
+		ovCtx.fillStyle = "#FF6A6A50";
+		ovCtx.fill();
+	}
+});
+
+mouse.listen.canvas.left.onpaint.on((evn) => {
+	if (paintMode && evn.initialTarget.id === "overlayCanvas") {
+		maskPaintCtx.globalCompositeOperation = "source-over";
+		maskPaintCtx.strokeStyle = "#FF6A6A";
+
+		maskPaintCtx.lineWidth = 8 * scaleFactor;
+		maskPaintCtx.beginPath();
+		maskPaintCtx.moveTo(evn.px, evn.py);
+		maskPaintCtx.lineTo(evn.x, evn.y);
+		maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
+		maskPaintCtx.stroke();
+	}
+});
+
+mouse.listen.canvas.right.onpaint.on((evn) => {
+	if (paintMode && evn.initialTarget.id === "overlayCanvas") {
+		maskPaintCtx.globalCompositeOperation = "destination-out";
+		maskPaintCtx.strokeStyle = "#FFFFFFFF";
+
+		maskPaintCtx.lineWidth = 8 * scaleFactor;
+		maskPaintCtx.beginPath();
+		maskPaintCtx.moveTo(evn.px, evn.py);
+		maskPaintCtx.lineTo(evn.x, evn.y);
+		maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
+		maskPaintCtx.stroke();
+	}
+});
 
 function mouseDown(evt) {
 	const rect = ovCanvas.getBoundingClientRect();
@@ -496,14 +503,7 @@ function mouseDown(evt) {
 			nextBox.w = arbitraryImageData.width;
 			nextBox.h = arbitraryImageData.height;
 			dropTargets.push(nextBox);
-		} else if (paintMode) {
-			//const rect = ovCanvas.getBoundingClientRect() // not-quite pixel offset was driving me insane
-			const canvasOffsetX = rect.left;
-			const canvasOffsetY = rect.top;
-			prevMouseX = mouseX = evt.clientX - canvasOffsetX;
-			prevMouseY = mouseY = evt.clientY - canvasOffsetY;
-			clicked = true;
-		} else {
+		} else if (!paintMode) {
 			//const rect = ovCanvas.getBoundingClientRect()
 			var nextBox = {};
 			nextBox.x =
@@ -738,6 +738,7 @@ function changePaintMode() {
 }
 
 function changeEnableErasing() {
+	// yeah because this is for the image layer
 	enableErasing = document.getElementById("cbxEnableErasing").checked;
 	localStorage.setItem("enable_erase", enableErasing);
 }
