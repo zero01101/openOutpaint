@@ -46,6 +46,7 @@ function _mouse_observers() {
 
 function _context_observers() {
     return {
+        onmousemove: new Observer(),
         left: _mouse_observers(),
         middle: _mouse_observers(),
         right: _mouse_observers(),
@@ -230,12 +231,19 @@ window.onmousemove = (evn) => {
     }
 
     ['window', 'canvas', 'world'].forEach((ctx) => {
+        mouse.listen[ctx].onmousemove.emit({
+            px: mouse[ctx].prev.x,
+            py: mouse[ctx].prev.y,
+            x: mouse[ctx].pos.x,
+            y: mouse[ctx].pos.y,
+            timestamp: new Date(),
+        });
         ['left', 'middle', 'right'].forEach((key) => {
             // ondrag event
             if (mouse[ctx].dragging[key] && mouse[ctx].dragging[key].drag)
                 mouse.listen[ctx][key].ondrag.emit({
                     px: mouse[ctx].prev.x,
-                    py: mouse[ctx].prev.x,
+                    py: mouse[ctx].prev.y,
                     x: mouse[ctx].pos.x,
                     y: mouse[ctx].pos.y,
                     timestamp: new Date(),
@@ -245,7 +253,7 @@ window.onmousemove = (evn) => {
             if (mouse[ctx].dragging[key])
                 mouse.listen[ctx][key].onpaint.emit({
                     px: mouse[ctx].prev.x,
-                    py: mouse[ctx].prev.x,
+                    py: mouse[ctx].prev.y,
                     x: mouse[ctx].pos.x,
                     y: mouse[ctx].pos.y,
                     timestamp: new Date(),
@@ -282,3 +290,7 @@ mouse.listen.window.right.onpaintend.on(() =>
     console.debug('mouse.listen.window.right.onpaintend')
 );
 */
+
+/**
+ * Mouse input processing
+ */
