@@ -27,6 +27,7 @@
                     id="negPrompt">people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry</textarea><br />
                 <hr>
             </div>
+            <!-- SD section -->
             <button type="button" class="collapsible">Stable Diffusion settings</button>
             <div class="content">
                 <label for="seed">Seed (-1 for random):</label> <br>
@@ -62,6 +63,7 @@
                 <input type="range" id="batchCount" name="batchCount" min="1" max="8" step="1" /><br />
                 <hr>
             </div>
+            <!-- Unsectioned -->
             <label for="scaleFactor">Scale factor: <input type="number" id="scaleFactorTxt"></label><br />
             <input type="range" id="scaleFactor" name="scaleFactor" min="1" max="16" /><br />
             <label for="cbxSnap">Snap to grid?</label>
@@ -80,6 +82,7 @@
             <span id="maskBlurText"></span><br />
             <input type="number" id="maskBlur" name="maskBlur" min="0" max="256" value="0" step="1"
                 onchange="changeMaskBlur()" /><br />
+            <!-- Save/load image section -->
             <button type="button" class="collapsible">Save/Load/New image</button>
             <div class="content">
                 <label for="preloadImage">Load image:</label>
