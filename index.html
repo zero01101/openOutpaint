@@ -9,8 +9,9 @@
 </head>
 
 <body>
-    <div id="infoContainer">
-        <div id="DraggableTitleBar" class="draggable">openOutpaint 🐠</div>
+    <!-- Main Toolbar -->
+    <div id="infoContainer" class="uiContainer">
+        <div id="infoTitleBar" class="draggable uiTitleBar">openOutpaint 🐠</div>
         <div id="info" class="info" style="min-width:200px;">
 
             <label for="host">Host</label>
@@ -71,9 +72,6 @@
             <input type="checkbox" id="cbxEnableErasing" onchange="changeEnableErasing()"><br />
             <label for="cbxPaint">Mask mode?</label>
             <input type="checkbox" id="cbxPaint" onchange="changePaintMode()"><br />
-            <!-- Having to tick a box to erase is a bad user experience, same goes for image erasing( cold be remedied by a temp confirm div) -->
-            <!-- <label for="cbxErase"><s>Erase mask?</s></label>
-            <input type="checkbox" id="cbxErase" onchange="changeEraseMode()" disabled="disabled"><br /> -->
 
             <label for="cbxHRFix">Auto txt2img HRfix?</label>
             <input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()"><br />
@@ -118,6 +116,17 @@
                 <span id="version">Alpha release v0.0.6.1</span>
                 <br />
                 <hr>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- History Toolbar -->
+    <div id="historyContainer"  class="uiContainer" style="right: 0;">
+        <div id="historyTitleBar" class="draggable uiTitleBar">History</div>
+        <div class="info" style="min-width:200px;">
+            <div id="history" class="history">
+
             </div>
             <div class="toolbar">
                 <button type="button" onclick="commands.undo()" class="tool">undo</button>
@@ -179,6 +188,8 @@
     </div>
 
 
+    <script src="js/util.js" type="text/javascript"></script>
+    <script src="js/input.js" type="text/javascript"></script>
     <script src="js/commands.js" type="text/javascript"></script>
     <script src="js/index.js" type="text/javascript"></script>
     <script src="js/settingsbar.js" type="text/javascript"></script>
