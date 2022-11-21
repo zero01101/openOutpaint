@@ -37,6 +37,8 @@ body{
 
 #infoContainer {
     position: absolute;
+    top: 68px;
+    left: 68px;
     width: 250px;
     height: auto;
     z-index: 999;
