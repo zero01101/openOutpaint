@@ -97,6 +97,7 @@ window.onmousedown = (evn) => {
             // ondclick event
             ['window', 'canvas', 'world'].forEach((ctx) =>
                 mouse.listen[ctx][key].ondclick.emit({
+                    target: evn.target,
                     buttonId: evn.button,
                     x: mouse[ctx].pos.x,
                     y: mouse[ctx].pos.y,
@@ -115,6 +116,7 @@ window.onmousedown = (evn) => {
         _drag_start_timeout[key] = setTimeout(() => {
             ['window', 'canvas', 'world'].forEach((ctx) => {
                 mouse.listen[ctx][key].ondragstart.emit({
+                    target: evn.target,
                     buttonId: evn.button,
                     x: mouse[ctx].pos.x,
                     y: mouse[ctx].pos.y,
@@ -134,6 +136,7 @@ window.onmousedown = (evn) => {
 
             // onpaintstart event
             mouse.listen[ctx][key].onpaintstart.emit({
+                target: evn.target,
                 buttonId: evn.button,
                 x: mouse[ctx].pos.x,
                 y: mouse[ctx].pos.y,
@@ -170,6 +173,7 @@ window.onmouseup = (evn) => {
                     inputConfig.clickRadius * inputConfig.clickRadius
             )
                 mouse.listen[ctx][key].onclick.emit({
+                    target: evn.target,
                     buttonId: evn.button,
                     x: mouse[ctx].pos.x,
                     y: mouse[ctx].pos.y,
@@ -178,6 +182,7 @@ window.onmouseup = (evn) => {
 
             // onpaintend event
             mouse.listen[ctx][key].onpaintend.emit({
+                target: evn.target,
                 buttonId: evn.button,
                 x: mouse[ctx].pos.x,
                 y: mouse[ctx].pos.y,
@@ -187,6 +192,7 @@ window.onmouseup = (evn) => {
             // ondragend event
             if (mouse[ctx].dragging[key].drag)
                 mouse.listen[ctx][key].ondragend.emit({
+                    target: evn.target,
                     buttonId: evn.button,
                     x: mouse[ctx].pos.x,
                     y: mouse[ctx].pos.y,
@@ -232,6 +238,7 @@ window.onmousemove = (evn) => {
 
     ['window', 'canvas', 'world'].forEach((ctx) => {
         mouse.listen[ctx].onmousemove.emit({
+            target: evn.target,
             px: mouse[ctx].prev.x,
             py: mouse[ctx].prev.y,
             x: mouse[ctx].pos.x,
@@ -242,6 +249,7 @@ window.onmousemove = (evn) => {
             // ondrag event
             if (mouse[ctx].dragging[key] && mouse[ctx].dragging[key].drag)
                 mouse.listen[ctx][key].ondrag.emit({
+                    target: evn.target,
                     px: mouse[ctx].prev.x,
                     py: mouse[ctx].prev.y,
                     x: mouse[ctx].pos.x,
@@ -252,6 +260,7 @@ window.onmousemove = (evn) => {
             // onpaint event
             if (mouse[ctx].dragging[key])
                 mouse.listen[ctx][key].onpaint.emit({
+                    target: evn.target,
                     px: mouse[ctx].prev.x,
                     py: mouse[ctx].prev.y,
                     x: mouse[ctx].pos.x,

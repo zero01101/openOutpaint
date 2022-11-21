@@ -109,7 +109,6 @@ const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var scaleFactor = 8; //x64 px
 var snapToGrid = true;
 var paintMode = false;
-var eraseMode = false; //TODO this is broken, functionality still exists in code but UI element is just naively disabled
 var backupMaskPaintCanvas; //???
 var backupMaskPaintCtx; //...? look i am bad at this
 var backupMaskChunk = null;
@@ -434,7 +433,7 @@ function mouseMove(evt) {
  * Mask implementation
  */
 mouse.listen.canvas.onmousemove.on((evn) => {
-    if (paintMode) {
+    if (paintMode && evn.target.id === 'overlayCanvas') {
         // draw big translucent red blob cursor
         ovCtx.beginPath();
         ovCtx.arc(evn.x, evn.y, 4 * scaleFactor, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
@@ -444,7 +443,7 @@ mouse.listen.canvas.onmousemove.on((evn) => {
 });
 
 mouse.listen.canvas.left.onpaint.on((evn) => {
-    if (paintMode) {
+    if (paintMode && evn.target.id === 'overlayCanvas') {
         maskPaintCtx.globalCompositeOperation = 'source-over';
         maskPaintCtx.strokeStyle = '#FF6A6A';
 
@@ -458,7 +457,7 @@ mouse.listen.canvas.left.onpaint.on((evn) => {
 });
 
 mouse.listen.canvas.right.onpaint.on((evn) => {
-    if (paintMode) {
+    if (paintMode && evn.target.id === 'overlayCanvas') {
         maskPaintCtx.globalCompositeOperation = 'destination-out';
         maskPaintCtx.strokeStyle = '#FFFFFFFF';
 
