@@ -1,6 +1,9 @@
 /**
  * Command pattern to allow for editing history
  */
+
+const _commands_events = new Observer();
+
 const commands = {
 	current: -1,
 	history: [],
@@ -30,7 +33,7 @@ const commands = {
 	 * The 'state' object will be passed to the 'undo' function as well.
 	 */
 	createCommand(name, run, undo, redo = run) {
-		const command = function runWrapper(options) {
+		const command = function runWrapper(title, options) {
 			// Create copy of options and state object
 			const copy = {};
 			Object.assign(copy, options);
@@ -38,7 +41,7 @@ const commands = {
 
 			// Attempt to run command
 			try {
-				run(copy, state);
+				run(title, copy, state);
 			} catch (e) {
 				console.warn(`Error while running command '${name}' with options:`);
 				console.warn(copy);
@@ -48,26 +51,56 @@ const commands = {
 
 			const undoWrapper = () => {
 				console.debug(`Undoing ${name}, currently ${commands.current}`);
-				undo(state);
+				undo(title, state);
+				_commands_events.emit({
+					name,
+					action: "undo",
+					state,
+					current: commands.current,
+				});
 			};
 			const redoWrapper = () => {
 				console.debug(`Redoing ${name}, currently ${commands.current}`);
-				redo(copy, state);
+				redo(title, copy, state);
+				_commands_events.emit({
+					name,
+					action: "redo",
+					state,
+					current: commands.current,
+				});
 			};
 
 			// Add to history
 			if (commands.history.length > commands.current + 1)
 				commands.history.splice(commands.current + 1);
-			commands.history.push({undo: undoWrapper, redo: redoWrapper});
+
+			const entry = {
+				id: guid(),
+				title,
+				undo: undoWrapper,
+				redo: redoWrapper,
+				state,
+			};
+
+			commands.history.push(entry);
 			commands.current++;
+
+			_commands_events.emit({
+				name,
+				action: "run",
+				state,
+				current: commands.current,
+			});
+
+			return entry;
 		};
 
 		this.types[name] = command;
 
 		return command;
 	},
-	runCommand(name, options) {
-		this.types[name](options);
+	runCommand(name, title, options) {
+		this.types[name](title, options);
 	},
 	types: {},
 };
@@ -77,7 +110,7 @@ const commands = {
  */
 commands.createCommand(
 	"drawImage",
-	(options, state) => {
+	(title, options, state) => {
 		if (
 			!options ||
 			options.image === undefined ||
@@ -116,7 +149,7 @@ commands.createCommand(
 		// Apply command
 		state.context.drawImage(options.image, state.box.x, state.box.y);
 	},
-	(state) => {
+	(title, state) => {
 		// Clear destination area
 		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
 		// Undo
