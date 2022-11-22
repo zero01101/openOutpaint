@@ -1,6 +1,6 @@
 # hello there 🐠
 
-![openOutpaint creating some undersea wildlife](docs/01-demo.gif)
+![openOutpaint creating some undersea wildlife](docs/01-demo-v3.gif)
 
 this is a completely vanilla javascript and html canvas outpainting convenience doodad built for the API optionally exposed by [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), operating similarly to a few others which certainly have superior functionality. this simply offers an alternative for my following vain desires:
 
