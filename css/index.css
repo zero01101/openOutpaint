@@ -45,11 +45,6 @@ body{
 	z-index: 999;
 	cursor: move;
 	background-color: rgba(104, 104, 104, 0.75);
-    position: absolute;
-    top: 68px;
-    left: 68px;
-    width: 250px;
-    height: auto;
     z-index: 999;
 
 	user-select: none;
