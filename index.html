@@ -125,10 +125,8 @@
     <div id="historyContainer"  class="uiContainer" style="right: 0;">
         <div id="historyTitleBar" class="draggable uiTitleBar">History</div>
         <div class="info" style="min-width:200px;">
-            <div id="history" class="history">
-
-            </div>
-            <div class="toolbar">
+            <div id="history" class="history"></div>
+            <div class="toolbar" style="padding: 10px;">
                 <button type="button" onclick="commands.undo()" class="tool">undo</button>
                 <button type="button" onclick="commands.redo()" class="tool">redo</button>
             </div>
@@ -194,6 +192,8 @@
     <script src="js/index.js" type="text/javascript"></script>
     <script src="js/settingsbar.js" type="text/javascript"></script>
     <script src="js/shortcuts.js" type="text/javascript"></script>
+    
+    <script src="js/ui/history.js" type="text/javascript"></script>
 </body>
 
 </html>

@@ -20,7 +20,7 @@ Observer.prototype = {
 				await handler(msg);
 			} catch (e) {
 				console.warn("Observer failed to run handler");
-				console.warn(handler);
+				console.warn(e);
 			}
 		});
 	},
