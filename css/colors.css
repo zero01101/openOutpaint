@@ -1,0 +1,8 @@
+:root {
+	--c-primary: #2c3333;
+	--c-hover: hsl(180, 7%, 30%);
+	--c-active: hsl(180, 7%, 25%);
+	--c-secondary: #395b64;
+	--c-accent: #a5c9ca;
+	--c-text: #e7f6f2;
+}

@@ -41,3 +41,41 @@ const guid = (size = 3) => {
 	id += s4();
 	return id;
 };
+
+/**
+ * Bounding box Calculation
+ */
+function snap(i, scaled = true, gridSize = 64) {
+	// very cheap test proof of concept but it works surprisingly well
+	var scaleOffset = 0;
+	if (scaled) {
+		if (scaleFactor % 2 != 0) {
+			// odd number, snaps to center of cell, oops
+			scaleOffset = gridSize / 2;
+		}
+	}
+	var snapOffset = (i % gridSize) - scaleOffset;
+	if (snapOffset == 0) {
+		return snapOffset;
+	}
+	return -snapOffset;
+}
+
+function getBoundingBox(cx, cy, w, h, gridSnap = null) {
+	const offset = {x: 0, y: 0};
+	const box = {x: 0, y: 0};
+
+	if (gridSnap) {
+		offset.x = snap(cx, true, gridSnap);
+		offset.y = snap(cy, true, gridSnap);
+	}
+	box.x = offset.x + cx;
+	box.y = offset.y + cy;
+
+	return {
+		x: Math.floor(box.x - w / 2),
+		y: Math.floor(box.y - h / 2),
+		w,
+		h,
+	};
+}
