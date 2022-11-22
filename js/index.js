@@ -905,8 +905,8 @@ function cropCanvas(sourceCanvas) {
 		return a - b;
 	});
 	var n = pix.x.length - 1;
-	w = (pix.x[n] - pix.x[0])+1;
-	h = (pix.y[n] - pix.y[0])+1;
+	w = pix.x[n] - pix.x[0] + 1;
+	h = pix.y[n] - pix.y[0] + 1;
 	// yup sure looks like it
 
 	try {
@@ -942,7 +942,6 @@ function checkIfWebuiIsRunning() {
 }
 
 function getUpscalers() {
-
 	/*
 	 so for some reason when upscalers request returns upscalers, the real-esrgan model names are incorrect, and need to be fetched from /sdapi/v1/realesrgan-models
 	 also the realesrgan models returned are not all correct, extra fun!
@@ -953,19 +952,21 @@ function getUpscalers() {
 	 { detail: "Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x" }
 	 from which we can extract the correct list of upscalers
 	*/
-	
+
 	// hacky way to get the correct list of upscalers
 	var upscalerSelect = document.getElementById("upscalers");
-	var extras_url = document.getElementById("host").value + "/sdapi/v1/extra-single-image/" // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
+	var extras_url =
+		document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
 	var empty_image = new Image(512, 512);
-	empty_image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAFCAAAAABCAYAAAChpRsuAAAALklEQVR42u3BAQ0AAAgDoJvc6LeHAybtBgAAAAAAAAAAAAAAAAAAAAAAAAB47QD2wAJ/LnnqGgAAAABJRU5ErkJggg=="; //transparent pixel
+	empty_image.src =
+		"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAFCAAAAABCAYAAAChpRsuAAAALklEQVR42u3BAQ0AAAgDoJvc6LeHAybtBgAAAAAAAAAAAAAAAAAAAAAAAAB47QD2wAJ/LnnqGgAAAABJRU5ErkJggg=="; //transparent pixel
 	var purposefully_incorrect_data = {
-		"resize-mode" : 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
-		"upscaling_resize": 2, 
-		"upscaler_1": "fake_upscaler",
-		"image": empty_image.src,
-	}
-	
+		"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
+		upscaling_resize: 2,
+		upscaler_1: "fake_upscaler",
+		image: empty_image.src,
+	};
+
 	fetch(extras_url, {
 		method: "POST",
 		headers: {
@@ -974,21 +975,19 @@ function getUpscalers() {
 		},
 		body: JSON.stringify(purposefully_incorrect_data),
 	})
-	.then((response) => response.json())
-	.then((data) => {
-		console.log( "purposefully_incorrect_data response, ignore above error");
-		// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
-		let upscalers = data.detail.split(": ")[1].trim().split(" , "); // converting the result to a list of upscalers
-		for (var i = 0; i < upscalers.length; i++) {
-			if(upscalers[i] == "LDSR") continue; // Skip LDSR, see reason in the first comment
-			var option = document.createElement("option");
-			option.text = upscalers[i];
-			option.value = upscalers[i];
-			upscalerSelect.add(option);
-		}
-
-	})
-
+		.then((response) => response.json())
+		.then((data) => {
+			console.log("purposefully_incorrect_data response, ignore above error");
+			// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
+			let upscalers = data.detail.split(": ")[1].trim().split(" , "); // converting the result to a list of upscalers
+			for (var i = 0; i < upscalers.length; i++) {
+				// if(upscalers[i] == "LDSR") continue; // Skip LDSR, see reason in the first comment // readded because worksonmymachine.jpg but leaving it here in case of, uh, future disaster?
+				var option = document.createElement("option");
+				option.text = upscalers[i];
+				option.value = upscalers[i];
+				upscalerSelect.add(option);
+			}
+		});
 
 	/* THE NON HACKY WAY THAT I SIMPLY COULD NOT GET TO PRODUCE A LIST WITHOUT NON WORKING UPSCALERS, FEEL FREE TO TRY AND FIGURE IT OUT
 
@@ -1034,7 +1033,7 @@ function getUpscalers() {
 	*/
 }
 
-async function upscaleAndDownload(){
+async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
@@ -1043,14 +1042,15 @@ async function upscaleAndDownload(){
 	var croppedCanvas = cropCanvas(imgCanvas);
 	if (croppedCanvas != null) {
 		var upscaler = document.getElementById("upscalers").value;
-		var url = document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
+		var url =
+			document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
 		var imgdata = croppedCanvas.toDataURL("image/png");
 		var data = {
-			"resize-mode" : 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
-			"upscaling_resize": upscale_factor, 
-			"upscaler_1": upscaler,
-			"image": imgdata,
-		}
+			"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
+			upscaling_resize: upscale_factor,
+			upscaler_1: upscaler,
+			image: imgdata,
+		};
 		console.log(data);
 		await fetch(url, {
 			method: "POST",
@@ -1060,19 +1060,24 @@ async function upscaleAndDownload(){
 			},
 			body: JSON.stringify(data),
 		})
-		.then((response) => response.json())
-		.then((data) => {
-			console.log(data);
-			var link = document.createElement("a");
-			link.download =
-			new Date().toISOString().slice(0, 19).replace("T", " ").replace(":", " ") +
-			" openOutpaint image upscaler_"+upscaler+".png";
-			link.href = "data:image/png;base64,"+data["image"];
-			link.click();
-		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log(data);
+				var link = document.createElement("a");
+				link.download =
+					new Date()
+						.toISOString()
+						.slice(0, 19)
+						.replace("T", " ")
+						.replace(":", " ") +
+					" openOutpaint image upscaler_" +
+					upscaler +
+					".png";
+				link.href = "data:image/png;base64," + data["image"];
+				link.click();
+			});
 	}
 }
-
 
 function loadSettings() {
 	// set default values if not set
