@@ -89,6 +89,10 @@
                 <input type="file" id="preloadImage" onchange="preloadImage()" accept="image/*" /
                     style="width: 200px;"><br />
                 <button onclick="downloadCanvas()">Save canvas</button><br />
+                <label for="upscalers">Choose upscaler</label>
+                <select id="upscalers"></select>
+                <button onclick="upscaleAndDownload()">Upscale (might take a sec)</button><br />
+
                 <button onclick="newImage()">Clear canvas</button>
             </div>
             <!-- Degub info -->
