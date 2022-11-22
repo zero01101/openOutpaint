@@ -156,3 +156,53 @@ commands.createCommand(
 		state.context.drawImage(state.original, state.box.x, state.box.y);
 	}
 );
+
+commands.createCommand(
+	"eraseImage",
+	(title, options, state) => {
+		if (
+			!options ||
+			options.x === undefined ||
+			options.y === undefined ||
+			options.w === undefined ||
+			options.h === undefined
+		)
+			throw "Command eraseImage requires options in the format: {x, y, w, h, ctx?}";
+
+		// Check if we have state
+		if (!state.context) {
+			const context = options.ctx || imgCtx;
+			state.context = context;
+
+			// Saving what was in the canvas before the command
+			const imgData = context.getImageData(
+				options.x,
+				options.y,
+				options.w,
+				options.h
+			);
+			state.box = {
+				x: options.x,
+				y: options.y,
+				w: options.w,
+				h: options.h,
+			};
+			// Create Image
+			const cutout = document.createElement("canvas");
+			cutout.width = state.box.w;
+			cutout.height = state.box.h;
+			cutout.getContext("2d").putImageData(imgData, 0, 0);
+			state.original = new Image();
+			state.original.src = cutout.toDataURL();
+		}
+
+		// Apply command
+		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
+	},
+	(title, state) => {
+		// Clear destination area
+		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
+		// Undo
+		state.context.drawImage(state.original, state.box.x, state.box.y);
+	}
+);

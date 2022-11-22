@@ -31,9 +31,9 @@ function _context_coords() {
 }
 function _mouse_observers() {
 	return {
-		// Simple click handlers
+		// Simple click handler
 		onclick: new Observer(),
-		// Double click handlers (will still trigger simple click handler as well)
+		// Double click handler (will still trigger simple click handler as well)
 		ondclick: new Observer(),
 		// Drag handler
 		ondragstart: new Observer(),
@@ -48,6 +48,7 @@ function _mouse_observers() {
 
 function _context_observers() {
 	return {
+		onwheel: new Observer(),
 		onmousemove: new Observer(),
 		left: _mouse_observers(),
 		middle: _mouse_observers(),
@@ -270,36 +271,27 @@ window.onmousemove = (evn) => {
 		});
 	});
 };
-/** MOUSE DEBUG */
-/*
-mouse.listen.window.right.onclick.on(() =>
-    console.debug('mouse.listen.window.right.onclick')
-);
 
-mouse.listen.window.right.ondclick.on(() =>
-    console.debug('mouse.listen.window.right.ondclick')
+window.addEventListener(
+	"wheel",
+	(evn) => {
+		evn.preventDefault();
+		["window", "canvas", "world"].forEach((ctx) => {
+			mouse.listen[ctx].onwheel.emit({
+				target: evn.target,
+				delta: evn.deltaY,
+				deltaX: evn.deltaX,
+				deltaY: evn.deltaY,
+				deltaZ: evn.deltaZ,
+				mode: evn.deltaMode,
+				x: mouse[ctx].pos.x,
+				y: mouse[ctx].pos.y,
+				timestamp: new Date(),
+			});
+		});
+	},
+	{passive: false}
 );
-mouse.listen.window.right.ondragstart.on(() =>
-    console.debug('mouse.listen.window.right.ondragstart')
-);
-mouse.listen.window.right.ondrag.on(() =>
-    console.debug('mouse.listen.window.right.ondrag')
-);
-mouse.listen.window.right.ondragend.on(() =>
-    console.debug('mouse.listen.window.right.ondragend')
-);
-
-mouse.listen.window.right.onpaintstart.on(() =>
-    console.debug('mouse.listen.window.right.onpaintstart')
-);
-mouse.listen.window.right.onpaint.on(() =>
-    console.debug('mouse.listen.window.right.onpaint')
-);
-mouse.listen.window.right.onpaintend.on(() =>
-    console.debug('mouse.listen.window.right.onpaintend')
-);
-*/
-
 /**
  * Keyboard input processing
  */

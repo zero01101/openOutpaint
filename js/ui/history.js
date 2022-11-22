@@ -1,6 +1,4 @@
 (() => {
-	makeDraggable("historyContainer");
-
 	const historyView = document.getElementById("history");
 
 	const makeHistoryEntry = (index, id, title) => {
