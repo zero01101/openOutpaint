@@ -183,7 +183,7 @@ function drop(imageParams) {
 }
 
 function writeArbitraryImage(img, x, y) {
-	commands.runCommand("drawImage", {
+	commands.runCommand("drawImage", "Image Stamp", {
 		x,
 		y,
 		image: img,
@@ -351,7 +351,7 @@ function clearPaintedMask() {
 function placeImage() {
 	const img = new Image();
 	img.onload = function () {
-		commands.runCommand("drawImage", {
+		commands.runCommand("drawImage", "Image Dream", {
 			x: tmpImgXYWH.x,
 			y: tmpImgXYWH.y,
 			image: img,

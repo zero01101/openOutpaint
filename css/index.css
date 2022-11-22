@@ -2,8 +2,8 @@
 	font-size: 100%;
 	font-family: Arial, Helvetica, sans-serif;
 }
-body{
-    margin:0px;
+body {
+	margin: 0px;
 }
 
 .container {
@@ -14,8 +14,42 @@ body{
 	background-color: #ccc;
 }
 
-.canvas {
-    border: 1px black solid;
+#historyContainer > .info {
+	padding: 0;
+}
+
+#history.history {
+	height: 200px;
+	overflow: scroll;
+}
+
+#history.history > .history-item {
+	cursor: pointer;
+
+	padding: 5px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+#history.history > .history-item {
+	background-color: #0000;
+}
+#history.history > .history-item:hover {
+	background-color: #fff5;
+}
+
+#history.history > .history-item.current {
+	background-color: #66f5;
+}
+#history.history > .history-item.current:hover {
+	background-color: #66f5;
+}
+
+#history.history > .history-item.future {
+	background-color: #4445;
+}
+#history.history > .history-item.future:hover {
+	background-color: #ddd5;
 }
 
 .mainHSplit {
@@ -35,7 +69,7 @@ body{
 }
 
 .uiContainer {
-	position: absolute;
+	position: fixed;
 	width: 250px;
 	height: auto;
 	z-index: 999;
@@ -45,7 +79,7 @@ body{
 	z-index: 999;
 	cursor: move;
 	background-color: rgba(104, 104, 104, 0.75);
-    z-index: 999;
+	z-index: 999;
 
 	user-select: none;
 
@@ -175,6 +209,6 @@ button.tool:hover {
 .strokeText {
 	-webkit-text-stroke: 1px #000;
 	font-size: 150%;
-    font-weight: 600;
+	font-weight: 600;
 	color: #fff;
 }
