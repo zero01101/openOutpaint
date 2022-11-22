@@ -238,8 +238,8 @@ function imageAcceptReject(x, y, data) {
 		div.style.position = "absolute";
 		div.style.left = parseInt(x) + "px";
 		div.style.top = parseInt(y + data.parameters.height) + "px";
-		div.style.width = "150px";
-		div.style.height = "50px";
+		div.style.width = "200px";
+		div.style.height = "70px";
 		div.innerHTML =
 			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button>';
 		document.getElementById("tempDiv").appendChild(div);
@@ -397,7 +397,7 @@ function march() {
 
 function drawMarchingAnts() {
 	clearTargetMask();
-	tgtCtx.strokeStyle = "#333333FF"; //"#55000077";
+	tgtCtx.strokeStyle = "#FFFFFFFF"; //"#55000077";
 	tgtCtx.setLineDash([4, 2]);
 	tgtCtx.lineDashOffset = -marchOffset;
 	tgtCtx.strokeRect(marchCoords.x, marchCoords.y, marchCoords.w, marchCoords.h);
