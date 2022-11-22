@@ -2,71 +2,83 @@
 
 ![openOutpaint creating some undersea wildlife](docs/01-demo.gif)
 
-this is a completely vanilla javascript and html canvas outpainting convenience doodad built for the API optionally exposed by [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), operating similarly to a few others which certainly have superior functionality.  this simply offers an alternative for my following vain desires:
- - avoiding the overhead of an additional virtual python evnironment or impacting a pre-existing one
- - operates against the API exposed by A1111's webUI
- - no external dependencies, extremely boring vanilla
- - no external connectivity, self-hosted and offline
- - unobfuscated (cough cough)
- - <a name="terrible"></a>i am terrible at javascript and should probably correct that
- - i have never used html canvas for anything before and should try it out
+this is a completely vanilla javascript and html canvas outpainting convenience doodad built for the API optionally exposed by [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), operating similarly to a few others which certainly have superior functionality. this simply offers an alternative for my following vain desires:
 
- ## features
-  - a big ol' 2560x1440 canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
-  - inpainting/touchup blob
-  - easily change samplers/steps/CFG/etc options for each dream summoned from the latent void 
-  - optional right-click to erase output image under cursor
-  - optional grid snapping for precision
-  - optional overmasking for potentially better seams between outpaints - set overmask px value to 0 to disable the feature
-  - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
-  - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent)) 
-  - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
-  - saves your preferences to browser localstorage for maximum convenience
-  - undo/redo
+- avoiding the overhead of an additional virtual python evnironment or impacting a pre-existing one
+- operates against the API exposed by A1111's webUI
+- no external dependencies, extremely boring vanilla
+- no external connectivity, self-hosted and offline
+- unobfuscated (cough cough)
+- <a name="terrible"></a>i am terrible at javascript and should probably correct that
+- i have never used html canvas for anything before and should try it out
 
- ## operation
+## features
 
- ### prerequisities
- you'll obviously need A1111's webUI installed before you can use this, thus you're presumed to have an operational python install up and running to boot.  
+- a big ol' 2560x1440 canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
+- inpainting/touchup blob
+- easily change samplers/steps/CFG/etc options for each dream summoned from the latent void
+- optional right-click to erase output image under cursor
+- optional grid snapping for precision
+- optional overmasking for potentially better seams between outpaints - set overmask px value to 0 to disable the feature
+- optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
+- import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent))
+- "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
+- saves your preferences to browser localstorage for maximum convenience
+- undo/redo
 
- ### notes 
- -  technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision 
- - a deliciously simple launch script is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux 
- - the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port.  you can of course modify the included launch script to point at a different port than 3456 if desired, as well
- - if your scale factor is > 8 (generating an image larger than 512x512), try the "auto txt2img HR fix" option
+## operation
+
+### prerequisities
+
+you'll obviously need A1111's webUI installed before you can use this, thus you're presumed to have an operational python install up and running to boot.
+
+### notes
+
+- technically you can run it directly in browser as a bare `file://` protocol webpage but that's _really_ not recommended as you'll have to add `null` as an accepted domain to your `--cors-allow-origins` option which just seems like it's a visibly poor decision
+- a deliciously simple launch script is included to pop up a teensy tiny python-based local webserver, however you may have to manually `chmod +x openOutpaint.sh` on mac/linux
+- the address http://127.0.0.1:3456 will be used as the host address for openOutpaint in the below quickstart; your local setup may use a different IP address or port. you can of course modify the included launch script to point at a different port than 3456 if desired, as well
+- if your scale factor is > 8 (generating an image larger than 512x512), try the "auto txt2img HR fix" option
 
 ### quickstart speedrun
+
 1. edit your `cors-allow-origins` to include https://zero01101.github.io and run webUI
 2. go to https://zero01101.github.io/openOutpaint/ and fill in the host value with your webUI API address
 3. click things and do stuff
 
 ### quickstart normal edition
- 1. clone this repo to your homelab's webserver (i mean who doesn't have a couple of those lying around?) or somewhere on your local pc
- 2. modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456` 
- 3. execute your webui-user script and wait for it to be ready
- 4. **APPLY THE FOLLOWING SETTINGS IN A1111 WEBUI ONCE IT IS READY:** 
-  - select an inpainting checkpoint/model - ([runwayml/stable-diffusion-inpainting](https://huggingface.co/runwayml/stable-diffusion-inpainting) [3e16efc8] is recommended)
-  - set your `Inpainting conditioning mask strength` to `1`
-  - disable the `Apply color correction to img2img results to match original colors.` option (the last 2 options are found under the stable diffusion category in the settings tab by default unless you've already moved it to your quicksettings list, and if so, you know where to set them already)
- 5. configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux. 
- 6. open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
- 7. update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the file selector browse button under "load local image"
- 8. once an image appears*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
- 9. now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
- 10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
- 11. play around with the available options!  
-  - snap to grid, uh, snaps to the grid
-  - mask mode is practically identical to A1111's inpainting mask, except that...
-  - scale factor affects the size of both the painting reticle __and__ mask blob 
-  - overmask and related px value expands the area masked in img2img outpaint requests, so as to attempt to minimize the seam between images; it's _partially_ functional currently and correcting the flaws are already in the //todo and issue tracker
-  - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
- 12. click "save canvas" to save the cropped region of outpainted canvas 
- 13. click "clear canvas" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours 
 
-*if it _doesn't_ create an image, check your console output to see if you've got CORS errors 
+1.  clone this repo to your homelab's webserver (i mean who doesn't have a couple of those lying around?) or somewhere on your local pc
+2.  modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456`
+3.  execute your webui-user script and wait for it to be ready
+4.  **APPLY THE FOLLOWING SETTINGS IN A1111 WEBUI ONCE IT IS READY:**
+
+- select an inpainting checkpoint/model - ([runwayml/stable-diffusion-inpainting](https://huggingface.co/runwayml/stable-diffusion-inpainting) [3e16efc8] is recommended)
+- set your `Inpainting conditioning mask strength` to `1`
+- disable the `Apply color correction to img2img results to match original colors.` option (the last 2 options are found under the stable diffusion category in the settings tab by default unless you've already moved it to your quicksettings list, and if so, you know where to set them already)
+
+5.  configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux.
+6.  open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
+7.  update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the file selector browse button under "load local image"
+8.  once an image appears\*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
+9.  now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence
+10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
+11. play around with the available options!
+
+- snap to grid, uh, snaps to the grid
+- mask mode is practically identical to A1111's inpainting mask, except that...
+- scale factor affects the size of both the painting reticle **and** mask blob
+- overmask and related px value expands the area masked in img2img outpaint requests, so as to attempt to minimize the seam between images; it's _partially_ functional currently and correcting the flaws are already in the //todo and issue tracker
+- ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
+
+12. click "save canvas" to save the cropped region of outpainted canvas
+13. click "clear canvas" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours
+
+\*if it _doesn't_ create an image, check your console output to see if you've got CORS errors
 
 ## //todo
+
 ### in order of "priority"/likelihood of me doing it
+
 - [ ] lots and lots of readme updates (ongoing)
 - [ ] comment basically everything that isn't self documenting (ongoing)
 - [ ] CHORE: refactor all the duplicated JS code (ongoing, guaranteed to get worse before it gets better)
@@ -76,14 +88,14 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] add error handling for async/XHR POST in case of, yknow, errors
 - [x] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
-- [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~ 
+- [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~
 - [ ] render progress spinner/bar
-- [x] ~~smart crop downloaded image~~ 
+- [x] ~~smart crop downloaded image~~
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [ ] scaling of imported arbitrary image before superimposition
 - [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
 - [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
-- [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~ 
+- [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~
 - [ ] infinite canvas
 - [x] ~~global undo/redo~~
 - [ ] inpainting sketch tools
@@ -95,30 +107,35 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - [ ] honestly probably refactor literally everything
 
 ## pull requests
+
 **PLEASE SEND PULL REQUESTS**  
-i am begging you, yes you personally reading this, please fix my horrible code and feel free to insult it, but i absolutely refuse to budge on no 3rd party libraries or dependencies, not even jquery, nothing.  vanilla is a very complex and layered flavor if you give it a chance.
+i am begging you, yes you personally reading this, please fix my horrible code and feel free to insult it, but i absolutely refuse to budge on no 3rd party libraries or dependencies, not even jquery, nothing. vanilla is a very complex and layered flavor if you give it a chance.
 
 ## bug reports
+
 please do! kindly indicate your OS, browser, versions of both, any errors in devtools/console output, what you were trying to do, what you expected, what happened unexpectedly or incorrectly, if something caught fire (please call the fire department first), the usual
 
 ## known bugs :(
- - generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying
- - ~~erase mask is like entirely broken~~
- - ~~odd-numbered scale factors don't snap correctly~~
- - ~~arbitrary "pasted" images require clicking twice to place them and i _don't know why_ [(yes i do)](#terrible), just getting them to be arbitrarily placable was a giant pain because i'm not got the smarts~~
- - selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective
- - not sure if "bug" since it occurs in stable diffusion and not openOutpaint, but auto txt2img HRfix + odd number scale factors returns an "Exception in ASGI application" in SD console output; for example using scale factor of 9 results in "RuntimeError: Sizes of tensors must match except in dimension 1. Expected size 10 but got size 9 for tensor number 1 in the list." 
+
+- generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying
+- ~~erase mask is like entirely broken~~
+- ~~odd-numbered scale factors don't snap correctly~~
+- ~~arbitrary "pasted" images require clicking twice to place them and i _don't know why_ [(yes i do)](#terrible), just getting them to be arbitrarily placable was a giant pain because i'm not got the smarts~~
+- selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective
+- not sure if "bug" since it occurs in stable diffusion and not openOutpaint, but auto txt2img HRfix + odd number scale factors returns an "Exception in ASGI application" in SD console output; for example using scale factor of 9 results in "RuntimeError: Sizes of tensors must match except in dimension 1. Expected size 10 but got size 9 for tensor number 1 in the list."
 
 ## warranty
+
 [lmao](https://github.com/moyix/fauxpilot#support-and-warranty)
 
-## samples 
-generated using 100% openOutpaint UI defaults except for switching to/from mask mode and changing scale factor to adjust the size of the mask blob, there's some neat stuff down there even if it disregarded the `people, humans, divers` negative prompt but in its defense there is only one singular person, human, diver in there, so according to the no homers club treatise of 1995 it's technically correct 
+## samples
+
+generated using 100% openOutpaint UI defaults except for switching to/from mask mode and changing scale factor to adjust the size of the mask blob, there's some neat stuff down there even if it disregarded the `people, humans, divers` negative prompt but in its defense there is only one singular person, human, diver in there, so according to the no homers club treatise of 1995 it's technically correct
 
 _(see https://github.com/zero01101/openOutpaint/commit/92ab9d231542ea5f7a3c85563acf5cd3cb16a928 for attempted counterattack)_
 ![fishies n stuff](docs/02-sample.png)
 
-<a name="arbitrary_transparent"></a>simple transparent PNGs slapped on the canvas twice and default UI settings used on the southern half 
+<a name="arbitrary_transparent"></a>simple transparent PNGs slapped on the canvas twice and default UI settings used on the southern half
 
 ![imported images that have been _changed_](docs/03-arbimg.png)
 
@@ -127,6 +144,7 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 ![many cats on a space station](docs/04-catsonaspacestation.png)
 
 ## version history
+
 - 0.0.1 - txt2img proof of concept
 - 0.0.2 - img2img outpainting proof of concept
 - 0.0.3 - image masking/img2img inpainting proof of concept
@@ -141,16 +159,18 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.5.7 - the majestic return of mask erasing, removed unnecessary overmask toggle [a96fd11](https://github.com/zero01101/openOutpaint/commit/a96fd116d750e38ce8982104ae5e5c966746fdc4)
 - 0.0.6 - absolutely brilliant undo/redo system, logical and straightforward enough to the point where even i can understand what it's doing [25681b3](https://github.com/zero01101/openOutpaint/commit/25681b3a83bbd7a1d1b3e675f26f141692d77c79)
 - 0.0.6.1 - finally think i've got overmasking working better with a bit of "humanization" to the automated masks, please play around with it and see if it's any better or just sucks in general [8002772](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
+- 0.0.6.5 - checkerboard background, far more attractive painted masking, HUGE code cleanup omg [74d5f13](https://github.com/zero01101/openOutpaint/commit/74d5f13aa582695e3e359ad46f7e629a25fb0091)
 
 ## collaborator credits 👑
- - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
- - [@Kalekki](https://github.com/Kalekki) - all SORTS of awesome goodness, legit pull request hero: [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17)
- - [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14),  [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21)
- - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 
+- [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
+- [@Kalekki](https://github.com/Kalekki) [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), []
+- [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22)
+- [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 
 ## what's with the fish?
-deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making an _"illustration of a bright orange fish, plain blue solid background"_ favicon which led to "ok then, fish is mascot" 
+
+deep aquatic life is _fascinating_ so i went with something underwater for a default prompt which led to making an _"illustration of a bright orange fish, plain blue solid background"_ favicon which led to "ok then, fish is mascot"
 
 ![fullres fishy favicon](docs/05-openOutpaintFish.png)
 
