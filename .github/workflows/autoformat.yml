@@ -1,6 +1,8 @@
 name: Prettier Autoformatting
 on:
   pull_request:
+    branches: [main]
+    types: [opened, synchronize, closed]
 
 jobs:
   prettier:
