@@ -2,6 +2,8 @@ const inputConfig = {
 	clickRadius: 10, // Radius to be considered a click (pixels). If farther, turns into a drag
 	clickTiming: 500, // Timing window to be considered a click (ms). If longer, turns into a drag
 	dClickTiming: 500, // Timing window to be considered a double click (ms).
+
+	keyboardHoldTiming: 100, // Timing window after which to consider holding a key (ms)
 };
 
 /**
@@ -299,5 +301,118 @@ mouse.listen.window.right.onpaintend.on(() =>
 */
 
 /**
- * Mouse input processing
+ * Keyboard input processing
  */
+// Base object generator functions
+
+const keyboard = {
+	keys: {},
+
+	isPressed(code) {
+		return this.keys[key].pressed;
+	},
+
+	isHeld(code) {
+		return !!this;
+	},
+
+	shortcuts: {},
+	onShortcut(shortcut, callback) {
+		/**
+		 * Adds a shortcut handler (shorcut must be in format: {ctrl?: bool, alt?: bool, shift?: bool, key: string (code)})
+		 * key must be the "code" parameter from keydown event; A key is "KeyA" for example
+		 */
+		if (this.shortcuts[shortcut.key] === undefined)
+			this.shortcuts[shortcut.key] = [];
+
+		this.shortcuts[shortcut.key].push({
+			ctrl: shortcut.ctrl,
+			alt: shortcut.alt,
+			shift: shortcut.shift,
+			id: guid(),
+			callback,
+		});
+	},
+	deleteShortcut(id) {
+		this.shortcuts.keys().forEach((key) => {
+			this.shortcuts[key] = this.shortcuts[key].filter((v) => v.id !== id);
+		});
+	},
+
+	listen: {
+		onkeydown: new Observer(),
+		onkeyup: new Observer(),
+		onkeyholdstart: new Observer(),
+		onkeyholdend: new Observer(),
+		onkeyclick: new Observer(),
+		onshortcut: new Observer(),
+	},
+};
+
+window.onkeydown = (evn) => {
+	keyboard.listen.onkeydown.emit({
+		code: evn.code,
+		key: evn.key,
+		evn,
+	});
+
+	keyboard.keys[evn.code] = {
+		pressed: true,
+		held: false,
+		_hold_to: setTimeout(() => {
+			keyboard.keys[evn.code].held = true;
+			delete keyboard.keys[evn.code]._hold_to;
+			keyboard.listen.onkeyholdstart.emit({
+				code: evn.code,
+				key: evn.key,
+				evn,
+			});
+		}, inputConfig.keyboardHoldTiming),
+	};
+
+	// Process shortcuts
+	const callbacks = keyboard.shortcuts[evn.code];
+
+	if (callbacks)
+		callbacks.forEach((callback) => {
+			if (
+				!!callback.ctrl === evn.ctrlKey &&
+				!!callback.alt === evn.altKey &&
+				!!callback.shift === evn.shiftKey
+			) {
+				keyboard.listen.onshortcut.emit({
+					code: evn.code,
+					key: evn.key,
+					id: callback.id,
+					evn,
+				});
+				callback.callback(evn);
+			}
+		});
+};
+
+window.onkeyup = (evn) => {
+	keyboard.listen.onkeyup.emit({
+		code: evn.code,
+		key: evn.key,
+		evn,
+	});
+	if (keyboard.keys[evn.code] && keyboard.keys[evn.code].held) {
+		keyboard.listen.onkeyholdend.emit({
+			code: evn.code,
+			key: evn.key,
+			evn,
+		});
+	} else {
+		keyboard.listen.onkeyclick.emit({
+			code: evn.code,
+			key: evn.key,
+			evn,
+		});
+	}
+
+	keyboard.keys[evn.code] = {
+		pressed: false,
+		held: false,
+	};
+};
