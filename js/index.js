@@ -104,11 +104,9 @@ var heldButton = 0;
 var snapX = 0;
 var snapY = 0;
 var drawThis = {};
-var clicked = false;
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var scaleFactor = 8; //x64 px
 var snapToGrid = true;
-var paintMode = false;
 var backupMaskPaintCanvas; //???
 var backupMaskPaintCtx; //...? look i am bad at this
 var backupMaskChunk = null;
@@ -123,9 +121,8 @@ var arbitraryImageData;
 var arbitraryImageBitmap;
 var arbitraryImageBase64; // seriously js cmon work with me here
 var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
-var enableErasing = false; // accidental right-click erase if the user isn't trying to erase is a bad thing
 var marchOffset = 0;
-var marching = false;
+var stopMarching = null;
 var marchCoords = {};
 
 // info div, sometimes hidden
@@ -156,7 +153,6 @@ function startup() {
 	loadSettings();
 	drawBackground();
 	changeScaleFactor();
-	changePaintMode();
 	changeSampler();
 	changeSteps();
 	changeCfgScale();
@@ -167,7 +163,6 @@ function startup() {
 	changeSeed();
 	changeOverMaskPx();
 	changeHiResFix();
-	changeEnableErasing();
 	document.getElementById("overlayCanvas").onmousemove = mouseMove;
 	document.getElementById("overlayCanvas").onmousedown = mouseDown;
 	document.getElementById("overlayCanvas").onmouseup = mouseUp;
@@ -193,43 +188,56 @@ function writeArbitraryImage(img, x, y) {
 	document.getElementById("preloadImage").files = null;
 }
 
-function dream(x, y, prompt) {
+function dream(
+	x,
+	y,
+	prompt,
+	extra = {method: endpoint, stopMarching: () => {}}
+) {
 	tmpImgXYWH.x = x;
 	tmpImgXYWH.y = y;
 	tmpImgXYWH.w = prompt.width;
 	tmpImgXYWH.h = prompt.height;
 	console.log(
-		"dreaming to " + host + url + endpoint + ":\r\n" + JSON.stringify(prompt)
+		"dreaming to " +
+			host +
+			url +
+			(extra.method || endpoint) +
+			":\r\n" +
+			JSON.stringify(prompt)
 	);
-	postData(prompt).then((data) => {
+	postData(prompt, extra).then((data) => {
 		returnedImages = data.images;
 		totalImagesReturned = data.images.length;
 		blockNewImages = true;
 		//console.log(data); // JSON data parsed by `data.json()` call
-		imageAcceptReject(x, y, data);
+		imageAcceptReject(x, y, data, extra);
 	});
 }
 
-async function postData(promptData) {
+async function postData(promptData, extra = null) {
 	this.host = document.getElementById("host").value;
 	// Default options are marked with *
-	const response = await fetch(this.host + this.url + this.endpoint, {
-		method: "POST", // *GET, POST, PUT, DELETE, etc.
-		mode: "cors", // no-cors, *cors, same-origin
-		cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-		credentials: "same-origin", // include, *same-origin, omit
-		headers: {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-		},
-		redirect: "follow", // manual, *follow, error
-		referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-		body: JSON.stringify(promptData), // body data type must match "Content-Type" header
-	});
+	const response = await fetch(
+		this.host + this.url + extra.method || endpoint,
+		{
+			method: "POST", // *GET, POST, PUT, DELETE, etc.
+			mode: "cors", // no-cors, *cors, same-origin
+			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
+			credentials: "same-origin", // include, *same-origin, omit
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			redirect: "follow", // manual, *follow, error
+			referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+			body: JSON.stringify(promptData), // body data type must match "Content-Type" header
+		}
+	);
 	return response.json(); // parses JSON response into native JavaScript objects
 }
 
-function imageAcceptReject(x, y, data) {
+function imageAcceptReject(x, y, data, extra = null) {
 	const img = new Image();
 	img.onload = function () {
 		tempCtx.drawImage(img, x, y); //imgCtx for actual image, tmp for... holding?
@@ -254,7 +262,8 @@ function imageAcceptReject(x, y, data) {
 
 function accept(evt) {
 	// write image to imgcanvas
-	marching = false;
+	stopMarching && stopMarching();
+	stopMarching = null;
 	clearBackupMask();
 	placeImage();
 	removeChoiceButtons();
@@ -264,7 +273,8 @@ function accept(evt) {
 
 function reject(evt) {
 	// remove image entirely
-	marching = false;
+	stopMarching && stopMarching();
+	stopMarching = null;
 	restoreBackupMask();
 	clearBackupMask();
 	clearTargetMask();
@@ -368,39 +378,23 @@ function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function snap(i, scaled = true) {
-	// very cheap test proof of concept but it works surprisingly well
-	var scaleOffset = 0;
-	if (scaled) {
-		if (scaleFactor % 2 != 0) {
-			// odd number, snaps to center of cell, oops
-			scaleOffset = basePixelCount / 2;
-		}
-	}
-	var snapOffset = (i % basePixelCount) - scaleOffset;
-	if (snapOffset == 0) {
-		return snapOffset;
-	}
-	return -snapOffset;
+function march(bb) {
+	let offset = 0;
+
+	const interval = setInterval(() => {
+		drawMarchingAnts(bb, offset++);
+		offset %= 16;
+	}, 20);
+
+	return () => clearInterval(interval);
 }
 
-function march() {
-	if (marching) {
-		marchOffset++;
-		if (marchOffset > 16) {
-			marchOffset = 0;
-		}
-		drawMarchingAnts();
-		setTimeout(march, 20);
-	}
-}
-
-function drawMarchingAnts() {
+function drawMarchingAnts(bb, offset) {
 	clearTargetMask();
 	tgtCtx.strokeStyle = "#FFFFFFFF"; //"#55000077";
 	tgtCtx.setLineDash([4, 2]);
-	tgtCtx.lineDashOffset = -marchOffset;
-	tgtCtx.strokeRect(marchCoords.x, marchCoords.y, marchCoords.w, marchCoords.h);
+	tgtCtx.lineDashOffset = -offset;
+	tgtCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
 }
 
 function mouseMove(evt) {
@@ -427,66 +421,8 @@ function mouseMove(evt) {
 		finalX = snapOffsetX + canvasX;
 		finalY = snapOffsetY + canvasY;
 		ovCtx.drawImage(arbitraryImage, finalX, finalY);
-	} else if (!paintMode) {
-		// draw targeting square reticle thingy cursor
-		ovCtx.strokeStyle = "#FFFFFF";
-		snapOffsetX = 0;
-		snapOffsetY = 0;
-		if (snapToGrid) {
-			snapOffsetX = snap(canvasX);
-			snapOffsetY = snap(canvasY);
-		}
-		finalX = snapOffsetX + canvasX;
-		finalY = snapOffsetY + canvasY;
-		ovCtx.strokeRect(
-			parseInt(finalX - (basePixelCount * scaleFactor) / 2),
-			parseInt(finalY - (basePixelCount * scaleFactor) / 2),
-			basePixelCount * scaleFactor,
-			basePixelCount * scaleFactor
-		); //origin is middle of the frame
 	}
 }
-
-/**
- * Mask implementation
- */
-mouse.listen.canvas.onmousemove.on((evn) => {
-	if (paintMode && evn.target.id === "overlayCanvas") {
-		// draw big translucent red blob cursor
-		ovCtx.beginPath();
-		ovCtx.arc(evn.x, evn.y, 4 * scaleFactor, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-		ovCtx.fillStyle = "#FF6A6A50";
-		ovCtx.fill();
-	}
-});
-
-mouse.listen.canvas.left.onpaint.on((evn) => {
-	if (paintMode && evn.initialTarget.id === "overlayCanvas") {
-		maskPaintCtx.globalCompositeOperation = "source-over";
-		maskPaintCtx.strokeStyle = "#FF6A6A";
-
-		maskPaintCtx.lineWidth = 8 * scaleFactor;
-		maskPaintCtx.beginPath();
-		maskPaintCtx.moveTo(evn.px, evn.py);
-		maskPaintCtx.lineTo(evn.x, evn.y);
-		maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
-		maskPaintCtx.stroke();
-	}
-});
-
-mouse.listen.canvas.right.onpaint.on((evn) => {
-	if (paintMode && evn.initialTarget.id === "overlayCanvas") {
-		maskPaintCtx.globalCompositeOperation = "destination-out";
-		maskPaintCtx.strokeStyle = "#FFFFFFFF";
-
-		maskPaintCtx.lineWidth = 8 * scaleFactor;
-		maskPaintCtx.beginPath();
-		maskPaintCtx.moveTo(evn.px, evn.py);
-		maskPaintCtx.lineTo(evn.x, evn.y);
-		maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
-		maskPaintCtx.stroke();
-	}
-});
 
 function mouseDown(evt) {
 	const rect = ovCanvas.getBoundingClientRect();
@@ -503,39 +439,6 @@ function mouseDown(evt) {
 			nextBox.w = arbitraryImageData.width;
 			nextBox.h = arbitraryImageData.height;
 			dropTargets.push(nextBox);
-		} else if (!paintMode) {
-			//const rect = ovCanvas.getBoundingClientRect()
-			var nextBox = {};
-			nextBox.x =
-				evt.clientX -
-				(basePixelCount * scaleFactor) / 2 -
-				rect.left +
-				oddOffset; //origin is middle of the frame
-			nextBox.y =
-				evt.clientY - (basePixelCount * scaleFactor) / 2 - rect.top + oddOffset; //TODO make a way to set the origin to numpad dirs?
-			nextBox.w = basePixelCount * scaleFactor;
-			nextBox.h = basePixelCount * scaleFactor;
-			drawTargets.push(nextBox);
-		}
-	} else if (evt.button == 2) {
-		if (enableErasing && !paintMode) {
-			// right click, also gotta make sure mask blob isn't being used as it's visually inconsistent with behavior of erased region
-			ctx = imgCanvas.getContext("2d");
-			if (snapToGrid) {
-				ctx.clearRect(
-					canvasX + snap(canvasX) - (basePixelCount * scaleFactor) / 2,
-					canvasY + snap(canvasY) - (basePixelCount * scaleFactor) / 2,
-					basePixelCount * scaleFactor,
-					basePixelCount * scaleFactor
-				);
-			} else {
-				ctx.clearRect(
-					canvasX - (basePixelCount * scaleFactor) / 2,
-					canvasY - (basePixelCount * scaleFactor) / 2,
-					basePixelCount * scaleFactor,
-					basePixelCount * scaleFactor
-				);
-			}
 		}
 	}
 }
@@ -561,186 +464,8 @@ function mouseUp(evt) {
 			drawThis.h = target.h;
 			drawIt = drawThis; // i still think this is really stupid and redundant and unnecessary and redundant
 			drop(drawIt);
-		} else if (paintMode) {
-			clicked = false;
-			return;
-		} else {
-			if (!blockNewImages) {
-				//TODO seriously, refactor this
-				blockNewImages = true;
-				marching = true;
-				var drawIt = {}; //why am i doing this????
-				var target = drawTargets[drawTargets.length - 1]; //get the last one... why am i storing all of them?
-				var oddOffset = 0;
-				if (scaleFactor % 2 != 0) {
-					oddOffset = basePixelCount / 2;
-				}
-				snapOffsetX = 0;
-				snapOffsetY = 0;
-				if (snapToGrid) {
-					snapOffsetX = snap(target.x);
-					snapOffsetY = snap(target.y);
-				}
-				finalX = snapOffsetX + target.x - oddOffset;
-				finalY = snapOffsetY + target.y - oddOffset;
-
-				drawThis.x = marchCoords.x = finalX;
-				drawThis.y = marchCoords.y = finalY;
-				drawThis.w = marchCoords.w = target.w;
-				drawThis.h = marchCoords.h = target.h;
-				march(finalX, finalY, target.w, target.h);
-				drawIt = drawThis; //TODO this is WRONG but also explicitly only draws the last image  ... i think
-				//check if there's image data already there
-				// console.log(downX + ":" + downY + " :: " + this.isCanvasBlank(downX, downY));
-				if (!isCanvasBlank(drawIt.x, drawIt.y, drawIt.w, drawIt.h, imgCanvas)) {
-					// image exists, set up for img2img
-					var mainCanvasCtx = document
-						.getElementById("canvas")
-						.getContext("2d");
-					const imgChunk = mainCanvasCtx.getImageData(
-						drawIt.x,
-						drawIt.y,
-						drawIt.w,
-						drawIt.h
-					); // imagedata object of the image being outpainted
-					const imgChunkData = imgChunk.data; // imagedata.data object, a big inconvenient uint8clampedarray
-					// these are the 3 mask monitors on the bottom of the page
-					var initImgCanvas = document.getElementById("initImgCanvasMonitor");
-					var overMaskCanvas = document.getElementById("overMaskCanvasMonitor");
-					overMaskCanvas.width = initImgCanvas.width = target.w; //maskCanvas.width = target.w;
-					overMaskCanvas.height = initImgCanvas.height = target.h; //maskCanvas.height = target.h;
-					var initImgCanvasCtx = initImgCanvas.getContext("2d");
-					var overMaskCanvasCtx = overMaskCanvas.getContext("2d");
-					// get blank pixels to use as mask
-					const initImgData = mainCanvasCtx.createImageData(drawIt.w, drawIt.h);
-					let overMaskImgData = overMaskCanvasCtx.createImageData(
-						drawIt.w,
-						drawIt.h
-					);
-					// cover entire masks in black before adding masked areas
-
-					for (let i = 0; i < imgChunkData.length; i += 4) {
-						// l->r, top->bottom, R G B A pixel values in a big ol array
-						// make a simple mask
-						if (imgChunkData[i + 3] == 0) {
-							// rgba pixel values, 4th one is alpha, if it's 0 there's "nothing there" in the image display canvas and its time to outpaint
-							overMaskImgData.data[i] = 255; // white mask gets painted over
-							overMaskImgData.data[i + 1] = 255;
-							overMaskImgData.data[i + 2] = 255;
-							overMaskImgData.data[i + 3] = 255;
-
-							initImgData.data[i] = 0; // null area on initial image becomes opaque black pixels
-							initImgData.data[i + 1] = 0;
-							initImgData.data[i + 2] = 0;
-							initImgData.data[i + 3] = 255;
-						} else {
-							// leave these pixels alone
-							overMaskImgData.data[i] = 0; // black mask gets ignored for in/outpainting
-							overMaskImgData.data[i + 1] = 0;
-							overMaskImgData.data[i + 2] = 0;
-							overMaskImgData.data[i + 3] = 255; // but it still needs an opaque alpha channel
-
-							initImgData.data[i] = imgChunkData[i]; // put the original picture back in the painted area
-							initImgData.data[i + 1] = imgChunkData[i + 1];
-							initImgData.data[i + 2] = imgChunkData[i + 2];
-							initImgData.data[i + 3] = imgChunkData[i + 3]; //it's still RGBA so we can handily do this in nice chunks'o'4
-						}
-					}
-					if (overMaskPx > 0) {
-						// https://stackoverflow.com/a/30204783 ???? !!!!!!!!
-						overMaskCanvasCtx.fillStyle = "black";
-						overMaskCanvasCtx.fillRect(0, 0, drawIt.w, drawIt.h); // fill with black instead of null to start
-						for (i = 0; i < overMaskImgData.data.length; i += 4) {
-							if (overMaskImgData.data[i] == 255) {
-								// white pixel?
-								// just blotch all over the thing
-								var rando = Math.floor(Math.random() * overMaskPx);
-								overMaskCanvasCtx.beginPath();
-								overMaskCanvasCtx.arc(
-									(i / 4) % overMaskCanvas.width,
-									Math.floor(i / 4 / overMaskCanvas.width),
-									scaleFactor + rando, // was 4 * sf + rando, too big
-									0,
-									2 * Math.PI,
-									true
-								);
-								overMaskCanvasCtx.fillStyle = "#FFFFFFFF";
-								overMaskCanvasCtx.fill();
-							}
-						}
-						overMaskImgData = overMaskCanvasCtx.getImageData(
-							0,
-							0,
-							overMaskCanvas.width,
-							overMaskCanvas.height
-						);
-						overMaskCanvasCtx.putImageData(overMaskImgData, 0, 0);
-					}
-					// also check for painted masks in region, add them as white pixels to mask canvas
-					const maskChunk = maskPaintCtx.getImageData(
-						drawIt.x,
-						drawIt.y,
-						drawIt.w,
-						drawIt.h
-					);
-					const maskChunkData = maskChunk.data;
-					for (let i = 0; i < maskChunkData.length; i += 4) {
-						if (maskChunkData[i + 3] != 0) {
-							overMaskImgData.data[i] = 255;
-							overMaskImgData.data[i + 1] = 255;
-							overMaskImgData.data[i + 2] = 255;
-							overMaskImgData.data[i + 3] = 255;
-						}
-					}
-					// backup any painted masks ingested then them, replacable if user doesn't like resultant image
-					var clearArea = maskPaintCtx.createImageData(drawIt.w, drawIt.h);
-					backupMaskChunk = maskChunk;
-					backupMaskX = drawIt.x;
-					backupMaskY = drawIt.y;
-
-					var clearD = clearArea.data;
-					for (let i = 0; i < clearD.length; i++) {
-						clearD[i] = 0; // just null it all out
-					}
-					maskPaintCtx.putImageData(clearArea, drawIt.x, drawIt.y);
-					// mask monitors
-					overMaskCanvasCtx.putImageData(overMaskImgData, 0, 0); // :pray:
-					var overMaskBase64 = overMaskCanvas.toDataURL();
-					initImgCanvasCtx.putImageData(initImgData, 0, 0);
-					var initImgBase64 = initImgCanvas.toDataURL();
-					// anyway all that to say NOW let's run img2img
-					endpoint = "img2img";
-					stableDiffusionData.mask = overMaskBase64;
-					stableDiffusionData.init_images = [initImgBase64];
-					// slightly more involved than txt2img
-				} else {
-					// time to run txt2img
-					endpoint = "txt2img";
-					// easy enough
-				}
-				stableDiffusionData.prompt = document.getElementById("prompt").value;
-				stableDiffusionData.negative_prompt =
-					document.getElementById("negPrompt").value;
-				stableDiffusionData.width = drawIt.w;
-				stableDiffusionData.height = drawIt.h;
-				stableDiffusionData.firstphase_height = drawIt.h / 2;
-				stableDiffusionData.firstphase_width = drawIt.w / 2;
-				dream(drawIt.x, drawIt.y, stableDiffusionData);
-			}
 		}
 	}
-}
-
-function changePaintMode() {
-	paintMode = document.getElementById("cbxPaint").checked;
-	clearTargetMask();
-	ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-}
-
-function changeEnableErasing() {
-	// yeah because this is for the image layer
-	enableErasing = document.getElementById("cbxEnableErasing").checked;
-	localStorage.setItem("enable_erase", enableErasing);
 }
 
 function changeSampler() {
@@ -972,6 +697,5 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
-	document.getElementById("cbxEnableErasing").checked = Boolean(_enable_erase);
 	document.getElementById("overMaskPx").value = Number(_overmask_px);
 }

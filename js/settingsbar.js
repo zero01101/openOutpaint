@@ -1,40 +1,4 @@
-//dragElement(document.getElementById("infoContainer"));
-//dragElement(document.getElementById("historyContainer"));
-
-function dragElement(elmnt) {
-	var p3 = 0,
-		p4 = 0;
-	var draggableElements = elmnt.getElementsByClassName("draggable");
-	for (var i = 0; i < draggableElements.length; i++) {
-		draggableElements[i].onmousedown = dragMouseDown;
-	}
-
-	function dragMouseDown(e) {
-		e.preventDefault();
-		p3 = e.clientX;
-		p4 = e.clientY;
-		document.onmouseup = closeDragElement;
-		document.onmousemove = elementDrag;
-	}
-
-	function elementDrag(e) {
-		e.preventDefault();
-		elmnt.style.bottom = null;
-		elmnt.style.right = null;
-		elmnt.style.top = elmnt.offsetTop - (p4 - e.clientY) + "px";
-		elmnt.style.left = elmnt.offsetLeft - (p3 - e.clientX) + "px";
-		p3 = e.clientX;
-		p4 = e.clientY;
-	}
-
-	function closeDragElement() {
-		document.onmouseup = null;
-		document.onmousemove = null;
-	}
-}
-
-function makeDraggable(id) {
-	const element = document.getElementById(id);
+function makeDraggable(element) {
 	const startbb = element.getBoundingClientRect();
 	let dragging = false;
 	let offset = {x: 0, y: 0};
@@ -66,7 +30,9 @@ function makeDraggable(id) {
 	});
 }
 
-makeDraggable("infoContainer");
+document.querySelectorAll(".floating-window").forEach((w) => {
+	makeDraggable(w);
+});
 
 var coll = document.getElementsByClassName("collapsible");
 for (var i = 0; i < coll.length; i++) {
