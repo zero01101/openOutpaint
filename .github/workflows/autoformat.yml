@@ -1,9 +1,7 @@
 name: Prettier Autoformatting
 on:
   pull_request:
-  push:
-    branches:
-      - main
+
 jobs:
   prettier:
     runs-on: ubuntu-latest
@@ -17,3 +15,4 @@ jobs:
         uses: creyD/prettier_action@v4.2
         with:
           prettier_options: --write **/*.{js,html,css,md}
+          only_changed: True
