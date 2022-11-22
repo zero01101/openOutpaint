@@ -26,6 +26,13 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - saves your preferences to browser localstorage for maximum convenience
 - undo/redo
 
+## collaborator credits 👑
+
+- [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
+- [@Kalekki](https://github.com/Kalekki) [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), [checkerboard background and non bonkers canvas borders](https://github.com/zero01101/openOutpaint/pull/24)
+- [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22)
+- [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
+
 ## operation
 
 ### prerequisities
@@ -160,13 +167,6 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.6 - absolutely brilliant undo/redo system, logical and straightforward enough to the point where even i can understand what it's doing [25681b3](https://github.com/zero01101/openOutpaint/commit/25681b3a83bbd7a1d1b3e675f26f141692d77c79)
 - 0.0.6.1 - finally think i've got overmasking working better with a bit of "humanization" to the automated masks, please play around with it and see if it's any better or just sucks in general [8002772](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 - 0.0.6.5 - checkerboard background, far more attractive painted masking, HUGE code cleanup omg [74d5f13](https://github.com/zero01101/openOutpaint/commit/74d5f13aa582695e3e359ad46f7e629a25fb0091)
-
-## collaborator credits 👑
-
-- [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
-- [@Kalekki](https://github.com/Kalekki) [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), [checkerboard background and non bonkers canvas borders](https://github.com/zero01101/openOutpaint/pull/24)
-- [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22)
-- [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 
 ## what's with the fish?
 
