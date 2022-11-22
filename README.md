@@ -55,7 +55,7 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 ### quickstart normal edition
 
 1.  clone this repo to your homelab's webserver (i mean who doesn't have a couple of those lying around?) or somewhere on your local pc
-2.  modify your `webui-user.sh` or `webui-user.bat`'s `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456`
+2.  edit the `webui-user.sh` or `webui-user.bat` in your local A1111's webUI installation directory and set the `COMMANDLINE_ARGS` variable to contain ` --api --cors-allow-origins=http://127.0.0.1:3456`
 3.  execute your webui-user script and wait for it to be ready
 4.  **APPLY THE FOLLOWING SETTINGS IN A1111 WEBUI ONCE IT IS READY:**
 
