@@ -68,8 +68,16 @@ const dream_generate_callback = (evn, state) => {
 			auxCtx.globalCompositeOperation = "destination-atop";
 			auxCtx.fillStyle = "#FFFF";
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
-			request.mask = auxCanvas.toDataURL();
-
+			var currentMask = auxCanvas.toDataURL();
+			request.mask =
+				document.getElementById("overMaskPx").value > 0
+					? applyOvermask(
+							auxCanvas,
+							auxCtx,
+							document.getElementById("overMaskPx").value,
+							currentMask
+					  )
+					: currentMask;
 			// Dream
 			dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
 		}
@@ -85,6 +93,37 @@ const dream_erase_callback = (evn, state) => {
 	);
 	commands.runCommand("eraseImage", "Erase Area", bb);
 };
+
+function applyOvermask(canvas, ctx, px) {
+	// :badpokerface: look it might be all placebo but i like overmask lol
+	// yes it's crushingly inefficient i knooow :( must fix
+	// https://stackoverflow.com/a/30204783 was instrumental to this working or completely to blame for this disaster depending on your interpretation
+	const tmpOvermaskCanvas = document.createElement("canvas");
+	tmpOvermaskCanvas.width = canvas.width;
+	tmpOvermaskCanvas.height = canvas.height;
+	var ctxImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	const omCtx = tmpOvermaskCanvas.getContext("2d");
+	omCtx.putImageData(ctxImgData, 0, 0);
+	for (i = 0; i < ctxImgData.data.length; i += 4) {
+		if (ctxImgData.data[i] == 255) {
+			// white pixel?
+			// just blotch all over the thing
+			var rando = Math.floor(Math.random() * px);
+			omCtx.beginPath();
+			omCtx.arc(
+				(i / 4) % tmpOvermaskCanvas.width,
+				Math.floor(i / 4 / tmpOvermaskCanvas.width),
+				scaleFactor + rando, // was 4 * sf + rando, too big
+				0,
+				2 * Math.PI,
+				true
+			);
+			omCtx.fillStyle = "#FFFFFFFF";
+			omCtx.fill();
+		}
+	}
+	return tmpOvermaskCanvas.toDataURL();
+}
 
 /**
  * Image to Image
