@@ -173,6 +173,6 @@ const dream_img2img_callback = (evn, state) => {
 		request.inpainting_mask_invert = true;
 
 		// Dream
-		dream(bb.x, bb.y, request, {method: "img2img"});
+		dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
 	}
 };

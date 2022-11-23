@@ -457,7 +457,7 @@ function checkProgress(bb) {
 
 				document.getElementById("estRemaining").innerText = estimate;
 			});
-	}, 500);
+	}, 1500);
 }
 
 function mouseMove(evt) {
