@@ -30,28 +30,13 @@
             <!-- SD section -->
             <button type="button" class="collapsible">Stable Diffusion settings</button>
             <div class="content">
+                <label for="models">Model:</label>
+                <select id="models" onchange="changeModel()"></select><br>
+                <label for="samplerSelect">Sampler:</label>
+                <select id="samplerSelect" onchange="changeSampler()"></select><br />
                 <label for="seed">Seed (-1 for random):</label> <br>
                 <input type="number" id="seed" onchange="changeSeed()" min="1" max="9999999999" value="-1"
                     step="1" /><br />
-                <label for="samplerSelect">Sampler:</label>
-                <select id="samplerSelect" onchange="changeSampler()">
-                    <option value="DDIM">DDIM</option>
-                    <option value="Euler a">Euler A</option>
-                    <option value="Euler">Euler</option>
-                    <option value="LMS">LMS</option>
-                    <option value="Heun">Heun</option>
-                    <option value="DPM2">DPM2</option>
-                    <option value="DPM2 a">DPM2a</option>
-                    <option value="DPM++ 2S a">DPM++2Sa</option>
-                    <option value="DPM++ 2m">DPM++2m</option>
-                    <option value="DPM fast">DPM fast</option>
-                    <option value="DPM adaptive">DPM adaptive</option>
-                    <option value="LMS Karras">LMS Karras</option>
-                    <option value="DPM2 Karras">DPM2 Karras</option>
-                    <option value="DPM2 a Karras">DPM2a Karras</option>
-                    <option value="DPM++ 2S a Karras">DPM++2Sa Karras</option>
-                    <option value="DPM++ 2M Karras">DPM++2M Karras</option>
-                </select><br />
                 <label for="steps">Steps: <input type="number" id="stepsTxt"></label><br />
                 <input type="range" id="steps" name="steps" min="1" max="50" /><br />
                 <label for="cfgScale">CFG scale: <input type="number" id="cfgScaleTxt"></label>
