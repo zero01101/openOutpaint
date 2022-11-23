@@ -123,6 +123,7 @@ var arbitraryImageBase64; // seriously js cmon work with me here
 var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
 var marchOffset = 0;
 var stopMarching = null;
+var inProgress = false;
 var marchCoords = {};
 
 // info div, sometimes hidden
@@ -193,7 +194,11 @@ function dream(
 	x,
 	y,
 	prompt,
-	extra = {method: endpoint, stopMarching: () => {}}
+	extra = {
+		method: endpoint,
+		stopMarching: () => {},
+		bb: {x, y, w: prompt.width, h: prompt.height},
+	}
 ) {
 	tmpImgXYWH.x = x;
 	tmpImgXYWH.y = y;
@@ -207,13 +212,16 @@ function dream(
 			":\r\n" +
 			JSON.stringify(prompt)
 	);
-	postData(prompt, extra).then((data) => {
-		returnedImages = data.images;
-		totalImagesReturned = data.images.length;
-		blockNewImages = true;
-		//console.log(data); // JSON data parsed by `data.json()` call
-		imageAcceptReject(x, y, data, extra);
-	});
+	const progressCheck = checkProgress(extra.bb);
+	postData(prompt, extra)
+		.then((data) => {
+			returnedImages = data.images;
+			totalImagesReturned = data.images.length;
+			blockNewImages = true;
+			//console.log(data); // JSON data parsed by `data.json()` call
+			imageAcceptReject(x, y, data, extra);
+		})
+		.finally(() => clearInterval(progressCheck));
 }
 
 async function postData(promptData, extra = null) {
@@ -239,6 +247,8 @@ async function postData(promptData, extra = null) {
 }
 
 function imageAcceptReject(x, y, data, extra = null) {
+	inProgress = false;
+	document.getElementById("progressDiv").remove();
 	const img = new Image();
 	img.onload = function () {
 		tempCtx.drawImage(img, x, y); //imgCtx for actual image, tmp for... holding?
@@ -250,7 +260,7 @@ function imageAcceptReject(x, y, data, extra = null) {
 		div.style.width = "200px";
 		div.style.height = "70px";
 		div.innerHTML =
-			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button>';
+			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button><span class="strokeText" id="estRemaining"></span>';
 		document.getElementById("tempDiv").appendChild(div);
 		document.getElementById("currentImgIndex").innerText = "1";
 		document.getElementById("totalImgIndex").innerText = totalImagesReturned;
@@ -396,6 +406,35 @@ function drawMarchingAnts(bb, offset) {
 	tgtCtx.setLineDash([4, 2]);
 	tgtCtx.lineDashOffset = -offset;
 	tgtCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
+}
+
+function checkProgress(bb) {
+	document.getElementById("progressDiv") &&
+		document.getElementById("progressDiv").remove();
+	// Skip image to stop using a ton of networking resources
+	endpoint = "progress?skip_current_image=true";
+	var div = document.createElement("div");
+	div.id = "progressDiv";
+	div.style.position = "absolute";
+	div.style.width = "200px";
+	div.style.height = "70px";
+	div.style.left = parseInt(bb.x + bb.w - 100) + "px";
+	div.style.top = parseInt(bb.y + bb.h) + "px";
+	div.innerHTML = '<span class="strokeText" id="estRemaining"></span>';
+	document.getElementById("tempDiv").appendChild(div);
+	return setInterval(() => {
+		fetch(host + url + endpoint)
+			.then((response) => response.json())
+			.then((data) => {
+				var estimate =
+					Math.round(data.progress * 100) +
+					"% :: " +
+					Math.floor(data.eta_relative) +
+					" sec.";
+
+				document.getElementById("estRemaining").innerText = estimate;
+			});
+	}, 500);
 }
 
 function mouseMove(evt) {

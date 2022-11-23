@@ -97,7 +97,8 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 - [x] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
 - [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~
-- [ ] render progress spinner/bar
+- [x] render progress spinner/bar
+- [ ] make render progress bar prettier
 - [x] ~~smart crop downloaded image~~
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [ ] scaling of imported arbitrary image before superimposition
