@@ -278,7 +278,7 @@ tools.img2img = toolbar.registerTool(
 					evn.y,
 					basePixelCount * scaleFactor,
 					basePixelCount * scaleFactor,
-					snapToGrid && basePixelCount
+					state.snapToGrid && basePixelCount
 				);
 
 				// For displaying border mask
