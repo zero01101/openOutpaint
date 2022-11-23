@@ -55,12 +55,31 @@ function sliderChangeHandlerFactory(
 	textBoxId,
 	dataKey,
 	defaultV,
+	save = true,
 	setter = (k, v) => (stableDiffusionData[k] = v),
 	getter = (k) => stableDiffusionData[k]
 ) {
-	const sliderEl = document.getElementById(sliderId);
-	const textBoxEl = document.getElementById(textBoxId);
-	const savedValue = localStorage.getItem(dataKey);
+	return sliderChangeHandlerFactoryEl(
+		document.getElementById(sliderId),
+		document.getElementById(textBoxId),
+		dataKey,
+		defaultV,
+		save,
+		setter,
+		getter
+	);
+}
+
+function sliderChangeHandlerFactoryEl(
+	sliderEl,
+	textBoxEl,
+	dataKey,
+	defaultV,
+	save = true,
+	setter = (k, v) => (stableDiffusionData[k] = v),
+	getter = (k) => stableDiffusionData[k]
+) {
+	const savedValue = save && localStorage.getItem(dataKey);
 
 	if (savedValue) setter(dataKey, savedValue || defaultV);
 
@@ -70,12 +89,12 @@ function sliderChangeHandlerFactory(
 
 		if (value) setter(dataKey, value);
 
-		if (!eventSource || eventSource.id === textBoxId)
+		if (!eventSource || eventSource === textBoxEl)
 			sliderEl.value = getter(dataKey);
 		setter(dataKey, Number(sliderEl.value));
 		textBoxEl.value = getter(dataKey);
 
-		localStorage.setItem(dataKey, getter(dataKey));
+		if (save) localStorage.setItem(dataKey, getter(dataKey));
 	}
 
 	textBoxEl.onchange = changeHandler;
@@ -198,14 +217,8 @@ function dream(
 	tmpImgXYWH.y = y;
 	tmpImgXYWH.w = prompt.width;
 	tmpImgXYWH.h = prompt.height;
-	console.log(
-		"dreaming to " +
-			host +
-			url +
-			(extra.method || endpoint) +
-			":\r\n" +
-			JSON.stringify(prompt)
-	);
+	console.info(`dreaming "${prompt.prompt}"`);
+	console.debug(prompt);
 	postData(prompt, extra).then((data) => {
 		returnedImages = data.images;
 		totalImagesReturned = data.images.length;
@@ -497,6 +510,7 @@ const changeScaleFactor = sliderChangeHandlerFactory(
 	"scaleFactorTxt",
 	"scaleFactor",
 	8,
+	true,
 	(k, v) => (scaleFactor = v),
 	(k) => scaleFactor
 );

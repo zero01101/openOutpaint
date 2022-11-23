@@ -14,3 +14,6 @@ keyboard.onShortcut({key: "KeyD"}, () => {
 keyboard.onShortcut({key: "KeyM"}, () => {
 	tools.maskbrush.enable();
 });
+keyboard.onShortcut({key: "KeyI"}, () => {
+	tools.img2img.enable();
+});
