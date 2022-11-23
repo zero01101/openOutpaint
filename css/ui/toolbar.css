@@ -1,0 +1,62 @@
+#ui-toolbar {
+	align-content: center;
+
+	width: 60px;
+
+	border-radius: 5px;
+
+	color: var(--c-text);
+	background-color: var(--c-primary);
+}
+
+#ui-toolbar .handle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	height: 10px;
+}
+
+#ui-toolbar .handle > .line {
+	width: 80%;
+	border-top: 2px #777 dotted;
+}
+
+#ui-toolbar .tool .tool-icon {
+	filter: invert(60%);
+}
+#ui-toolbar .tool.using .tool-icon {
+	filter: invert(80%);
+}
+#ui-toolbar .tool:hover .tool-icon {
+	filter: invert(90%);
+}
+
+/* The separator */
+#ui-toolbar .separator {
+	width: 80%;
+	margin: auto;
+	align-self: center;
+	border-top: 1px var(--c-hover) solid;
+}
+
+/* Styles for the tool buttons */
+#ui-toolbar .tool {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	aspect-ratio: 1;
+	margin: 5px;
+	border-radius: 5px;
+
+	cursor: pointer;
+}
+
+#ui-toolbar .tool.using {
+	background-color: var(--c-active);
+}
+
+#ui-toolbar .tool:hover {
+	background-color: var(--c-hover);
+}

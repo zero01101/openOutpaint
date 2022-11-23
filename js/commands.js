@@ -39,6 +39,12 @@ const commands = {
 			Object.assign(copy, options);
 			const state = {};
 
+			const entry = {
+				id: guid(),
+				title,
+				state,
+			};
+
 			// Attempt to run command
 			try {
 				run(title, copy, state);
@@ -53,6 +59,7 @@ const commands = {
 				console.debug(`Undoing ${name}, currently ${commands.current}`);
 				undo(title, state);
 				_commands_events.emit({
+					id: entry.id,
 					name,
 					action: "undo",
 					state,
@@ -63,6 +70,7 @@ const commands = {
 				console.debug(`Redoing ${name}, currently ${commands.current}`);
 				redo(title, copy, state);
 				_commands_events.emit({
+					id: entry.id,
 					name,
 					action: "redo",
 					state,
@@ -71,21 +79,29 @@ const commands = {
 			};
 
 			// Add to history
-			if (commands.history.length > commands.current + 1)
-				commands.history.splice(commands.current + 1);
+			if (commands.history.length > commands.current + 1) {
+				commands.history.forEach((entry, index) => {
+					if (index >= commands.current + 1)
+						_commands_events.emit({
+							id: entry.id,
+							name,
+							action: "deleted",
+							state,
+							current: commands.current,
+						});
+				});
 
-			const entry = {
-				id: guid(),
-				title,
-				undo: undoWrapper,
-				redo: redoWrapper,
-				state,
-			};
+				commands.history.splice(commands.current + 1);
+			}
 
 			commands.history.push(entry);
 			commands.current++;
 
+			entry.undo = undoWrapper;
+			entry.redo = redoWrapper;
+
 			_commands_events.emit({
+				id: entry.id,
 				name,
 				action: "run",
 				state,
@@ -148,6 +164,56 @@ commands.createCommand(
 
 		// Apply command
 		state.context.drawImage(options.image, state.box.x, state.box.y);
+	},
+	(title, state) => {
+		// Clear destination area
+		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
+		// Undo
+		state.context.drawImage(state.original, state.box.x, state.box.y);
+	}
+);
+
+commands.createCommand(
+	"eraseImage",
+	(title, options, state) => {
+		if (
+			!options ||
+			options.x === undefined ||
+			options.y === undefined ||
+			options.w === undefined ||
+			options.h === undefined
+		)
+			throw "Command eraseImage requires options in the format: {x, y, w, h, ctx?}";
+
+		// Check if we have state
+		if (!state.context) {
+			const context = options.ctx || imgCtx;
+			state.context = context;
+
+			// Saving what was in the canvas before the command
+			const imgData = context.getImageData(
+				options.x,
+				options.y,
+				options.w,
+				options.h
+			);
+			state.box = {
+				x: options.x,
+				y: options.y,
+				w: options.w,
+				h: options.h,
+			};
+			// Create Image
+			const cutout = document.createElement("canvas");
+			cutout.width = state.box.w;
+			cutout.height = state.box.h;
+			cutout.getContext("2d").putImageData(imgData, 0, 0);
+			state.original = new Image();
+			state.original.src = cutout.toDataURL();
+		}
+
+		// Apply command
+		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
 	},
 	(title, state) => {
 		// Clear destination area
