@@ -784,8 +784,9 @@ function changeEnableErasing() {
 }
 
 function changeSampler() {
-	if(!document.getElementById("samplerSelect").value == ""){ // must be done, since before getSamplers is done, the options are empty
-		console.log(document.getElementById("samplerSelect").value == "")
+	if (!document.getElementById("samplerSelect").value == "") {
+		// must be done, since before getSamplers is done, the options are empty
+		console.log(document.getElementById("samplerSelect").value == "");
 		stableDiffusionData.sampler_index =
 			document.getElementById("samplerSelect").value;
 		localStorage.setItem("sampler", stableDiffusionData.sampler_index);
@@ -1075,7 +1076,7 @@ function getUpscalers() {
 	*/
 }
 
-async function getModels(){
+async function getModels() {
 	var modelSelect = document.getElementById("models");
 	var url = document.getElementById("host").value + "/sdapi/v1/sd-models";
 	await fetch(url)
@@ -1088,7 +1089,7 @@ async function getModels(){
 				option.value = data[i].title;
 				modelSelect.add(option);
 			}
-		})
+		});
 
 	/* 	To get the current model, we might need to call /config/ which returns a json file with EVERYTHING from the webui, 25k lines of json... i havent figured out any other way to get the model thats loaded
 		response >> components >> second component(quicksettings with checkpoint chooser as default) >> value = the current model
@@ -1100,18 +1101,18 @@ async function getModels(){
 		.then((data) => {
 			//console.log(data)
 			var model = data.components[1].props.value;
-			console.log("Current model: "+model);
+			console.log("Current model: " + model);
 			modelSelect.value = model;
-		})
+		});
 }
 
-function changeModel(){
+function changeModel() {
 	// change the model
 	console.log("changing model to " + document.getElementById("models").value);
 	var model_title = document.getElementById("models").value;
 	var payload = {
-		"sd_model_checkpoint": model_title
-	}
+		sd_model_checkpoint: model_title,
+	};
 	var url = document.getElementById("host").value + "/sdapi/v1/options/";
 	fetch(url, {
 		method: "POST",
@@ -1138,7 +1139,7 @@ function changeModel(){
 		});
 }
 
-function getSamplers(){
+function getSamplers() {
 	var samplerSelect = document.getElementById("samplerSelect");
 	var url = document.getElementById("host").value + "/sdapi/v1/samplers";
 	fetch(url)
@@ -1147,15 +1148,15 @@ function getSamplers(){
 			//console.log(data); All samplers
 			for (var i = 0; i < data.length; i++) {
 				// PLMS SAMPLER DOES NOT WORK FOR ANY IMAGES BEYOND FOR THE INITIAL IMAGE (for me at least), GIVES ASGI Exception; AttributeError: 'PLMSSampler' object has no attribute 'stochastic_encode'
-				
+
 				var option = document.createElement("option");
 				option.text = data[i].name;
 				option.value = data[i].name;
 				samplerSelect.add(option);
 			}
-			if(localStorage.getItem("sampler") != null){
+			if (localStorage.getItem("sampler") != null) {
 				samplerSelect.value = localStorage.getItem("sampler");
-			}else{
+			} else {
 				// needed now, as hardcoded sampler cant be guaranteed to be in the list
 				samplerSelect.value = data[0].name;
 				localStorage.setItem("sampler", samplerSelect.value);
@@ -1167,7 +1168,6 @@ function getSamplers(){
 					error
 			);
 		});
-
 }
 async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
