@@ -1,6 +1,6 @@
 # hello there 🐠
 
-![openOutpaint creating some undersea wildlife](docs/01-demo-v3-c.gif)
+[openOutpaint creating some undersea wildlife](https://user-images.githubusercontent.com/1765167/203318284-a9f6970f-c9f1-44be-8c61-810aa5ed46be.webm)
 
 this is a completely vanilla javascript and html canvas outpainting convenience doodad built for the API optionally exposed by [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), operating similarly to a few others which certainly have superior functionality. this simply offers an alternative for my following vain desires:
 
@@ -23,13 +23,14 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
 - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent))
 - "temporary" monitors at the bottom to see exactly what mask/image you're feeding img2img, no i'm certainly not using them as actual imagedata sources or anything
+- upscaler support for final output images _(NOTE: LDSR has had reports of not operating correctly when selected - please test and see if it works as expected)_
 - saves your preferences to browser localstorage for maximum convenience
 - undo/redo with ctrl+z/y keyboard shortcuts for additional maximum convenience
 
 ## collaborator credits 👑
 
 - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
-- [@Kalekki](https://github.com/Kalekki) - [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), [checkerboard background and non bonkers canvas borders](https://github.com/zero01101/openOutpaint/pull/24)
+- [@Kalekki](https://github.com/Kalekki) - [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), [checkerboard background and non bonkers canvas borders](https://github.com/zero01101/openOutpaint/pull/24), [upscaling output image](https://github.com/zero01101/openOutpaint/pull/35)
 - [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [even more wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22), [undo/redo keyboard shortcuts and keyboard input support](https://github.com/zero01101/openOutpaint/pull/30), [scrumptious photography-shoppe-style history palette](https://github.com/zero01101/openOutpaint/commit/b12fc0d2a02074cb31c0ef35ce56d2bd02244908)
 - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 
@@ -96,7 +97,8 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 - [x] image erase region in case you decide later that you're not too happy with earlier results (technically i guess you could just mask over the entire region you dislike but that's... bad)
 - [ ] controls for the rest of API-available options (e.g. ~~hires fix~~, inpaint fill modes, etc)
 - [x] ~~save user-set option values to browser localstorage to persist your preferred, uh, preferences~~
-- [ ] render progress spinner/bar
+- [x] render progress spinner/bar
+- [ ] make render progress bar prettier
 - [x] ~~smart crop downloaded image~~
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [ ] scaling of imported arbitrary image before superimposition
@@ -167,6 +169,7 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.6 - absolutely brilliant undo/redo system, logical and straightforward enough to the point where even i can understand what it's doing [25681b3](https://github.com/zero01101/openOutpaint/commit/25681b3a83bbd7a1d1b3e675f26f141692d77c79)
 - 0.0.6.1 - finally think i've got overmasking working better with a bit of "humanization" to the automated masks, please play around with it and see if it's any better or just sucks in general [8002772](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 - 0.0.6.5 - checkerboard background, far more attractive painted masking, HUGE code cleanup omg [74d5f13](https://github.com/zero01101/openOutpaint/commit/74d5f13aa582695e3e359ad46f7e629a25fb0091)
+- 0.0.6.9 - upscaler support for final output image [3b91a89](https://github.com/zero01101/openOutpaint/commit/3b91a89214e22930ad75fdc2d9e6e79a5f40ee82)
 
 ## what's with the fish?
 
