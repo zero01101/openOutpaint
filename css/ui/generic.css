@@ -1,0 +1,32 @@
+/* UI Floating Windows */
+.floating-window {
+	position: fixed;
+	width: 250px;
+	height: auto;
+	z-index: 999;
+}
+
+.floating-window-title {
+	cursor: move;
+	background-color: rgba(104, 104, 104, 0.75);
+
+	user-select: none;
+
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-bottom: auto;
+	font-size: 1.5em;
+	color: black;
+	text-align: center;
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+	border: solid;
+	border-bottom: none;
+	border-color: black;
+}
+
+.draggable {
+	cursor: move;
+}

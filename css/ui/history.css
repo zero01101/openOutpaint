@@ -1,0 +1,38 @@
+#historyContainer > .info {
+	padding: 0;
+}
+
+#history.history {
+	height: 200px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+#history.history > .history-item {
+	cursor: pointer;
+
+	padding: 5px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+#history.history > .history-item {
+	background-color: #0000;
+}
+#history.history > .history-item:hover {
+	background-color: #fff5;
+}
+
+#history.history > .history-item.current {
+	background-color: #66f5;
+}
+#history.history > .history-item.current:hover {
+	background-color: #66f5;
+}
+
+#history.history > .history-item.future {
+	background-color: #4445;
+}
+#history.history > .history-item.future:hover {
+	background-color: #ddd5;
+}
