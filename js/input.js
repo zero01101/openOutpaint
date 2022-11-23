@@ -362,7 +362,9 @@ window.onkeydown = (evn) => {
 		}, inputConfig.keyboardHoldTiming),
 	};
 
-	// Process shortcuts
+	// Process shortcuts if input target is not a text field
+	if (evn.target instanceof HTMLInputElement && evn.type === "text") return;
+
 	const callbacks = keyboard.shortcuts[evn.code];
 
 	if (callbacks)

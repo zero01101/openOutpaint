@@ -116,6 +116,67 @@ const toolbar = {
 };
 
 /**
+ * Premade inputs for populating the context menus
+ */
+const _toolbar_input = {
+	checkbox: (state, dataKey, text) => {
+		if (state[dataKey] === undefined) state[dataKey] = false;
+
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.checked = state[dataKey];
+		checkbox.onchange = () => (state[dataKey] = checkbox.checked);
+
+		const label = document.createElement("label");
+		label.appendChild(checkbox);
+		label.appendChild(new Text(text));
+
+		return {checkbox, label};
+	},
+
+	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1) => {
+		const slider = document.createElement("input");
+		slider.type = "range";
+		slider.max = max;
+		slider.step = step;
+		slider.min = min;
+		slider.value = state[dataKey];
+
+		const textEl = document.createElement("input");
+		textEl.type = "number";
+		textEl.value = state[dataKey];
+
+		console.log(state[dataKey]);
+
+		sliderChangeHandlerFactoryEl(
+			slider,
+			textEl,
+			dataKey,
+			state[dataKey],
+			false,
+			(k, v) => (state[dataKey] = v),
+			(k) => state[dataKey]
+		);
+
+		const label = document.createElement("label");
+		label.appendChild(new Text(text));
+		label.appendChild(textEl);
+		label.appendChild(slider);
+
+		return {
+			slider,
+			text: textEl,
+			label,
+			setValue(v) {
+				slider.value = v;
+				textEl.value = slider.value;
+				return parseInt(slider.value);
+			},
+		};
+	},
+};
+
+/**
  * Dream and img2img tools
  */
 const _reticle_draw = (evn, snapToGrid = true) => {
@@ -145,7 +206,7 @@ tools.dream = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		_reticle_draw({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.mousemovecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
@@ -170,23 +231,136 @@ tools.dream = toolbar.registerTool(
 		populateContextMenu: (menu, state) => {
 			if (!state.ctxmenu) {
 				state.ctxmenu = {};
-				// Snap To Grid Checkbox
-				const snapToGridCheckbox = document.createElement("input");
-				snapToGridCheckbox.type = "checkbox";
-				snapToGridCheckbox.checked = state.snapToGrid;
-				snapToGridCheckbox.onchange = () =>
-					(state.snapToGrid = snapToGridCheckbox.checked);
-				state.ctxmenu.snapToGridCheckbox = snapToGridCheckbox;
-
-				const snapToGridLabel = document.createElement("label");
-				snapToGridLabel.appendChild(snapToGridCheckbox);
-				snapToGridLabel.appendChild(new Text("Snap to Grid"));
-				state.ctxmenu.snapToGridLabel = snapToGridLabel;
+				state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
+					state,
+					"snapToGrid",
+					"Snap To Grid"
+				).label;
 			}
 
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
 		},
 		shortcut: "D",
+	}
+);
+
+tools.img2img = toolbar.registerTool(
+	"res/icons/image.svg",
+	"Img2Img",
+	(state, opt) => {
+		// Draw new cursor immediately
+		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+		state.mousemovecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+
+		// Start Listeners
+		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
+		mouse.listen.canvas.left.onclick.on(state.dreamcb);
+		mouse.listen.canvas.right.onclick.on(state.erasecb);
+	},
+	(state, opt) => {
+		// Clear Listeners
+		mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
+		mouse.listen.canvas.left.onclick.clear(state.dreamcb);
+		mouse.listen.canvas.right.onclick.clear(state.erasecb);
+	},
+	{
+		init: (state) => {
+			state.snapToGrid = true;
+			state.denoisingStrength = 0.7;
+
+			state.useBorderMask = true;
+			state.borderMaskSize = 64;
+
+			state.mousemovecb = (evn) => {
+				_reticle_draw(evn, state.snapToGrid);
+				const bb = getBoundingBox(
+					evn.x,
+					evn.y,
+					basePixelCount * scaleFactor,
+					basePixelCount * scaleFactor,
+					snapToGrid && basePixelCount
+				);
+
+				// For displaying border mask
+				const auxCanvas = document.createElement("canvas");
+				auxCanvas.width = bb.w;
+				auxCanvas.height = bb.h;
+				const auxCtx = auxCanvas.getContext("2d");
+
+				if (state.useBorderMask) {
+					auxCtx.fillStyle = "#FF6A6A50";
+					auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
+					auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
+					auxCtx.fillRect(
+						bb.w - state.borderMaskSize,
+						0,
+						state.borderMaskSize,
+						bb.h
+					);
+					auxCtx.fillRect(
+						0,
+						bb.h - state.borderMaskSize,
+						bb.w,
+						state.borderMaskSize
+					);
+				}
+
+				const tmp = ovCtx.globalAlpha;
+				ovCtx.globalAlpha = 0.4;
+				ovCtx.drawImage(auxCanvas, bb.x, bb.y);
+				ovCtx.globalAlpha = tmp;
+			};
+			state.dreamcb = (evn) => {
+				dream_img2img_callback(evn, state);
+			};
+			state.erasecb = (evn) => dream_erase_callback(evn, state);
+		},
+		populateContextMenu: (menu, state) => {
+			if (!state.ctxmenu) {
+				state.ctxmenu = {};
+				// Snap To Grid Checkbox
+				state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
+					state,
+					"snapToGrid",
+					"Snap To Grid"
+				).label;
+
+				// Denoising Strength Slider
+				state.ctxmenu.denoisingStrengthLabel = _toolbar_input.slider(
+					state,
+					"denoisingStrength",
+					"Denoising Strength",
+					0,
+					1,
+					0.05
+				).label;
+
+				// Use Border Mask Checkbox
+				state.ctxmenu.useBorderMaskLabel = _toolbar_input.checkbox(
+					state,
+					"useBorderMask",
+					"Use Border Mask"
+				).label;
+				// Border Mask Size Slider
+				state.ctxmenu.borderMaskSize = _toolbar_input.slider(
+					state,
+					"borderMaskSize",
+					"Border Mask Size",
+					0,
+					128,
+					1
+				).label;
+			}
+
+			menu.appendChild(state.ctxmenu.snapToGridLabel);
+			menu.appendChild(document.createElement("br"));
+			menu.appendChild(state.ctxmenu.denoisingStrengthLabel);
+			menu.appendChild(document.createElement("br"));
+			menu.appendChild(state.ctxmenu.useBorderMaskLabel);
+			menu.appendChild(document.createElement("br"));
+			menu.appendChild(state.ctxmenu.borderMaskSize);
+		},
+		shortcut: "I",
 	}
 );
 
@@ -246,15 +420,9 @@ tools.maskbrush = toolbar.registerTool(
 
 			state.wheelcb = (evn) => {
 				if (evn.target.id === "overlayCanvas") {
-					state.setBrushSize(
-						Math.max(
-							state.config.minBrushSize,
-							Math.min(
-								state.config.maxBrushSize,
-								state.brushSize -
-									Math.floor(state.config.brushScrollSpeed * evn.delta)
-							)
-						)
+					state.brushSize = state.setBrushSize(
+						state.brushSize -
+							Math.floor(state.config.brushScrollSpeed * evn.delta)
 					);
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 					state.movecb(evn);
@@ -267,28 +435,16 @@ tools.maskbrush = toolbar.registerTool(
 		populateContextMenu: (menu, state) => {
 			if (!state.ctxmenu) {
 				state.ctxmenu = {};
-				// Brush Size slider
-				const brushSizeRange = document.createElement("input");
-				brushSizeRange.type = "range";
-				brushSizeRange.value = state.brushSize;
-				brushSizeRange.max = state.config.maxBrushSize;
-				brushSizeRange.step = 8;
-				brushSizeRange.min = state.config.minBrushSize;
-				brushSizeRange.oninput = () =>
-					(state.brushSize = parseInt(brushSizeRange.value));
-				state.ctxmenu.brushSizeRange = brushSizeRange;
-				const brushSizeText = document.createElement("input");
-				brushSizeText.type = "number";
-				brushSizeText.value = state.brushSize;
-				brushSizeText.oninput = () =>
-					(state.brushSize = parseInt(brushSizeText.value));
-				state.ctxmenu.brushSizeText = brushSizeText;
-
-				const brushSizeLabel = document.createElement("label");
-				brushSizeLabel.appendChild(new Text("Brush Size"));
-				brushSizeLabel.appendChild(brushSizeText);
-				brushSizeLabel.appendChild(brushSizeRange);
-				state.ctxmenu.brushSizeLabel = brushSizeLabel;
+				const brushSizeSlider = _toolbar_input.slider(
+					state,
+					"brushSize",
+					"Brush Size",
+					state.config.minBrushSize,
+					state.config.maxBrushSize,
+					1
+				);
+				state.ctxmenu.brushSizeLabel = brushSizeSlider.label;
+				state.setBrushSize = brushSizeSlider.setValue;
 			}
 
 			menu.appendChild(state.ctxmenu.brushSizeLabel);
