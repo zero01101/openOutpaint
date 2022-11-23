@@ -32,7 +32,7 @@ const dream_generate_callback = (evn, state) => {
 		// Use txt2img if canvas is blank
 		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, imgCanvas)) {
 			// Dream
-			dream(bb.x, bb.y, request, {method: "txt2img"});
+			dream(bb.x, bb.y, request, {method: "txt2img", stopMarching, bb});
 		} else {
 			// Use img2img if not
 
@@ -71,7 +71,7 @@ const dream_generate_callback = (evn, state) => {
 			request.mask = auxCanvas.toDataURL();
 
 			// Dream
-			dream(bb.x, bb.y, request, {method: "img2img"});
+			dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
 		}
 	}
 };
