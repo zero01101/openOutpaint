@@ -363,7 +363,16 @@ window.onkeydown = (evn) => {
 	};
 
 	// Process shortcuts if input target is not a text field
-	if (evn.target instanceof HTMLInputElement && evn.type === "text") return;
+	switch (evn.target.tagName.toLowerCase()) {
+		case "input":
+		case "textarea":
+		case "select":
+		case "button":
+			return; // If in an input field, do not process shortcuts
+		default:
+			// Do nothing
+			break;
+	}
 
 	const callbacks = keyboard.shortcuts[evn.code];
 
