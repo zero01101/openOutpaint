@@ -30,7 +30,7 @@
 				if (
 					!commands.history.find((entry) => `hist-${entry.id}` === child.id)
 				) {
-					console.log("Removing " + entry.id);
+					console.log("Removing " + child.id);
 					historyView.removeChild(child);
 				}
 			});
