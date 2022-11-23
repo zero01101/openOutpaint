@@ -25,17 +25,25 @@
 	};
 
 	_commands_events.on((message) => {
+		if (message.action === "run") {
+			Array.from(historyView.children).forEach((child) => {
+				if (
+					!commands.history.find((entry) => `hist-${entry.id}` === child.id)
+				) {
+					console.log("Removing " + entry.id);
+					historyView.removeChild(child);
+				}
+			});
+		}
+
 		commands.history.forEach((entry, index) => {
-			console.log("Inserting " + entry.id);
 			if (!document.getElementById(`hist-${entry.id}`)) {
+				console.log("Inserting " + entry.id);
 				historyView.appendChild(
 					makeHistoryEntry(index, `hist-${entry.id}`, entry.title)
 				);
 			}
 		});
-
-		while (historyView.children.length > commands.history.length)
-			historyView.removeChild(historyView.lastElementChild);
 
 		Array.from(historyView.children).forEach((child, index) => {
 			if (index === commands.current) {
