@@ -39,6 +39,12 @@ const commands = {
 			Object.assign(copy, options);
 			const state = {};
 
+			const entry = {
+				id: guid(),
+				title,
+				state,
+			};
+
 			// Attempt to run command
 			try {
 				run(title, copy, state);
@@ -53,6 +59,7 @@ const commands = {
 				console.debug(`Undoing ${name}, currently ${commands.current}`);
 				undo(title, state);
 				_commands_events.emit({
+					id: entry.id,
 					name,
 					action: "undo",
 					state,
@@ -63,6 +70,7 @@ const commands = {
 				console.debug(`Redoing ${name}, currently ${commands.current}`);
 				redo(title, copy, state);
 				_commands_events.emit({
+					id: entry.id,
 					name,
 					action: "redo",
 					state,
@@ -71,21 +79,29 @@ const commands = {
 			};
 
 			// Add to history
-			if (commands.history.length > commands.current + 1)
-				commands.history.splice(commands.current + 1);
+			if (commands.history.length > commands.current + 1) {
+				commands.history.forEach((entry, index) => {
+					if (index >= commands.current + 1)
+						_commands_events.emit({
+							id: entry.id,
+							name,
+							action: "deleted",
+							state,
+							current: commands.current,
+						});
+				});
 
-			const entry = {
-				id: guid(),
-				title,
-				undo: undoWrapper,
-				redo: redoWrapper,
-				state,
-			};
+				commands.history.splice(commands.current + 1);
+			}
 
 			commands.history.push(entry);
 			commands.current++;
 
+			entry.undo = undoWrapper;
+			entry.redo = redoWrapper;
+
 			_commands_events.emit({
+				id: entry.id,
 				name,
 				action: "run",
 				state,
