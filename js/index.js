@@ -181,7 +181,6 @@ function startup() {
 	changeCfgScale();
 	changeBatchCount();
 	changeBatchSize();
-	changeSnapMode();
 	changeMaskBlur();
 	changeSeed();
 	changeOverMaskPx();
@@ -576,10 +575,6 @@ const changeSteps = sliderChangeHandlerFactory(
 	"steps",
 	30
 );
-
-function changeSnapMode() {
-	snapToGrid = document.getElementById("cbxSnap").checked;
-}
 
 function changeMaskBlur() {
 	stableDiffusionData.mask_blur = document.getElementById("maskBlur").value;
