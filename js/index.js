@@ -142,6 +142,7 @@ var arbitraryImageBase64; // seriously js cmon work with me here
 var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
 var marchOffset = 0;
 var stopMarching = null;
+var inProgress = false;
 var marchCoords = {};
 
 // info div, sometimes hidden
@@ -170,6 +171,7 @@ const bgCtx = bgCanvas.getContext("2d");
 function startup() {
 	checkIfWebuiIsRunning();
 	loadSettings();
+	getUpscalers();
 	drawBackground();
 	changeScaleFactor();
 	changeSampler();
@@ -211,21 +213,38 @@ function dream(
 	x,
 	y,
 	prompt,
-	extra = {method: endpoint, stopMarching: () => {}}
+	extra = {
+		method: endpoint,
+		stopMarching: () => {},
+		bb: {x, y, w: prompt.width, h: prompt.height},
+	}
 ) {
 	tmpImgXYWH.x = x;
 	tmpImgXYWH.y = y;
 	tmpImgXYWH.w = prompt.width;
 	tmpImgXYWH.h = prompt.height;
+	console.log(
+		"dreaming to " +
+			host +
+			url +
+			(extra.method || endpoint) +
+			":\r\n" +
+			JSON.stringify(prompt)
+	);
 	console.info(`dreaming "${prompt.prompt}"`);
 	console.debug(prompt);
-	postData(prompt, extra).then((data) => {
-		returnedImages = data.images;
-		totalImagesReturned = data.images.length;
-		blockNewImages = true;
-		//console.log(data); // JSON data parsed by `data.json()` call
-		imageAcceptReject(x, y, data, extra);
-	});
+
+	// Start checking for progress
+	const progressCheck = checkProgress(extra.bb);
+	postData(prompt, extra)
+		.then((data) => {
+			returnedImages = data.images;
+			totalImagesReturned = data.images.length;
+			blockNewImages = true;
+			//console.log(data); // JSON data parsed by `data.json()` call
+			imageAcceptReject(x, y, data, extra);
+		})
+		.finally(() => clearInterval(progressCheck));
 }
 
 async function postData(promptData, extra = null) {
@@ -251,6 +270,8 @@ async function postData(promptData, extra = null) {
 }
 
 function imageAcceptReject(x, y, data, extra = null) {
+	inProgress = false;
+	document.getElementById("progressDiv").remove();
 	const img = new Image();
 	img.onload = function () {
 		tempCtx.drawImage(img, x, y); //imgCtx for actual image, tmp for... holding?
@@ -262,7 +283,7 @@ function imageAcceptReject(x, y, data, extra = null) {
 		div.style.width = "200px";
 		div.style.height = "70px";
 		div.innerHTML =
-			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button>';
+			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button><span class="strokeText" id="estRemaining"></span>';
 		document.getElementById("tempDiv").appendChild(div);
 		document.getElementById("currentImgIndex").innerText = "1";
 		document.getElementById("totalImgIndex").innerText = totalImagesReturned;
@@ -408,6 +429,35 @@ function drawMarchingAnts(bb, offset) {
 	tgtCtx.setLineDash([4, 2]);
 	tgtCtx.lineDashOffset = -offset;
 	tgtCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
+}
+
+function checkProgress(bb) {
+	document.getElementById("progressDiv") &&
+		document.getElementById("progressDiv").remove();
+	// Skip image to stop using a ton of networking resources
+	endpoint = "progress?skip_current_image=true";
+	var div = document.createElement("div");
+	div.id = "progressDiv";
+	div.style.position = "absolute";
+	div.style.width = "200px";
+	div.style.height = "70px";
+	div.style.left = parseInt(bb.x + bb.w - 100) + "px";
+	div.style.top = parseInt(bb.y + bb.h) + "px";
+	div.innerHTML = '<span class="strokeText" id="estRemaining"></span>';
+	document.getElementById("tempDiv").appendChild(div);
+	return setInterval(() => {
+		fetch(host + url + endpoint)
+			.then((response) => response.json())
+			.then((data) => {
+				var estimate =
+					Math.round(data.progress * 100) +
+					"% :: " +
+					Math.floor(data.eta_relative) +
+					" sec.";
+
+				document.getElementById("estRemaining").innerText = estimate;
+			});
+	}, 500);
 }
 
 function mouseMove(evt) {
@@ -643,8 +693,8 @@ function cropCanvas(sourceCanvas) {
 		return a - b;
 	});
 	var n = pix.x.length - 1;
-	w = pix.x[n] - pix.x[0];
-	h = pix.y[n] - pix.y[0];
+	w = pix.x[n] - pix.x[0] + 1;
+	h = pix.y[n] - pix.y[0] + 1;
 	// yup sure looks like it
 
 	try {
@@ -677,6 +727,144 @@ function checkIfWebuiIsRunning() {
 					error
 			);
 		});
+}
+
+function getUpscalers() {
+	/*
+	 so for some reason when upscalers request returns upscalers, the real-esrgan model names are incorrect, and need to be fetched from /sdapi/v1/realesrgan-models
+	 also the realesrgan models returned are not all correct, extra fun!
+	 LDSR seems to have problems so we dont add that either ->  RuntimeError: Number of dimensions of repeat dims can not be smaller than number of dimensions of tensor
+	 need to figure out why that is, if you dont get this error then you can add it back in
+
+	 Hacky way to get the correct list all in one go is to purposefully make an incorrect request, which then returns
+	 { detail: "Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x" }
+	 from which we can extract the correct list of upscalers
+	*/
+
+	// hacky way to get the correct list of upscalers
+	var upscalerSelect = document.getElementById("upscalers");
+	var extras_url =
+		document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
+	var empty_image = new Image(512, 512);
+	empty_image.src =
+		"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAFCAAAAABCAYAAAChpRsuAAAALklEQVR42u3BAQ0AAAgDoJvc6LeHAybtBgAAAAAAAAAAAAAAAAAAAAAAAAB47QD2wAJ/LnnqGgAAAABJRU5ErkJggg=="; //transparent pixel
+	var purposefully_incorrect_data = {
+		"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
+		upscaling_resize: 2,
+		upscaler_1: "fake_upscaler",
+		image: empty_image.src,
+	};
+
+	fetch(extras_url, {
+		method: "POST",
+		headers: {
+			Accept: "application/json",
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(purposefully_incorrect_data),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			console.log("purposefully_incorrect_data response, ignore above error");
+			// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
+			let upscalers = data.detail.split(": ")[1].trim().split(" , "); // converting the result to a list of upscalers
+			for (var i = 0; i < upscalers.length; i++) {
+				// if(upscalers[i] == "LDSR") continue; // Skip LDSR, see reason in the first comment // readded because worksonmymachine.jpg but leaving it here in case of, uh, future disaster?
+				var option = document.createElement("option");
+				option.text = upscalers[i];
+				option.value = upscalers[i];
+				upscalerSelect.add(option);
+			}
+		});
+
+	/* THE NON HACKY WAY THAT I SIMPLY COULD NOT GET TO PRODUCE A LIST WITHOUT NON WORKING UPSCALERS, FEEL FREE TO TRY AND FIGURE IT OUT
+
+	var url = document.getElementById("host").value + "/sdapi/v1/upscalers";
+	var realesrgan_url = document.getElementById("host").value + "/sdapi/v1/realesrgan-models";
+
+	// get upscalers
+	fetch(url)
+		.then((response) => response.json())
+		.then((data) => {
+			console.log(data);
+
+			for (var i = 0; i < data.length; i++) {
+				var option = document.createElement("option");
+
+				if (data[i].name.includes("ESRGAN") || data[i].name.includes("LDSR")) {
+					continue;
+				}
+				option.text = data[i].name;
+				upscalerSelect.add(option);
+			}
+		})
+		.catch((error) => {
+			alert(
+				"Error getting upscalers, please check console for additional info\n" +
+					error
+			);
+		});
+	// fetch realesrgan models separately
+	fetch(realesrgan_url)
+		.then((response) => response.json())
+		.then((data) => {
+			var model = data;
+			for(var i = 0; i < model.length; i++){
+				let option = document.createElement("option");
+				option.text = model[i].name;
+				option.value = model[i].name;
+				upscalerSelect.add(option);
+
+			}
+		
+	})
+	*/
+}
+
+async function upscaleAndDownload() {
+	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
+
+	// get cropped canvas, send it to upscaler, download result
+	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
+	var upscaler = document.getElementById("upscalers").value;
+	var croppedCanvas = cropCanvas(imgCanvas);
+	if (croppedCanvas != null) {
+		var upscaler = document.getElementById("upscalers").value;
+		var url =
+			document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
+		var imgdata = croppedCanvas.toDataURL("image/png");
+		var data = {
+			"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
+			upscaling_resize: upscale_factor,
+			upscaler_1: upscaler,
+			image: imgdata,
+		};
+		console.log(data);
+		await fetch(url, {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log(data);
+				var link = document.createElement("a");
+				link.download =
+					new Date()
+						.toISOString()
+						.slice(0, 19)
+						.replace("T", " ")
+						.replace(":", " ") +
+					" openOutpaint image upscaler_" +
+					upscaler +
+					".png";
+				link.href = "data:image/png;base64," + data["image"];
+				link.click();
+			});
+	}
 }
 
 function loadSettings() {
