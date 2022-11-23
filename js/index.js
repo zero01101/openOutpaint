@@ -126,6 +126,7 @@ var placingArbitraryImage = false; // for when the user has loaded an existing i
 var enableErasing = false; // accidental right-click erase if the user isn't trying to erase is a bad thing
 var marchOffset = 0;
 var marching = false;
+var inProgress = false;
 var marchCoords = {};
 
 // info div, sometimes hidden
@@ -209,6 +210,7 @@ function dream(x, y, prompt) {
 		//console.log(data); // JSON data parsed by `data.json()` call
 		imageAcceptReject(x, y, data);
 	});
+	checkProgress();
 }
 
 async function postData(promptData) {
@@ -231,6 +233,8 @@ async function postData(promptData) {
 }
 
 function imageAcceptReject(x, y, data) {
+	inProgress = false;
+	document.getElementById("progressDiv").remove();
 	const img = new Image();
 	img.onload = function () {
 		tempCtx.drawImage(img, x, y); //imgCtx for actual image, tmp for... holding?
@@ -242,7 +246,7 @@ function imageAcceptReject(x, y, data) {
 		div.style.width = "200px";
 		div.style.height = "70px";
 		div.innerHTML =
-			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button>';
+			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button><span class="strokeText" id="estRemaining"></span>';
 		document.getElementById("tempDiv").appendChild(div);
 		document.getElementById("currentImgIndex").innerText = "1";
 		document.getElementById("totalImgIndex").innerText = totalImagesReturned;
@@ -402,6 +406,39 @@ function drawMarchingAnts() {
 	tgtCtx.setLineDash([4, 2]);
 	tgtCtx.lineDashOffset = -marchOffset;
 	tgtCtx.strokeRect(marchCoords.x, marchCoords.y, marchCoords.w, marchCoords.h);
+}
+
+function checkProgress() {
+	document.getElementById("progressDiv") &&
+		document.getElementById("progressDiv").remove();
+	endpoint = "progress?skip_current_image=false";
+	var div = document.createElement("div");
+	div.id = "progressDiv";
+	div.style.position = "absolute";
+	div.style.width = "200px";
+	div.style.height = "70px";
+	div.style.left = parseInt(marchCoords.x + marchCoords.w - 100) + "px";
+	div.style.top = parseInt(marchCoords.y + marchCoords.h) + "px";
+	div.innerHTML = '<span class="strokeText" id="estRemaining"></span>';
+	document.getElementById("tempDiv").appendChild(div);
+	updateProgress();
+}
+
+function updateProgress() {
+	if (inProgress) {
+		fetch(host + url + endpoint)
+			.then((response) => response.json())
+			.then((data) => {
+				var estimate =
+					Math.round(data.progress * 100) +
+					"% :: " +
+					Math.floor(data.eta_relative) +
+					" sec.";
+
+				document.getElementById("estRemaining").innerText = estimate;
+			});
+		setTimeout(updateProgress, 500);
+	}
 }
 
 function mouseMove(evt) {
@@ -569,7 +606,7 @@ function mouseUp(evt) {
 			if (!blockNewImages) {
 				//TODO seriously, refactor this
 				blockNewImages = true;
-				marching = true;
+				marching = inProgress = true;
 				var drawIt = {}; //why am i doing this????
 				var target = drawTargets[drawTargets.length - 1]; //get the last one... why am i storing all of them?
 				var oddOffset = 0;
