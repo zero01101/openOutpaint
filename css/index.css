@@ -14,44 +14,6 @@ body {
 	background-color: #ccc;
 }
 
-#historyContainer > .info {
-	padding: 0;
-}
-
-#history.history {
-	height: 200px;
-	overflow: scroll;
-}
-
-#history.history > .history-item {
-	cursor: pointer;
-
-	padding: 5px;
-	padding-top: 2px;
-	padding-bottom: 2px;
-}
-
-#history.history > .history-item {
-	background-color: #0000;
-}
-#history.history > .history-item:hover {
-	background-color: #fff5;
-}
-
-#history.history > .history-item.current {
-	background-color: #66f5;
-}
-#history.history > .history-item.current:hover {
-	background-color: #66f5;
-}
-
-#history.history > .history-item.future {
-	background-color: #4445;
-}
-#history.history > .history-item.future:hover {
-	background-color: #ddd5;
-}
-
 .mainHSplit {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -66,40 +28,6 @@ body {
 	grid-template-rows: 1fr;
 	grid-column-gap: 5px;
 	grid-row-gap: 5px;
-}
-
-.uiContainer {
-	position: fixed;
-	width: 250px;
-	height: auto;
-	z-index: 999;
-}
-
-.uiTitleBar {
-	z-index: 999;
-	cursor: move;
-	background-color: rgba(104, 104, 104, 0.75);
-	z-index: 999;
-
-	user-select: none;
-
-	padding-left: 5px;
-	padding-right: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	margin-bottom: auto;
-	font-size: 1.5em;
-	color: black;
-	text-align: center;
-	border-top-left-radius: 10px;
-	border-top-right-radius: 10px;
-	border: solid;
-	border-bottom: none;
-	border-color: black;
-}
-
-.draggable {
-	cursor: move;
 }
 
 .toolbar {
@@ -158,7 +86,7 @@ button.tool:hover {
 	transition: max-height 0.2s ease-out;
 }
 
-.info {
+.menu-container {
 	background-color: rgba(255, 255, 255, 0.5);
 	padding-left: 10px;
 	padding-right: 10px;
