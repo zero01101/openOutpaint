@@ -155,7 +155,9 @@ const bgCtx = bgCanvas.getContext("2d");
 function startup() {
 	checkIfWebuiIsRunning();
 	loadSettings();
+	getSamplers();
 	getUpscalers();
+	getModels();
 	drawBackground();
 	changeScaleFactor();
 	changePaintMode();
@@ -782,9 +784,12 @@ function changeEnableErasing() {
 }
 
 function changeSampler() {
-	stableDiffusionData.sampler_index =
-		document.getElementById("samplerSelect").value;
-	localStorage.setItem("sampler", stableDiffusionData.sampler_index);
+	if(!document.getElementById("samplerSelect").value == ""){ // must be done, since before getSamplers is done, the options are empty
+		console.log(document.getElementById("samplerSelect").value == "")
+		stableDiffusionData.sampler_index =
+			document.getElementById("samplerSelect").value;
+		localStorage.setItem("sampler", stableDiffusionData.sampler_index);
+	}
 }
 
 const changeCfgScale = sliderChangeHandlerFactory(
@@ -1070,6 +1075,100 @@ function getUpscalers() {
 	*/
 }
 
+async function getModels(){
+	var modelSelect = document.getElementById("models");
+	var url = document.getElementById("host").value + "/sdapi/v1/sd-models";
+	await fetch(url)
+		.then((response) => response.json())
+		.then((data) => {
+			//console.log(data); All models
+			for (var i = 0; i < data.length; i++) {
+				var option = document.createElement("option");
+				option.text = data[i].model_name;
+				option.value = data[i].title;
+				modelSelect.add(option);
+			}
+		})
+
+	/* 	To get the current model, we might need to call /config/ which returns a json file with EVERYTHING from the webui, 25k lines of json... i havent figured out any other way to get the model thats loaded
+		response >> components >> second component(quicksettings with checkpoint chooser as default) >> value = the current model
+		The current model we get only updates on full restart of WebUI, so if we change the model, and then refresh the page, it will still show the old model.
+		We could just not show the current model, but i think it would be nice to show it.
+	*/
+	await fetch(document.getElementById("host").value + "/config/")
+		.then((response) => response.json())
+		.then((data) => {
+			//console.log(data)
+			var model = data.components[1].props.value;
+			console.log("Current model: "+model);
+			modelSelect.value = model;
+		})
+}
+
+function changeModel(){
+	// change the model
+	console.log("changing model to " + document.getElementById("models").value);
+	var model_title = document.getElementById("models").value;
+	var payload = {
+		"sd_model_checkpoint": model_title
+	}
+	var url = document.getElementById("host").value + "/sdapi/v1/options/";
+	fetch(url, {
+		method: "POST",
+		mode: "cors", // no-cors, *cors, same-origin
+		cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
+		credentials: "same-origin", // include, *same-origin, omit
+		redirect: "follow", // manual, *follow, error
+		referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+		headers: {
+			Accept: "application/json",
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	})
+		.then((response) => response.json())
+		.then(() => {
+			alert("Model changed to " + model_title);
+		})
+		.catch((error) => {
+			alert(
+				"Error changing model, please check console for additional info\n" +
+					error
+			);
+		});
+}
+
+function getSamplers(){
+	var samplerSelect = document.getElementById("samplerSelect");
+	var url = document.getElementById("host").value + "/sdapi/v1/samplers";
+	fetch(url)
+		.then((response) => response.json())
+		.then((data) => {
+			//console.log(data); All samplers
+			for (var i = 0; i < data.length; i++) {
+				// PLMS SAMPLER DOES NOT WORK FOR ANY IMAGES BEYOND FOR THE INITIAL IMAGE (for me at least), GIVES ASGI Exception; AttributeError: 'PLMSSampler' object has no attribute 'stochastic_encode'
+				
+				var option = document.createElement("option");
+				option.text = data[i].name;
+				option.value = data[i].name;
+				samplerSelect.add(option);
+			}
+			if(localStorage.getItem("sampler") != null){
+				samplerSelect.value = localStorage.getItem("sampler");
+			}else{
+				// needed now, as hardcoded sampler cant be guaranteed to be in the list
+				samplerSelect.value = data[0].name;
+				localStorage.setItem("sampler", samplerSelect.value);
+			}
+		})
+		.catch((error) => {
+			alert(
+				"Error getting samplers, please check console for additional info\n" +
+					error
+			);
+		});
+
+}
 async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
