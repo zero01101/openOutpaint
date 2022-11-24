@@ -134,15 +134,7 @@ const _toolbar_input = {
 		return {checkbox, label};
 	},
 
-	slider: (
-		state,
-		dataKey,
-		text,
-		min = 0,
-		max = 1,
-		step = 0.1,
-		defaultValue = 0.3
-	) => {
+	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1) => {
 		const slider = document.createElement("div");
 
 		const value = createSlider(text, slider, {
@@ -152,7 +144,7 @@ const _toolbar_input = {
 			valuecb: (v) => {
 				state[dataKey] = v;
 			},
-			defaultValue,
+			defaultValue: state[dataKey],
 		});
 
 		return {
@@ -179,6 +171,7 @@ const _reticle_draw = (evn, snapToGrid = true) => {
 		);
 
 		// draw targeting square reticle thingy cursor
+		ovCtx.lineWidth = 1;
 		ovCtx.strokeStyle = "#FFF";
 		ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h); //origin is middle of the frame
 	}
@@ -189,179 +182,8 @@ const tools = {};
 /**
  * Dream tool
  */
-tools.dream = toolbar.registerTool(
-	"res/icons/image-plus.svg",
-	"Dream",
-	(state, opt) => {
-		// Draw new cursor immediately
-		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.mousemovecb({
-			...mouse.coords.canvas.pos,
-			target: {id: "overlayCanvas"},
-		});
-
-		// Start Listeners
-		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
-		mouse.listen.canvas.left.onclick.on(state.dreamcb);
-		mouse.listen.canvas.right.onclick.on(state.erasecb);
-	},
-	(state, opt) => {
-		// Clear Listeners
-		mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
-		mouse.listen.canvas.left.onclick.clear(state.dreamcb);
-		mouse.listen.canvas.right.onclick.clear(state.erasecb);
-	},
-	{
-		init: (state) => {
-			state.snapToGrid = true;
-			state.overMaskPx = 0;
-			state.mousemovecb = (evn) => _reticle_draw(evn, state.snapToGrid);
-			state.dreamcb = (evn) => {
-				dream_generate_callback(evn, state);
-			};
-			state.erasecb = (evn) => dream_erase_callback(evn, state);
-		},
-		populateContextMenu: (menu, state) => {
-			if (!state.ctxmenu) {
-				state.ctxmenu = {};
-				state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
-					state,
-					"snapToGrid",
-					"Snap To Grid"
-				).label;
-				state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
-					state,
-					"overMaskPx",
-					"Overmask px",
-					0,
-					128,
-					1,
-					64
-				).slider;
-			}
-
-			menu.appendChild(state.ctxmenu.snapToGridLabel);
-			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.overMaskPxLabel);
-		},
-		shortcut: "D",
-	}
-);
-
-tools.img2img = toolbar.registerTool(
-	"res/icons/image.svg",
-	"Img2Img",
-	(state, opt) => {
-		// Draw new cursor immediately
-		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.mousemovecb({
-			...mouse.coords.canvas.pos,
-			target: {id: "overlayCanvas"},
-		});
-
-		// Start Listeners
-		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
-		mouse.listen.canvas.left.onclick.on(state.dreamcb);
-		mouse.listen.canvas.right.onclick.on(state.erasecb);
-	},
-	(state, opt) => {
-		// Clear Listeners
-		mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
-		mouse.listen.canvas.left.onclick.clear(state.dreamcb);
-		mouse.listen.canvas.right.onclick.clear(state.erasecb);
-	},
-	{
-		init: (state) => {
-			state.snapToGrid = true;
-			state.denoisingStrength = 0.7;
-
-			state.borderMaskSize = 64;
-
-			state.mousemovecb = (evn) => {
-				_reticle_draw(evn, state.snapToGrid);
-				const bb = getBoundingBox(
-					evn.x,
-					evn.y,
-					basePixelCount * scaleFactor,
-					basePixelCount * scaleFactor,
-					state.snapToGrid && basePixelCount
-				);
-
-				// For displaying border mask
-				const auxCanvas = document.createElement("canvas");
-				auxCanvas.width = bb.w;
-				auxCanvas.height = bb.h;
-				const auxCtx = auxCanvas.getContext("2d");
-
-				if (state.borderMaskSize > 0) {
-					auxCtx.fillStyle = "#FF6A6A50";
-					auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
-					auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
-					auxCtx.fillRect(
-						bb.w - state.borderMaskSize,
-						0,
-						state.borderMaskSize,
-						bb.h
-					);
-					auxCtx.fillRect(
-						0,
-						bb.h - state.borderMaskSize,
-						bb.w,
-						state.borderMaskSize
-					);
-				}
-
-				const tmp = ovCtx.globalAlpha;
-				ovCtx.globalAlpha = 0.4;
-				ovCtx.drawImage(auxCanvas, bb.x, bb.y);
-				ovCtx.globalAlpha = tmp;
-			};
-			state.dreamcb = (evn) => {
-				dream_img2img_callback(evn, state);
-			};
-			state.erasecb = (evn) => dream_erase_callback(evn, state);
-		},
-		populateContextMenu: (menu, state) => {
-			if (!state.ctxmenu) {
-				state.ctxmenu = {};
-				// Snap To Grid Checkbox
-				state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
-					state,
-					"snapToGrid",
-					"Snap To Grid"
-				).label;
-
-				// Denoising Strength Slider
-				state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
-					state,
-					"denoisingStrength",
-					"Denoising Strength",
-					0,
-					1,
-					0.05,
-					0.7
-				).slider;
-
-				// Border Mask Size Slider
-				state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
-					state,
-					"borderMaskSize",
-					"Border Mask Size",
-					0,
-					128,
-					1,
-					64
-				).slider;
-			}
-
-			menu.appendChild(state.ctxmenu.snapToGridLabel);
-			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
-			menu.appendChild(state.ctxmenu.borderMaskSlider);
-		},
-		shortcut: "I",
-	}
-);
+tools.dream = dreamTool();
+tools.img2img = img2imgTool();
 
 /**
  * Mask Editing tools
@@ -371,86 +193,13 @@ toolbar.addSeparator();
 /**
  * Mask Brush tool
  */
-tools.maskbrush = toolbar.registerTool(
-	"res/icons/paintbrush.svg",
-	"Mask Brush",
-	(state, opt) => {
-		// Draw new cursor immediately
-		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.movecb({...mouse.coords.canvas.pos, target: {id: "overlayCanvas"}});
+tools.maskbrush = maskBrushTool();
 
-		// Start Listeners
-		mouse.listen.canvas.onmousemove.on(state.movecb);
-		mouse.listen.canvas.onwheel.on(state.wheelcb);
-		mouse.listen.canvas.left.onpaint.on(state.drawcb);
-		mouse.listen.canvas.right.onpaint.on(state.erasecb);
-	},
-	(state, opt) => {
-		// Clear Listeners
-		mouse.listen.canvas.onmousemove.clear(state.movecb);
-		mouse.listen.canvas.onwheel.on(state.wheelcb);
-		mouse.listen.canvas.left.onpaint.clear(state.drawcb);
-		mouse.listen.canvas.right.onpaint.clear(state.erasecb);
-	},
-	{
-		init: (state) => {
-			state.config = {
-				brushScrollSpeed: 1 / 4,
-				minBrushSize: 10,
-				maxBrushSize: 500,
-			};
+/**
+ * Image Editing tools
+ */
+toolbar.addSeparator();
 
-			state.brushSize = 64;
-			state.setBrushSize = (size) => {
-				state.brushSize = size;
-				state.ctxmenu.brushSizeRange.value = size;
-				state.ctxmenu.brushSizeText.value = size;
-			};
-
-			state.movecb = (evn) => {
-				if (evn.target.id === "overlayCanvas") {
-					// draw big translucent red blob cursor
-					ovCtx.beginPath();
-					ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-					ovCtx.fillStyle = "#FF6A6A50";
-					ovCtx.fill();
-				}
-			};
-
-			state.wheelcb = (evn) => {
-				if (evn.target.id === "overlayCanvas") {
-					state.brushSize = state.setBrushSize(
-						state.brushSize -
-							Math.floor(state.config.brushScrollSpeed * evn.delta)
-					);
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-					state.movecb(evn);
-				}
-			};
-
-			state.drawcb = (evn) => mask_brush_draw_callback(evn, state);
-			state.erasecb = (evn) => mask_brush_erase_callback(evn, state);
-		},
-		populateContextMenu: (menu, state) => {
-			if (!state.ctxmenu) {
-				state.ctxmenu = {};
-				const brushSizeSlider = _toolbar_input.slider(
-					state,
-					"brushSize",
-					"Brush Size",
-					state.config.minBrushSize,
-					state.config.maxBrushSize,
-					1,
-					64
-				);
-				state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
-				state.setBrushSize = brushSizeSlider.setValue;
-			}
-
-			menu.appendChild(state.ctxmenu.brushSizeSlider);
-		},
-		shortcut: "M",
-	}
-);
+tools.selecttransform = selectTransformTool();
 
 toolbar.tools[0].enable();

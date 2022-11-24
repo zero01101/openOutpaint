@@ -64,7 +64,10 @@ function snap(i, scaled = true, gridSize = 64) {
 			scaleOffset = gridSize / 2;
 		}
 	}
-	var snapOffset = (i % gridSize) - scaleOffset;
+	const modulus = i % gridSize;
+	var snapOffset = modulus - scaleOffset;
+	if (modulus > gridSize / 2) snapOffset = modulus - gridSize;
+
 	if (snapOffset == 0) {
 		return snapOffset;
 	}
