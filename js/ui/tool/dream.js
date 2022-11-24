@@ -108,7 +108,9 @@ function applyOvermask(canvas, ctx, px) {
 			omCtx.arc(
 				(i / 4) % tmpOvermaskCanvas.width,
 				Math.floor(i / 4 / tmpOvermaskCanvas.width),
-				scaleFactor + rando, // was 4 * sf + rando, too big
+				scaleFactor +
+					rando +
+					(rando > scaleFactor ? rando / scaleFactor : scaleFactor / rando), // was 4 * sf + rando, too big, but i think i want it more ... random
 				0,
 				2 * Math.PI,
 				true

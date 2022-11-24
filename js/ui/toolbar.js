@@ -223,11 +223,11 @@ tools.dream = toolbar.registerTool(
 				state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 					state,
 					"overMaskPx",
-					"Overmask px (0 to disable):",
+					"Overmask px",
 					0,
 					128,
 					1
-				).label;
+				).slider;
 			}
 
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
