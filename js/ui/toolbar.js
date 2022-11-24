@@ -134,7 +134,15 @@ const _toolbar_input = {
 		return {checkbox, label};
 	},
 
-	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1) => {
+	slider: (
+		state,
+		dataKey,
+		text,
+		min = 0,
+		max = 1,
+		step = 0.1,
+		defaultValue = 0.3
+	) => {
 		const slider = document.createElement("div");
 
 		const value = createSlider(text, slider, {
@@ -144,6 +152,7 @@ const _toolbar_input = {
 			valuecb: (v) => {
 				state[dataKey] = v;
 			},
+			defaultValue,
 		});
 
 		return {
@@ -226,7 +235,8 @@ tools.dream = toolbar.registerTool(
 					"Overmask px",
 					0,
 					128,
-					1
+					1,
+					64
 				).slider;
 			}
 
@@ -265,7 +275,6 @@ tools.img2img = toolbar.registerTool(
 			state.snapToGrid = true;
 			state.denoisingStrength = 0.7;
 
-			state.useBorderMask = true;
 			state.borderMaskSize = 64;
 
 			state.mousemovecb = (evn) => {
@@ -284,7 +293,7 @@ tools.img2img = toolbar.registerTool(
 				auxCanvas.height = bb.h;
 				const auxCtx = auxCanvas.getContext("2d");
 
-				if (state.useBorderMask) {
+				if (state.borderMaskSize > 0) {
 					auxCtx.fillStyle = "#FF6A6A50";
 					auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
 					auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
@@ -329,33 +338,26 @@ tools.img2img = toolbar.registerTool(
 					"Denoising Strength",
 					0,
 					1,
-					0.05
+					0.05,
+					0.7
 				).slider;
 
-				// Use Border Mask Checkbox
-				state.ctxmenu.useBorderMaskSlider = _toolbar_input.checkbox(
-					state,
-					"useBorderMask",
-					"Use Border Mask"
-				).label;
 				// Border Mask Size Slider
-				state.ctxmenu.borderMaskSize = _toolbar_input.slider(
+				state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
 					state,
 					"borderMaskSize",
 					"Border Mask Size",
 					0,
 					128,
-					1
+					1,
+					64
 				).slider;
 			}
 
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
 			menu.appendChild(document.createElement("br"));
 			menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
-			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.useBorderMaskSlider);
-			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.borderMaskSize);
+			menu.appendChild(state.ctxmenu.borderMaskSlider);
 		},
 		shortcut: "I",
 	}
@@ -438,7 +440,8 @@ tools.maskbrush = toolbar.registerTool(
 					"Brush Size",
 					state.config.minBrushSize,
 					state.config.maxBrushSize,
-					1
+					1,
+					64
 				);
 				state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 				state.setBrushSize = brushSizeSlider.setValue;
