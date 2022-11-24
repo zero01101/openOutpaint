@@ -3,7 +3,7 @@ const inputConfig = {
 	clickTiming: 500, // Timing window to be considered a click (ms). If longer, turns into a drag
 	dClickTiming: 500, // Timing window to be considered a double click (ms).
 
-	keyboardHoldTiming: 100, // Timing window after which to consider holding a key (ms)
+	keyboardHoldTiming: 1000, // Timing window after which to consider holding a key (ms)
 };
 
 /**
@@ -342,7 +342,9 @@ const keyboard = {
 };
 
 window.onkeydown = (evn) => {
+	// onkeydown event
 	keyboard.listen.onkeydown.emit({
+		target: evn.target,
 		code: evn.code,
 		key: evn.key,
 		evn,
@@ -354,7 +356,9 @@ window.onkeydown = (evn) => {
 		_hold_to: setTimeout(() => {
 			keyboard.keys[evn.code].held = true;
 			delete keyboard.keys[evn.code]._hold_to;
+			// onkeyholdstart event
 			keyboard.listen.onkeyholdstart.emit({
+				target: evn.target,
 				code: evn.code,
 				key: evn.key,
 				evn,
@@ -383,7 +387,9 @@ window.onkeydown = (evn) => {
 				!!callback.alt === evn.altKey &&
 				!!callback.shift === evn.shiftKey
 			) {
+				// onshortcut event
 				keyboard.listen.onshortcut.emit({
+					target: evn.target,
 					code: evn.code,
 					key: evn.key,
 					id: callback.id,
@@ -395,19 +401,25 @@ window.onkeydown = (evn) => {
 };
 
 window.onkeyup = (evn) => {
+	// onkeyup event
 	keyboard.listen.onkeyup.emit({
+		target: evn.target,
 		code: evn.code,
 		key: evn.key,
 		evn,
 	});
 	if (keyboard.keys[evn.code] && keyboard.keys[evn.code].held) {
+		// onkeyholdend event
 		keyboard.listen.onkeyholdend.emit({
+			target: evn.target,
 			code: evn.code,
 			key: evn.key,
 			evn,
 		});
 	} else {
+		// onkeyclick event
 		keyboard.listen.onkeyclick.emit({
+			target: evn.target,
 			code: evn.code,
 			key: evn.key,
 			evn,
