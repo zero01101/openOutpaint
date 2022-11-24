@@ -132,7 +132,7 @@ var backupMaskChunk = null;
 var backupMaskX = null;
 var backupMaskY = null;
 var totalImagesReturned;
-var overMaskPx = 16;
+var overMaskPx = 0;
 var drawTargets = []; // is this needed?  i only draw the last one anyway...
 var dropTargets = []; // uhhh yeah similar to the above but for arbitrary dropped images
 var arbitraryImage;
@@ -587,8 +587,8 @@ function changeSeed() {
 }
 
 function changeOverMaskPx() {
-	overMaskPx = document.getElementById("overMaskPx").value;
-	localStorage.setItem("overmask_px", overMaskPx);
+	// overMaskPx = document.getElementById("overMaskPx").value;
+	// localStorage.setItem("overmask_px", overMaskPx);
 }
 
 function changeHiResFix() {
@@ -993,5 +993,5 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
-	document.getElementById("overMaskPx").value = Number(_overmask_px);
+	// document.getElementById("overMaskPx").value = Number(_overmask_px);
 }
