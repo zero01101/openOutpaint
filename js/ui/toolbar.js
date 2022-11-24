@@ -353,9 +353,9 @@ tools.img2img = toolbar.registerTool(
 			menu.appendChild(document.createElement("br"));
 			menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.useBorderMaskLabel);
+			menu.appendChild(state.ctxmenu.useBorderMaskSlider);
 			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.borderMaskSlider);
+			menu.appendChild(state.ctxmenu.borderMaskSize);
 		},
 		shortcut: "I",
 	}
