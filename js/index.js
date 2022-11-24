@@ -120,7 +120,6 @@ function startup() {
 	getModels();
 	drawBackground();
 	changeSampler();
-	changeSnapMode();
 	changeMaskBlur();
 	changeSeed();
 	changeOverMaskPx();
