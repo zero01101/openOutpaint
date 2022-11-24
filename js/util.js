@@ -43,6 +43,16 @@ const guid = (size = 3) => {
 };
 
 /**
+ * Default option set
+ */
+
+function defaultOpt(options, defaults) {
+	Object.keys(defaults).forEach((key) => {
+		if (options[key] === undefined) options[key] = defaults[key];
+	});
+}
+
+/**
  * Bounding box Calculation
  */
 function snap(i, scaled = true, gridSize = 64) {
