@@ -70,13 +70,8 @@ const dream_generate_callback = (evn, state) => {
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
 			var currentMask = auxCanvas.toDataURL();
 			request.mask =
-				document.getElementById("overMaskPx").value > 0
-					? applyOvermask(
-							auxCanvas,
-							auxCtx,
-							document.getElementById("overMaskPx").value,
-							currentMask
-					  )
+				state.overMaskPx > 0
+					? applyOvermask(auxCanvas, auxCtx, state.overMaskPx, currentMask)
 					: currentMask;
 			// Dream
 			dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});

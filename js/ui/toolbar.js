@@ -222,6 +222,7 @@ tools.dream = toolbar.registerTool(
 	{
 		init: (state) => {
 			state.snapToGrid = true;
+			state.overMaskPx = 0;
 			state.mousemovecb = (evn) => _reticle_draw(evn, state.snapToGrid);
 			state.dreamcb = (evn) => {
 				dream_generate_callback(evn, state);
@@ -236,9 +237,19 @@ tools.dream = toolbar.registerTool(
 					"snapToGrid",
 					"Snap To Grid"
 				).label;
+				state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
+					state,
+					"overMaskPx",
+					"Overmask px (0 to disable):",
+					0,
+					128,
+					1
+				).label;
 			}
 
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
+			menu.appendChild(document.createElement("br"));
+			menu.appendChild(state.ctxmenu.overMaskPxLabel);
 		},
 		shortcut: "D",
 	}
