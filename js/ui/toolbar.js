@@ -275,7 +275,6 @@ tools.img2img = toolbar.registerTool(
 			state.snapToGrid = true;
 			state.denoisingStrength = 0.7;
 
-			state.useBorderMask = true;
 			state.borderMaskSize = 64;
 
 			state.mousemovecb = (evn) => {
@@ -294,7 +293,7 @@ tools.img2img = toolbar.registerTool(
 				auxCanvas.height = bb.h;
 				const auxCtx = auxCanvas.getContext("2d");
 
-				if (state.useBorderMask) {
+				if (state.borderMaskSize > 0) {
 					auxCtx.fillStyle = "#FF6A6A50";
 					auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
 					auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
@@ -358,14 +357,7 @@ tools.img2img = toolbar.registerTool(
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
 			menu.appendChild(document.createElement("br"));
 			menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
-<<<<<<< HEAD
 			menu.appendChild(state.ctxmenu.borderMaskSlider);
-=======
-			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.useBorderMaskSlider);
-			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.borderMaskSize);
->>>>>>> main
 		},
 		shortcut: "I",
 	}
