@@ -93,9 +93,8 @@ function createSlider(name, wrapper, options = {}) {
 		phantomRange.value = val;
 		value = parseFloat(phantomRange.value);
 		bar.style.width = `${
-			wrapper.offsetWidth *
-			((value - options.min) / (options.max - options.min))
-		}px`;
+			100 * ((value - options.min) / (options.max - options.min))
+		}%`;
 		textEl.value = `${name}: ${value}`;
 		options.valuecb && options.valuecb(value);
 	};
