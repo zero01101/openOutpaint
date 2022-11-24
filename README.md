@@ -20,7 +20,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - optional grid snapping for precision
 - optional hi-res fix for blank/txt2img dreams which, if enabled, uses image width/height / 2 as firstpass size
 - optional overmasking for potentially better seams between outpaints - set overmask px value to 0 to disable the feature
-- dedicted img2img tool with optional border masking for enhanced output coherence with existing subject matter
+- dedicated img2img tool with optional border masking for enhanced output coherence with existing subject matter
 - floating toolbox with handy keyboard shortcuts
 - import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent))
 - upscaler support for final output images _(NOTE: LDSR has had reports of not operating correctly when selected - please test and see if it works as expected)_
