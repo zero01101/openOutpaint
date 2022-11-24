@@ -206,7 +206,10 @@ tools.dream = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.mousemovecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.mousemovecb({
+			...mouse.coords.canvas.pos,
+			target: {id: "overlayCanvas"},
+		});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
@@ -250,7 +253,10 @@ tools.img2img = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.mousemovecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.mousemovecb({
+			...mouse.coords.canvas.pos,
+			target: {id: "overlayCanvas"},
+		});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
@@ -378,7 +384,7 @@ tools.maskbrush = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.movecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.movecb({...mouse.coords.canvas.pos, target: {id: "overlayCanvas"}});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.movecb);

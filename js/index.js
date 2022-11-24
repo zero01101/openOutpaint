@@ -47,62 +47,6 @@ var stableDiffusionData = {
 	// "include_init_images": false // ??????
 };
 
-/**
- * Some Utility Functions
- */
-function sliderChangeHandlerFactory(
-	sliderId,
-	textBoxId,
-	dataKey,
-	defaultV,
-	save = true,
-	setter = (k, v) => (stableDiffusionData[k] = v),
-	getter = (k) => stableDiffusionData[k]
-) {
-	return sliderChangeHandlerFactoryEl(
-		document.getElementById(sliderId),
-		document.getElementById(textBoxId),
-		dataKey,
-		defaultV,
-		save,
-		setter,
-		getter
-	);
-}
-
-function sliderChangeHandlerFactoryEl(
-	sliderEl,
-	textBoxEl,
-	dataKey,
-	defaultV,
-	save = true,
-	setter = (k, v) => (stableDiffusionData[k] = v),
-	getter = (k) => stableDiffusionData[k]
-) {
-	const savedValue = save && localStorage.getItem(dataKey);
-
-	if (savedValue) setter(dataKey, savedValue || defaultV);
-
-	function changeHandler(evn) {
-		const eventSource = evn && evn.srcElement;
-		const value = eventSource && Number(eventSource.value);
-
-		if (value) setter(dataKey, value);
-
-		if (!eventSource || eventSource === textBoxEl)
-			sliderEl.value = getter(dataKey);
-		setter(dataKey, Number(sliderEl.value));
-		textBoxEl.value = getter(dataKey);
-
-		if (save) localStorage.setItem(dataKey, getter(dataKey));
-	}
-
-	textBoxEl.onchange = changeHandler;
-	sliderEl.oninput = changeHandler;
-
-	return changeHandler;
-}
-
 // stuff things use
 var blockNewImages = false;
 var returnedImages;
@@ -175,12 +119,7 @@ function startup() {
 	getUpscalers();
 	getModels();
 	drawBackground();
-	changeScaleFactor();
 	changeSampler();
-	changeSteps();
-	changeCfgScale();
-	changeBatchCount();
-	changeBatchSize();
 	changeSnapMode();
 	changeMaskBlur();
 	changeSeed();
@@ -543,39 +482,73 @@ function changeSampler() {
 	}
 }
 
-const changeCfgScale = sliderChangeHandlerFactory(
-	"cfgScale",
-	"cfgScaleTxt",
+const makeSlider = (
+	label,
+	el,
+	lsKey,
+	min,
+	max,
+	step,
+	defaultValue,
+	valuecb = null
+) => {
+	const local = localStorage.getItem(lsKey);
+	const def = parseFloat(local === null ? defaultValue : local);
+	return createSlider(label, el, {
+		valuecb:
+			valuecb ||
+			((v) => {
+				stableDiffusionData[lsKey] = v;
+				localStorage.setItem(lsKey, v);
+			}),
+		min,
+		max,
+		step,
+		defaultValue: def,
+	});
+};
+
+makeSlider(
+	"CFG Scale",
+	document.getElementById("cfgScale"),
 	"cfg_scale",
+	-1,
+	25,
+	0.5,
 	7.0
 );
-const changeBatchSize = sliderChangeHandlerFactory(
-	"batchSize",
-	"batchSizeText",
+makeSlider(
+	"Batch Size",
+	document.getElementById("batchSize"),
 	"batch_size",
-	2
-);
-const changeBatchCount = sliderChangeHandlerFactory(
-	"batchCount",
-	"batchCountText",
-	"n_iter",
-	2
-);
-const changeScaleFactor = sliderChangeHandlerFactory(
-	"scaleFactor",
-	"scaleFactorTxt",
-	"scaleFactor",
+	1,
 	8,
-	true,
-	(k, v) => (scaleFactor = v),
-	(k) => scaleFactor
+	1,
+	2
 );
-const changeSteps = sliderChangeHandlerFactory(
-	"steps",
-	"stepsTxt",
-	"steps",
-	30
+makeSlider(
+	"Iterations",
+	document.getElementById("batchCount"),
+	"n_iter",
+	1,
+	8,
+	1,
+	2
 );
+makeSlider(
+	"Scale Factor",
+	document.getElementById("scaleFactor"),
+	"scale_factor",
+	1,
+	16,
+	1,
+	8,
+	(v) => {
+		scaleFactor = v;
+	}
+);
+
+makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 1, 30);
 
 function changeSnapMode() {
 	snapToGrid = document.getElementById("cbxSnap").checked;

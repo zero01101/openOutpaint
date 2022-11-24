@@ -61,52 +61,13 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 						max="9999999999"
 						value="-1"
 						step="1" /><br />
-					<label for="steps">Steps: <input type="number" id="stepsTxt" /></label
-					><br />
-					<input type="range" id="steps" name="steps" min="1" max="50" /><br />
-					<label for="cfgScale"
-						>CFG scale: <input type="number" id="cfgScaleTxt"
-					/></label>
-					<br />
-					<input
-						type="range"
-						id="cfgScale"
-						name="cfgScale"
-						min="-1"
-						max="25"
-						step="0.5" /><br />
-					<label for="batchSize"
-						>Batch size: <input type="number" id="batchSizeText" /></label
-					><br />
-					<input
-						type="range"
-						id="batchSize"
-						name="batchSize"
-						min="1"
-						max="8"
-						step="1" /><br />
-					<label for="batchCount"
-						>Batch count: <input type="number" id="batchCountText" /></label
-					><br />
-					<input
-						type="range"
-						id="batchCount"
-						name="batchCount"
-						min="1"
-						max="8"
-						step="1" /><br />
-					<hr />
+					<div id="steps"></div>
+					<div id="cfgScale"></div>
+					<div id="batchSize"></div>
+					<div id="batchCount"></div>
 				</div>
 				<!-- Unsectioned -->
-				<label for="scaleFactor"
-					>Scale factor: <input type="number" id="scaleFactorTxt" /></label
-				><br />
-				<input
-					type="range"
-					id="scaleFactor"
-					name="scaleFactor"
-					min="1"
-					max="16" /><br />
+				<div id="scaleFactor"></div>
 				<label for="cbxSnap">Snap to grid?</label>
 				<input
 					type="checkbox"

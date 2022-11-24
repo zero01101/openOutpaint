@@ -30,3 +30,68 @@
 .draggable {
 	cursor: move;
 }
+
+/* Slider Input */
+div.slider-wrapper {
+	margin: 5px;
+}
+
+div.slider-wrapper {
+	position: relative;
+	height: 20px;
+	border-radius: 5px;
+}
+
+div.slider-wrapper * {
+	height: 20px;
+	border-radius: 5px;
+	margin: 0;
+}
+
+div.slider-wrapper > * {
+	position: absolute;
+	padding: inherit;
+	width: 100%;
+
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+
+	overflow: hidden;
+}
+
+div.slider-wrapper > div.under {
+	display: flex;
+	background-color: var(--c-primary-accent);
+}
+div.slider-wrapper > div.under > div:first-child {
+	background-color: var(--c-primary);
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+div.slider-wrapper > div.under > div:last-child {
+	flex: 1;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+div.slider-wrapper > div.under > * {
+	height: 100%;
+}
+
+div.slider-wrapper > div.over {
+	cursor: pointer;
+}
+
+div.slider-wrapper > input.text {
+	color: var(--c-text);
+
+	flex: 1;
+	appearance: textfield;
+	border: 0px;
+
+	padding-top: 5px;
+	height: 15px;
+	text-align: center;
+	background-color: transparent;
+}
