@@ -26,19 +26,24 @@
 			</div>
 			<div id="info" class="menu-container" style="min-width: 200px">
 				<label for="host">Host</label>
-				<input id="host" value="http://127.0.0.1:7860" /><br />
+				<input id="host" value="http://127.0.0.1:7860" />
+				<br />
 
 				<!-- Prompts section -->
 				<button type="button" class="collapsible">Prompts</button>
 				<div class="content">
-					<label for="prompt">Prompt:</label> <br />
+					<label for="prompt">Prompt:</label>
+					<br />
 					<textarea id="prompt">
 oceanographic study, underwater wildlife, award winning</textarea
-					><br />
-					<label for="negPrompt">Negative prompt:</label> <br />
+					>
+					<br />
+					<label for="negPrompt">Negative prompt:</label>
+					<br />
 					<textarea id="negPrompt">
 people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry</textarea
-					><br />
+					>
+					<br />
 					<hr />
 				</div>
 				<!-- SD section -->
@@ -47,12 +52,13 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 				</button>
 				<div class="content">
 					<label for="models">Model:</label>
-					<select id="models" onchange="changeModel()"></select
-					><br />
+					<select id="models" onchange="changeModel()"></select>
+					<br />
 					<label for="samplerSelect">Sampler:</label>
-					<select id="samplerSelect" onchange="changeSampler()"></select
-					><br />
-					<label for="seed">Seed (-1 for random):</label> <br />
+					<select id="samplerSelect" onchange="changeSampler()"></select>
+					<br />
+					<label for="seed">Seed (-1 for random):</label>
+					<br />
 					<input
 						type="number"
 						id="seed"
@@ -60,13 +66,19 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 						min="1"
 						max="9999999999"
 						value="-1"
-						step="1" /><br />
-					<label for="steps">Steps: <input type="number" id="stepsTxt" /></label
-					><br />
-					<input type="range" id="steps" name="steps" min="1" max="50" /><br />
-					<label for="cfgScale"
-						>CFG scale: <input type="number" id="cfgScaleTxt"
-					/></label>
+						step="1" />
+					<br />
+					<label for="steps">
+						Steps:
+						<input type="number" id="stepsTxt" />
+					</label>
+					<br />
+					<input type="range" id="steps" name="steps" min="1" max="50" />
+					<br />
+					<label for="cfgScale">
+						CFG scale:
+						<input type="number" id="cfgScaleTxt" />
+					</label>
 					<br />
 					<input
 						type="range"
@@ -74,44 +86,52 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 						name="cfgScale"
 						min="-1"
 						max="25"
-						step="0.5" /><br />
-					<label for="batchSize"
-						>Batch size: <input type="number" id="batchSizeText" /></label
-					><br />
+						step="0.5" />
+					<br />
+					<label for="batchSize">
+						Batch size:
+						<input type="number" id="batchSizeText" />
+					</label>
+					<br />
 					<input
 						type="range"
 						id="batchSize"
 						name="batchSize"
 						min="1"
 						max="8"
-						step="1" /><br />
-					<label for="batchCount"
-						>Batch count: <input type="number" id="batchCountText" /></label
-					><br />
+						step="1" />
+					<br />
+					<label for="batchCount">
+						Batch count:
+						<input type="number" id="batchCountText" />
+					</label>
+					<br />
 					<input
 						type="range"
 						id="batchCount"
 						name="batchCount"
 						min="1"
 						max="8"
-						step="1" /><br />
+						step="1" />
+					<br />
 					<hr />
 				</div>
 				<!-- Unsectioned -->
-				<label for="scaleFactor"
-					>Scale factor: <input type="number" id="scaleFactorTxt" /></label
-				><br />
+				<label for="scaleFactor">
+					Scale factor:
+					<input type="number" id="scaleFactorTxt" />
+				</label>
+				<br />
 				<input
 					type="range"
 					id="scaleFactor"
 					name="scaleFactor"
 					min="1"
-					max="16" /><br />
+					max="16" />
+				<br />
 				<label for="cbxHRFix">Auto txt2img HRfix?</label>
-				<input
-					type="checkbox"
-					id="cbxHRFix"
-					onchange="changeHiResFix()" /><br />
+				<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
+				<br />
 				<label for="overMaskPx">Overmask px (0 to disable):</label>
 				<input
 					type="number"
@@ -120,9 +140,11 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 					min="0"
 					max="128"
 					value="16"
-					step="1" /><br />
+					step="1" />
+				<br />
 				<label for="maskBlur">Mask blur:</label>
-				<span id="maskBlurText"></span><br />
+				<span id="maskBlurText"></span>
+				<br />
 				<input
 					type="number"
 					id="maskBlur"
@@ -131,19 +153,23 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 					max="256"
 					value="0"
 					step="1"
-					onchange="changeMaskBlur()" /><br />
+					onchange="changeMaskBlur()" />
+				<br />
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Load/New image</button>
 				<div class="content">
 					<label for="preloadImage">Load image:</label>
 					<input type="file" id="preloadImage" onchange="preloadImage()"
-					accept="image/*" / style="width: 200px;"><br />
-					<button onclick="downloadCanvas()">Save canvas</button><br />
+					accept="image/*" / style="width: 200px;">
+					<br />
+					<button onclick="downloadCanvas()">Save canvas</button>
+					<br />
 					<label for="upscalers">Choose upscaler</label>
 					<select id="upscalers"></select>
 					<button onclick="upscaleAndDownload()">
-						Upscale (might take a sec)</button
-					><br />
+						Upscale (might take a sec)
+					</button>
+					<br />
 
 					<button onclick="newImage()">Clear canvas</button>
 				</div>
@@ -166,10 +192,16 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 					<span id="snapX"></span>
 					<br />
 					<label for="snapY">snapY:</label>
-					<span id="snapY"></span><br />
+					<span id="snapY"></span>
+					<br />
 					<label for="heldButton">Mouse button:</label>
-					<span id="heldButton"></span><br />
-					<span id="version">Alpha release v0.0.6.6</span>
+					<span id="heldButton"></span>
+					<br />
+					<span id="version">
+						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
+							Alpha release v0.0.7
+						</a>
+					</span>
 					<br />
 					<hr />
 				</div>
@@ -298,15 +330,17 @@ people, person, humans, human, divers, diver, glitch, error, text, watermark, ba
 						class="overMaskCanvasMonitor"
 						width="512"
 						height="512">
-						<p>lol ur browser sucks</p> </canvas
-					><br />
+						<p>lol ur browser sucks</p>
+					</canvas>
+					<br />
 					<canvas
 						id="initImgCanvasMonitor"
 						class="initImgCanvasMonitor"
 						width="512"
 						height="512">
-						<p>lol ur browser sucks</p> </canvas
-					><br />
+						<p>lol ur browser sucks</p>
+					</canvas>
+					<br />
 				</div>
 			</div>
 		</div>
