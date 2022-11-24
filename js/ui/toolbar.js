@@ -358,7 +358,14 @@ tools.img2img = toolbar.registerTool(
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
 			menu.appendChild(document.createElement("br"));
 			menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
+<<<<<<< HEAD
 			menu.appendChild(state.ctxmenu.borderMaskSlider);
+=======
+			menu.appendChild(document.createElement("br"));
+			menu.appendChild(state.ctxmenu.useBorderMaskSlider);
+			menu.appendChild(document.createElement("br"));
+			menu.appendChild(state.ctxmenu.borderMaskSize);
+>>>>>>> main
 		},
 		shortcut: "I",
 	}

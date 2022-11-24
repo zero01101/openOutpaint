@@ -397,7 +397,7 @@ function checkProgress(bb) {
 
 				document.getElementById("estRemaining").innerText = estimate;
 			});
-	}, 1500);
+	}, 1000);
 }
 
 function mouseMove(evt) {
