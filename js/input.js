@@ -94,7 +94,7 @@ const _double_click_timeout = {};
 const _drag_start_timeout = {};
 
 window.onmousedown = (evn) => {
-	const time = new Date();
+	const time = performance.now();
 
 	if (_double_click_timeout[evn.button]) {
 		// ondclick event
@@ -105,6 +105,7 @@ window.onmousedown = (evn) => {
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
 					y: mouse.coords[name].pos.y,
+					evn,
 					timestamp: time,
 				});
 		});
@@ -120,12 +121,17 @@ window.onmousedown = (evn) => {
 	_drag_start_timeout[evn.button] = setTimeout(() => {
 		mouse.contexts.forEach(({target, name, buttons}) => {
 			const key = buttons[evn.button];
-			if ((!target || target === evn.target) && key) {
+			if (
+				(!target || target === evn.target) &&
+				!mouse.coords[name].dragging[key].drag &&
+				key
+			) {
 				mouse.listen[name][key].ondragstart.emit({
 					target: evn.target,
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
 					y: mouse.coords[name].pos.y,
+					evn,
 					timestamp: time,
 				});
 
@@ -150,14 +156,15 @@ window.onmousedown = (evn) => {
 				buttonId: evn.button,
 				x: mouse.coords[name].pos.x,
 				y: mouse.coords[name].pos.y,
-				timestamp: new Date(),
+				evn,
+				timestamp: performance.now(),
 			});
 		}
 	});
 };
 
 window.onmouseup = (evn) => {
-	const time = new Date();
+	const time = performance.now();
 
 	mouse.contexts.forEach(({target, name, buttons}) => {
 		const key = buttons[evn.button];
@@ -177,8 +184,7 @@ window.onmouseup = (evn) => {
 
 			if (
 				mouse.buttons[evn.button] &&
-				time.getTime() - mouse.buttons[evn.button].getTime() <
-					inputConfig.clickTiming &&
+				time - mouse.buttons[evn.button] < inputConfig.clickTiming &&
 				dx * dx + dy * dy < inputConfig.clickRadius * inputConfig.clickRadius
 			)
 				mouse.listen[name][key].onclick.emit({
@@ -186,7 +192,8 @@ window.onmouseup = (evn) => {
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
 					y: mouse.coords[name].pos.y,
-					timestamp: new Date(),
+					evn,
+					timestamp: performance.now(),
 				});
 
 			// onpaintend event
@@ -196,7 +203,8 @@ window.onmouseup = (evn) => {
 				buttonId: evn.button,
 				x: mouse.coords[name].pos.x,
 				y: mouse.coords[name].pos.y,
-				timestamp: new Date(),
+				evn,
+				timestamp: performance.now(),
 			});
 
 			// ondragend event
@@ -207,7 +215,8 @@ window.onmouseup = (evn) => {
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
 					y: mouse.coords[name].pos.y,
-					timestamp: new Date(),
+					evn,
+					timestamp: performance.now(),
 				});
 
 			mouse.coords[name].dragging[key] = null;
@@ -235,11 +244,36 @@ window.onmousemove = (evn) => {
 				py: mouse.coords[name].prev.y,
 				x: mouse.coords[name].pos.x,
 				y: mouse.coords[name].pos.y,
-				timestamp: new Date(),
+				evn,
+				timestamp: performance.now(),
 			});
 
 			Object.keys(context.buttons).forEach((index) => {
 				const key = context.buttons[index];
+				// ondragstart event (2)
+				if (mouse.coords[name].dragging[key]) {
+					const dx =
+						mouse.coords[name].pos.x - mouse.coords[name].dragging[key].x;
+					const dy =
+						mouse.coords[name].pos.y - mouse.coords[name].dragging[key].y;
+					if (
+						!mouse.coords[name].dragging[key].drag &&
+						dx * dx + dy * dy >=
+							inputConfig.clickRadius * inputConfig.clickRadius
+					) {
+						mouse.listen[name][key].ondragstart.emit({
+							target: evn.target,
+							buttonId: evn.button,
+							x: mouse.coords[name].pos.x,
+							y: mouse.coords[name].pos.y,
+							evn,
+							timestamp: performance.now(),
+						});
+
+						mouse.coords[name].dragging[key].drag = true;
+					}
+				}
+
 				// ondrag event
 				if (
 					mouse.coords[name].dragging[key] &&
@@ -253,7 +287,8 @@ window.onmousemove = (evn) => {
 						py: mouse.coords[name].prev.y,
 						x: mouse.coords[name].pos.x,
 						y: mouse.coords[name].pos.y,
-						timestamp: new Date(),
+						evn,
+						timestamp: performance.now(),
 					});
 
 				// onpaint event
@@ -266,7 +301,8 @@ window.onmousemove = (evn) => {
 						py: mouse.coords[name].prev.y,
 						x: mouse.coords[name].pos.x,
 						y: mouse.coords[name].pos.y,
-						timestamp: new Date(),
+						evn,
+						timestamp: performance.now(),
 					});
 				}
 			});
@@ -288,7 +324,8 @@ window.addEventListener(
 				mode: evn.deltaMode,
 				x: mouse.coords[name].pos.x,
 				y: mouse.coords[name].pos.y,
-				timestamp: new Date(),
+				evn,
+				timestamp: performance.now(),
 			});
 		});
 	},
