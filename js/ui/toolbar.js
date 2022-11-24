@@ -135,42 +135,22 @@ const _toolbar_input = {
 	},
 
 	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1) => {
-		const slider = document.createElement("input");
-		slider.type = "range";
-		slider.max = max;
-		slider.step = step;
-		slider.min = min;
-		slider.value = state[dataKey];
+		const slider = document.createElement("div");
 
-		const textEl = document.createElement("input");
-		textEl.type = "number";
-		textEl.value = state[dataKey];
-
-		console.log(state[dataKey]);
-
-		sliderChangeHandlerFactoryEl(
-			slider,
-			textEl,
-			dataKey,
-			state[dataKey],
-			false,
-			(k, v) => (state[dataKey] = v),
-			(k) => state[dataKey]
-		);
-
-		const label = document.createElement("label");
-		label.appendChild(new Text(text));
-		label.appendChild(textEl);
-		label.appendChild(slider);
+		const value = createSlider(text, slider, {
+			min,
+			max,
+			step,
+			valuecb: (v) => {
+				state[dataKey] = v;
+			},
+		});
 
 		return {
 			slider,
-			text: textEl,
-			label,
 			setValue(v) {
-				slider.value = v;
-				textEl.value = slider.value;
-				return parseInt(slider.value);
+				value.value = v;
+				return value.value;
 			},
 		};
 	},
@@ -206,7 +186,10 @@ tools.dream = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.mousemovecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.mousemovecb({
+			...mouse.coords.canvas.pos,
+			target: {id: "overlayCanvas"},
+		});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
@@ -261,7 +244,10 @@ tools.img2img = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.mousemovecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.mousemovecb({
+			...mouse.coords.canvas.pos,
+			target: {id: "overlayCanvas"},
+		});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.mousemovecb);
@@ -337,17 +323,17 @@ tools.img2img = toolbar.registerTool(
 				).label;
 
 				// Denoising Strength Slider
-				state.ctxmenu.denoisingStrengthLabel = _toolbar_input.slider(
+				state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
 					state,
 					"denoisingStrength",
 					"Denoising Strength",
 					0,
 					1,
 					0.05
-				).label;
+				).slider;
 
 				// Use Border Mask Checkbox
-				state.ctxmenu.useBorderMaskLabel = _toolbar_input.checkbox(
+				state.ctxmenu.useBorderMaskSlider = _toolbar_input.checkbox(
 					state,
 					"useBorderMask",
 					"Use Border Mask"
@@ -360,16 +346,16 @@ tools.img2img = toolbar.registerTool(
 					0,
 					128,
 					1
-				).label;
+				).slider;
 			}
 
 			menu.appendChild(state.ctxmenu.snapToGridLabel);
 			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.denoisingStrengthLabel);
+			menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 			menu.appendChild(document.createElement("br"));
 			menu.appendChild(state.ctxmenu.useBorderMaskLabel);
 			menu.appendChild(document.createElement("br"));
-			menu.appendChild(state.ctxmenu.borderMaskSize);
+			menu.appendChild(state.ctxmenu.borderMaskSlider);
 		},
 		shortcut: "I",
 	}
@@ -389,7 +375,7 @@ tools.maskbrush = toolbar.registerTool(
 	(state, opt) => {
 		// Draw new cursor immediately
 		ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-		state.movecb({...mouse.canvas.pos, target: {id: "overlayCanvas"}});
+		state.movecb({...mouse.coords.canvas.pos, target: {id: "overlayCanvas"}});
 
 		// Start Listeners
 		mouse.listen.canvas.onmousemove.on(state.movecb);
@@ -454,11 +440,11 @@ tools.maskbrush = toolbar.registerTool(
 					state.config.maxBrushSize,
 					1
 				);
-				state.ctxmenu.brushSizeLabel = brushSizeSlider.label;
+				state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 				state.setBrushSize = brushSizeSlider.setValue;
 			}
 
-			menu.appendChild(state.ctxmenu.brushSizeLabel);
+			menu.appendChild(state.ctxmenu.brushSizeSlider);
 		},
 		shortcut: "M",
 	}
