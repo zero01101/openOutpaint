@@ -3,32 +3,13 @@ const inputConfig = {
 	clickTiming: 500, // Timing window to be considered a click (ms). If longer, turns into a drag
 	dClickTiming: 500, // Timing window to be considered a double click (ms).
 
-	keyboardHoldTiming: 100, // Timing window after which to consider holding a key (ms)
+	keyboardHoldTiming: 1000, // Timing window after which to consider holding a key (ms)
 };
 
 /**
  * Mouse input processing
  */
 // Base object generator functions
-function _context_coords() {
-	return {
-		dragging: {
-			left: null,
-			middle: null,
-			right: null,
-		},
-
-		prev: {
-			x: 0,
-			y: 0,
-		},
-
-		pos: {
-			x: 0,
-			y: 0,
-		},
-	};
-}
 function _mouse_observers() {
 	return {
 		// Simple click handler
@@ -46,229 +27,286 @@ function _mouse_observers() {
 	};
 }
 
-function _context_observers() {
-	return {
-		onwheel: new Observer(),
-		onmousemove: new Observer(),
-		left: _mouse_observers(),
-		middle: _mouse_observers(),
-		right: _mouse_observers(),
-	};
-}
-
 const mouse = {
-	buttons: {
-		right: null,
-		left: null,
-		middle: null,
-	},
+	contexts: [],
+	buttons: {},
+	coords: {},
 
-	// Mouse Actions in Window Coordinates
-	window: _context_coords(),
+	listen: {},
 
-	// Mouse Actions in Canvas Coordinates
-	canvas: _context_coords(),
+	// Register Context
+	registerContext: (name, onmove, options = {}) => {
+		// Options
+		defaultOpt(options, {
+			target: null,
+			buttons: {0: "left", 1: "middle", 2: "right"},
+		});
 
-	// Mouse Actions in World Coordinates
-	world: _context_coords(),
+		// Context information
+		const context = {
+			id: guid(),
+			name,
+			onmove,
+			target: options.target,
+			buttons: options.buttons,
+		};
 
-	listen: {
-		window: _context_observers(),
-		canvas: _context_observers(),
-		world: _context_observers(),
+		// Coordinate information
+		mouse.coords[name] = {
+			dragging: {},
+
+			prev: {
+				x: 0,
+				y: 0,
+			},
+
+			pos: {
+				x: 0,
+				y: 0,
+			},
+		};
+
+		// Listeners
+		mouse.listen[name] = {
+			onwheel: new Observer(),
+			onmousemove: new Observer(),
+		};
+
+		// Button specific items
+		Object.keys(options.buttons).forEach((index) => {
+			const button = options.buttons[index];
+			mouse.coords[name].dragging[button] = null;
+			mouse.listen[name][button] = _mouse_observers();
+		});
+
+		// Add to context
+		context.coords = mouse.coords[name];
+		context.listen = mouse.listen[name];
+
+		// Add to list
+		mouse.contexts.push(context);
+
+		return context;
 	},
 };
-
-function _mouse_state_snapshot() {
-	return {
-		buttons: window.structuredClone(mouse.buttons),
-		window: window.structuredClone(mouse.window),
-		canvas: window.structuredClone(mouse.canvas),
-		world: window.structuredClone(mouse.world),
-	};
-}
 
 const _double_click_timeout = {};
 const _drag_start_timeout = {};
 
 window.onmousedown = (evn) => {
-	const time = new Date();
+	const time = performance.now();
 
-	// Processes for a named button
-	const onhold = (key) => () => {
-		if (_double_click_timeout[key]) {
-			// ondclick event
-			["window", "canvas", "world"].forEach((ctx) =>
-				mouse.listen[ctx][key].ondclick.emit({
+	if (_double_click_timeout[evn.button]) {
+		// ondclick event
+		mouse.contexts.forEach(({target, name, buttons}) => {
+			if ((!target || target === evn.target) && buttons[evn.button])
+				mouse.listen[name][buttons[evn.button]].ondclick.emit({
 					target: evn.target,
 					buttonId: evn.button,
-					x: mouse[ctx].pos.x,
-					y: mouse[ctx].pos.y,
-					timestamp: new Date(),
-				})
-			);
-		} else {
-			// Start timer
-			_double_click_timeout[key] = setTimeout(
-				() => delete _double_click_timeout[key],
-				inputConfig.dClickTiming
-			);
-		}
-
-		// Set drag start timeout
-		_drag_start_timeout[key] = setTimeout(() => {
-			["window", "canvas", "world"].forEach((ctx) => {
-				mouse.listen[ctx][key].ondragstart.emit({
-					target: evn.target,
-					buttonId: evn.button,
-					x: mouse[ctx].pos.x,
-					y: mouse[ctx].pos.y,
-					timestamp: new Date(),
+					x: mouse.coords[name].pos.x,
+					y: mouse.coords[name].pos.y,
+					evn,
+					timestamp: time,
 				});
-				if (mouse[ctx].dragging[key]) mouse[ctx].dragging[key].drag = true;
+		});
+	} else {
+		// Start timer
+		_double_click_timeout[evn.button] = setTimeout(
+			() => delete _double_click_timeout[evn.button],
+			inputConfig.dClickTiming
+		);
+	}
 
-				delete _drag_start_timeout[key];
-			});
-		}, inputConfig.clickTiming);
+	// Set drag start timeout
+	_drag_start_timeout[evn.button] = setTimeout(() => {
+		mouse.contexts.forEach(({target, name, buttons}) => {
+			const key = buttons[evn.button];
+			if (
+				(!target || target === evn.target) &&
+				!mouse.coords[name].dragging[key].drag &&
+				key
+			) {
+				mouse.listen[name][key].ondragstart.emit({
+					target: evn.target,
+					buttonId: evn.button,
+					x: mouse.coords[name].pos.x,
+					y: mouse.coords[name].pos.y,
+					evn,
+					timestamp: time,
+				});
 
-		["window", "canvas", "world"].forEach((ctx) => {
-			mouse.buttons[key] = time;
-			mouse[ctx].dragging[key] = {target: evn.target};
-			Object.assign(mouse[ctx].dragging[key], mouse[ctx].pos);
+				mouse.coords[name].dragging[key].drag = true;
+			}
+		});
+		delete _drag_start_timeout[evn.button];
+	}, inputConfig.clickTiming);
+
+	mouse.buttons[evn.button] = time;
+
+	mouse.contexts.forEach(({target, name, buttons}) => {
+		const key = buttons[evn.button];
+		if ((!target || target === evn.target) && key) {
+			mouse.coords[name].dragging[key] = {};
+			mouse.coords[name].dragging[key].target = evn.target;
+			Object.assign(mouse.coords[name].dragging[key], mouse.coords[name].pos);
 
 			// onpaintstart event
-			mouse.listen[ctx][key].onpaintstart.emit({
+			mouse.listen[name][key].onpaintstart.emit({
 				target: evn.target,
 				buttonId: evn.button,
-				x: mouse[ctx].pos.x,
-				y: mouse[ctx].pos.y,
-				timestamp: new Date(),
+				x: mouse.coords[name].pos.x,
+				y: mouse.coords[name].pos.y,
+				evn,
+				timestamp: performance.now(),
 			});
-		});
-	};
-
-	// Runs the correct handler
-	const buttons = [onhold("left"), onhold("middle"), onhold("right")];
-
-	buttons[evn.button] && buttons[evn.button]();
+		}
+	});
 };
 
 window.onmouseup = (evn) => {
-	const time = new Date();
+	const time = performance.now();
 
-	// Processes for a named button
-	const onrelease = (key) => () => {
-		["window", "canvas", "world"].forEach((ctx) => {
+	mouse.contexts.forEach(({target, name, buttons}) => {
+		const key = buttons[evn.button];
+		if (
+			(!target || target === evn.target) &&
+			key &&
+			mouse.coords[name].dragging[key]
+		) {
 			const start = {
-				x: mouse[ctx].dragging[key].x,
-				y: mouse[ctx].dragging[key].y,
+				x: mouse.coords[name].dragging[key].x,
+				y: mouse.coords[name].dragging[key].y,
 			};
 
 			// onclick event
-			const dx = mouse[ctx].pos.x - start.x;
-			const dy = mouse[ctx].pos.y - start.y;
+			const dx = mouse.coords[name].pos.x - start.x;
+			const dy = mouse.coords[name].pos.y - start.y;
 
 			if (
-				time.getTime() - mouse.buttons[key].getTime() <
-					inputConfig.clickTiming &&
+				mouse.buttons[evn.button] &&
+				time - mouse.buttons[evn.button] < inputConfig.clickTiming &&
 				dx * dx + dy * dy < inputConfig.clickRadius * inputConfig.clickRadius
 			)
-				mouse.listen[ctx][key].onclick.emit({
+				mouse.listen[name][key].onclick.emit({
 					target: evn.target,
 					buttonId: evn.button,
-					x: mouse[ctx].pos.x,
-					y: mouse[ctx].pos.y,
-					timestamp: new Date(),
+					x: mouse.coords[name].pos.x,
+					y: mouse.coords[name].pos.y,
+					evn,
+					timestamp: performance.now(),
 				});
 
 			// onpaintend event
-			mouse.listen[ctx][key].onpaintend.emit({
+			mouse.listen[name][key].onpaintend.emit({
 				target: evn.target,
-				initialTarget: mouse[ctx].dragging[key].target,
+				initialTarget: mouse.coords[name].dragging[key].target,
 				buttonId: evn.button,
-				x: mouse[ctx].pos.x,
-				y: mouse[ctx].pos.y,
-				timestamp: new Date(),
+				x: mouse.coords[name].pos.x,
+				y: mouse.coords[name].pos.y,
+				evn,
+				timestamp: performance.now(),
 			});
 
 			// ondragend event
-			if (mouse[ctx].dragging[key].drag)
-				mouse.listen[ctx][key].ondragend.emit({
+			if (mouse.coords[name].dragging[key].drag)
+				mouse.listen[name][key].ondragend.emit({
 					target: evn.target,
-					initialTarget: mouse[ctx].dragging[key].target,
+					initialTarget: mouse.coords[name].dragging[key].target,
 					buttonId: evn.button,
-					x: mouse[ctx].pos.x,
-					y: mouse[ctx].pos.y,
-					timestamp: new Date(),
+					x: mouse.coords[name].pos.x,
+					y: mouse.coords[name].pos.y,
+					evn,
+					timestamp: performance.now(),
 				});
 
-			mouse[ctx].dragging[key] = null;
-		});
-
-		if (_drag_start_timeout[key] !== undefined) {
-			clearTimeout(_drag_start_timeout[key]);
-			delete _drag_start_timeout[key];
+			mouse.coords[name].dragging[key] = null;
 		}
-		mouse.buttons[key] = null;
-	};
+	});
 
-	// Runs the correct handler
-	const buttons = [onrelease("left"), onrelease("middle"), onrelease("right")];
-
-	buttons[evn.button] && buttons[evn.button]();
+	if (_drag_start_timeout[evn.button] !== undefined) {
+		clearTimeout(_drag_start_timeout[evn.button]);
+		delete _drag_start_timeout[evn.button];
+	}
+	mouse.buttons[evn.button] = null;
 };
 
 window.onmousemove = (evn) => {
-	// Set Window Coordinates
-	Object.assign(mouse.window.prev, mouse.window.pos);
-	mouse.window.pos = {x: evn.clientX, y: evn.clientY};
+	mouse.contexts.forEach((context) => {
+		const target = context.target;
+		const name = context.name;
 
-	// Set Canvas Coordinates (using overlay canvas as reference)
-	if (evn.target.id === "overlayCanvas") {
-		Object.assign(mouse.canvas.prev, mouse.canvas.pos);
-		mouse.canvas.pos = {x: evn.layerX, y: evn.layerY};
-	}
+		if (!target || target === evn.target) {
+			context.onmove(evn, context);
 
-	// Set World Coordinates (For now the same as canvas coords; Will be useful with infinite canvas)
-	if (evn.target.id === "overlayCanvas") {
-		Object.assign(mouse.world.prev, mouse.world.pos);
-		mouse.world.pos = {x: evn.layerX, y: evn.layerY};
-	}
+			mouse.listen[name].onmousemove.emit({
+				target: evn.target,
+				px: mouse.coords[name].prev.x,
+				py: mouse.coords[name].prev.y,
+				x: mouse.coords[name].pos.x,
+				y: mouse.coords[name].pos.y,
+				evn,
+				timestamp: performance.now(),
+			});
 
-	["window", "canvas", "world"].forEach((ctx) => {
-		mouse.listen[ctx].onmousemove.emit({
-			target: evn.target,
-			px: mouse[ctx].prev.x,
-			py: mouse[ctx].prev.y,
-			x: mouse[ctx].pos.x,
-			y: mouse[ctx].pos.y,
-			timestamp: new Date(),
-		});
-		["left", "middle", "right"].forEach((key) => {
-			// ondrag event
-			if (mouse[ctx].dragging[key] && mouse[ctx].dragging[key].drag)
-				mouse.listen[ctx][key].ondrag.emit({
-					target: evn.target,
-					initialTarget: mouse[ctx].dragging[key].target,
-					px: mouse[ctx].prev.x,
-					py: mouse[ctx].prev.y,
-					x: mouse[ctx].pos.x,
-					y: mouse[ctx].pos.y,
-					timestamp: new Date(),
-				});
+			Object.keys(context.buttons).forEach((index) => {
+				const key = context.buttons[index];
+				// ondragstart event (2)
+				if (mouse.coords[name].dragging[key]) {
+					const dx =
+						mouse.coords[name].pos.x - mouse.coords[name].dragging[key].x;
+					const dy =
+						mouse.coords[name].pos.y - mouse.coords[name].dragging[key].y;
+					if (
+						!mouse.coords[name].dragging[key].drag &&
+						dx * dx + dy * dy >=
+							inputConfig.clickRadius * inputConfig.clickRadius
+					) {
+						mouse.listen[name][key].ondragstart.emit({
+							target: evn.target,
+							buttonId: evn.button,
+							x: mouse.coords[name].pos.x,
+							y: mouse.coords[name].pos.y,
+							evn,
+							timestamp: performance.now(),
+						});
 
-			// onpaint event
-			if (mouse[ctx].dragging[key])
-				mouse.listen[ctx][key].onpaint.emit({
-					target: evn.target,
-					initialTarget: mouse[ctx].dragging[key].target,
-					px: mouse[ctx].prev.x,
-					py: mouse[ctx].prev.y,
-					x: mouse[ctx].pos.x,
-					y: mouse[ctx].pos.y,
-					timestamp: new Date(),
-				});
-		});
+						mouse.coords[name].dragging[key].drag = true;
+					}
+				}
+
+				// ondrag event
+				if (
+					mouse.coords[name].dragging[key] &&
+					mouse.coords[name].dragging[key].drag
+				)
+					mouse.listen[name][key].ondrag.emit({
+						target: evn.target,
+						initialTarget: mouse.coords[name].dragging[key].target,
+						button: index,
+						px: mouse.coords[name].prev.x,
+						py: mouse.coords[name].prev.y,
+						x: mouse.coords[name].pos.x,
+						y: mouse.coords[name].pos.y,
+						evn,
+						timestamp: performance.now(),
+					});
+
+				// onpaint event
+				if (mouse.coords[name].dragging[key]) {
+					mouse.listen[name][key].onpaint.emit({
+						target: evn.target,
+						initialTarget: mouse.coords[name].dragging[key].target,
+						button: index,
+						px: mouse.coords[name].prev.x,
+						py: mouse.coords[name].prev.y,
+						x: mouse.coords[name].pos.x,
+						y: mouse.coords[name].pos.y,
+						evn,
+						timestamp: performance.now(),
+					});
+				}
+			});
+		}
 	});
 };
 
@@ -276,21 +314,40 @@ window.addEventListener(
 	"wheel",
 	(evn) => {
 		evn.preventDefault();
-		["window", "canvas", "world"].forEach((ctx) => {
-			mouse.listen[ctx].onwheel.emit({
+		mouse.contexts.forEach(({name}) => {
+			mouse.listen[name].onwheel.emit({
 				target: evn.target,
 				delta: evn.deltaY,
 				deltaX: evn.deltaX,
 				deltaY: evn.deltaY,
 				deltaZ: evn.deltaZ,
 				mode: evn.deltaMode,
-				x: mouse[ctx].pos.x,
-				y: mouse[ctx].pos.y,
-				timestamp: new Date(),
+				x: mouse.coords[name].pos.x,
+				y: mouse.coords[name].pos.y,
+				evn,
+				timestamp: performance.now(),
 			});
 		});
 	},
 	{passive: false}
+);
+
+mouse.registerContext("window", (evn, ctx) => {
+	ctx.coords.prev.x = ctx.coords.pos.x;
+	ctx.coords.prev.y = ctx.coords.pos.y;
+	ctx.coords.pos.x = evn.clientX;
+	ctx.coords.pos.y = evn.clientY;
+});
+
+mouse.registerContext(
+	"canvas",
+	(evn, ctx) => {
+		ctx.coords.prev.x = ctx.coords.pos.x;
+		ctx.coords.prev.y = ctx.coords.pos.y;
+		ctx.coords.pos.x = evn.layerX;
+		ctx.coords.pos.y = evn.layerY;
+	},
+	document.getElementById("overlayCanvas")
 );
 /**
  * Keyboard input processing
@@ -342,7 +399,9 @@ const keyboard = {
 };
 
 window.onkeydown = (evn) => {
+	// onkeydown event
 	keyboard.listen.onkeydown.emit({
+		target: evn.target,
 		code: evn.code,
 		key: evn.key,
 		evn,
@@ -354,7 +413,9 @@ window.onkeydown = (evn) => {
 		_hold_to: setTimeout(() => {
 			keyboard.keys[evn.code].held = true;
 			delete keyboard.keys[evn.code]._hold_to;
+			// onkeyholdstart event
 			keyboard.listen.onkeyholdstart.emit({
+				target: evn.target,
 				code: evn.code,
 				key: evn.key,
 				evn,
@@ -383,7 +444,9 @@ window.onkeydown = (evn) => {
 				!!callback.alt === evn.altKey &&
 				!!callback.shift === evn.shiftKey
 			) {
+				// onshortcut event
 				keyboard.listen.onshortcut.emit({
+					target: evn.target,
 					code: evn.code,
 					key: evn.key,
 					id: callback.id,
@@ -395,19 +458,25 @@ window.onkeydown = (evn) => {
 };
 
 window.onkeyup = (evn) => {
+	// onkeyup event
 	keyboard.listen.onkeyup.emit({
+		target: evn.target,
 		code: evn.code,
 		key: evn.key,
 		evn,
 	});
 	if (keyboard.keys[evn.code] && keyboard.keys[evn.code].held) {
+		// onkeyholdend event
 		keyboard.listen.onkeyholdend.emit({
+			target: evn.target,
 			code: evn.code,
 			key: evn.key,
 			evn,
 		});
 	} else {
+		// onkeyclick event
 		keyboard.listen.onkeyclick.emit({
+			target: evn.target,
 			code: evn.code,
 			key: evn.key,
 			evn,
