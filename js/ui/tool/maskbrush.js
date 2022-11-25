@@ -44,7 +44,7 @@ const maskBrushTool = () =>
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
-			mouse.listen.canvas.onwheel.on(state.wheelcb);
+			mouse.listen.canvas.onwheel.clear(state.wheelcb);
 			mouse.listen.canvas.left.onpaint.clear(state.drawcb);
 			mouse.listen.canvas.right.onpaint.clear(state.erasecb);
 		},

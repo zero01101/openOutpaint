@@ -10,16 +10,15 @@ const stampTool = () =>
 			// Start Listeners
 			mouse.listen.canvas.onmousemove.on(state.movecb);
 			mouse.listen.canvas.left.onclick.on(state.drawcb);
+			mouse.listen.canvas.right.onclick.on(state.cancelcb);
 
 			// For calls from other tools to paste image
 			if (opt && opt.image) {
-				const resource = state.addResource(
+				state.addResource(
 					opt.name || "Clipboard",
 					opt.image,
 					opt.temporary === undefined ? true : opt.temporary
 				);
-				state.selected = resource;
-				document.getElementById(`resource-${resource.id}`).click();
 				state.ctxmenu.uploadButton.disabled = true;
 				state.back = opt.back || null;
 				toolbar.lock();
@@ -35,6 +34,7 @@ const stampTool = () =>
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
 			mouse.listen.canvas.left.onclick.clear(state.drawcb);
+			mouse.listen.canvas.right.onclick.clear(state.cancelcb);
 
 			// Deselect
 			state.selected = null;
@@ -49,12 +49,15 @@ const stampTool = () =>
 				state.selected = null;
 				state.back = null;
 
-				const selectResource = (resource) => {
+				state.lastMouseMove = {x: 0, y: 0};
+
+				state.selectResource = (resource) => {
 					if (state.ctxmenu.uploadButton.disabled) return;
 
-					const resourceWrapper = resource.dom.wrapper;
+					const resourceWrapper = resource && resource.dom.wrapper;
 
-					const wasSelected = resourceWrapper.classList.contains("selected");
+					const wasSelected =
+						resourceWrapper && resourceWrapper.classList.contains("selected");
 
 					Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
 						child.classList.remove("selected");
@@ -62,7 +65,7 @@ const stampTool = () =>
 
 					// Select
 					if (!wasSelected) {
-						resourceWrapper.classList.add("selected");
+						resourceWrapper && resourceWrapper.classList.add("selected");
 						state.selected = resource;
 					}
 					// If already selected, clear selection
@@ -70,6 +73,9 @@ const stampTool = () =>
 						resourceWrapper.classList.remove("selected");
 						state.selected = null;
 					}
+
+					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					state.movecb(state.lastMouseMove);
 				};
 
 				// Synchronizes resources array with the DOM
@@ -90,7 +96,7 @@ const stampTool = () =>
 							resourceWrapper.classList.add("resource");
 
 							resourceWrapper.addEventListener("click", () =>
-								selectResource(resource)
+								state.selectResource(resource)
 							);
 
 							resourceWrapper.addEventListener("mouseover", () => {
@@ -133,7 +139,7 @@ const stampTool = () =>
 					syncResources();
 
 					// Select this resource
-					selectResource(resource);
+					state.selectResource(resource);
 
 					return resource;
 				};
@@ -154,6 +160,8 @@ const stampTool = () =>
 							x += snap(evn.x, true, 64);
 							y += snap(evn.y, true, 64);
 						}
+
+						state.lastMouseMove = evn;
 
 						// Draw selected image
 						if (state.selected) {
@@ -196,15 +204,21 @@ const stampTool = () =>
 
 						if (state.back) {
 							toolbar.unlock();
-							state.back({message: "Returning from stamp", pasted: true});
+							const backfn = state.back;
+							state.back = null;
+							backfn({message: "Returning from stamp", pasted: true});
 						}
 					}
 				};
 				state.cancelcb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
+						state.selectResource(null);
+
 						if (state.back) {
 							toolbar.unlock();
-							state.back({message: "Returning from stamp", pasted: false});
+							const backfn = state.back;
+							state.back = null;
+							backfn({message: "Returning from stamp", pasted: false});
 						}
 					}
 				};

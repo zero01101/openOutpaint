@@ -143,7 +143,7 @@ function cropCanvas(sourceCanvas) {
 	return cutCanvas;
 }
 
-function downloadCanvas(options) {
+function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
 		canvas: imgCanvas,
