@@ -18,9 +18,9 @@ const stampTool = () =>
 					opt.image,
 					opt.temporary === undefined ? true : opt.temporary
 				);
-				console.debug(state.selected);
 				state.ctxmenu.uploadButton.disabled = true;
 				state.back = opt.back || null;
+				toolbar.lock();
 			} else if (opt) {
 				throw Error(
 					"Pasting from other tools must be in format {image, name?, temporary?, back?}"
