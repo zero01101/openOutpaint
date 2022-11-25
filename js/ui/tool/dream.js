@@ -183,7 +183,7 @@ const dream_img2img_callback = (evn, state) => {
 		auxCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 
 		// Border Mask
-		if (state.useBorderMask) {
+		if (state.borderMaskSize > 0) {
 			auxCtx.fillStyle = "#000F";
 			auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
 			auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
