@@ -214,6 +214,7 @@ function imageAcceptReject(x, y, data, extra = null) {
 	document.getElementById("progressDiv").remove();
 	const img = new Image();
 	img.onload = function () {
+		backupAndClearMask(x, y, img.width, img.height);
 		tempCtx.drawImage(img, x, y); //imgCtx for actual image, tmp for... holding?
 		var div = document.createElement("div");
 		div.id = "veryTempDiv";
@@ -298,6 +299,21 @@ function removeChoiceButtons(evt) {
 	const element = document.getElementById("veryTempDiv");
 	element.remove();
 	tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+}
+
+function backupAndClearMask(x, y, w, h) {
+	var clearArea = maskPaintCtx.createImageData(w, h);
+	backupMaskChunk = maskPaintCtx.getImageData(x, y, w, h);
+	backupMaskX = x;
+	backupMaskY = y;
+	var clearD = clearArea.data;
+	for (i = 0; i < clearD.length; i += 4) {
+		clearD[i] = 0;
+		clearD[i + 1] = 0;
+		clearD[i + 2] = 0;
+		clearD[i + 3] = 0;
+	}
+	maskPaintCtx.putImageData(clearArea, x, y);
 }
 
 function restoreBackupMask() {
