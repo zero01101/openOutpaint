@@ -62,6 +62,13 @@ const selectTransformTool = () =>
 				};
 
 				state.reset = () => {
+					if (state.selected)
+						imgCtx.drawImage(
+							state.selected.image,
+							state.selected.original.x,
+							state.selected.original.y
+						);
+
 					if (state.dragging) state.dragging = null;
 					else state.selected = null;
 
