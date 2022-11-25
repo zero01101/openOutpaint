@@ -216,4 +216,4 @@ toolbar.addSeparator();
 tools.selecttransform = selectTransformTool();
 tools.stamp = stampTool();
 
-toolbar.tools[toolbar.tools.length - 1].enable();
+toolbar.tools[0].enable();
