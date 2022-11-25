@@ -13,11 +13,13 @@ const stampTool = () =>
 
 			// For calls from other tools to paste image
 			if (opt && opt.image) {
-				state.selected = state.addResource(
+				const resource = state.addResource(
 					opt.name || "Clipboard",
 					opt.image,
 					opt.temporary === undefined ? true : opt.temporary
 				);
+				state.selected = resource;
+				document.getElementById(`resource-${resource.id}`).click();
 				state.ctxmenu.uploadButton.disabled = true;
 				state.back = opt.back || null;
 				toolbar.lock();
@@ -33,6 +35,12 @@ const stampTool = () =>
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
 			mouse.listen.canvas.left.onclick.clear(state.drawcb);
+
+			// Deselect
+			state.selected = null;
+			Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
+				child.classList.remove("selected");
+			});
 		},
 		{
 			init: (state) => {
@@ -50,6 +58,7 @@ const stampTool = () =>
 							resourceWrapper.classList.add("resource");
 
 							resourceWrapper.addEventListener("click", () => {
+								if (state.ctxmenu.uploadButton.disabled) return;
 								state.selected = resource;
 								Array.from(state.ctxmenu.resourceList.children).forEach(
 									(child) => {
@@ -76,10 +85,13 @@ const stampTool = () =>
 
 					if (elements.length > state.resources.length)
 						elements.forEach((element) => {
-							for (let resource in state.resources) {
-								if (element.id.endsWith(resource.id)) return;
-							}
-							state.ctxmenu.resourceList.removeChild(element);
+							let remove = true;
+							state.resources.some((resource) => {
+								console.debug(element.id, resource.id);
+								if (element.id.endsWith(resource.id)) remove = false;
+							});
+
+							if (remove) state.ctxmenu.resourceList.removeChild(element);
 						});
 				};
 

@@ -87,6 +87,12 @@ const selectTransformTool = () =>
 						y: Math.min(y1, y2),
 						w: Math.abs(x1 - x2),
 						h: Math.abs(y1 - y2),
+						updateOriginal() {
+							this.original.x = this.x;
+							this.original.y = this.y;
+							this.original.w = this.w;
+							this.original.h = this.h;
+						},
 						contains(x, y) {
 							return (
 								this.x <= x &&
@@ -171,13 +177,14 @@ const selectTransformTool = () =>
 
 						// Update scale
 						if (state.scaling) {
-							state.scaling.scaleTo(x, y);
+							state.scaling.scaleTo(x, y, state.keepAspectRatio);
 						}
 
 						// Update position
 						if (state.moving) {
 							state.selected.x = x - state.moving.offset.x;
 							state.selected.y = y - state.moving.offset.y;
+							state.selected.updateOriginal();
 						}
 
 						// Draw dragging box
@@ -271,25 +278,27 @@ const selectTransformTool = () =>
 
 				state.clickcb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
-						imgCtx.drawImage(
-							state.selected.image,
-							state.original.x,
-							state.original.y
-						);
-						commands.runCommand(
-							"eraseImage",
-							"Image Transform Erase",
-							state.original
-						);
-						commands.runCommand(
-							"drawImage",
-							"Image Transform Draw",
-							state.selected
-						);
-						state.original = null;
-						state.selected = null;
+						if (state.selected) {
+							imgCtx.drawImage(
+								state.selected.image,
+								state.original.x,
+								state.original.y
+							);
+							commands.runCommand(
+								"eraseImage",
+								"Image Transform Erase",
+								state.original
+							);
+							commands.runCommand(
+								"drawImage",
+								"Image Transform Draw",
+								state.selected
+							);
+							state.original = null;
+							state.selected = null;
 
-						redraw();
+							redraw();
+						}
 					}
 				};
 				state.dragstartcb = (evn) => {
@@ -330,6 +339,7 @@ const selectTransformTool = () =>
 						}
 
 						if (state.scaling) {
+							state.selected.updateOriginal();
 							state.scaling = null;
 						} else if (state.moving) {
 							state.moving = null;
@@ -419,17 +429,7 @@ const selectTransformTool = () =>
 						const ctx = state.clipboard.copy.getContext("2d");
 
 						ctx.clearRect(0, 0, state.selected.w, state.selected.h);
-						ctx.drawImage(
-							imgCanvas,
-							state.selected.x,
-							state.selected.y,
-							state.selected.w,
-							state.selected.h,
-							0,
-							0,
-							state.selected.w,
-							state.selected.h
-						);
+						ctx.drawImage(state.selected.image, 0, 0);
 
 						// Because firefox needs manual activation of the feature
 						if (state.useClipboard) {
