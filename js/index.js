@@ -130,25 +130,6 @@ function startup() {
 	document.getElementById("scaleFactor").value = scaleFactor;
 }
 
-function drop(imageParams) {
-	const img = new Image();
-	img.onload = function () {
-		writeArbitraryImage(img, imageParams.x, imageParams.y);
-	};
-	img.src = arbitraryImageBase64;
-}
-
-function writeArbitraryImage(img, x, y) {
-	commands.runCommand("drawImage", "Image Stamp", {
-		x,
-		y,
-		image: img,
-	});
-	blockNewImages = false;
-	placingArbitraryImage = false;
-	document.getElementById("preloadImage").files = null;
-}
-
 function dream(
 	x,
 	y,
@@ -593,43 +574,6 @@ function drawBackground() {
 			bgCtx.fillRect(x, y, 64, 64);
 		}
 	}
-}
-
-function preloadImage() {
-	// possible firefox-only bug?
-	// attempt to prevent requesting a dream if double-clicking a selected image
-	document.getElementById("overlayCanvas").onmousemove = null;
-	document.getElementById("overlayCanvas").onmousedown = null;
-	document.getElementById("overlayCanvas").onmouseup = null;
-
-	var file = document.getElementById("preloadImage").files[0];
-	var reader = new FileReader();
-	reader.onload = function (evt) {
-		var imgCanvas = document.createElement("canvas");
-		var imgCtx = imgCanvas.getContext("2d");
-		arbitraryImage = new Image();
-		arbitraryImage.onload = function () {
-			blockNewImages = true;
-			// now put it into imagedata for canvas fun
-			imgCanvas.width = arbitraryImage.width;
-			imgCanvas.height = arbitraryImage.height;
-			imgCtx.drawImage(arbitraryImage, 0, 0);
-			arbitraryImageData = imgCtx.getImageData(
-				0,
-				0,
-				arbitraryImage.width,
-				arbitraryImage.height
-			); // can't use that to drawImage on a canvas...
-			arbitraryImageBitmap = createImageBitmap(arbitraryImageData); // apparently that either... maybe just the raw image?
-			arbitraryImageBase64 = imgCanvas.toDataURL();
-			placingArbitraryImage = true;
-			document.getElementById("overlayCanvas").onmousemove = mouseMove;
-			document.getElementById("overlayCanvas").onmousedown = mouseDown;
-			document.getElementById("overlayCanvas").onmouseup = mouseUp;
-		};
-		arbitraryImage.src = evt.target.result;
-	};
-	reader.readAsDataURL(file);
 }
 
 function downloadCanvas() {
