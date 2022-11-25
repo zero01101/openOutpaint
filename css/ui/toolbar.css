@@ -32,6 +32,29 @@
 	filter: invert(90%);
 }
 
+/* Toolbar lock indicator */
+#ui-toolbar .lock-indicator {
+	position: absolute;
+	display: none;
+
+	padding: 0;
+
+	background-color: var(--c-text);
+
+	right: 2px;
+	top: 10px;
+
+	width: 15px;
+	height: 15px;
+
+	background-color: red;
+
+	-webkit-mask-image: url("/res/icons/lock.svg");
+	-webkit-mask-size: contain;
+	mask-image: url("/res/icons/lock.svg");
+	mask-size: contain;
+}
+
 /* The separator */
 #ui-toolbar .separator {
 	width: 80%;

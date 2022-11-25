@@ -133,7 +133,7 @@ commands.createCommand(
 			options.x === undefined ||
 			options.y === undefined
 		)
-			throw "Command drawImage requires options in the format: {image, x, y, ctx?}";
+			throw "Command drawImage requires options in the format: {image, x, y, w?, h?, ctx?}";
 
 		// Check if we have state
 		if (!state.context) {
@@ -144,14 +144,14 @@ commands.createCommand(
 			const imgData = context.getImageData(
 				options.x,
 				options.y,
-				options.image.width,
-				options.image.height
+				options.w || options.image.width,
+				options.h || options.image.height
 			);
 			state.box = {
 				x: options.x,
 				y: options.y,
-				w: options.image.width,
-				h: options.image.height,
+				w: options.w || options.image.width,
+				h: options.h || options.image.height,
 			};
 			// Create Image
 			const cutout = document.createElement("canvas");
@@ -163,7 +163,17 @@ commands.createCommand(
 		}
 
 		// Apply command
-		state.context.drawImage(options.image, state.box.x, state.box.y);
+		state.context.drawImage(
+			options.image,
+			0,
+			0,
+			options.image.width,
+			options.image.height,
+			state.box.x,
+			state.box.y,
+			state.box.w,
+			state.box.h
+		);
 	},
 	(title, state) => {
 		// Clear destination area
