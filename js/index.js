@@ -254,7 +254,12 @@ function newImage(evt) {
 	clearPaintedMask();
 	clearBackupMask();
 	clearTargetMask();
-	clearImgMask();
+	commands.runCommand("eraseImage", "Clear Canvas", {
+		x: 0,
+		y: 0,
+		w: imgCanvas.width,
+		h: imgCanvas.height,
+	});
 }
 
 function prevImg(evt) {
