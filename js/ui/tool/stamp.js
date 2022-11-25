@@ -49,25 +49,49 @@ const stampTool = () =>
 				state.selected = null;
 				state.back = null;
 
+				const selectResource = (resource) => {
+					if (state.ctxmenu.uploadButton.disabled) return;
+
+					const resourceWrapper = resource.dom.wrapper;
+
+					const wasSelected = resourceWrapper.classList.contains("selected");
+
+					Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
+						child.classList.remove("selected");
+					});
+
+					// Select
+					if (!wasSelected) {
+						resourceWrapper.classList.add("selected");
+						state.selected = resource;
+					}
+					// If already selected, clear selection
+					else {
+						resourceWrapper.classList.remove("selected");
+						state.selected = null;
+					}
+				};
+
+				// Synchronizes resources array with the DOM
 				const syncResources = () => {
+					// Creates DOM elements when needed
 					state.resources.forEach((resource) => {
-						if (!document.getElementById(`resource-${resource.id}`)) {
+						if (
+							!state.ctxmenu.resourceList.querySelector(
+								`#resource-${resource.id}`
+							)
+						) {
+							console.debug(
+								`Creating resource element 'resource-${resource.id}'`
+							);
 							const resourceWrapper = document.createElement("div");
 							resourceWrapper.id = `resource-${resource.id}`;
 							resourceWrapper.textContent = resource.name;
 							resourceWrapper.classList.add("resource");
 
-							resourceWrapper.addEventListener("click", () => {
-								if (state.ctxmenu.uploadButton.disabled) return;
-								state.selected = resource;
-								Array.from(state.ctxmenu.resourceList.children).forEach(
-									(child) => {
-										child.classList.remove("selected");
-									}
-								);
-
-								resourceWrapper.classList.add("selected");
-							});
+							resourceWrapper.addEventListener("click", () =>
+								selectResource(resource)
+							);
 
 							resourceWrapper.addEventListener("mouseover", () => {
 								state.ctxmenu.previewPane.style.display = "block";
@@ -78,16 +102,17 @@ const stampTool = () =>
 							});
 
 							state.ctxmenu.resourceList.appendChild(resourceWrapper);
+							resource.dom = {wrapper: resourceWrapper};
 						}
 					});
 
+					// Removes DOM elements when needed
 					const elements = Array.from(state.ctxmenu.resourceList.children);
 
 					if (elements.length > state.resources.length)
 						elements.forEach((element) => {
 							let remove = true;
 							state.resources.some((resource) => {
-								console.debug(element.id, resource.id);
 								if (element.id.endsWith(resource.id)) remove = false;
 							});
 
@@ -95,6 +120,7 @@ const stampTool = () =>
 						});
 				};
 
+				// Adds a image resource (temporary allows only one draw, used for pasting)
 				state.addResource = (name, image, temporary = false) => {
 					const id = guid();
 					const resource = {
@@ -105,8 +131,15 @@ const stampTool = () =>
 					};
 					state.resources.push(resource);
 					syncResources();
+
+					// Select this resource
+					selectResource(resource);
+
 					return resource;
 				};
+
+				// Deletes a resource (Yes, functionality is here, but we don't have an UI for this yet)
+				// Used for temporary images too
 				state.deleteResource = (id) => {
 					state.resources = state.resources.filter((v) => v.id !== id);
 
@@ -175,8 +208,10 @@ const stampTool = () =>
 						}
 					}
 				};
-			},
-			populateContextMenu: (menu, state) => {
+
+				/**
+				 * Creates context menu
+				 */
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
 					// Snap To Grid Checkbox
@@ -218,7 +253,7 @@ const stampTool = () =>
 								const image = document.createElement("img");
 								image.src = url.createObjectURL(file);
 
-								state.selected = state.addResource(file.name, image, false);
+								state.addResource(file.name, image, false);
 							}
 						});
 
@@ -272,7 +307,8 @@ const stampTool = () =>
 					state.ctxmenu.resourceManager = resourceManager;
 					state.ctxmenu.resourceList = resourceList;
 				}
-
+			},
+			populateContextMenu: (menu, state) => {
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(state.ctxmenu.resourceManager);
 			},

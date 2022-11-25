@@ -64,6 +64,11 @@ body {
 	margin-bottom: 5px;
 }
 
+.button.tool:disabled {
+	background-color: #666 !important;
+	cursor: default;
+}
+
 .button.tool:hover {
 	background-color: rgb(30, 30, 80);
 }

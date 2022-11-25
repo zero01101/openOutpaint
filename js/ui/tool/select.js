@@ -20,6 +20,8 @@ const selectTransformTool = () =>
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyS"}, state.ctrlscb);
+
+			state.selected = null;
 		},
 		(state, opt) => {
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
@@ -50,7 +52,16 @@ const selectTransformTool = () =>
 
 				state.original = null;
 				state.dragging = null;
-				state.selected = null;
+				state._selected = null;
+				Object.defineProperty(state, "selected", {
+					get: () => state._selected,
+					set: (v) => {
+						if (v) state.ctxmenu.enableButtons();
+						else state.ctxmenu.disableButtons();
+
+						return (state._selected = v);
+					},
+				});
 				state.moving = null;
 
 				state.lastMouseTarget = null;
@@ -503,12 +514,52 @@ const selectTransformTool = () =>
 					state.ctxmenu.useClipboardLabel = clipboardCheckbox.label;
 					if (!navigator.clipboard.write)
 						clipboardCheckbox.checkbox.disabled = true; // Disable if not available
+
+					// Some useful actions to do with selection
+					const actionArray = document.createElement("div");
+					actionArray.classList.add("button-array");
+
+					const saveSelectionButton = document.createElement("button");
+					saveSelectionButton.classList.add("button", "tool");
+					saveSelectionButton.textContent = "Save";
+					saveSelectionButton.title = "Saves Selection";
+					saveSelectionButton.onclick = () => {
+						downloadCanvas({
+							cropToContent: false,
+							canvas: state.selected.image,
+						});
+					};
+
+					const createResourceButton = document.createElement("button");
+					createResourceButton.classList.add("button", "tool");
+					createResourceButton.textContent = "Resource";
+					createResourceButton.title = "Saves Selection as a Resource";
+					createResourceButton.onclick = () => {
+						const image = document.createElement("img");
+						image.src = state.selected.image.toDataURL();
+						tools.stamp.state.addResource("Selection Resource", image);
+						tools.stamp.enable();
+					};
+
+					actionArray.appendChild(saveSelectionButton);
+					actionArray.appendChild(createResourceButton);
+
+					state.ctxmenu.disableButtons = () => {
+						saveSelectionButton.disabled = true;
+						createResourceButton.disabled = true;
+					};
+					state.ctxmenu.enableButtons = () => {
+						saveSelectionButton.disabled = "";
+						createResourceButton.disabled = "";
+					};
+					state.ctxmenu.actionArray = actionArray;
 				}
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepAspectRatioLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.useClipboardLabel);
+				menu.appendChild(state.ctxmenu.actionArray);
 			},
 			shortcut: "S",
 		}
