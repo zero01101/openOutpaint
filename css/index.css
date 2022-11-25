@@ -30,20 +30,27 @@ body {
 	grid-row-gap: 5px;
 }
 
-.toolbar {
+.button-array {
 	display: flex;
-	justify-content: space-between;
+	justify-content: stretch;
 }
 
-.toolbar > .tool {
+.button-array > .button.tool {
 	flex: 1;
+	border-radius: 0;
 }
 
-.toolbar > .tool:not(:last-child) {
-	margin-right: 10px;
+.button-array > .button.tool:first-child {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
 }
 
-button.tool {
+.button-array > .button.tool:last-child {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.button.tool {
 	background-color: rgb(0, 0, 50);
 	color: rgb(255, 255, 255);
 	border-radius: 5px;
@@ -57,8 +64,11 @@ button.tool {
 	margin-bottom: 5px;
 }
 
-button.tool:hover {
-	background-color: #667;
+.button.tool:hover {
+	background-color: rgb(30, 30, 80);
+}
+.button.tool:active {
+	background-color: rgb(60, 60, 130);
 }
 
 .collapsible {
@@ -100,7 +110,7 @@ button.tool:hover {
 	font-size: medium;
 	text-align: left;
 	max-height: fit-content;
-	overflow: auto;
+	overflow: visible;
 	cursor: auto;
 }
 

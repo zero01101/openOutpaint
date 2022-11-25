@@ -3,9 +3,20 @@
  */
 
 const toolbar = {
+	_locked: false,
 	_toolbar: document.getElementById("ui-toolbar"),
+	_toolbar_lock_indicator: document.getElementById("toolbar-lock-indicator"),
 
 	tools: [],
+
+	lock() {
+		toolbar._locked = true;
+		toolbar._toolbar_lock_indicator.style.display = "block";
+	},
+	unlock() {
+		toolbar._locked = false;
+		toolbar._toolbar_lock_indicator.style.display = "none";
+	},
 
 	_makeToolbarEntry: (tool) => {
 		const toolTitle = document.createElement("img");
@@ -78,6 +89,8 @@ const toolbar = {
 			state: {},
 			options,
 			enable: (opt = null) => {
+				if (toolbar._locked) return;
+
 				this.tools.filter((t) => t.enabled).forEach((t) => t.disable());
 
 				while (contextMenuEl.lastChild) {
@@ -201,5 +214,6 @@ tools.maskbrush = maskBrushTool();
 toolbar.addSeparator();
 
 tools.selecttransform = selectTransformTool();
+tools.stamp = stampTool();
 
-toolbar.tools[0].enable();
+toolbar.tools[toolbar.tools.length - 1].enable();
