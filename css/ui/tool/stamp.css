@@ -1,0 +1,77 @@
+.resource-manager {
+	position: relative;
+	border-radius: 5px;
+}
+
+.resource-manager {
+	user-select: none;
+}
+.resource-manager > .preview-pane {
+	display: none;
+
+	position: absolute;
+
+	height: 200px;
+	width: 200px;
+
+	right: -200px;
+	top: 0px;
+
+	background-color: white;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+
+	border-radius: 2px;
+}
+
+.resource-manager > .resource-list {
+	height: 200px;
+
+	background-color: #ffffff66;
+
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.resource-manager > .resource-list > * {
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.resource-manager > .resource-list > *:hover {
+	background-color: #ffff;
+}
+.resource-manager > .resource-list > .selected {
+	background-color: #fff6;
+}
+
+.resource-manager > .resource-list.dragging {
+	background-color: #ffffff88;
+	transition-duration: 0.3s;
+}
+
+.resource-manager > .upload-button {
+	display: block;
+	width: 100%;
+
+	padding-left: 0;
+	padding-right: 0;
+
+	margin-top: 0;
+
+	text-align: center;
+
+	border-top-left-radius: 0px;
+	border-top-right-radius: 0px;
+
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+
+	border: 0px;
+}

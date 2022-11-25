@@ -107,6 +107,7 @@ function createSlider(name, wrapper, options = {}) {
 		textEl.value = `${name}: ${value}`;
 	});
 	textEl.addEventListener("focus", () => {
+		overEl.style.pointerEvents = "none";
 		textEl.value = value;
 	});
 
@@ -125,7 +126,6 @@ function createSlider(name, wrapper, options = {}) {
 
 	mouse.listen.window.left.onclick.on((evn) => {
 		if (evn.target === overEl) {
-			overEl.style.pointerEvents = "none";
 			textEl.select();
 		}
 	});

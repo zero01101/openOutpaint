@@ -212,3 +212,179 @@ const dream_img2img_callback = (evn, state) => {
 		dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
 	}
 };
+
+/**
+ * Registers Tools
+ */
+const dreamTool = () =>
+	toolbar.registerTool(
+		"res/icons/image-plus.svg",
+		"Dream",
+		(state, opt) => {
+			// Draw new cursor immediately
+			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			state.mousemovecb({
+				...mouse.coords.canvas.pos,
+				target: {id: "overlayCanvas"},
+			});
+
+			// Start Listeners
+			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
+			mouse.listen.canvas.left.onclick.on(state.dreamcb);
+			mouse.listen.canvas.right.onclick.on(state.erasecb);
+		},
+		(state, opt) => {
+			// Clear Listeners
+			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
+			mouse.listen.canvas.left.onclick.clear(state.dreamcb);
+			mouse.listen.canvas.right.onclick.clear(state.erasecb);
+		},
+		{
+			init: (state) => {
+				state.snapToGrid = true;
+				state.overMaskPx = 0;
+				state.mousemovecb = (evn) => _reticle_draw(evn, state.snapToGrid);
+				state.dreamcb = (evn) => {
+					dream_generate_callback(evn, state);
+				};
+				state.erasecb = (evn) => dream_erase_callback(evn, state);
+			},
+			populateContextMenu: (menu, state) => {
+				if (!state.ctxmenu) {
+					state.ctxmenu = {};
+					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
+						state,
+						"snapToGrid",
+						"Snap To Grid"
+					).label;
+					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
+						state,
+						"overMaskPx",
+						"Overmask px",
+						0,
+						128,
+						1
+					).slider;
+				}
+
+				menu.appendChild(state.ctxmenu.snapToGridLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.overMaskPxLabel);
+			},
+			shortcut: "D",
+		}
+	);
+
+const img2imgTool = () =>
+	toolbar.registerTool(
+		"res/icons/image.svg",
+		"Img2Img",
+		(state, opt) => {
+			// Draw new cursor immediately
+			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			state.mousemovecb({
+				...mouse.coords.canvas.pos,
+				target: {id: "overlayCanvas"},
+			});
+
+			// Start Listeners
+			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
+			mouse.listen.canvas.left.onclick.on(state.dreamcb);
+			mouse.listen.canvas.right.onclick.on(state.erasecb);
+		},
+		(state, opt) => {
+			// Clear Listeners
+			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
+			mouse.listen.canvas.left.onclick.clear(state.dreamcb);
+			mouse.listen.canvas.right.onclick.clear(state.erasecb);
+		},
+		{
+			init: (state) => {
+				state.snapToGrid = true;
+				state.denoisingStrength = 0.7;
+
+				state.borderMaskSize = 64;
+
+				state.mousemovecb = (evn) => {
+					_reticle_draw(evn, state.snapToGrid);
+					const bb = getBoundingBox(
+						evn.x,
+						evn.y,
+						basePixelCount * scaleFactor,
+						basePixelCount * scaleFactor,
+						state.snapToGrid && basePixelCount
+					);
+
+					// For displaying border mask
+					const auxCanvas = document.createElement("canvas");
+					auxCanvas.width = bb.w;
+					auxCanvas.height = bb.h;
+					const auxCtx = auxCanvas.getContext("2d");
+
+					if (state.borderMaskSize > 0) {
+						auxCtx.fillStyle = "#FF6A6A50";
+						auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
+						auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
+						auxCtx.fillRect(
+							bb.w - state.borderMaskSize,
+							0,
+							state.borderMaskSize,
+							bb.h
+						);
+						auxCtx.fillRect(
+							0,
+							bb.h - state.borderMaskSize,
+							bb.w,
+							state.borderMaskSize
+						);
+					}
+
+					const tmp = ovCtx.globalAlpha;
+					ovCtx.globalAlpha = 0.4;
+					ovCtx.drawImage(auxCanvas, bb.x, bb.y);
+					ovCtx.globalAlpha = tmp;
+				};
+				state.dreamcb = (evn) => {
+					dream_img2img_callback(evn, state);
+				};
+				state.erasecb = (evn) => dream_erase_callback(evn, state);
+			},
+			populateContextMenu: (menu, state) => {
+				if (!state.ctxmenu) {
+					state.ctxmenu = {};
+					// Snap To Grid Checkbox
+					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
+						state,
+						"snapToGrid",
+						"Snap To Grid"
+					).label;
+
+					// Denoising Strength Slider
+					state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
+						state,
+						"denoisingStrength",
+						"Denoising Strength",
+						0,
+						1,
+						0.05
+					).slider;
+
+					// Border Mask Size Slider
+					state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
+						state,
+						"borderMaskSize",
+						"Border Mask Size",
+						0,
+						128,
+						1
+					).slider;
+				}
+
+				menu.appendChild(state.ctxmenu.snapToGridLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
+				menu.appendChild(state.ctxmenu.borderMaskSlider);
+			},
+			shortcut: "I",
+		}
+	);

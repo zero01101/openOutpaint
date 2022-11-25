@@ -201,6 +201,8 @@ window.onmouseup = (evn) => {
 				target: evn.target,
 				initialTarget: mouse.coords[name].dragging[key].target,
 				buttonId: evn.button,
+				ix: mouse.coords[name].dragging[key].x,
+				iy: mouse.coords[name].dragging[key].y,
 				x: mouse.coords[name].pos.x,
 				y: mouse.coords[name].pos.y,
 				evn,
@@ -213,6 +215,8 @@ window.onmouseup = (evn) => {
 					target: evn.target,
 					initialTarget: mouse.coords[name].dragging[key].target,
 					buttonId: evn.button,
+					ix: mouse.coords[name].dragging[key].x,
+					iy: mouse.coords[name].dragging[key].y,
 					x: mouse.coords[name].pos.x,
 					y: mouse.coords[name].pos.y,
 					evn,
@@ -264,6 +268,8 @@ window.onmousemove = (evn) => {
 						mouse.listen[name][key].ondragstart.emit({
 							target: evn.target,
 							buttonId: evn.button,
+							ix: mouse.coords[name].dragging[key].x,
+							iy: mouse.coords[name].dragging[key].y,
 							x: mouse.coords[name].pos.x,
 							y: mouse.coords[name].pos.y,
 							evn,
@@ -283,6 +289,8 @@ window.onmousemove = (evn) => {
 						target: evn.target,
 						initialTarget: mouse.coords[name].dragging[key].target,
 						button: index,
+						ix: mouse.coords[name].dragging[key].x,
+						iy: mouse.coords[name].dragging[key].y,
 						px: mouse.coords[name].prev.x,
 						py: mouse.coords[name].prev.y,
 						x: mouse.coords[name].pos.x,
@@ -297,6 +305,8 @@ window.onmousemove = (evn) => {
 						target: evn.target,
 						initialTarget: mouse.coords[name].dragging[key].target,
 						button: index,
+						ix: mouse.coords[name].dragging[key].x,
+						iy: mouse.coords[name].dragging[key].y,
 						px: mouse.coords[name].prev.x,
 						py: mouse.coords[name].prev.y,
 						x: mouse.coords[name].pos.x,
@@ -382,9 +392,17 @@ const keyboard = {
 			callback,
 		});
 	},
-	deleteShortcut(id) {
+	deleteShortcut(id, key = null) {
+		if (key) {
+			this.shortcuts[key] = this.shortcuts[key].filter(
+				(v) => v.id !== id && v.callback !== id
+			);
+			return;
+		}
 		this.shortcuts.keys().forEach((key) => {
-			this.shortcuts[key] = this.shortcuts[key].filter((v) => v.id !== id);
+			this.shortcuts[key] = this.shortcuts[key].filter(
+				(v) => v.id !== id && v.callback !== id
+			);
 		});
 	},
 
