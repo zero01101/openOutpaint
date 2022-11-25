@@ -205,7 +205,8 @@ function imageAcceptReject(x, y, data, extra = null) {
 		div.style.width = "200px";
 		div.style.height = "70px";
 		div.innerHTML =
-			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button><span class="strokeText" id="estRemaining"></span>';
+			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button><button onclick="resource(this)">RES</button><span class="strokeText" id="estRemaining"></span>';
+
 		document.getElementById("tempDiv").appendChild(div);
 		document.getElementById("currentImgIndex").innerText = "1";
 		document.getElementById("totalImgIndex").innerText = totalImagesReturned;
@@ -238,11 +239,28 @@ function reject(evt) {
 	blockNewImages = false;
 }
 
+function resource(evt) {
+	// send image to resources
+	const img = new Image();
+	// load the image data after defining the closure
+	img.src = "data:image/png;base64," + returnedImages[imageIndex];
+
+	tools.stamp.state.addResource(
+		prompt("Enter new resource name", "Dream Resource"),
+		img
+	);
+}
+
 function newImage(evt) {
 	clearPaintedMask();
 	clearBackupMask();
 	clearTargetMask();
-	clearImgMask();
+	commands.runCommand("eraseImage", "Clear Canvas", {
+		x: 0,
+		y: 0,
+		w: imgCanvas.width,
+		h: imgCanvas.height,
+	});
 }
 
 function prevImg(evt) {
@@ -590,65 +608,6 @@ function drawBackground() {
 			bgCtx.fillRect(x, y, 64, 64);
 		}
 	}
-}
-
-function downloadCanvas() {
-	var link = document.createElement("a");
-	link.download =
-		new Date().toISOString().slice(0, 19).replace("T", " ").replace(":", " ") +
-		" openOutpaint image.png";
-	var croppedCanvas = cropCanvas(imgCanvas);
-	if (croppedCanvas != null) {
-		link.href = croppedCanvas.toDataURL("image/png");
-		link.click();
-	}
-}
-
-function cropCanvas(sourceCanvas) {
-	var w = sourceCanvas.width;
-	var h = sourceCanvas.height;
-	var pix = {x: [], y: []};
-	var imageData = sourceCanvas.getContext("2d").getImageData(0, 0, w, h);
-	var x, y, index;
-
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
-			// lol i need to learn what this part does
-			index = (y * w + x) * 4; // OHHH OK this is setting the imagedata.data uint8clampeddataarray index for the specified x/y coords
-			//this part i get, this is checking that 4th RGBA byte for opacity
-			if (imageData.data[index + 3] > 0) {
-				pix.x.push(x);
-				pix.y.push(y);
-			}
-		}
-	}
-	// ...need to learn what this part does too :badpokerface:
-	// is this just determining the boundaries of non-transparent pixel data?
-	pix.x.sort(function (a, b) {
-		return a - b;
-	});
-	pix.y.sort(function (a, b) {
-		return a - b;
-	});
-	var n = pix.x.length - 1;
-	w = pix.x[n] - pix.x[0] + 1;
-	h = pix.y[n] - pix.y[0] + 1;
-	// yup sure looks like it
-
-	try {
-		var cut = sourceCanvas
-			.getContext("2d")
-			.getImageData(pix.x[0], pix.y[0], w, h);
-		var cutCanvas = document.createElement("canvas");
-		cutCanvas.width = w;
-		cutCanvas.height = h;
-		cutCanvas.getContext("2d").putImageData(cut, 0, 0);
-	} catch (ex) {
-		// probably empty image
-		//TODO confirm edge cases?
-		cutCanvas = null;
-	}
-	return cutCanvas;
 }
 
 function checkIfWebuiIsRunning() {
