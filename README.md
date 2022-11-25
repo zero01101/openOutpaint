@@ -22,7 +22,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - optional overmasking for potentially better seams between outpaints - set overmask px value to 0 to disable the feature
 - dedicated img2img tool with optional border masking for enhanced output coherence with existing subject matter
 - floating toolbox with handy keyboard shortcuts
-- import arbitrary images and superimpose on the canvas wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent))
+- import arbitrary images and scale/stamp on the canvas whenever, wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent))
 - upscaler support for final output images _(NOTE: LDSR has had reports of not operating correctly when selected - please test and see if it works as expected)_
 - saves your preferences to browser localstorage for maximum convenience
 - floating navigable undo/redo palette with ctrl+z/y keyboard shortcuts for additional maximum convenience
@@ -31,7 +31,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
 - [@Kalekki](https://github.com/Kalekki) - [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), [checkerboard background and non bonkers canvas borders](https://github.com/zero01101/openOutpaint/pull/24), [upscaling output image](https://github.com/zero01101/openOutpaint/pull/35), [switch models from UI, API call to get samplers instead of hardcoded list haha whoops](https://github.com/zero01101/openOutpaint/pull/39)
-- [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [even more wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22), [undo/redo keyboard shortcuts and keyboard input support](https://github.com/zero01101/openOutpaint/pull/30), [scrumptious photography-shoppe-style history palette](https://github.com/zero01101/openOutpaint/pull/31), [dedicated img2img tool/floating toolbar/general code modularization and future-proofing](https://github.com/zero01101/openOutpaint/pull/37)
+- [@seijihariki](https://github.com/seijihariki) - [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [even more wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22), [undo/redo keyboard shortcuts and keyboard input support](https://github.com/zero01101/openOutpaint/pull/30), [scrumptious photography-shoppe-style history palette](https://github.com/zero01101/openOutpaint/pull/31), [dedicated img2img tool/floating toolbar/general code modularization and future-proofing](https://github.com/zero01101/openOutpaint/pull/37), [enormous revamp to image importing, supports copy/pasting, scaling, multiple stampable images holy crap](https://github.com/zero01101/openOutpaint/pull/49)
 - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ~~that is still driving me crazy getting it to work right~~ ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [possible betterness?](https://github.com/zero01101/openOutpaint/commit/8002772ee6aa4b2f5b544af82cb6d545cf81368f)
 
 ## operation
@@ -66,7 +66,7 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 
 5.  configure your local webhost in your homelab to serve the newly cloned repo like the technological bastion you are, or simply run the included `openOutpaint.bat` on windows or `openOutpaint.sh` on mac/linux.
 6.  open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
-7.  update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas, and wait _OR_ you can load an existing image from your computer using the file selector browse button under "load local image"
+7.  update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas using the dream [`d`] tool, and wait (**OR** you can load as many existing images from your computer as you'd like using the "stamp image" tool [`U`])
 8.  once an image appears\*, click the `<` and `>` buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` to choose one you like, or `n` to cancel that image generation batch outright and possibly try again
 9.  now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence, or you can right-click to remove some of it if you want to completely retry a chunk but leave the rest alone
 10. enable the mask mode to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, disable mask mode and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
@@ -74,12 +74,13 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 12. just play around with the available options!
 
 - snap to grid, uh, snaps to the grid
-- mask mode is practically identical to A1111's inpainting mask, use scrollwheel to change the blob size
+- select image [`s`] is a marquee selector, use it to define a section of image you'd like to copy or freely scale
+- mask brush [`m`] is practically identical to A1111's inpainting mask, use scrollwheel to change the blob size
 - overmask and related px value expands the area masked in img2img outpaint requests, so as to attempt to minimize the seam between images
-- border mask (img2img tool only) and related value compresses the area masked in img2img towards the image section being "replaced" to maximize possible coherence
+- border mask (img2img tool [`i`] only) and related value compresses the area masked in img2img towards the image section being "replaced" to maximize possible coherence
 - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
 
-13. click "save canvas" (or choose an upscaler and click "upscale", but heed its warning) to save the cropped region of outpainted canvas
+13. open the "save/upscaling" menu and click "save canvas" (or choose an upscaler and click "upscale", but heed its warning) to save the cropped region of outpainted canvas
 14. click "clear canvas" to blank the canvas and start all over only to discover that it's like 2 AM and you have to go to sleep because you have work in about 4 hours
 
 \*if it _doesn't_ create an image, check your console output to see if you've got CORS errors
@@ -91,7 +92,7 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 - [ ] lots and lots of readme updates (ongoing)
 - [ ] comment basically everything that isn't self documenting (ongoing)
 - [ ] CHORE: refactor all the duplicated JS code (ongoing, guaranteed to get worse before it gets better)
-- [ ] move overmask px control to base context menu
+- [x] move overmask px control to base context menu
 - [ ] keyboard shortcuts for approve/reject (<>YN) [a mighty convenient workaround to prevent soft-lock if approve/reject controls are offscreen]
 - [ ] make it so approve/reject controls cannot live offscreen, they must stay here
 - [x] overmask seam of img2img ~~BUG: it kinda sucks currently, just moves the seam instead of fixing it, i want to try to gradient-fade the edge but filter = 'blur(Ypx)' is awful for this and my remedial per-pixel loops crash the browser because i am the embodiment of inefficiency~~
@@ -105,9 +106,9 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 - [ ] make render progress bar prettier
 - [x] ~~smart crop downloaded image~~
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
-- [ ] scaling of imported arbitrary image before superimposition
+- [x] ~~scaling of imported arbitrary image before superimposition~~
 - [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
-- [ ] discrete size control for mask and target reticle, discrete x/y axes for reticle
+- [ ] ~~discrete size control for mask and target reticle~~, discrete x/y axes for reticle
 - [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~
 - [ ] infinite canvas
 - [x] ~~global undo/redo~~
@@ -130,11 +131,11 @@ please do! kindly indicate your OS, browser, versions of both, any errors in dev
 
 ## known bugs :(
 
-- generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying
+- generated images display +1px on x/y during approve/reject state, doesn't affect output, just annoying - less obvious now with checkerboard background
 - ~~erase mask is like entirely broken~~
 - ~~odd-numbered scale factors don't snap correctly~~
 - ~~arbitrary "pasted" images require clicking twice to place them and i _don't know why_ [(yes i do)](#terrible), just getting them to be arbitrarily placable was a giant pain because i'm not got the smarts~~
-- selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective
+- ~~selecting an aribtrary image by double-clicking it in the file picker can sometimes trigger a dream request that errors out if your file picker is "above" the canvas; i tried to alleviate that by temporarily removing the mouse(move/down/up) handlers for the canvas context on selection of a file, but i'm POSITIVE it's an improper solution and not quite sure if it's even fully effective~~ [fixed via pr 49](<(https://github.com/zero01101/openOutpaint/pull/49)>)
 - not sure if "bug" since it occurs in stable diffusion and not openOutpaint, but auto txt2img HRfix + odd number scale factors returns an "Exception in ASGI application" in SD console output; for example using scale factor of 9 results in "RuntimeError: Sizes of tensors must match except in dimension 1. Expected size 10 but got size 9 for tensor number 1 in the list."
 - if you request a dream beyond the left border of the canvas you can kinda end up in a softlock state
 
@@ -176,6 +177,7 @@ imported a transparent clip of a [relatively famous happy lil kitty](https://com
 - 0.0.6.5 - checkerboard background, far more attractive painted masking, HUGE code cleanup omg [74d5f13](https://github.com/zero01101/openOutpaint/commit/74d5f13aa582695e3e359ad46f7e629a25fb0091)
 - 0.0.6.9 - upscaler support for final output image [3b91a89](https://github.com/zero01101/openOutpaint/commit/3b91a89214e22930ad75fdc2d9e6e79a5f40ee82)
 - 0.0.7 - floating toolbar, img2img tool, border masking, change model from UI, general _very needed_ code cleanup and modernization [9916ee8](https://github.com/zero01101/openOutpaint/commit/9916ee891738a56cb827e67f9fbe0cffab27fc60)
+- 0.0.7.5 - giant arbitary image handling and marquee select tool update [bbdfef9](https://github.com/zero01101/openOutpaint/commit/bbdfef937d28f607b601013c75de0f9049739488)
 
 ## what's with the fish?
 
