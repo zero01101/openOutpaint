@@ -183,7 +183,7 @@ const dream_img2img_callback = (evn, state) => {
 		auxCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 
 		// Border Mask
-		if (state.useBorderMask) {
+		if (state.borderMaskSize > 0) {
 			auxCtx.fillStyle = "#000F";
 			auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
 			auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
@@ -307,42 +307,44 @@ const img2imgTool = () =>
 
 				state.mousemovecb = (evn) => {
 					_reticle_draw(evn, state.snapToGrid);
-					const bb = getBoundingBox(
-						evn.x,
-						evn.y,
-						basePixelCount * scaleFactor,
-						basePixelCount * scaleFactor,
-						state.snapToGrid && basePixelCount
-					);
-
-					// For displaying border mask
-					const auxCanvas = document.createElement("canvas");
-					auxCanvas.width = bb.w;
-					auxCanvas.height = bb.h;
-					const auxCtx = auxCanvas.getContext("2d");
-
-					if (state.borderMaskSize > 0) {
-						auxCtx.fillStyle = "#FF6A6A50";
-						auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
-						auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
-						auxCtx.fillRect(
-							bb.w - state.borderMaskSize,
-							0,
-							state.borderMaskSize,
-							bb.h
+					if (evn.target.id === "overlayCanvas") {
+						const bb = getBoundingBox(
+							evn.x,
+							evn.y,
+							basePixelCount * scaleFactor,
+							basePixelCount * scaleFactor,
+							state.snapToGrid && basePixelCount
 						);
-						auxCtx.fillRect(
-							0,
-							bb.h - state.borderMaskSize,
-							bb.w,
-							state.borderMaskSize
-						);
+
+						// For displaying border mask
+						const auxCanvas = document.createElement("canvas");
+						auxCanvas.width = bb.w;
+						auxCanvas.height = bb.h;
+						const auxCtx = auxCanvas.getContext("2d");
+
+						if (state.borderMaskSize > 0) {
+							auxCtx.fillStyle = "#FF6A6A50";
+							auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
+							auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
+							auxCtx.fillRect(
+								bb.w - state.borderMaskSize,
+								0,
+								state.borderMaskSize,
+								bb.h
+							);
+							auxCtx.fillRect(
+								0,
+								bb.h - state.borderMaskSize,
+								bb.w,
+								state.borderMaskSize
+							);
+						}
+
+						const tmp = ovCtx.globalAlpha;
+						ovCtx.globalAlpha = 0.4;
+						ovCtx.drawImage(auxCanvas, bb.x, bb.y);
+						ovCtx.globalAlpha = tmp;
 					}
-
-					const tmp = ovCtx.globalAlpha;
-					ovCtx.globalAlpha = 0.4;
-					ovCtx.drawImage(auxCanvas, bb.x, bb.y);
-					ovCtx.globalAlpha = tmp;
 				};
 				state.dreamcb = (evn) => {
 					dream_img2img_callback(evn, state);

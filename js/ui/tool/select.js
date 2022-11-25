@@ -7,23 +7,28 @@ const selectTransformTool = () =>
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 			state.movecb({...mouse.coords.canvas.pos, target: {id: "overlayCanvas"}});
 
+			// Canvas left mouse handlers
 			mouse.listen.canvas.onmousemove.on(state.movecb);
 			mouse.listen.canvas.left.onclick.on(state.clickcb);
 			mouse.listen.canvas.left.ondragstart.on(state.dragstartcb);
 			mouse.listen.canvas.left.ondragend.on(state.dragendcb);
 
+			// Canvas right mouse handler
 			mouse.listen.canvas.right.onclick.on(state.cancelcb);
 
+			// Keyboard click handlers
 			keyboard.listen.onkeyclick.on(state.keyclickcb);
 			keyboard.listen.onkeydown.on(state.keydowncb);
+
+			// Registers keyboard shortcuts
 			keyboard.onShortcut({ctrl: true, key: "KeyC"}, state.ctrlccb);
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
-			keyboard.onShortcut({ctrl: true, key: "KeyS"}, state.ctrlscb);
 
 			state.selected = null;
 		},
 		(state, opt) => {
+			// Clear all those listeners and shortcuts we set up
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
 			mouse.listen.canvas.left.onclick.clear(state.clickcb);
 			mouse.listen.canvas.left.ondragstart.clear(state.dragstartcb);
@@ -36,10 +41,11 @@ const selectTransformTool = () =>
 			keyboard.deleteShortcut(state.ctrlccb, "KeyC");
 			keyboard.deleteShortcut(state.ctrlvcb, "KeyV");
 			keyboard.deleteShortcut(state.ctrlxcb, "KeyX");
-			keyboard.deleteShortcut(state.ctrlscb, "KeyS");
 
+			// Clear any selections
 			state.reset();
 
+			// Resets cursor
 			ovCanvas.style.cursor = "auto";
 		},
 		{
@@ -64,6 +70,7 @@ const selectTransformTool = () =>
 				});
 				state.moving = null;
 
+				// Some things to easy request for a redraw
 				state.lastMouseTarget = null;
 				state.lastMouseMove = null;
 
@@ -72,12 +79,13 @@ const selectTransformTool = () =>
 					state.movecb(state.lastMouseMove);
 				};
 
+				// Clears selection and make things right
 				state.reset = () => {
 					if (state.selected)
 						imgCtx.drawImage(
-							state.selected.image,
-							state.selected.original.x,
-							state.selected.original.y
+							state.original.image,
+							state.original.x,
+							state.original.y
 						);
 
 					if (state.dragging) state.dragging = null;
@@ -86,6 +94,7 @@ const selectTransformTool = () =>
 					redraw();
 				};
 
+				// Selection bounding box object. Has some witchery to deal with handles.
 				const selectionBB = (x1, y1, x2, y2) => {
 					return {
 						original: {
@@ -174,6 +183,7 @@ const selectTransformTool = () =>
 					};
 				};
 
+				// Mouse move handelr. As always, also renders cursor
 				state.movecb = (evn) => {
 					ovCanvas.style.cursor = "auto";
 					state.lastMouseTarget = evn.target;
@@ -287,8 +297,10 @@ const selectTransformTool = () =>
 					}
 				};
 
+				// Handles left mouse clicks
 				state.clickcb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
+						// If something is selected, commit changes to the canvas
 						if (state.selected) {
 							imgCtx.drawImage(
 								state.selected.image,
@@ -312,6 +324,8 @@ const selectTransformTool = () =>
 						}
 					}
 				};
+
+				// Handles left mouse drag events
 				state.dragstartcb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
 						let ix = evn.ix;
@@ -321,6 +335,7 @@ const selectTransformTool = () =>
 							iy += snap(evn.iy, true, 64);
 						}
 
+						// If is selected, check if drag is in handles/body and act accordingly
 						if (state.selected) {
 							const handles = state.selected.handles();
 
@@ -329,17 +344,21 @@ const selectTransformTool = () =>
 							);
 							if (activeHandle) {
 								state.scaling = activeHandle;
+								return;
 							} else if (state.selected.contains(ix, iy)) {
 								state.moving = {
 									offset: {x: ix - state.selected.x, y: iy - state.selected.y},
 								};
+								return;
 							}
-						} else {
-							state.dragging = {ix, iy};
 						}
+						// If it is not, just create new selection
+						state.reset();
+						state.dragging = {ix, iy};
 					}
 				};
 
+				// Handles left mouse drag end events
 				state.dragendcb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
 						let x = evn.x;
@@ -349,11 +368,17 @@ const selectTransformTool = () =>
 							y += snap(evn.y, true, 64);
 						}
 
+						// If we are scaling, stop scaling and do some handler magic
 						if (state.scaling) {
 							state.selected.updateOriginal();
 							state.scaling = null;
+							// If we are moving the selection, just... stop
 						} else if (state.moving) {
 							state.moving = null;
+							/**
+							 * If we are dragging, create a cutout selection area and save to an auxiliar image
+							 * We will be rendering the image to the overlay, so it will not be noticeable
+							 */
 						} else if (state.dragging) {
 							state.original = selectionBB(
 								state.dragging.ix,
@@ -404,19 +429,21 @@ const selectTransformTool = () =>
 					}
 				};
 
+				// Handler for right clicks. Basically resets everything
 				state.cancelcb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
 						state.reset();
 					}
 				};
 
-				// Keyboard callbacks
+				// Keyboard callbacks (For now, they just handle the "delete" key)
 				state.keydowncb = (evn) => {};
 
 				state.keyclickcb = (evn) => {
 					if (state.lastMouseTarget.id === "overlayCanvas") {
 						switch (evn.code) {
 							case "Delete":
+								// Deletes selected area
 								state.selected &&
 									commands.runCommand(
 										"eraseImage",
@@ -430,8 +457,11 @@ const selectTransformTool = () =>
 				};
 
 				// Register Ctrl-C/V Shortcut
-				state.ctrlccb = (evn) => {
+
+				// Handles copying
+				state.ctrlccb = (evn, cut = false) => {
 					if (state.selected && state.lastMouseTarget.id === "overlayCanvas") {
+						// We create a new canvas to store the data
 						state.clipboard.copy = document.createElement("canvas");
 
 						state.clipboard.copy.width = state.selected.w;
@@ -440,10 +470,29 @@ const selectTransformTool = () =>
 						const ctx = state.clipboard.copy.getContext("2d");
 
 						ctx.clearRect(0, 0, state.selected.w, state.selected.h);
-						ctx.drawImage(state.selected.image, 0, 0);
+						ctx.drawImage(
+							state.selected.image,
+							0,
+							0,
+							state.selected.image.width,
+							state.selected.image.height,
+							0,
+							0,
+							state.selected.w,
+							state.selected.h
+						);
+
+						// If cutting, we reverse the selection and erase the selection area
+						if (cut) {
+							const aux = state.original;
+							state.reset();
+
+							commands.runCommand("eraseImage", "Cut Image", aux);
+						}
 
 						// Because firefox needs manual activation of the feature
 						if (state.useClipboard) {
+							// Send to clipboard
 							state.clipboard.copy.toBlob((blob) => {
 								const item = new ClipboardItem({"image/png": blob});
 								navigator.clipboard.write([item]).catch((e) => {
@@ -454,8 +503,11 @@ const selectTransformTool = () =>
 						}
 					}
 				};
+
+				// Handles pasting
 				state.ctrlvcb = (evn) => {
 					if (state.useClipboard) {
+						// If we use the clipboard, do some proccessing of clipboard data (ugly but kind of minimum required)
 						navigator.clipboard.read().then((items) => {
 							console.info(items[0]);
 							for (const item of items) {
@@ -476,35 +528,41 @@ const selectTransformTool = () =>
 							}
 						});
 					} else if (state.clipboard.copy) {
+						// Use internal clipboard
 						const image = document.createElement("img");
 						image.src = state.clipboard.copy.toDataURL();
 
+						// Send to stamp, as clipboard temporary data
 						tools.stamp.enable({
 							image,
 							back: tools.selecttransform.enable,
 						});
 					}
 				};
-				state.ctrlxcb = (evn) => {};
-				state.ctrlscb = (evn) => {
-					evn.evn.preventDefault();
+
+				// Cut shortcut. Basically, send to copy handler
+				state.ctrlxcb = (evn) => {
+					state.ctrlccb(evn, true);
 				};
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
+
 					// Snap To Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
 						"snapToGrid",
 						"Snap To Grid"
 					).label;
+
 					// Keep Aspect Ratio
 					state.ctxmenu.keepAspectRatioLabel = _toolbar_input.checkbox(
 						state,
 						"keepAspectRatio",
 						"Keep Aspect Ratio"
 					).label;
+
 					// Use Clipboard
 					const clipboardCheckbox = _toolbar_input.checkbox(
 						state,
@@ -519,6 +577,7 @@ const selectTransformTool = () =>
 					const actionArray = document.createElement("div");
 					actionArray.classList.add("button-array");
 
+					// Save button
 					const saveSelectionButton = document.createElement("button");
 					saveSelectionButton.classList.add("button", "tool");
 					saveSelectionButton.textContent = "Save";
@@ -530,6 +589,7 @@ const selectTransformTool = () =>
 						});
 					};
 
+					// Save as Resource Button
 					const createResourceButton = document.createElement("button");
 					createResourceButton.classList.add("button", "tool");
 					createResourceButton.textContent = "Resource";
@@ -544,10 +604,13 @@ const selectTransformTool = () =>
 					actionArray.appendChild(saveSelectionButton);
 					actionArray.appendChild(createResourceButton);
 
+					// Disable buttons (if nothing is selected)
 					state.ctxmenu.disableButtons = () => {
 						saveSelectionButton.disabled = true;
 						createResourceButton.disabled = true;
 					};
+
+					// Disable buttons (if something is selected)
 					state.ctxmenu.enableButtons = () => {
 						saveSelectionButton.disabled = "";
 						createResourceButton.disabled = "";
