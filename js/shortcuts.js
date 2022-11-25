@@ -17,3 +17,9 @@ keyboard.onShortcut({key: "KeyM"}, () => {
 keyboard.onShortcut({key: "KeyI"}, () => {
 	tools.img2img.enable();
 });
+keyboard.onShortcut({key: "KeyS"}, () => {
+	tools.selecttransform.enable();
+});
+keyboard.onShortcut({key: "KeyU"}, () => {
+	tools.stamp.enable();
+});

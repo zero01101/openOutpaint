@@ -392,7 +392,13 @@ const keyboard = {
 			callback,
 		});
 	},
-	deleteShortcut(id) {
+	deleteShortcut(id, key = null) {
+		if (key) {
+			this.shortcuts[key] = this.shortcuts[key].filter(
+				(v) => v.id !== id && v.callback !== id
+			);
+			return;
+		}
 		this.shortcuts.keys().forEach((key) => {
 			this.shortcuts[key] = this.shortcuts[key].filter(
 				(v) => v.id !== id && v.callback !== id
