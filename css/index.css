@@ -97,8 +97,9 @@ body {
 
 .content {
 	max-height: 0;
-	overflow: hidden;
-	transition: max-height 0.2s ease-out;
+	overflow-y: clip;
+	overflow-x: visible;
+	transition: max-height 0.2s ease-out, height 0s ease-out;
 }
 
 .menu-container {
@@ -154,4 +155,31 @@ body {
 	font-size: 150%;
 	font-weight: 600;
 	color: #fff;
+}
+
+#models {
+	width: 100%;
+	text-overflow: ellipsis;
+}
+
+/* Prompt Fields */
+
+div.prompt-wrapper {
+	overflow: visible;
+}
+
+div.prompt-wrapper > textarea {
+	margin: 0;
+	padding: 0;
+
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0;
+
+	resize: vertical;
+}
+
+div.prompt-wrapper > textarea:focus {
+	width: 700px;
 }

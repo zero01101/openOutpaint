@@ -113,8 +113,29 @@ const bgCanvas = document.getElementById("backgroundCanvas"); // gray bg grid
 const bgCtx = bgCanvas.getContext("2d");
 
 function startup() {
-	checkIfWebuiIsRunning();
 	loadSettings();
+
+	const hostEl = document.getElementById("host");
+	hostEl.oninput = () => {
+		host = hostEl.value;
+		localStorage.setItem("host", host);
+	};
+
+	const promptEl = document.getElementById("prompt");
+	promptEl.oninput = () => {
+		stableDiffusionData.prompt = promptEl.value;
+		promptEl.title = promptEl.value;
+		localStorage.setItem("prompt", stableDiffusionData.prompt);
+	};
+
+	const negPromptEl = document.getElementById("negPrompt");
+	negPromptEl.oninput = () => {
+		stableDiffusionData.negative_prompt = negPromptEl.value;
+		negPromptEl.title = negPromptEl.value;
+		localStorage.setItem("neg_prompt", stableDiffusionData.negative_prompt);
+	};
+
+	checkIfWebuiIsRunning();
 	getSamplers();
 	getUpscalers();
 	getModels();
@@ -859,6 +880,18 @@ async function upscaleAndDownload() {
 
 function loadSettings() {
 	// set default values if not set
+	var _host =
+		localStorage.getItem("host") == null
+			? "http://127.0.0.1:7860"
+			: localStorage.getItem("host");
+	var _prompt =
+		localStorage.getItem("prompt") == null
+			? "oceanographic study, underwater wildlife, award winning"
+			: localStorage.getItem("prompt");
+	var _negprompt =
+		localStorage.getItem("neg_prompt") == null
+			? "people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry"
+			: localStorage.getItem("neg_prompt");
 	var _sampler =
 		localStorage.getItem("sampler") == null
 			? "DDIM"
@@ -885,9 +918,18 @@ function loadSettings() {
 			: localStorage.getItem("overmask_px");
 
 	// set the values into the UI
+	document.getElementById("host").value = String(_host);
+	document.getElementById("prompt").value = String(_prompt);
+	document.getElementById("prompt").title = String(_prompt);
+	document.getElementById("negPrompt").value = String(_negprompt);
+	document.getElementById("negPrompt").title = String(_negprompt);
 	document.getElementById("samplerSelect").value = String(_sampler);
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
 	// document.getElementById("overMaskPx").value = Number(_overmask_px);
 }
+
+document.getElementById("mainHSplit").addEventListener("wheel", (evn) => {
+	evn.preventDefault();
+});
