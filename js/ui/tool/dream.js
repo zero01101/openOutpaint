@@ -50,21 +50,40 @@ const dream_generate_callback = (evn, state) => {
 			request.init_images = [auxCanvas.toDataURL()];
 
 			// Get mask image
+			auxCtx.fillStyle = "#000F";
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-			auxCtx.globalCompositeOperation = "destination-out";
-			auxCtx.drawImage(
-				maskPaintCanvas,
-				bb.x,
-				bb.y,
-				bb.w,
-				bb.h,
-				0,
-				0,
-				bb.w,
-				bb.h
-			);
+			if (state.invertMask) {
+				auxCtx.globalCompositeOperation = "destination-in";
+				auxCtx.drawImage(
+					maskPaintCanvas,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h,
+					0,
+					0,
+					bb.w,
+					bb.h
+				);
+
+				auxCtx.globalCompositeOperation = "destination-in";
+				auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+			} else {
+				auxCtx.globalCompositeOperation = "destination-in";
+				auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+				auxCtx.globalCompositeOperation = "destination-out";
+				auxCtx.drawImage(
+					maskPaintCanvas,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h,
+					0,
+					0,
+					bb.w,
+					bb.h
+				);
+			}
 			auxCtx.globalCompositeOperation = "destination-atop";
 			auxCtx.fillStyle = "#FFFF";
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
@@ -178,35 +197,36 @@ const dream_img2img_callback = (evn, state) => {
 		request.init_images = [auxCanvas.toDataURL()];
 
 		// Get mask image
+		auxCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
 		auxCtx.fillRect(0, 0, bb.w, bb.h);
 		auxCtx.globalCompositeOperation = "destination-out";
 		auxCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 
+		auxCtx.globalCompositeOperation = "destination-atop";
+		auxCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
+		auxCtx.fillRect(0, 0, bb.w, bb.h);
+
 		// Border Mask
-		if (state.borderMaskSize > 0) {
+		if (state.keepBorderSize > 0) {
+			auxCtx.globalCompositeOperation = "source-over";
 			auxCtx.fillStyle = "#000F";
-			auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
-			auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
+			auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
+			auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
 			auxCtx.fillRect(
-				bb.w - state.borderMaskSize,
+				bb.w - state.keepBorderSize,
 				0,
-				state.borderMaskSize,
+				state.keepBorderSize,
 				bb.h
 			);
 			auxCtx.fillRect(
 				0,
-				bb.h - state.borderMaskSize,
+				bb.h - state.keepBorderSize,
 				bb.w,
-				state.borderMaskSize
+				state.keepBorderSize
 			);
 		}
 
-		auxCtx.globalCompositeOperation = "destination-atop";
-		auxCtx.fillStyle = "#FFFF";
-		auxCtx.fillRect(0, 0, bb.w, bb.h);
 		request.mask = auxCanvas.toDataURL();
-
-		request.inpainting_mask_invert = true;
 
 		// Dream
 		dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
@@ -242,6 +262,7 @@ const dreamTool = () =>
 		{
 			init: (state) => {
 				state.snapToGrid = true;
+				state.invertMask = false;
 				state.overMaskPx = 0;
 				state.mousemovecb = (evn) => _reticle_draw(evn, state.snapToGrid);
 				state.dreamcb = (evn) => {
@@ -252,11 +273,22 @@ const dreamTool = () =>
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
+
+					// Snap to Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
 						"snapToGrid",
 						"Snap To Grid"
 					).label;
+
+					// Invert Mask Checkbox
+					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
+						state,
+						"invertMask",
+						"Invert Mask"
+					).label;
+
+					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
 						"overMaskPx",
@@ -268,6 +300,8 @@ const dreamTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.invertMaskLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 			},
@@ -301,9 +335,11 @@ const img2imgTool = () =>
 		{
 			init: (state) => {
 				state.snapToGrid = true;
+				state.invertMask = true;
+
 				state.denoisingStrength = 0.7;
 
-				state.borderMaskSize = 64;
+				state.keepBorderSize = 64;
 
 				state.mousemovecb = (evn) => {
 					_reticle_draw(evn, state.snapToGrid);
@@ -322,21 +358,21 @@ const img2imgTool = () =>
 						auxCanvas.height = bb.h;
 						const auxCtx = auxCanvas.getContext("2d");
 
-						if (state.borderMaskSize > 0) {
-							auxCtx.fillStyle = "#FF6A6A50";
-							auxCtx.fillRect(0, 0, state.borderMaskSize, bb.h);
-							auxCtx.fillRect(0, 0, bb.w, state.borderMaskSize);
+						if (state.keepBorderSize > 0) {
+							auxCtx.fillStyle = "#6A6AFF50";
+							auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
+							auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
 							auxCtx.fillRect(
-								bb.w - state.borderMaskSize,
+								bb.w - state.keepBorderSize,
 								0,
-								state.borderMaskSize,
+								state.keepBorderSize,
 								bb.h
 							);
 							auxCtx.fillRect(
 								0,
-								bb.h - state.borderMaskSize,
+								bb.h - state.keepBorderSize,
 								bb.w,
-								state.borderMaskSize
+								state.keepBorderSize
 							);
 						}
 
@@ -361,6 +397,13 @@ const img2imgTool = () =>
 						"Snap To Grid"
 					).label;
 
+					// Invert Mask Checkbox
+					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
+						state,
+						"invertMask",
+						"Invert Mask"
+					).label;
+
 					// Denoising Strength Slider
 					state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
 						state,
@@ -374,8 +417,8 @@ const img2imgTool = () =>
 					// Border Mask Size Slider
 					state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
 						state,
-						"borderMaskSize",
-						"Border Mask Size",
+						"keepBorderSize",
+						"Keep Border Size",
 						0,
 						128,
 						1
@@ -383,6 +426,8 @@ const img2imgTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.invertMaskLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
