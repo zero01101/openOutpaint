@@ -28,10 +28,15 @@
 				openOutpaint 🐠
 			</div>
 			<div id="info" class="menu-container" style="min-width: 200px">
-				<label for="host">Host</label>
-				<input id="host" value="http://127.0.0.1:7860" />
-				<br />
-
+				<label>
+					Host
+					<div class="host-field-wrapper">
+						<input id="host" value="http://127.0.0.1:7860" />
+						<div
+							id="connection-status-indicator"
+							class="connection-status"></div>
+					</div>
+				</label>
 				<!-- Prompts section -->
 				<button type="button" class="collapsible">Prompts</button>
 				<div class="content">
