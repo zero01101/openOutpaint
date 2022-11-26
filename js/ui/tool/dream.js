@@ -227,6 +227,7 @@ const dream_img2img_callback = (evn, state) => {
 		}
 
 		request.mask = auxCanvas.toDataURL();
+		request.inpaint_full_res = state.fullResolution;
 
 		// Dream
 		dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
@@ -336,6 +337,7 @@ const img2imgTool = () =>
 			init: (state) => {
 				state.snapToGrid = true;
 				state.invertMask = true;
+				state.fullResolution = false;
 
 				state.denoisingStrength = 0.7;
 
@@ -404,6 +406,13 @@ const img2imgTool = () =>
 						"Invert Mask"
 					).label;
 
+					// Inpaint Full Resolution Checkbox
+					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
+						state,
+						"fullResolution",
+						"Inpaint Full Resolution"
+					).label;
+
 					// Denoising Strength Slider
 					state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
 						state,
@@ -428,6 +437,8 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);

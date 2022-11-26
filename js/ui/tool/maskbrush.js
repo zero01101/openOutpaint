@@ -1,11 +1,17 @@
 const _mask_brush_draw_callback = (evn, state) => {
-	if (evn.initialTarget.id === "overlayCanvas") {
+	if (
+		(evn.initialTarget && evn.initialTarget.id === "overlayCanvas") ||
+		(!evn.initialTarget && evn.target.id === "overlayCanvas")
+	) {
 		maskPaintCtx.globalCompositeOperation = "source-over";
 		maskPaintCtx.strokeStyle = "#FF6A6A";
 
 		maskPaintCtx.lineWidth = state.brushSize;
 		maskPaintCtx.beginPath();
-		maskPaintCtx.moveTo(evn.px, evn.py);
+		maskPaintCtx.moveTo(
+			evn.px === undefined ? evn.x : evn.px,
+			evn.py === undefined ? evn.y : evn.py
+		);
 		maskPaintCtx.lineTo(evn.x, evn.y);
 		maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
 		maskPaintCtx.stroke();
@@ -13,13 +19,19 @@ const _mask_brush_draw_callback = (evn, state) => {
 };
 
 const _mask_brush_erase_callback = (evn, state) => {
-	if (evn.initialTarget.id === "overlayCanvas") {
+	if (
+		(evn.initialTarget && evn.initialTarget.id === "overlayCanvas") ||
+		(!evn.initialTarget && evn.target.id === "overlayCanvas")
+	) {
 		maskPaintCtx.globalCompositeOperation = "destination-out";
 		maskPaintCtx.strokeStyle = "#FFFFFFFF";
 
 		maskPaintCtx.lineWidth = state.brushSize;
 		maskPaintCtx.beginPath();
-		maskPaintCtx.moveTo(evn.px, evn.py);
+		maskPaintCtx.moveTo(
+			evn.px === undefined ? evn.x : evn.px,
+			evn.py === undefined ? evn.y : evn.py
+		);
 		maskPaintCtx.lineTo(evn.x, evn.y);
 		maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
 		maskPaintCtx.stroke();
@@ -38,14 +50,18 @@ const maskBrushTool = () =>
 			// Start Listeners
 			mouse.listen.canvas.onmousemove.on(state.movecb);
 			mouse.listen.canvas.onwheel.on(state.wheelcb);
+			mouse.listen.canvas.left.onpaintstart.on(state.drawcb);
 			mouse.listen.canvas.left.onpaint.on(state.drawcb);
+			mouse.listen.canvas.right.onpaintstart.on(state.erasecb);
 			mouse.listen.canvas.right.onpaint.on(state.erasecb);
 		},
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
 			mouse.listen.canvas.onwheel.clear(state.wheelcb);
+			mouse.listen.canvas.left.onpaintstart.clear(state.drawcb);
 			mouse.listen.canvas.left.onpaint.clear(state.drawcb);
+			mouse.listen.canvas.right.onpaintstart.clear(state.erasecb);
 			mouse.listen.canvas.right.onpaint.clear(state.erasecb);
 		},
 		{
