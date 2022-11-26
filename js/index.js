@@ -323,6 +323,8 @@ function testHostConnection() {
 			connectionStatus ? 30000 : 5000
 		);
 	};
+
+	checkAgain();
 }
 
 function dream(
