@@ -162,6 +162,66 @@ body {
 	text-overflow: ellipsis;
 }
 
+/* Host input */
+.host-field-wrapper {
+	position: relative;
+	display: flex;
+
+	align-items: center;
+	justify-content: space-between;
+
+	width: 100%;
+	height: fit-content;
+}
+
+.host-field-wrapper input {
+	display: block;
+}
+
+.host-field-wrapper .connection-status {
+	width: 15px;
+	height: 15px;
+
+	box-sizing: inherit;
+
+	border-radius: 50%;
+	margin: 5px;
+
+	cursor: pointer;
+
+	aspect-ratio: 1;
+}
+
+.host-field-wrapper .connection-status:hover {
+	width: 19px;
+	height: 19px;
+
+	margin: 3px;
+}
+
+.host-field-wrapper .connection-status:active {
+	width: 17px;
+	height: 17px;
+
+	margin: 4px;
+}
+
+.host-field-wrapper .connection-status.online {
+	background-color: #49dd49;
+}
+
+.host-field-wrapper .connection-status.offline {
+	background-color: #dd4949;
+}
+
+.host-field-wrapper .connection-status.cors-issue {
+	background-color: #dddd49;
+}
+
+input#host {
+	box-sizing: border-box;
+}
+
 /* Prompt Fields */
 
 div.prompt-wrapper {

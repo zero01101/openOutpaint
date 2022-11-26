@@ -113,11 +113,17 @@ const bgCanvas = document.getElementById("backgroundCanvas"); // gray bg grid
 const bgCtx = bgCanvas.getContext("2d");
 
 function startup() {
+	testHostConfiguration();
+	testHostConnection();
+
 	loadSettings();
 
 	const hostEl = document.getElementById("host");
-	hostEl.oninput = () => {
-		host = hostEl.value;
+	hostEl.onchange = () => {
+		host = hostEl.value.endsWith("/")
+			? hostEl.value.substring(0, hostEl.value.length - 1)
+			: hostEl.value;
+		hostEl.value = host;
 		localStorage.setItem("host", host);
 	};
 
@@ -135,10 +141,6 @@ function startup() {
 		localStorage.setItem("neg_prompt", stableDiffusionData.negative_prompt);
 	};
 
-	checkIfWebuiIsRunning();
-	getSamplers();
-	getUpscalers();
-	getModels();
 	drawBackground();
 	changeSampler();
 	changeMaskBlur();
@@ -149,6 +151,178 @@ function startup() {
 	document.getElementById("overlayCanvas").onmousedown = mouseDown;
 	document.getElementById("overlayCanvas").onmouseup = mouseUp;
 	document.getElementById("scaleFactor").value = scaleFactor;
+}
+
+/**
+ * Initial connection checks
+ */
+function testHostConfiguration() {
+	/**
+	 * Check host configuration
+	 */
+	const hostEl = document.getElementById("host");
+
+	const requestHost = (prompt, def = "http://127.0.0.1:7860") => {
+		let value = window.prompt(prompt, def);
+		if (value === null) value = "http://127.0.0.1:7860";
+
+		value = value.endsWith("/") ? value.substring(0, value.length - 1) : value;
+		host = value;
+		hostEl.value = host;
+		localStorage.setItem("host", host);
+
+		testHostConfiguration();
+	};
+
+	const current = localStorage.getItem("host");
+	if (current) {
+		if (!current.match(/^https?:\/\/[a-z0-9][a-z0-9.]+[a-z0-9](:[0-9]+)?$/i))
+			requestHost(
+				"Host seems to be invalid! Please fix your host here:",
+				current
+			);
+	} else {
+		requestHost(
+			"This seems to be the first time you are using openOutpaint! Please set your host here:"
+		);
+	}
+}
+
+function testHostConnection() {
+	function CheckInProgressError(message = "") {
+		this.name = "CheckInProgressError";
+		this.message = message;
+	}
+	CheckInProgressError.prototype = Object.create(Error.prototype);
+
+	const connectionIndicator = document.getElementById(
+		"connection-status-indicator"
+	);
+
+	let connectionStatus = false;
+	let firstTimeOnline = true;
+
+	const setConnectionStatus = (status) => {
+		const statuses = {
+			online: () => {
+				connectionIndicator.classList.add("online");
+				connectionIndicator.classList.remove(
+					"cors-issue",
+					"offline",
+					"server-error"
+				);
+				connectionIndicator.title = "Connected";
+				connectionStatus = true;
+			},
+			error: () => {
+				connectionIndicator.classList.add("server-error");
+				connectionIndicator.classList.remove("online", "offline", "cors-issue");
+				connectionIndicator.title =
+					"Server is online, but is returning an error response";
+				connectionStatus = false;
+			},
+			corsissue: () => {
+				connectionIndicator.classList.add("cors-issue");
+				connectionIndicator.classList.remove(
+					"online",
+					"offline",
+					"server-error"
+				);
+				connectionIndicator.title =
+					"Server is online, but CORS is blocking our requests";
+				connectionStatus = false;
+			},
+			offline: () => {
+				connectionIndicator.classList.add("offline");
+				connectionIndicator.classList.remove(
+					"cors-issue",
+					"online",
+					"server-error"
+				);
+				connectionIndicator.title =
+					"Server seems to be offline. Please check the console for more information.";
+				connectionStatus = false;
+			},
+		};
+
+		statuses[status] && statuses[status]();
+	};
+
+	let checkInProgress = false;
+
+	const checkConnection = async (notify = false) => {
+		if (checkInProgress)
+			throw new CheckInProgressError(
+				"Check is currently in progress, please try again"
+			);
+		checkInProgress = true;
+		var url = document.getElementById("host").value + "/startup-events";
+		// Attempt normal request
+		try {
+			const response = await fetch(url);
+
+			if (response.status === 200) {
+				setConnectionStatus("online");
+				// Load data as soon as connection is first stablished
+				if (firstTimeOnline) {
+					getSamplers();
+					getUpscalers();
+					getModels();
+					firstTimeOnline = false;
+				}
+			} else {
+				setConnectionStatus("error");
+				const message = `Server responded with ${response.status} - ${response.statusText}. Try running the webui with the flag '--api'`;
+				console.error(message);
+				if (notify) alert(message);
+			}
+		} catch (e) {
+			try {
+				// Tests if problem is CORS
+				await fetch(url, {mode: "no-cors"});
+
+				setConnectionStatus("corsissue");
+				const message = `CORS is blocking our requests. Try running the webui with the flag '--cors-allow-origins=${document.URL.substring(
+					0,
+					document.URL.length - 1
+				)}'`;
+				console.error(message);
+				if (notify) alert(message);
+			} catch (e) {
+				setConnectionStatus("offline");
+				const message = `The server seems to be offline. Is host '${
+					document.getElementById("host").value
+				}' correct?`;
+				console.error(message);
+				if (notify) alert(message);
+			}
+		}
+		checkInProgress = false;
+		return status;
+	};
+
+	checkConnection(true);
+
+	// On click, attempt to refresh
+	connectionIndicator.onclick = async () => {
+		try {
+			await checkConnection(true);
+			checked = true;
+		} catch (e) {
+			console.debug("Already refreshing");
+		}
+	};
+
+	// Checks every 5 seconds if offline, 30 seconds if online
+	const checkAgain = () => {
+		setTimeout(
+			() => {
+				checkConnection();
+				checkAgain();
+			},
+			connectionStatus ? 30000 : 5000
+		);
+	};
 }
 
 function dream(
@@ -631,22 +805,6 @@ function drawBackground() {
 	}
 }
 
-function checkIfWebuiIsRunning() {
-	var url = document.getElementById("host").value + "/startup-events";
-	fetch(url)
-		.then((response) => {
-			if (response.status == 200) {
-				console.log("webui is running");
-			}
-		})
-		.catch((error) => {
-			alert(
-				"WebUI doesnt seem to be running, please start it and try again\nCheck console for additional info\n" +
-					error
-			);
-		});
-}
-
 function getUpscalers() {
 	/*
 	 so for some reason when upscalers request returns upscalers, the real-esrgan model names are incorrect, and need to be fetched from /sdapi/v1/realesrgan-models
@@ -880,10 +1038,6 @@ async function upscaleAndDownload() {
 
 function loadSettings() {
 	// set default values if not set
-	var _host =
-		localStorage.getItem("host") == null
-			? "http://127.0.0.1:7860"
-			: localStorage.getItem("host");
 	var _prompt =
 		localStorage.getItem("prompt") == null
 			? "ocean floor scientific expedition, underwater wildlife"
@@ -918,7 +1072,6 @@ function loadSettings() {
 			: localStorage.getItem("overmask_px");
 
 	// set the values into the UI
-	document.getElementById("host").value = String(_host);
 	document.getElementById("prompt").value = String(_prompt);
 	document.getElementById("prompt").title = String(_prompt);
 	document.getElementById("negPrompt").value = String(_negprompt);
