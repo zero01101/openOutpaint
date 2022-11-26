@@ -1,6 +1,8 @@
 # hello there 🐠
 
-[openOutpaint creating some undersea wildlife](https://user-images.githubusercontent.com/1649724/203454747-9984d408-c973-4e4a-8085-fb1ee6574ff7.webm)
+[openOutpaint creating some undersea... well, stuff](https://user-images.githubusercontent.com/1649724/204071400-7d089e80-b4f7-4efd-b8bb-cc8ad2c46b22.webm)
+
+_demo example current as of [8667f94](https://github.com/zero01101/openOutpaint/commit/8667f94f12105efeeeee3389d3add8036e3552ab) / 2022-11-25_
 
 this is a completely vanilla javascript and html canvas outpainting convenience doodad built for the API optionally exposed by [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), operating similarly to a few others which certainly have superior functionality. this simply offers an alternative for my following vain desires:
 
