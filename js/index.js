@@ -886,7 +886,7 @@ function loadSettings() {
 			: localStorage.getItem("host");
 	var _prompt =
 		localStorage.getItem("prompt") == null
-			? "oceanographic study, underwater wildlife, award winning"
+			? "ocean floor scientific expedition, underwater wildlife"
 			: localStorage.getItem("prompt");
 	var _negprompt =
 		localStorage.getItem("neg_prompt") == null
