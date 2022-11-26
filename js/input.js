@@ -323,7 +323,6 @@ window.onmousemove = (evn) => {
 window.addEventListener(
 	"wheel",
 	(evn) => {
-		evn.preventDefault();
 		mouse.contexts.forEach(({name}) => {
 			mouse.listen[name].onwheel.emit({
 				target: evn.target,
