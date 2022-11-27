@@ -93,6 +93,8 @@ const maskBrushTool = () =>
 
 			// Hide Mask
 			setMask("none");
+			state.ctxmenu.previewMaskButton.remove("active");
+			maskPaintCanvas.classList.remove("opaque");
 		},
 		{
 			init: (state) => {
@@ -146,9 +148,46 @@ const maskBrushTool = () =>
 					);
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
+
+					// Some mask-related action buttons
+					const actionArray = document.createElement("div");
+					actionArray.classList.add("button-array");
+
+					const clearMaskButton = document.createElement("button");
+					clearMaskButton.classList.add("button", "tool");
+					clearMaskButton.textContent = "Clear";
+					clearMaskButton.title = "Clears Painted Mask";
+					clearMaskButton.onclick = () => {
+						maskPaintCtx.clearRect(
+							0,
+							0,
+							maskPaintCanvas.width,
+							maskPaintCanvas.height
+						);
+					};
+
+					const previewMaskButton = document.createElement("button");
+					previewMaskButton.classList.add("button", "tool");
+					previewMaskButton.textContent = "Preview";
+					previewMaskButton.title = "Displays Mask with Full Opacity";
+					previewMaskButton.onclick = () => {
+						if (previewMaskButton.classList.contains("active")) {
+							maskPaintCanvas.classList.remove("opaque");
+						} else {
+							maskPaintCanvas.classList.add("opaque");
+						}
+						previewMaskButton.classList.toggle("active");
+					};
+
+					actionArray.appendChild(clearMaskButton);
+					actionArray.appendChild(previewMaskButton);
+
+					state.ctxmenu.previewMaskButton = previewMaskButton;
+					state.ctxmenu.actionArray = actionArray;
 				}
 
 				menu.appendChild(state.ctxmenu.brushSizeSlider);
+				menu.appendChild(state.ctxmenu.actionArray);
 			},
 			shortcut: "M",
 		}
