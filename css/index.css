@@ -146,8 +146,25 @@ body {
 	position: absolute;
 }
 
+/* Mask colors for mask inversion */
+/* Filters are some magic acquired at https://codepen.io/sosuke/pen/Pjoqqp */
 .maskPaintCanvas {
-	filter: opacity(40%);
+	opacity: 0%;
+}
+
+.maskPaintCanvas.display {
+	opacity: 40%;
+	filter: invert(100%);
+}
+
+.maskPaintCanvas.display.clear {
+	filter: invert(71%) sepia(46%) saturate(6615%) hue-rotate(321deg)
+		brightness(106%) contrast(100%);
+}
+
+.maskPaintCanvas.display.hold {
+	filter: invert(41%) sepia(16%) saturate(5181%) hue-rotate(218deg)
+		brightness(103%) contrast(108%);
 }
 
 .strokeText {

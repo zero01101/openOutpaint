@@ -1,10 +1,34 @@
+const setMask = (state) => {
+	const canvas = document.querySelector("#maskPaintCanvas");
+	switch (state) {
+		case "clear":
+			canvas.classList.remove("hold");
+			canvas.classList.add("display", "clear");
+			break;
+		case "hold":
+			canvas.classList.remove("clear");
+			canvas.classList.add("display", "hold");
+			break;
+		case "neutral":
+			canvas.classList.remove("clear", "hold");
+			canvas.classList.add("display");
+			break;
+		case "none":
+			canvas.classList.remove("display", "hold", "clear");
+			break;
+		default:
+			console.debug(`Invalid mask type: ${state}`);
+			break;
+	}
+};
+
 const _mask_brush_draw_callback = (evn, state) => {
 	if (
 		(evn.initialTarget && evn.initialTarget.id === "overlayCanvas") ||
 		(!evn.initialTarget && evn.target.id === "overlayCanvas")
 	) {
 		maskPaintCtx.globalCompositeOperation = "source-over";
-		maskPaintCtx.strokeStyle = "#FF6A6A";
+		maskPaintCtx.strokeStyle = "black";
 
 		maskPaintCtx.lineWidth = state.brushSize;
 		maskPaintCtx.beginPath();
@@ -24,7 +48,7 @@ const _mask_brush_erase_callback = (evn, state) => {
 		(!evn.initialTarget && evn.target.id === "overlayCanvas")
 	) {
 		maskPaintCtx.globalCompositeOperation = "destination-out";
-		maskPaintCtx.strokeStyle = "#FFFFFFFF";
+		maskPaintCtx.strokeStyle = "black";
 
 		maskPaintCtx.lineWidth = state.brushSize;
 		maskPaintCtx.beginPath();
@@ -54,6 +78,9 @@ const maskBrushTool = () =>
 			mouse.listen.canvas.left.onpaint.on(state.drawcb);
 			mouse.listen.canvas.right.onpaintstart.on(state.erasecb);
 			mouse.listen.canvas.right.onpaint.on(state.erasecb);
+
+			// Display Mask
+			setMask("neutral");
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -63,6 +90,9 @@ const maskBrushTool = () =>
 			mouse.listen.canvas.left.onpaint.clear(state.drawcb);
 			mouse.listen.canvas.right.onpaintstart.clear(state.erasecb);
 			mouse.listen.canvas.right.onpaint.clear(state.erasecb);
+
+			// Hide Mask
+			setMask("none");
 		},
 		{
 			init: (state) => {
@@ -81,10 +111,10 @@ const maskBrushTool = () =>
 
 				state.movecb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
-						// draw big translucent red blob cursor
+						// draw big translucent white blob cursor
 						ovCtx.beginPath();
 						ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-						ovCtx.fillStyle = "#FF6A6A50";
+						ovCtx.fillStyle = "#FFFFFF50";
 						ovCtx.fill();
 					}
 				};

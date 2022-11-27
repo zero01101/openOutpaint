@@ -253,12 +253,18 @@ const dreamTool = () =>
 			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
 			mouse.listen.canvas.left.onclick.on(state.dreamcb);
 			mouse.listen.canvas.right.onclick.on(state.erasecb);
+
+			// Display Mask
+			setMask(state.invertMask ? "hold" : "clear");
 		},
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
 			mouse.listen.canvas.left.onclick.clear(state.dreamcb);
 			mouse.listen.canvas.right.onclick.clear(state.erasecb);
+
+			// Hide Mask
+			setMask("none");
 		},
 		{
 			init: (state) => {
@@ -286,7 +292,10 @@ const dreamTool = () =>
 					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
 						state,
 						"invertMask",
-						"Invert Mask"
+						"Invert Mask",
+						() => {
+							setMask(state.invertMask ? "hold" : "clear");
+						}
 					).label;
 
 					// Overmasking Slider
@@ -326,12 +335,18 @@ const img2imgTool = () =>
 			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
 			mouse.listen.canvas.left.onclick.on(state.dreamcb);
 			mouse.listen.canvas.right.onclick.on(state.erasecb);
+
+			// Display Mask
+			setMask(state.invertMask ? "hold" : "clear");
 		},
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
 			mouse.listen.canvas.left.onclick.clear(state.dreamcb);
 			mouse.listen.canvas.right.onclick.clear(state.erasecb);
+
+			// Hide mask
+			setMask("none");
 		},
 		{
 			init: (state) => {
@@ -361,7 +376,7 @@ const img2imgTool = () =>
 						const auxCtx = auxCanvas.getContext("2d");
 
 						if (state.keepBorderSize > 0) {
-							auxCtx.fillStyle = "#6A6AFF50";
+							auxCtx.fillStyle = "#6A6AFF7F";
 							auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
 							auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
 							auxCtx.fillRect(
@@ -403,7 +418,10 @@ const img2imgTool = () =>
 					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
 						state,
 						"invertMask",
-						"Invert Mask"
+						"Invert Mask",
+						() => {
+							setMask(state.invertMask ? "hold" : "clear");
+						}
 					).label;
 
 					// Inpaint Full Resolution Checkbox
