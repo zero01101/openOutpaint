@@ -7,6 +7,8 @@
 		<link href="css/colors.css" rel="stylesheet" />
 
 		<link href="css/index.css" rel="stylesheet" />
+		<link href="css/layers.css" rel="stylesheet" />
+
 		<link href="css/ui/generic.css" rel="stylesheet" />
 
 		<link href="css/ui/history.css" rel="stylesheet" />
@@ -187,6 +189,17 @@
 			</div>
 			<div class="lock-indicator" id="toolbar-lock-indicator"></div>
 			<div class="toolbar-section"></div>
+		</div>
+
+		<!-- Layer Allocation View -->
+		<div
+			id="layer-preview"
+			class="floating-window toolbar"
+			style="left: 10px; bottom: 10px">
+			<div class="draggable floating-window-title">Layer Debug View</div>
+			<div class="menu-container" style="min-width: 200px">
+				<canvas class="preview-canvas"></canvas>
+			</div>
 		</div>
 
 		<!-- Canvases -->
