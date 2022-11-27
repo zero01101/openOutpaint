@@ -153,7 +153,7 @@ const stampTool = () =>
 				};
 
 				state.movecb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
+					if (evn.target && evn.target.id === "overlayCanvas") {
 						let x = evn.x;
 						let y = evn.y;
 						if (state.snapToGrid) {

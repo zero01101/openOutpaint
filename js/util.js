@@ -35,7 +35,7 @@ const guid = (size = 3) => {
 			.toString(16)
 			.substring(1);
 	};
-	// returns id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
+	// returns id of format 'aaaa'-'aaaa'-'aaaa' by default
 	let id = "";
 	for (var i = 0; i < size - 1; i++) id += s4() + "-";
 	id += s4();

@@ -30,52 +30,6 @@ body {
 	grid-row-gap: 5px;
 }
 
-.button-array {
-	display: flex;
-	justify-content: stretch;
-}
-
-.button-array > .button.tool {
-	flex: 1;
-	border-radius: 0;
-}
-
-.button-array > .button.tool:first-child {
-	border-top-left-radius: 5px;
-	border-bottom-left-radius: 5px;
-}
-
-.button-array > .button.tool:last-child {
-	border-top-right-radius: 5px;
-	border-bottom-right-radius: 5px;
-}
-
-.button.tool {
-	background-color: rgb(0, 0, 50);
-	color: rgb(255, 255, 255);
-	border-radius: 5px;
-	cursor: pointer;
-	border: none;
-	text-align: center;
-	outline: none;
-	font-size: 15px;
-	padding: 5px;
-	margin-top: 5px;
-	margin-bottom: 5px;
-}
-
-.button.tool:disabled {
-	background-color: #666 !important;
-	cursor: default;
-}
-
-.button.tool:hover {
-	background-color: rgb(30, 30, 80);
-}
-.button.tool:active {
-	background-color: rgb(60, 60, 130);
-}
-
 .collapsible {
 	background-color: rgb(0, 0, 0);
 	color: rgb(255, 255, 255);
@@ -146,8 +100,29 @@ body {
 	position: absolute;
 }
 
+/* Mask colors for mask inversion */
+/* Filters are some magic acquired at https://codepen.io/sosuke/pen/Pjoqqp */
 .maskPaintCanvas {
-	filter: opacity(40%);
+	opacity: 0%;
+}
+
+.maskPaintCanvas.display {
+	opacity: 40%;
+	filter: invert(100%);
+}
+
+.maskPaintCanvas.display.opaque {
+	opacity: 100%;
+}
+
+.maskPaintCanvas.display.clear {
+	filter: invert(71%) sepia(46%) saturate(6615%) hue-rotate(321deg)
+		brightness(106%) contrast(100%);
+}
+
+.maskPaintCanvas.display.hold {
+	filter: invert(41%) sepia(16%) saturate(5181%) hue-rotate(218deg)
+		brightness(103%) contrast(108%);
 }
 
 .strokeText {
@@ -242,4 +217,52 @@ div.prompt-wrapper > textarea {
 
 div.prompt-wrapper > textarea:focus {
 	width: 700px;
+}
+
+/* Tool buttons */
+
+.button-array {
+	display: flex;
+	justify-content: stretch;
+}
+
+.button-array > .button.tool {
+	flex: 1;
+	border-radius: 0;
+}
+
+.button-array > .button.tool:first-child {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.button-array > .button.tool:last-child {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.button-array > .button.tool {
+	background-color: rgb(0, 0, 50);
+	color: rgb(255, 255, 255);
+	cursor: pointer;
+	border: none;
+	text-align: center;
+	outline: none;
+	font-size: 15px;
+	padding: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.button-array > .button.tool:disabled {
+	background-color: #666 !important;
+	cursor: default;
+}
+
+.button-array > .button.tool:hover {
+	background-color: rgb(30, 30, 80);
+}
+.button-array > .button.tool:active,
+.button.tool.active {
+	background-color: rgb(60, 60, 130);
 }
