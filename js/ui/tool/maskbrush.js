@@ -93,8 +93,9 @@ const maskBrushTool = () =>
 
 			// Hide Mask
 			setMask("none");
-			state.ctxmenu.previewMaskButton.remove("active");
+			state.ctxmenu.previewMaskButton.classList.remove("active");
 			maskPaintCanvas.classList.remove("opaque");
+			state.preview = false;
 		},
 		{
 			init: (state) => {
@@ -111,13 +112,23 @@ const maskBrushTool = () =>
 					state.ctxmenu.brushSizeText.value = size;
 				};
 
+				state.preview = false;
+
 				state.movecb = (evn) => {
 					if (evn.target.id === "overlayCanvas") {
 						// draw big translucent white blob cursor
 						ovCtx.beginPath();
 						ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
 						ovCtx.fillStyle = "#FFFFFF50";
+
 						ovCtx.fill();
+
+						if (state.preview) {
+							ovCtx.strokeStyle = "#000F";
+							ovCtx.setLineDash([4, 2]);
+							ovCtx.stroke();
+							ovCtx.setLineDash([]);
+						}
 					}
 				};
 
@@ -173,16 +184,19 @@ const maskBrushTool = () =>
 					previewMaskButton.onclick = () => {
 						if (previewMaskButton.classList.contains("active")) {
 							maskPaintCanvas.classList.remove("opaque");
+							state.preview = false;
 						} else {
 							maskPaintCanvas.classList.add("opaque");
+							state.preview = true;
 						}
 						previewMaskButton.classList.toggle("active");
 					};
 
+					state.ctxmenu.previewMaskButton = previewMaskButton;
+
 					actionArray.appendChild(clearMaskButton);
 					actionArray.appendChild(previewMaskButton);
 
-					state.ctxmenu.previewMaskButton = previewMaskButton;
 					state.ctxmenu.actionArray = actionArray;
 				}
 
