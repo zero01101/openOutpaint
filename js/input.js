@@ -10,29 +10,32 @@ const inputConfig = {
  * Mouse input processing
  */
 // Base object generator functions
-function _mouse_observers() {
-	return {
-		// Simple click handler
-		onclick: new Observer(),
-		// Double click handler (will still trigger simple click handler as well)
-		ondclick: new Observer(),
-		// Drag handler
-		ondragstart: new Observer(),
-		ondrag: new Observer(),
-		ondragend: new Observer(),
-		// Paint handler (like drag handler, but with no delay); will trigger during clicks too
-		onpaintstart: new Observer(),
-		onpaint: new Observer(),
-		onpaintend: new Observer(),
-	};
+function _mouse_observers(name = "generic_mouse_observer_array") {
+	return makeReadOnly(
+		{
+			// Simple click handler
+			onclick: new Observer(),
+			// Double click handler (will still trigger simple click handler as well)
+			ondclick: new Observer(),
+			// Drag handler
+			ondragstart: new Observer(),
+			ondrag: new Observer(),
+			ondragend: new Observer(),
+			// Paint handler (like drag handler, but with no delay); will trigger during clicks too
+			onpaintstart: new Observer(),
+			onpaint: new Observer(),
+			onpaintend: new Observer(),
+		},
+		name
+	);
 }
 
 const mouse = {
-	contexts: [],
+	_contexts: [],
 	buttons: {},
-	coords: {},
+	coords: makeWriteOnce({}, "mouse.coords"),
 
-	listen: {},
+	listen: makeWriteOnce({}, "mouse.listen"),
 
 	// Register Context
 	registerContext: (name, onmove, options = {}) => {
@@ -76,7 +79,9 @@ const mouse = {
 		Object.keys(options.buttons).forEach((index) => {
 			const button = options.buttons[index];
 			mouse.coords[name].dragging[button] = null;
-			mouse.listen[name][button] = _mouse_observers();
+			mouse.listen[name][button] = _mouse_observers(
+				`mouse.listen[${name}][${button}]`
+			);
 		});
 
 		// Add to context
@@ -84,7 +89,7 @@ const mouse = {
 		context.listen = mouse.listen[name];
 
 		// Add to list
-		mouse.contexts.push(context);
+		mouse._contexts.push(context);
 
 		return context;
 	},
@@ -98,7 +103,7 @@ window.onmousedown = (evn) => {
 
 	if (_double_click_timeout[evn.button]) {
 		// ondclick event
-		mouse.contexts.forEach(({target, name, buttons}) => {
+		mouse._contexts.forEach(({target, name, buttons}) => {
 			if ((!target || target === evn.target) && buttons[evn.button])
 				mouse.listen[name][buttons[evn.button]].ondclick.emit({
 					target: evn.target,
@@ -119,7 +124,7 @@ window.onmousedown = (evn) => {
 
 	// Set drag start timeout
 	_drag_start_timeout[evn.button] = setTimeout(() => {
-		mouse.contexts.forEach(({target, name, buttons}) => {
+		mouse._contexts.forEach(({target, name, buttons}) => {
 			const key = buttons[evn.button];
 			if (
 				(!target || target === evn.target) &&
@@ -143,7 +148,7 @@ window.onmousedown = (evn) => {
 
 	mouse.buttons[evn.button] = time;
 
-	mouse.contexts.forEach(({target, name, buttons}) => {
+	mouse._contexts.forEach(({target, name, buttons}) => {
 		const key = buttons[evn.button];
 		if ((!target || target === evn.target) && key) {
 			mouse.coords[name].dragging[key] = {};
@@ -166,7 +171,7 @@ window.onmousedown = (evn) => {
 window.onmouseup = (evn) => {
 	const time = performance.now();
 
-	mouse.contexts.forEach(({target, name, buttons}) => {
+	mouse._contexts.forEach(({target, name, buttons}) => {
 		const key = buttons[evn.button];
 		if (
 			(!target || target === evn.target) &&
@@ -235,7 +240,7 @@ window.onmouseup = (evn) => {
 };
 
 window.onmousemove = (evn) => {
-	mouse.contexts.forEach((context) => {
+	mouse._contexts.forEach((context) => {
 		const target = context.target;
 		const name = context.name;
 
@@ -323,7 +328,7 @@ window.onmousemove = (evn) => {
 window.addEventListener(
 	"wheel",
 	(evn) => {
-		mouse.contexts.forEach(({name}) => {
+		mouse._contexts.forEach(({name}) => {
 			mouse.listen[name].onwheel.emit({
 				target: evn.target,
 				delta: evn.deltaY,

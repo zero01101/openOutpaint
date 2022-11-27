@@ -53,6 +53,32 @@ function defaultOpt(options, defaults) {
 }
 
 /**
+ * Make object read-only
+ */
+function makeReadOnly(obj, name = "read-only object") {
+	return new Proxy(obj, {
+		set: (obj, prop, value) => {
+			throw new ProxyReadOnlySetError(
+				`Tried setting the '${prop}' property on '${name}'`
+			);
+		},
+	});
+}
+
+// Makes an object so you can't rewrite already written values
+function makeWriteOnce(obj, name = "write-once object") {
+	return new Proxy(obj, {
+		set: (obj, prop, value) => {
+			if (obj[prop] !== undefined)
+				throw new ProxyWriteOnceSetError(
+					`Tried setting the '${prop}' property on '${name}' after it was already set`
+				);
+			obj[prop] = value;
+		},
+	});
+}
+
+/**
  * Bounding box Calculation
  */
 function snap(i, scaled = true, gridSize = 64) {
