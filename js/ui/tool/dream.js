@@ -53,6 +53,8 @@ const dream_generate_callback = (evn, state) => {
 			auxCtx.fillStyle = "#000F";
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
 			if (state.invertMask) {
+				// overmasking by definition is entirely pointless with an inverted mask outpaint
+				// since it should explicitly avoid brushed masks too, we just won't even bother
 				auxCtx.globalCompositeOperation = "destination-in";
 				auxCtx.drawImage(
 					maskPaintCanvas,
@@ -71,7 +73,17 @@ const dream_generate_callback = (evn, state) => {
 			} else {
 				auxCtx.globalCompositeOperation = "destination-in";
 				auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-				auxCtx.globalCompositeOperation = "destination-out";
+				// here's where to overmask to avoid including the brushed mask
+				// 99% of my issues were from failing to set source-over for the overmask blotches
+				if (state.overMaskPx > 0) {
+					// transparent to white first
+					auxCtx.globalCompositeOperation = "destination-atop";
+					auxCtx.fillStyle = "#FFFF";
+					auxCtx.fillRect(0, 0, bb.w, bb.h);
+					applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
+				}
+
+				auxCtx.globalCompositeOperation = "destination-out"; // ???
 				auxCtx.drawImage(
 					maskPaintCanvas,
 					bb.x,
@@ -87,11 +99,7 @@ const dream_generate_callback = (evn, state) => {
 			auxCtx.globalCompositeOperation = "destination-atop";
 			auxCtx.fillStyle = "#FFFF";
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
-			var currentMask = auxCanvas.toDataURL();
-			request.mask =
-				state.overMaskPx > 0
-					? applyOvermask(auxCanvas, auxCtx, state.overMaskPx, currentMask)
-					: currentMask;
+			request.mask = auxCanvas.toDataURL();
 			// Dream
 			dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
 		}
@@ -112,21 +120,17 @@ function applyOvermask(canvas, ctx, px) {
 	// :badpokerface: look it might be all placebo but i like overmask lol
 	// yes it's crushingly inefficient i knooow :( must fix
 	// https://stackoverflow.com/a/30204783 was instrumental to this working or completely to blame for this disaster depending on your interpretation
-	const tmpOvermaskCanvas = document.createElement("canvas");
-	tmpOvermaskCanvas.width = canvas.width;
-	tmpOvermaskCanvas.height = canvas.height;
+	ctx.globalCompositeOperation = "source-over";
 	var ctxImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	const omCtx = tmpOvermaskCanvas.getContext("2d");
-	omCtx.putImageData(ctxImgData, 0, 0);
 	for (i = 0; i < ctxImgData.data.length; i += 4) {
 		if (ctxImgData.data[i] == 255) {
 			// white pixel?
 			// just blotch all over the thing
 			var rando = Math.floor(Math.random() * px);
-			omCtx.beginPath();
-			omCtx.arc(
-				(i / 4) % tmpOvermaskCanvas.width,
-				Math.floor(i / 4 / tmpOvermaskCanvas.width),
+			ctx.beginPath();
+			ctx.arc(
+				(i / 4) % canvas.width,
+				Math.floor(i / 4 / canvas.width),
 				scaleFactor +
 					rando +
 					(rando > scaleFactor ? rando / scaleFactor : scaleFactor / rando), // was 4 * sf + rando, too big, but i think i want it more ... random
@@ -134,11 +138,10 @@ function applyOvermask(canvas, ctx, px) {
 				2 * Math.PI,
 				true
 			);
-			omCtx.fillStyle = "#FFFFFFFF";
-			omCtx.fill();
+			ctx.fillStyle = "#FFFF";
+			ctx.fill();
 		}
 	}
-	return tmpOvermaskCanvas.toDataURL();
 }
 
 /**
