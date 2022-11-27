@@ -914,16 +914,12 @@ async function getModels() {
 			}
 		});
 
-	/* 	To get the current model, we might need to call /config/ which returns a json file with EVERYTHING from the webui, 25k lines of json... i havent figured out any other way to get the model thats loaded
-		response >> components >> second component(quicksettings with checkpoint chooser as default) >> value = the current model
-		The current model we get only updates on full restart of WebUI, so if we change the model, and then refresh the page, it will still show the old model.
-		We could just not show the current model, but i think it would be nice to show it.
-	*/
-	await fetch(document.getElementById("host").value + "/config/")
+	// get currently loaded model
+
+	await fetch(document.getElementById("host").value + "/sdapi/v1/options")
 		.then((response) => response.json())
 		.then((data) => {
-			//console.log(data)
-			var model = data.components[1].props.value;
+			var model = data.sd_model_checkpoint;
 			console.log("Current model: " + model);
 			modelSelect.value = model;
 		});
