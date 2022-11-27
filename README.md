@@ -28,6 +28,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - upscaler support for final output images _(NOTE: LDSR has had reports of not operating correctly when selected - please test and see if it works as expected)_
 - saves your preferences to browser localstorage for maximum convenience
 - floating navigable undo/redo palette with ctrl+z/y keyboard shortcuts for additional maximum convenience
+- inverted mask modes - red masks get mutated, blue masks stay the same
 
 ## collaborator credits 👑
 
