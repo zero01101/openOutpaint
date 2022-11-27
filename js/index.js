@@ -112,6 +112,22 @@ const imgCtx = imgCanvas.getContext("2d");
 const bgCanvas = document.getElementById("backgroundCanvas"); // gray bg grid
 const bgCtx = bgCanvas.getContext("2d");
 
+// Layering
+const imageCollection = layers.registerCollection("image", {
+	name: "Image Layers",
+	scope: {
+		always: {
+			key: "default",
+			options: {
+				name: "Default Image Layer",
+			},
+		},
+	},
+});
+
+layers.registerCollection("mask", {name: "Mask Layers", requiresActive: true});
+
+//
 function startup() {
 	testHostConfiguration();
 	testHostConnection();
