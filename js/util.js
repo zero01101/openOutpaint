@@ -33,8 +33,8 @@ class Observer {
 	 * @param {any} msg The message to send to the observers
 	 */
 	async emit(msg) {
-		Promise.all(
-			Array.from(this._handlers).map((handler) => async () => {
+		return Promise.all(
+			Array.from(this._handlers).map(async (handler) => {
 				try {
 					await handler(msg);
 				} catch (e) {
