@@ -154,7 +154,7 @@ const commands = makeReadOnly(
 		 */
 		runCommand(name, title, options = null) {
 			if (!this._types[name])
-				throw CommandNonExistentError(
+				throw new CommandNonExistentError(
 					`[commands] Command '${name}' does not exist`
 				);
 			this._types[name](title, options);
