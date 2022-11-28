@@ -4,6 +4,9 @@
 
 const _commands_events = new Observer();
 
+/** CommandNonExistentError */
+class CommandNonExistentError extends Error {}
+
 /** Global Commands Object */
 const commands = makeReadOnly(
 	{
@@ -150,6 +153,10 @@ const commands = makeReadOnly(
 		 * @param {any} options The options to be sent to the command to be run
 		 */
 		runCommand(name, title, options = null) {
+			if (!this._types[name])
+				throw CommandNonExistentError(
+					`[commands] Command '${name}' does not exist`
+				);
 			this._types[name](title, options);
 		},
 	},
