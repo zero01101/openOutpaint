@@ -241,7 +241,7 @@ div.prompt-wrapper > textarea:focus {
 	border-bottom-right-radius: 5px;
 }
 
-.button-array > .button.tool {
+.button.tool {
 	background-color: rgb(0, 0, 50);
 	color: rgb(255, 255, 255);
 	cursor: pointer;
@@ -254,15 +254,15 @@ div.prompt-wrapper > textarea:focus {
 	margin-bottom: 5px;
 }
 
-.button-array > .button.tool:disabled {
+.button.tool:disabled {
 	background-color: #666 !important;
 	cursor: default;
 }
 
-.button-array > .button.tool:hover {
+.button.tool:hover {
 	background-color: rgb(30, 30, 80);
 }
-.button-array > .button.tool:active,
+.button.tool:active,
 .button.tool.active {
 	background-color: rgb(60, 60, 130);
 }

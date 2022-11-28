@@ -4,122 +4,158 @@
 
 const _commands_events = new Observer();
 
-const commands = {
-	current: -1,
-	history: [],
-	undo(n = 1) {
-		for (var i = 0; i < n && this.current > -1; i++) {
-			this.history[this.current--].undo();
-		}
-	},
-	redo(n = 1) {
-		for (var i = 0; i < n && this.current + 1 < this.history.length; i++) {
-			this.history[++this.current].redo();
-		}
-	},
+/** Global Commands Object */
+const commands = makeReadOnly(
+	{
+		/** Current History Index Reader */
+		get current() {
+			return this._current;
+		},
+		/** Current History Index (private) */
+		_current: -1,
+		/** Command History (private) */
+		_history: [],
+		/** The types of commands we can run (private) */
+		_types: {},
 
-	/**
-	 * These are basic commands that can be done/undone
-	 *
-	 * They must contain a 'run' method that performs the action the first time,
-	 * a 'undo' method that undoes that action and a 'redo' method that does the
-	 * action again, but without requiring parameters. 'redo' is by default the
-	 * same as 'run'.
-	 *
-	 * The 'run' and 'redo' functions will receive a 'options' parameter which will be
-	 * forwarded directly to the operation, and a 'state' parameter that
-	 * can be used to store state for undoing things.
-	 *
-	 * The 'state' object will be passed to the 'undo' function as well.
-	 */
-	createCommand(name, run, undo, redo = run) {
-		const command = function runWrapper(title, options) {
-			// Create copy of options and state object
-			const copy = {};
-			Object.assign(copy, options);
-			const state = {};
-
-			const entry = {
-				id: guid(),
-				title,
-				state,
-			};
-
-			// Attempt to run command
-			try {
-				run(title, copy, state);
-			} catch (e) {
-				console.warn(`Error while running command '${name}' with options:`);
-				console.warn(copy);
-				console.warn(e);
-				return;
+		/**
+		 * Undoes the last commands in the history
+		 *
+		 * @param {number} n Number of actions to undo
+		 */
+		undo(n = 1) {
+			for (var i = 0; i < n && this.current > -1; i++) {
+				this._history[this._current--].undo();
 			}
+		},
+		/**
+		 * Redoes the next commands in the history
+		 *
+		 * @param {number} n Number of actions to redo
+		 */
+		redo(n = 1) {
+			for (var i = 0; i < n && this.current + 1 < this._history.length; i++) {
+				this._history[++this._current].redo();
+			}
+		},
 
-			const undoWrapper = () => {
-				console.debug(`Undoing ${name}, currently ${commands.current}`);
-				undo(title, state);
+		/**
+		 *	Creates a basic command, that can be done and undone
+		 *
+		 * They must contain a 'run' method that performs the action for the first time,
+		 * a 'undo' method that undoes that action and a 'redo' method that does the
+		 * action again, but without requiring parameters. 'redo' is by default the
+		 * same as 'run'.
+		 *
+		 * The 'run' and 'redo' functions will receive a 'options' parameter which will be
+		 * forwarded directly to the operation, and a 'state' parameter that
+		 * can be used to store state for undoing things.
+		 *
+		 * The 'state' object will be passed to the 'undo' function as well.
+		 *
+		 * @param {string} name Command identifier (name)
+		 * @param {(title: string, options: any, state: {[key: string]: any}) => void | Promise<void>} run A method that performs the action for the first time
+		 * @param {(title: string, state: {[key: string]: any}) => } undo A method that reverses what the run method did
+		 * @param {(title: string, options: any, state: {[key: string]: any}) => void | Promise<void>} redo A method that redoes the action after undone (default: run)
+		 * @returns
+		 */
+		createCommand(name, run, undo, redo = run) {
+			const command = async function runWrapper(title, options) {
+				// Create copy of options and state object
+				const copy = {};
+				Object.assign(copy, options);
+				const state = {};
+
+				const entry = {
+					id: guid(),
+					title,
+					state,
+				};
+
+				// Attempt to run command
+				try {
+					await run(title, copy, state);
+				} catch (e) {
+					console.warn(`Error while running command '${name}' with options:`);
+					console.warn(copy);
+					console.warn(e);
+					return;
+				}
+
+				const undoWrapper = () => {
+					console.debug(`Undoing ${name}, currently ${this._current}`);
+					undo(title, state);
+					_commands_events.emit({
+						id: entry.id,
+						name,
+						action: "undo",
+						state,
+						current: this._current,
+					});
+				};
+				const redoWrapper = () => {
+					console.debug(`Redoing ${name}, currently ${this._current}`);
+					redo(title, copy, state);
+					_commands_events.emit({
+						id: entry.id,
+						name,
+						action: "redo",
+						state,
+						current: this._current,
+					});
+				};
+
+				// Add to history
+				if (commands._history.length > commands._current + 1) {
+					commands._history.forEach((entry, index) => {
+						if (index >= commands._current + 1)
+							_commands_events.emit({
+								id: entry.id,
+								name,
+								action: "deleted",
+								state,
+								current: this._current,
+							});
+					});
+
+					commands._history.splice(commands._current + 1);
+				}
+
+				commands._history.push(entry);
+				commands._current++;
+
+				entry.undo = undoWrapper;
+				entry.redo = redoWrapper;
+
 				_commands_events.emit({
 					id: entry.id,
 					name,
-					action: "undo",
+					action: "run",
 					state,
-					current: commands.current,
+					current: commands._current,
 				});
-			};
-			const redoWrapper = () => {
-				console.debug(`Redoing ${name}, currently ${commands.current}`);
-				redo(title, copy, state);
-				_commands_events.emit({
-					id: entry.id,
-					name,
-					action: "redo",
-					state,
-					current: commands.current,
-				});
+
+				return entry;
 			};
 
-			// Add to history
-			if (commands.history.length > commands.current + 1) {
-				commands.history.forEach((entry, index) => {
-					if (index >= commands.current + 1)
-						_commands_events.emit({
-							id: entry.id,
-							name,
-							action: "deleted",
-							state,
-							current: commands.current,
-						});
-				});
+			this._types[name] = command;
 
-				commands.history.splice(commands.current + 1);
-			}
-
-			commands.history.push(entry);
-			commands.current++;
-
-			entry.undo = undoWrapper;
-			entry.redo = redoWrapper;
-
-			_commands_events.emit({
-				id: entry.id,
-				name,
-				action: "run",
-				state,
-				current: commands.current,
-			});
-
-			return entry;
-		};
-
-		this.types[name] = command;
-
-		return command;
+			return command;
+		},
+		/**
+		 * Runs a command
+		 *
+		 * @param {string} name The name of the command to run
+		 * @param {string} title The display name of the command on the history panel view
+		 * @param {any} options The options to be sent to the command to be run
+		 */
+		runCommand(name, title, options = null) {
+			this._types[name](title, options);
+		},
 	},
-	runCommand(name, title, options) {
-		this.types[name](title, options);
-	},
-	types: {},
-};
+	"commands",
+	["_current"]
+);
 
 /**
  * Draw Image Command, used to draw a Image to a context

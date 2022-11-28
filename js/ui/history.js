@@ -28,7 +28,7 @@
 		if (message.action === "run") {
 			Array.from(historyView.children).forEach((child) => {
 				if (
-					!commands.history.find((entry) => `hist-${entry.id}` === child.id)
+					!commands._history.find((entry) => `hist-${entry.id}` === child.id)
 				) {
 					console.log("Removing " + child.id);
 					historyView.removeChild(child);
@@ -36,7 +36,7 @@
 			});
 		}
 
-		commands.history.forEach((entry, index) => {
+		commands._history.forEach((entry, index) => {
 			if (!document.getElementById(`hist-${entry.id}`)) {
 				console.log("Inserting " + entry.id);
 				historyView.appendChild(

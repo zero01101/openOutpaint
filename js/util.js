@@ -1,30 +1,50 @@
 /**
- * Implementation of a simple Oberver Pattern for custom event handling
+ * Observer class
  */
-function Observer() {
-	this.handlers = new Set();
-}
+class Observer {
+	/**
+	 * List of handlers
+	 * @type {Set<(msg: any) => void | Promise<void>>}
+	 */
+	_handlers = new Set();
 
-Observer.prototype = {
-	// Adds handler for this message
+	/**
+	 * Adds a observer to the events
+	 *
+	 * @param {(msg: any) => void | Promise<void>} callback The function to run when receiving a message
+	 * @returns {(msg:any) => void | Promise<void>} The callback we received
+	 */
 	on(callback) {
-		this.handlers.add(callback);
+		this._handlers.add(callback);
 		return callback;
-	},
+	}
+	/**
+	 *	Removes a observer
+	 *
+	 * @param {(msg: any) => void | Promise<void>} callback The function used to register the callback
+	 * @returns {boolean} Whether the handler existed
+	 */
 	clear(callback) {
-		return this.handlers.delete(callback);
-	},
-	emit(msg) {
-		this.handlers.forEach(async (handler) => {
-			try {
-				await handler(msg);
-			} catch (e) {
-				console.warn("Observer failed to run handler");
-				console.warn(e);
-			}
-		});
-	},
-};
+		return this._handlers.delete(callback);
+	}
+	/**
+	 * Send a message to all observers
+	 *
+	 * @param {any} msg The message to send to the observers
+	 */
+	async emit(msg) {
+		Promise.all(
+			Array.from(this._handlers).map((handler) => async () => {
+				try {
+					await handler(msg);
+				} catch (e) {
+					console.warn("Observer failed to run handler");
+					console.warn(e);
+				}
+			})
+		);
+	}
+}
 
 /**
  * Generates a simple UID in the format xxxx-xxxx-...-xxxx, with x being [0-9a-f]
@@ -62,16 +82,21 @@ class ProxyReadOnlySetError extends Error {}
 /**
  * Makes a given object read-only; throws a ProxyReadOnlySetError exception if modification is attempted
  *
- * @param {any} obj Object to be proxied
+ * @template T Object Type
+ *
+ * @param {T} obj Object to be proxied
  * @param {string} name Name for logging purposes
- * @returns {any} Proxied object, intercepting write attempts
+ * @param {string[]} exceptions Parameters excepted from this restriction
+ * @returns {T} Proxied object, intercepting write attempts
  */
-function makeReadOnly(obj, name = "read-only object") {
+function makeReadOnly(obj, name = "read-only object", exceptions = []) {
 	return new Proxy(obj, {
 		set: (obj, prop, value) => {
-			throw new ProxyReadOnlySetError(
-				`Tried setting the '${prop}' property on '${name}'`
-			);
+			if (!exceptions.some((v) => v === prop))
+				throw new ProxyReadOnlySetError(
+					`Tried setting the '${prop}' property on '${name}'`
+				);
+			obj[prop] = value;
 		},
 	});
 }
@@ -81,14 +106,16 @@ class ProxyWriteOnceSetError extends Error {}
 /**
  * Makes a given object write-once; Attempts to overwrite an existing prop in the object will throw a ProxyWriteOnceSetError exception
  *
- * @param {any} obj Object to be proxied
+ * @template T Object Type
+ * @param {T} obj Object to be proxied
  * @param {string} name Name for logging purposes
- * @returns {any} Proxied object, intercepting write attempts
+ * @param {string[]} exceptions Parameters excepted from this restriction
+ * @returns {T} Proxied object, intercepting write attempts
  */
-function makeWriteOnce(obj, name = "write-once object") {
+function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
 	return new Proxy(obj, {
 		set: (obj, prop, value) => {
-			if (obj[prop] !== undefined)
+			if (obj[prop] !== undefined && !exceptions.some((v) => v === prop))
 				throw new ProxyWriteOnceSetError(
 					`Tried setting the '${prop}' property on '${name}' after it was already set`
 				);
