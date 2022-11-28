@@ -9,8 +9,8 @@ const stampTool = () =>
 
 			// Start Listeners
 			mouse.listen.canvas.onmousemove.on(state.movecb);
-			mouse.listen.canvas.left.onclick.on(state.drawcb);
-			mouse.listen.canvas.right.onclick.on(state.cancelcb);
+			mouse.listen.canvas.btn.left.onclick.on(state.drawcb);
+			mouse.listen.canvas.btn.right.onclick.on(state.cancelcb);
 
 			// For calls from other tools to paste image
 			if (opt && opt.image) {
@@ -33,8 +33,8 @@ const stampTool = () =>
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
-			mouse.listen.canvas.left.onclick.clear(state.drawcb);
-			mouse.listen.canvas.right.onclick.clear(state.cancelcb);
+			mouse.listen.canvas.btn.left.onclick.clear(state.drawcb);
+			mouse.listen.canvas.btn.right.onclick.clear(state.cancelcb);
 
 			// Deselect
 			state.selected = null;

@@ -9,12 +9,12 @@ const selectTransformTool = () =>
 
 			// Canvas left mouse handlers
 			mouse.listen.canvas.onmousemove.on(state.movecb);
-			mouse.listen.canvas.left.onclick.on(state.clickcb);
-			mouse.listen.canvas.left.ondragstart.on(state.dragstartcb);
-			mouse.listen.canvas.left.ondragend.on(state.dragendcb);
+			mouse.listen.canvas.btn.left.onclick.on(state.clickcb);
+			mouse.listen.canvas.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.canvas.btn.left.ondragend.on(state.dragendcb);
 
 			// Canvas right mouse handler
-			mouse.listen.canvas.right.onclick.on(state.cancelcb);
+			mouse.listen.canvas.btn.right.onclick.on(state.cancelcb);
 
 			// Keyboard click handlers
 			keyboard.listen.onkeyclick.on(state.keyclickcb);
@@ -30,11 +30,11 @@ const selectTransformTool = () =>
 		(state, opt) => {
 			// Clear all those listeners and shortcuts we set up
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
-			mouse.listen.canvas.left.onclick.clear(state.clickcb);
-			mouse.listen.canvas.left.ondragstart.clear(state.dragstartcb);
-			mouse.listen.canvas.left.ondragend.clear(state.dragendcb);
+			mouse.listen.canvas.btn.left.onclick.clear(state.clickcb);
+			mouse.listen.canvas.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.canvas.btn.left.ondragend.clear(state.dragendcb);
 
-			mouse.listen.canvas.right.onclick.clear(state.cancelcb);
+			mouse.listen.canvas.btn.right.onclick.clear(state.cancelcb);
 
 			keyboard.listen.onkeyclick.clear(state.keyclickcb);
 			keyboard.listen.onkeydown.clear(state.keydowncb);

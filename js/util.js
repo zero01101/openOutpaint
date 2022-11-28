@@ -1,18 +1,33 @@
 /**
- * Observer class
+ * Some type definitions before the actual code
+ */
+/**
+ * Represents a simple bounding box
+ *
+ * @typedef BoundingBox
+ * @type {Object}
+ * @property {number} x - Leftmost coordinate of the box
+ * @property {number} y - Topmost coordinate of the box
+ * @property {number} w - The bounding box Width
+ * @property {number} h - The bounding box Height
+ */
+
+/**
+ * A simple implementation of the Observer programming pattern
+ * @template [T=any] Message type
  */
 class Observer {
 	/**
 	 * List of handlers
-	 * @type {Set<(msg: any) => void | Promise<void>>}
+	 * @type {Set<(msg: T) => void | Promise<void>>}
 	 */
 	_handlers = new Set();
 
 	/**
 	 * Adds a observer to the events
 	 *
-	 * @param {(msg: any) => void | Promise<void>} callback The function to run when receiving a message
-	 * @returns {(msg:any) => void | Promise<void>} The callback we received
+	 * @param {(msg: T) => void | Promise<void>} callback The function to run when receiving a message
+	 * @returns {(msg:T) => void | Promise<void>} The callback we received
 	 */
 	on(callback) {
 		this._handlers.add(callback);
@@ -21,16 +36,16 @@ class Observer {
 	/**
 	 *	Removes a observer
 	 *
-	 * @param {(msg: any) => void | Promise<void>} callback The function used to register the callback
+	 * @param {(msg: T) => void | Promise<void>} callback The function used to register the callback
 	 * @returns {boolean} Whether the handler existed
 	 */
 	clear(callback) {
 		return this._handlers.delete(callback);
 	}
 	/**
-	 * Send a message to all observers
+	 * Sends a message to all observers
 	 *
-	 * @param {any} msg The message to send to the observers
+	 * @param {T} msg The message to send to the observers
 	 */
 	async emit(msg) {
 		return Promise.all(
@@ -49,7 +64,7 @@ class Observer {
 /**
  * Generates a simple UID in the format xxxx-xxxx-...-xxxx, with x being [0-9a-f]
  *
- * @param {number} size Number of quartets of characters to generate
+ * @param {number} [size] Number of quartets of characters to generate
  * @returns {string} The new UID
  */
 const guid = (size = 3) => {
@@ -68,8 +83,10 @@ const guid = (size = 3) => {
 /**
  *	Assigns defaults to an option object passed to the function.
  *
- * @param {{[key: string]: any}} options Original options object
- * @param {{[key: string]: any}} defaults Default values to assign
+ * @template T Object Type
+ *
+ * @param {T} options Original options object
+ * @param {T} defaults Default values to assign
  */
 function defaultOpt(options, defaults) {
 	Object.keys(defaults).forEach((key) => {
@@ -108,8 +125,8 @@ class ProxyWriteOnceSetError extends Error {}
  *
  * @template T Object Type
  * @param {T} obj Object to be proxied
- * @param {string} name Name for logging purposes
- * @param {string[]} exceptions Parameters excepted from this restriction
+ * @param {string} [name] Name for logging purposes
+ * @param {string[]} [exceptions] Parameters excepted from this restriction
  * @returns {T} Proxied object, intercepting write attempts
  */
 function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
@@ -154,12 +171,12 @@ function snap(i, scaled = true, gridSize = 64) {
 /**
  * Gets a bounding box centered on a given set of coordinates. Supports grid snapping
  *
- * @param {number} cx x-coordinate of the center of the box
- * @param {number} cy y-coordinate of the center of the box
- * @param {number} w the width of the box
- * @param {height} h the height of the box
- * @param {number | null} gridSnap The size of the grid to snap to
- * @returns {BoundingBox} A bounding box object centered at (cx, cy)
+ * @param {number} cx - x-coordinate of the center of the box
+ * @param {number} cy - y-coordinate of the center of the box
+ * @param {number} w - the width of the box
+ * @param {height} h - the height of the box
+ * @param {number | null} gridSnap - The size of the grid to snap to
+ * @returns {BoundingBox} - A bounding box object centered at (cx, cy)
  */
 function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 	const offset = {x: 0, y: 0};
@@ -180,9 +197,6 @@ function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 	};
 }
 
-/**
- * Triggers Canvas Download
- */
 /**
  * Crops a given canvas to content, returning a new canvas object with the content in it.
  *
@@ -239,10 +253,10 @@ function cropCanvas(sourceCanvas) {
 /**
  * Downloads the content of a canvas to the disk, or opens it
  *
- * @param {{cropToContent: boolean, canvas: HTMLCanvasElement, filename: string}} options A options array with the following:\
- * cropToContent: If we wish to crop to content first (default: true)
- * canvas: The source canvas (default: imgCanvas)
- * filename: The filename to save as (default: '[ISO date] [Hours] [Minutes] [Seconds] openOutpaint image.png').\
+ * @param {Object} options - Optional Information
+ * @param {boolean} [options.cropToContent] - If we wish to crop to content first (default: true)
+ * @param {HTMLCanvasElement} [options.canvas] - The source canvas (default: imgCanvas)
+ * @param {string} [options.filename] - The filename to save as (default: '[ISO date] [Hours] [Minutes] [Seconds] openOutpaint image.png').\
  * If null, opens image in new tab.
  */
 function downloadCanvas(options = {}) {

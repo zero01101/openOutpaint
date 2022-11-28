@@ -6,7 +6,7 @@ function makeDraggable(element) {
 	element.style.top = startbb.y + "px";
 	element.style.left = startbb.x + "px";
 
-	mouse.listen.window.left.onpaintstart.on((evn) => {
+	mouse.listen.window.btn.left.onpaintstart.on((evn) => {
 		if (
 			element.contains(evn.target) &&
 			evn.target.classList.contains("draggable")
@@ -18,14 +18,14 @@ function makeDraggable(element) {
 		}
 	});
 
-	mouse.listen.window.left.onpaint.on((evn) => {
+	mouse.listen.window.btn.left.onpaint.on((evn) => {
 		if (dragging) {
 			element.style.top = evn.y - offset.y + "px";
 			element.style.left = evn.x - offset.x + "px";
 		}
 	});
 
-	mouse.listen.window.left.onpaintend.on((evn) => {
+	mouse.listen.window.btn.left.onpaintend.on((evn) => {
 		dragging = false;
 	});
 }
@@ -143,13 +143,13 @@ function createSlider(name, wrapper, options = {}) {
 		}
 	});
 
-	mouse.listen.window.left.onclick.on((evn) => {
+	mouse.listen.window.btn.left.onclick.on((evn) => {
 		if (evn.target === overEl) {
 			textEl.select();
 		}
 	});
 
-	mouse.listen.window.left.ondrag.on((evn) => {
+	mouse.listen.window.btn.left.ondrag.on((evn) => {
 		if (evn.target === overEl) {
 			setValue(
 				Math.max(

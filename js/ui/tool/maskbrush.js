@@ -74,10 +74,10 @@ const maskBrushTool = () =>
 			// Start Listeners
 			mouse.listen.canvas.onmousemove.on(state.movecb);
 			mouse.listen.canvas.onwheel.on(state.wheelcb);
-			mouse.listen.canvas.left.onpaintstart.on(state.drawcb);
-			mouse.listen.canvas.left.onpaint.on(state.drawcb);
-			mouse.listen.canvas.right.onpaintstart.on(state.erasecb);
-			mouse.listen.canvas.right.onpaint.on(state.erasecb);
+			mouse.listen.canvas.btn.left.onpaintstart.on(state.drawcb);
+			mouse.listen.canvas.btn.left.onpaint.on(state.drawcb);
+			mouse.listen.canvas.btn.right.onpaintstart.on(state.erasecb);
+			mouse.listen.canvas.btn.right.onpaint.on(state.erasecb);
 
 			// Display Mask
 			setMask("neutral");
@@ -86,10 +86,10 @@ const maskBrushTool = () =>
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.movecb);
 			mouse.listen.canvas.onwheel.clear(state.wheelcb);
-			mouse.listen.canvas.left.onpaintstart.clear(state.drawcb);
-			mouse.listen.canvas.left.onpaint.clear(state.drawcb);
-			mouse.listen.canvas.right.onpaintstart.clear(state.erasecb);
-			mouse.listen.canvas.right.onpaint.clear(state.erasecb);
+			mouse.listen.canvas.btn.left.onpaintstart.clear(state.drawcb);
+			mouse.listen.canvas.btn.left.onpaint.clear(state.drawcb);
+			mouse.listen.canvas.btn.right.onpaintstart.clear(state.erasecb);
+			mouse.listen.canvas.btn.right.onpaint.clear(state.erasecb);
 
 			// Hide Mask
 			setMask("none");

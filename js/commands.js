@@ -7,6 +7,45 @@ const _commands_events = new Observer();
 /** CommandNonExistentError */
 class CommandNonExistentError extends Error {}
 
+/**
+ * An object that represents an entry of the command in the history
+ *
+ * @typedef CommandEntry
+ * @property {string} id A unique ID generated for this entry
+ * @property {string} title The title passed to the command being run
+ * @property {() => void | Promise<void>} undo A method to undo whatever the command did
+ * @property {() => void | Promise<void>} redo A method to redo whatever undo did
+ * @property {{[key: string]: any}} state The state of the current command instance
+ */
+
+/**
+ * A command, which is run, then returns a CommandEntry object that can be used to manually undo/redo it
+ *
+ * @callback Command
+ * @param {string} title The title passed to the command being run
+ * @param {*} options A options object for the command
+ * @returns {Promise<CommandEntry>}
+ */
+
+/**
+ * A method for running a command (or redoing it)
+ *
+ * @callback CommandDoCallback
+ * @param {string} title The title passed to the command being run
+ * @param {*} options A options object for the command
+ * @param {{[key: string]: any}} state The state of the current command instance
+ * @returns {void | Promise<void>}
+ */
+
+/**
+ * A method for undoing a command
+ *
+ * @callback CommandUndoCallback
+ * @param {string} title The title passed to the command when it was run
+ * @param {{[key: string]: any}} state The state of the current command instance
+ * @returns {void | Promise<void>}
+ */
+
 /** Global Commands Object */
 const commands = makeReadOnly(
 	{
@@ -16,7 +55,11 @@ const commands = makeReadOnly(
 		},
 		/** Current History Index (private) */
 		_current: -1,
-		/** Command History (private) */
+		/**
+		 * Command History (private)
+		 *
+		 * @type {CommandEntry[]}
+		 */
 		_history: [],
 		/** The types of commands we can run (private) */
 		_types: {},
@@ -24,21 +67,21 @@ const commands = makeReadOnly(
 		/**
 		 * Undoes the last commands in the history
 		 *
-		 * @param {number} n Number of actions to undo
+		 * @param {number} [n] Number of actions to undo
 		 */
-		undo(n = 1) {
+		async undo(n = 1) {
 			for (var i = 0; i < n && this.current > -1; i++) {
-				this._history[this._current--].undo();
+				await this._history[this._current--].undo();
 			}
 		},
 		/**
 		 * Redoes the next commands in the history
 		 *
-		 * @param {number} n Number of actions to redo
+		 * @param {number} [n] Number of actions to redo
 		 */
-		redo(n = 1) {
+		async redo(n = 1) {
 			for (var i = 0; i < n && this.current + 1 < this._history.length; i++) {
-				this._history[++this._current].redo();
+				await this._history[++this._current].redo();
 			}
 		},
 
@@ -57,10 +100,10 @@ const commands = makeReadOnly(
 		 * The 'state' object will be passed to the 'undo' function as well.
 		 *
 		 * @param {string} name Command identifier (name)
-		 * @param {(title: string, options: any, state: {[key: string]: any}) => void | Promise<void>} run A method that performs the action for the first time
-		 * @param {(title: string, state: {[key: string]: any}) => } undo A method that reverses what the run method did
-		 * @param {(title: string, options: any, state: {[key: string]: any}) => void | Promise<void>} redo A method that redoes the action after undone (default: run)
-		 * @returns
+		 * @param {CommandDoCallback} run A method that performs the action for the first time
+		 * @param {CommandUndoCallback} undo A method that reverses what the run method did
+		 * @param {CommandDoCallback} redo A method that redoes the action after undone (default: run)
+		 * @returns {Command}
 		 */
 		createCommand(name, run, undo, redo = run) {
 			const command = async function runWrapper(title, options) {
@@ -69,6 +112,7 @@ const commands = makeReadOnly(
 				Object.assign(copy, options);
 				const state = {};
 
+				/** @type {CommandEntry} */
 				const entry = {
 					id: guid(),
 					title,
@@ -77,16 +121,21 @@ const commands = makeReadOnly(
 
 				// Attempt to run command
 				try {
+					console.debug(`[commands] Running '${title}'[${name}]`);
 					await run(title, copy, state);
 				} catch (e) {
-					console.warn(`Error while running command '${name}' with options:`);
+					console.warn(
+						`[commands] Error while running command '${name}' with options:`
+					);
 					console.warn(copy);
 					console.warn(e);
 					return;
 				}
 
 				const undoWrapper = () => {
-					console.debug(`Undoing ${name}, currently ${this._current}`);
+					console.debug(
+						`[commands] Undoing '${title}'[${name}], currently ${this._current}`
+					);
 					undo(title, state);
 					_commands_events.emit({
 						id: entry.id,
@@ -97,7 +146,9 @@ const commands = makeReadOnly(
 					});
 				};
 				const redoWrapper = () => {
-					console.debug(`Redoing ${name}, currently ${this._current}`);
+					console.debug(
+						`[commands] Redoing '${title}'[${name}], currently ${this._current}`
+					);
 					redo(title, copy, state);
 					_commands_events.emit({
 						id: entry.id,
