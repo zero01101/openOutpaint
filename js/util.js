@@ -237,7 +237,7 @@ function cropCanvas(sourceCanvas) {
 }
 
 /**
- *	Downloads the content of a canvas to the disk, or opens it
+ * Downloads the content of a canvas to the disk, or opens it
  *
  * @param {{cropToContent: boolean, canvas: HTMLCanvasElement, filename: string}} options A options array with the following:\
  * cropToContent: If we wish to crop to content first (default: true)
