@@ -27,7 +27,10 @@ Observer.prototype = {
 };
 
 /**
- * Generates unique id
+ * Generates a simple UID in the format xxxx-xxxx-...-xxxx, with x being [0-9a-f]
+ *
+ * @param {number} size Number of quartets of characters to generate
+ * @returns {string} The new UID
  */
 const guid = (size = 3) => {
 	const s4 = () => {
@@ -43,17 +46,25 @@ const guid = (size = 3) => {
 };
 
 /**
- * Default option set
+ *	Assigns defaults to an option object passed to the function.
+ *
+ * @param {{[key: string]: any}} options Original options object
+ * @param {{[key: string]: any}} defaults Default values to assign
  */
-
 function defaultOpt(options, defaults) {
 	Object.keys(defaults).forEach((key) => {
 		if (options[key] === undefined) options[key] = defaults[key];
 	});
 }
 
+/** Custom error for attempt to set read-only objects */
+class ProxyReadOnlySetError extends Error {}
 /**
- * Make object read-only
+ * Makes a given object read-only; throws a ProxyReadOnlySetError exception if modification is attempted
+ *
+ * @param {any} obj Object to be proxied
+ * @param {string} name Name for logging purposes
+ * @returns {any} Proxied object, intercepting write attempts
  */
 function makeReadOnly(obj, name = "read-only object") {
 	return new Proxy(obj, {
@@ -65,7 +76,15 @@ function makeReadOnly(obj, name = "read-only object") {
 	});
 }
 
-// Makes an object so you can't rewrite already written values
+/** Custom error for attempt to set write-once objects a second time */
+class ProxyWriteOnceSetError extends Error {}
+/**
+ * Makes a given object write-once; Attempts to overwrite an existing prop in the object will throw a ProxyWriteOnceSetError exception
+ *
+ * @param {any} obj Object to be proxied
+ * @param {string} name Name for logging purposes
+ * @returns {any} Proxied object, intercepting write attempts
+ */
 function makeWriteOnce(obj, name = "write-once object") {
 	return new Proxy(obj, {
 		set: (obj, prop, value) => {
@@ -79,7 +98,12 @@ function makeWriteOnce(obj, name = "write-once object") {
 }
 
 /**
- * Bounding box Calculation
+ * Snaps a single value to an infinite grid
+ *
+ * @param {number} i Original value to be snapped
+ * @param {boolean} scaled If grid will change alignment for odd scaleFactor values (default: true)
+ * @param {number} gridSize Size of the grid
+ * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
 function snap(i, scaled = true, gridSize = 64) {
 	// very cheap test proof of concept but it works surprisingly well
@@ -100,6 +124,16 @@ function snap(i, scaled = true, gridSize = 64) {
 	return -snapOffset;
 }
 
+/**
+ * Gets a bounding box centered on a given set of coordinates. Supports grid snapping
+ *
+ * @param {number} cx x-coordinate of the center of the box
+ * @param {number} cy y-coordinate of the center of the box
+ * @param {number} w the width of the box
+ * @param {height} h the height of the box
+ * @param {number | null} gridSnap The size of the grid to snap to
+ * @returns {BoundingBox} A bounding box object centered at (cx, cy)
+ */
 function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 	const offset = {x: 0, y: 0};
 	const box = {x: 0, y: 0};
@@ -121,6 +155,12 @@ function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 
 /**
  * Triggers Canvas Download
+ */
+/**
+ * Crops a given canvas to content, returning a new canvas object with the content in it.
+ *
+ * @param {HTMLCanvasElement} sourceCanvas Canvas to get a content crop from
+ * @returns {HTMLCanvasElement} A new canvas with the cropped part of the image
  */
 function cropCanvas(sourceCanvas) {
 	var w = sourceCanvas.width;
@@ -169,6 +209,15 @@ function cropCanvas(sourceCanvas) {
 	return cutCanvas;
 }
 
+/**
+ *	Downloads the content of a canvas to the disk, or opens it
+ *
+ * @param {{cropToContent: boolean, canvas: HTMLCanvasElement, filename: string}} options A options array with the following:\
+ * cropToContent: If we wish to crop to content first (default: true)
+ * canvas: The source canvas (default: imgCanvas)
+ * filename: The filename to save as (default: '[ISO date] [Hours] [Minutes] [Seconds] openOutpaint image.png').\
+ * If null, opens image in new tab.
+ */
 function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
@@ -182,7 +231,8 @@ function downloadCanvas(options = {}) {
 	});
 
 	var link = document.createElement("a");
-	link.download = options.filename;
+	link.target = "_blank";
+	if (options.filename) link.download = options.filename;
 
 	var croppedCanvas = options.cropToContent
 		? cropCanvas(options.canvas)
