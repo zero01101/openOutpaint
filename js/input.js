@@ -102,6 +102,7 @@ const mouse = {
 		mouse.listen[name] = {
 			onwheel: new Observer(),
 			onmousemove: new Observer(),
+			btn: {},
 		};
 
 		// Button specific items
