@@ -10,31 +10,62 @@ const inputConfig = {
  * Mouse input processing
  */
 // Base object generator functions
-function _mouse_observers() {
-	return {
-		// Simple click handler
-		onclick: new Observer(),
-		// Double click handler (will still trigger simple click handler as well)
-		ondclick: new Observer(),
-		// Drag handler
-		ondragstart: new Observer(),
-		ondrag: new Observer(),
-		ondragend: new Observer(),
-		// Paint handler (like drag handler, but with no delay); will trigger during clicks too
-		onpaintstart: new Observer(),
-		onpaint: new Observer(),
-		onpaintend: new Observer(),
-	};
+function _mouse_observers(name = "generic_mouse_observer_array") {
+	return makeReadOnly(
+		{
+			// Simple click handler
+			onclick: new Observer(),
+			// Double click handler (will still trigger simple click handler as well)
+			ondclick: new Observer(),
+			// Drag handler
+			ondragstart: new Observer(),
+			ondrag: new Observer(),
+			ondragend: new Observer(),
+			// Paint handler (like drag handler, but with no delay); will trigger during clicks too
+			onpaintstart: new Observer(),
+			onpaint: new Observer(),
+			onpaintend: new Observer(),
+		},
+		name
+	);
 }
 
+/** Global Mouse Object */
 const mouse = {
-	contexts: [],
+	/**
+	 * Array of context objects
+	 * @type {MouseContext[]}
+	 */
+	_contexts: [],
+	/**
+	 * Timestamps of the button's last down event
+	 * @type {Record<,number | null>}
+	 */
 	buttons: {},
-	coords: {},
+	/**
+	 * Coordinate storage of mouse positions
+	 * @type {{[ctxKey: string]: MouseCoordContext}}
+	 */
+	coords: makeWriteOnce({}, "mouse.coords"),
 
-	listen: {},
+	/**
+	 * Listener storage for event observers
+	 * @type {{[ctxKey: string]: MouseListenerContext}}
+	 */
+	listen: makeWriteOnce({}, "mouse.listen"),
 
 	// Register Context
+
+	/**
+	 * Registers a new mouse context
+	 *
+	 * @param {string} name The key name of the context
+	 * @param {ContextMoveTransformer} onmove The function to perform coordinate transform
+	 * @param {object} options Extra options
+	 * @param {HTMLElement} [options.target=null] Target filtering
+	 * @param {Record<number, string>} [options.buttons={0: "left", 1: "middle", 2: "right"}] Custom button mapping
+	 * @returns {MouseContext}
+	 */
 	registerContext: (name, onmove, options = {}) => {
 		// Options
 		defaultOpt(options, {
@@ -43,6 +74,7 @@ const mouse = {
 		});
 
 		// Context information
+		/** @type {MouseContext} */
 		const context = {
 			id: guid(),
 			name,
@@ -70,13 +102,16 @@ const mouse = {
 		mouse.listen[name] = {
 			onwheel: new Observer(),
 			onmousemove: new Observer(),
+			btn: {},
 		};
 
 		// Button specific items
 		Object.keys(options.buttons).forEach((index) => {
 			const button = options.buttons[index];
 			mouse.coords[name].dragging[button] = null;
-			mouse.listen[name][button] = _mouse_observers();
+			mouse.listen[name].btn[button] = _mouse_observers(
+				`mouse.listen[${name}].btn[${button}]`
+			);
 		});
 
 		// Add to context
@@ -84,7 +119,7 @@ const mouse = {
 		context.listen = mouse.listen[name];
 
 		// Add to list
-		mouse.contexts.push(context);
+		mouse._contexts.push(context);
 
 		return context;
 	},
@@ -98,9 +133,9 @@ window.onmousedown = (evn) => {
 
 	if (_double_click_timeout[evn.button]) {
 		// ondclick event
-		mouse.contexts.forEach(({target, name, buttons}) => {
+		mouse._contexts.forEach(({target, name, buttons}) => {
 			if ((!target || target === evn.target) && buttons[evn.button])
-				mouse.listen[name][buttons[evn.button]].ondclick.emit({
+				mouse.listen[name].btn[buttons[evn.button]].ondclick.emit({
 					target: evn.target,
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
@@ -119,14 +154,14 @@ window.onmousedown = (evn) => {
 
 	// Set drag start timeout
 	_drag_start_timeout[evn.button] = setTimeout(() => {
-		mouse.contexts.forEach(({target, name, buttons}) => {
+		mouse._contexts.forEach(({target, name, buttons}) => {
 			const key = buttons[evn.button];
 			if (
 				(!target || target === evn.target) &&
 				!mouse.coords[name].dragging[key].drag &&
 				key
 			) {
-				mouse.listen[name][key].ondragstart.emit({
+				mouse.listen[name].btn[key].ondragstart.emit({
 					target: evn.target,
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
@@ -143,7 +178,7 @@ window.onmousedown = (evn) => {
 
 	mouse.buttons[evn.button] = time;
 
-	mouse.contexts.forEach(({target, name, buttons}) => {
+	mouse._contexts.forEach(({target, name, buttons}) => {
 		const key = buttons[evn.button];
 		if ((!target || target === evn.target) && key) {
 			mouse.coords[name].dragging[key] = {};
@@ -151,7 +186,7 @@ window.onmousedown = (evn) => {
 			Object.assign(mouse.coords[name].dragging[key], mouse.coords[name].pos);
 
 			// onpaintstart event
-			mouse.listen[name][key].onpaintstart.emit({
+			mouse.listen[name].btn[key].onpaintstart.emit({
 				target: evn.target,
 				buttonId: evn.button,
 				x: mouse.coords[name].pos.x,
@@ -166,7 +201,7 @@ window.onmousedown = (evn) => {
 window.onmouseup = (evn) => {
 	const time = performance.now();
 
-	mouse.contexts.forEach(({target, name, buttons}) => {
+	mouse._contexts.forEach(({target, name, buttons}) => {
 		const key = buttons[evn.button];
 		if (
 			(!target || target === evn.target) &&
@@ -187,7 +222,7 @@ window.onmouseup = (evn) => {
 				time - mouse.buttons[evn.button] < inputConfig.clickTiming &&
 				dx * dx + dy * dy < inputConfig.clickRadius * inputConfig.clickRadius
 			)
-				mouse.listen[name][key].onclick.emit({
+				mouse.listen[name].btn[key].onclick.emit({
 					target: evn.target,
 					buttonId: evn.button,
 					x: mouse.coords[name].pos.x,
@@ -197,7 +232,7 @@ window.onmouseup = (evn) => {
 				});
 
 			// onpaintend event
-			mouse.listen[name][key].onpaintend.emit({
+			mouse.listen[name].btn[key].onpaintend.emit({
 				target: evn.target,
 				initialTarget: mouse.coords[name].dragging[key].target,
 				buttonId: evn.button,
@@ -211,7 +246,7 @@ window.onmouseup = (evn) => {
 
 			// ondragend event
 			if (mouse.coords[name].dragging[key].drag)
-				mouse.listen[name][key].ondragend.emit({
+				mouse.listen[name].btn[key].ondragend.emit({
 					target: evn.target,
 					initialTarget: mouse.coords[name].dragging[key].target,
 					buttonId: evn.button,
@@ -235,7 +270,7 @@ window.onmouseup = (evn) => {
 };
 
 window.onmousemove = (evn) => {
-	mouse.contexts.forEach((context) => {
+	mouse._contexts.forEach((context) => {
 		const target = context.target;
 		const name = context.name;
 
@@ -265,7 +300,7 @@ window.onmousemove = (evn) => {
 						dx * dx + dy * dy >=
 							inputConfig.clickRadius * inputConfig.clickRadius
 					) {
-						mouse.listen[name][key].ondragstart.emit({
+						mouse.listen[name].btn[key].ondragstart.emit({
 							target: evn.target,
 							buttonId: evn.button,
 							ix: mouse.coords[name].dragging[key].x,
@@ -285,7 +320,7 @@ window.onmousemove = (evn) => {
 					mouse.coords[name].dragging[key] &&
 					mouse.coords[name].dragging[key].drag
 				)
-					mouse.listen[name][key].ondrag.emit({
+					mouse.listen[name].btn[key].ondrag.emit({
 						target: evn.target,
 						initialTarget: mouse.coords[name].dragging[key].target,
 						button: index,
@@ -301,7 +336,7 @@ window.onmousemove = (evn) => {
 
 				// onpaint event
 				if (mouse.coords[name].dragging[key]) {
-					mouse.listen[name][key].onpaint.emit({
+					mouse.listen[name].btn[key].onpaint.emit({
 						target: evn.target,
 						initialTarget: mouse.coords[name].dragging[key].target,
 						button: index,
@@ -323,7 +358,7 @@ window.onmousemove = (evn) => {
 window.addEventListener(
 	"wheel",
 	(evn) => {
-		mouse.contexts.forEach(({name}) => {
+		mouse._contexts.forEach(({name}) => {
 			mouse.listen[name].onwheel.emit({
 				target: evn.target,
 				delta: evn.deltaY,
@@ -361,20 +396,51 @@ mouse.registerContext(
 /**
  * Keyboard input processing
  */
-// Base object generator functions
-
+/** Global Keyboard Object */
 const keyboard = {
+	/**
+	 * Stores the key states for all keys
+	 *
+	 * @type {Record<string, KeyboardKeyState>}
+	 */
 	keys: {},
 
+	/**
+	 * Checks if a key is pressed or not
+	 *
+	 * @param {string} code - The code of the key
+	 * @returns {boolean}
+	 */
 	isPressed(code) {
-		return this.keys[key].pressed;
+		return this.keys[code].pressed;
 	},
 
+	/**
+	 * Checks if a key is held or not
+	 *
+	 * @param {string} code - The code of the key
+	 * @returns {boolean}
+	 */
 	isHeld(code) {
-		return !!this;
+		return this.keys[code].held;
 	},
 
+	/**
+	 * Object storing shortcuts. Uses key as indexing for better performance.
+	 * @type {Record<string, KeyboardShortcut[]>}
+	 */
 	shortcuts: {},
+	/**
+	 * Adds a shortcut listener
+	 *
+	 * @param {object} shortcut Shortcut information
+	 * @param {boolean} [shortcut.ctrl=false] If control must be pressed
+	 * @param {boolean} [shortcut.alt=false] If alt must be pressed
+	 * @param {boolean} [shortcut.shift=false] If shift must be pressed
+	 * @param {string} shortcut.key The key code (evn.code) for the key pressed
+	 * @param {KeyboardShortcutCallback} callback Will be called on shortcut detection
+	 * @returns
+	 */
 	onShortcut(shortcut, callback) {
 		/**
 		 * Adds a shortcut handler (shorcut must be in format: {ctrl?: bool, alt?: bool, shift?: bool, key: string (code)})
@@ -384,23 +450,32 @@ const keyboard = {
 			this.shortcuts[shortcut.key] = [];
 
 		this.shortcuts[shortcut.key].push({
-			ctrl: shortcut.ctrl,
-			alt: shortcut.alt,
-			shift: shortcut.shift,
+			ctrl: !!shortcut.ctrl,
+			alt: !!shortcut.alt,
+			shift: !!shortcut.shift,
 			id: guid(),
 			callback,
 		});
+
+		return callback;
 	},
-	deleteShortcut(id, key = null) {
+	/**
+	 * Deletes a shortcut (disables callback)
+	 *
+	 * @param {string | KeyboardShortcutCallback} shortcut A shortcut ID or its callback
+	 * @param {string} [key=null] If you know the key code, to avoid searching all shortcuts
+	 * @returns
+	 */
+	deleteShortcut(shortcut, key = null) {
 		if (key) {
 			this.shortcuts[key] = this.shortcuts[key].filter(
-				(v) => v.id !== id && v.callback !== id
+				(v) => v.id !== shortcut && v.callback !== shortcut
 			);
 			return;
 		}
 		this.shortcuts.keys().forEach((key) => {
 			this.shortcuts[key] = this.shortcuts[key].filter(
-				(v) => v.id !== id && v.callback !== id
+				(v) => v.id !== shortcut && v.callback !== shortcut
 			);
 		});
 	},

@@ -254,8 +254,8 @@ const dreamTool = () =>
 
 			// Start Listeners
 			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
-			mouse.listen.canvas.left.onclick.on(state.dreamcb);
-			mouse.listen.canvas.right.onclick.on(state.erasecb);
+			mouse.listen.canvas.btn.left.onclick.on(state.dreamcb);
+			mouse.listen.canvas.btn.right.onclick.on(state.erasecb);
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -263,8 +263,8 @@ const dreamTool = () =>
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
-			mouse.listen.canvas.left.onclick.clear(state.dreamcb);
-			mouse.listen.canvas.right.onclick.clear(state.erasecb);
+			mouse.listen.canvas.btn.left.onclick.clear(state.dreamcb);
+			mouse.listen.canvas.btn.right.onclick.clear(state.erasecb);
 
 			// Hide Mask
 			setMask("none");
@@ -336,8 +336,8 @@ const img2imgTool = () =>
 
 			// Start Listeners
 			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
-			mouse.listen.canvas.left.onclick.on(state.dreamcb);
-			mouse.listen.canvas.right.onclick.on(state.erasecb);
+			mouse.listen.canvas.btn.left.onclick.on(state.dreamcb);
+			mouse.listen.canvas.btn.right.onclick.on(state.erasecb);
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -345,8 +345,8 @@ const img2imgTool = () =>
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
-			mouse.listen.canvas.left.onclick.clear(state.dreamcb);
-			mouse.listen.canvas.right.onclick.clear(state.erasecb);
+			mouse.listen.canvas.btn.left.onclick.clear(state.dreamcb);
+			mouse.listen.canvas.btn.right.onclick.clear(state.erasecb);
 
 			// Hide mask
 			setMask("none");

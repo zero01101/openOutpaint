@@ -1,0 +1,38 @@
+/**
+ * An object that represents an entry of the command in the history
+ *
+ * @typedef CommandEntry
+ * @property {string} id A unique ID generated for this entry
+ * @property {string} title The title passed to the command being run
+ * @property {() => void | Promise<void>} undo A method to undo whatever the command did
+ * @property {() => void | Promise<void>} redo A method to redo whatever undo did
+ * @property {{[key: string]: any}} state The state of the current command instance
+ */
+
+/**
+ * A command, which is run, then returns a CommandEntry object that can be used to manually undo/redo it
+ *
+ * @callback Command
+ * @param {string} title The title passed to the command being run
+ * @param {*} options A options object for the command
+ * @returns {Promise<CommandEntry>}
+ */
+
+/**
+ * A method for running a command (or redoing it)
+ *
+ * @callback CommandDoCallback
+ * @param {string} title The title passed to the command being run
+ * @param {*} options A options object for the command
+ * @param {{[key: string]: any}} state The state of the current command instance
+ * @returns {void | Promise<void>}
+ */
+
+/**
+ * A method for undoing a command
+ *
+ * @callback CommandUndoCallback
+ * @param {string} title The title passed to the command when it was run
+ * @param {{[key: string]: any}} state The state of the current command instance
+ * @returns {void | Promise<void>}
+ */

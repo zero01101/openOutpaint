@@ -1,33 +1,71 @@
 /**
- * Implementation of a simple Oberver Pattern for custom event handling
+ * Some type definitions before the actual code
  */
-function Observer() {
-	this.handlers = new Set();
-}
-
-Observer.prototype = {
-	// Adds handler for this message
-	on(callback) {
-		this.handlers.add(callback);
-		return callback;
-	},
-	clear(callback) {
-		return this.handlers.delete(callback);
-	},
-	emit(msg) {
-		this.handlers.forEach(async (handler) => {
-			try {
-				await handler(msg);
-			} catch (e) {
-				console.warn("Observer failed to run handler");
-				console.warn(e);
-			}
-		});
-	},
-};
+/**
+ * Represents a simple bounding box
+ *
+ * @typedef BoundingBox
+ * @type {Object}
+ * @property {number} x - Leftmost coordinate of the box
+ * @property {number} y - Topmost coordinate of the box
+ * @property {number} w - The bounding box Width
+ * @property {number} h - The bounding box Height
+ */
 
 /**
- * Generates unique id
+ * A simple implementation of the Observer programming pattern
+ * @template [T=any] Message type
+ */
+class Observer {
+	/**
+	 * List of handlers
+	 * @type {Set<(msg: T) => void | Promise<void>>}
+	 */
+	_handlers = new Set();
+
+	/**
+	 * Adds a observer to the events
+	 *
+	 * @param {(msg: T) => void | Promise<void>} callback The function to run when receiving a message
+	 * @returns {(msg:T) => void | Promise<void>} The callback we received
+	 */
+	on(callback) {
+		this._handlers.add(callback);
+		return callback;
+	}
+	/**
+	 *	Removes a observer
+	 *
+	 * @param {(msg: T) => void | Promise<void>} callback The function used to register the callback
+	 * @returns {boolean} Whether the handler existed
+	 */
+	clear(callback) {
+		return this._handlers.delete(callback);
+	}
+	/**
+	 * Sends a message to all observers
+	 *
+	 * @param {T} msg The message to send to the observers
+	 */
+	async emit(msg) {
+		return Promise.all(
+			Array.from(this._handlers).map(async (handler) => {
+				try {
+					await handler(msg);
+				} catch (e) {
+					console.warn("Observer failed to run handler");
+					console.warn(e);
+				}
+			})
+		);
+	}
+}
+
+/**
+ * Generates a simple UID in the format xxxx-xxxx-...-xxxx, with x being [0-9a-f]
+ *
+ * @param {number} [size] Number of quartets of characters to generate
+ * @returns {string} The new UID
  */
 const guid = (size = 3) => {
 	const s4 = () => {
@@ -43,17 +81,73 @@ const guid = (size = 3) => {
 };
 
 /**
- * Default option set
+ *	Assigns defaults to an option object passed to the function.
+ *
+ * @template T Object Type
+ *
+ * @param {T} options Original options object
+ * @param {T} defaults Default values to assign
  */
-
 function defaultOpt(options, defaults) {
 	Object.keys(defaults).forEach((key) => {
 		if (options[key] === undefined) options[key] = defaults[key];
 	});
 }
 
+/** Custom error for attempt to set read-only objects */
+class ProxyReadOnlySetError extends Error {}
 /**
- * Bounding box Calculation
+ * Makes a given object read-only; throws a ProxyReadOnlySetError exception if modification is attempted
+ *
+ * @template T Object Type
+ *
+ * @param {T} obj Object to be proxied
+ * @param {string} name Name for logging purposes
+ * @param {string[]} exceptions Parameters excepted from this restriction
+ * @returns {T} Proxied object, intercepting write attempts
+ */
+function makeReadOnly(obj, name = "read-only object", exceptions = []) {
+	return new Proxy(obj, {
+		set: (obj, prop, value) => {
+			if (!exceptions.some((v) => v === prop))
+				throw new ProxyReadOnlySetError(
+					`Tried setting the '${prop}' property on '${name}'`
+				);
+			obj[prop] = value;
+		},
+	});
+}
+
+/** Custom error for attempt to set write-once objects a second time */
+class ProxyWriteOnceSetError extends Error {}
+/**
+ * Makes a given object write-once; Attempts to overwrite an existing prop in the object will throw a ProxyWriteOnceSetError exception
+ *
+ * @template T Object Type
+ * @param {T} obj Object to be proxied
+ * @param {string} [name] Name for logging purposes
+ * @param {string[]} [exceptions] Parameters excepted from this restriction
+ * @returns {T} Proxied object, intercepting write attempts
+ */
+function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
+	return new Proxy(obj, {
+		set: (obj, prop, value) => {
+			if (obj[prop] !== undefined && !exceptions.some((v) => v === prop))
+				throw new ProxyWriteOnceSetError(
+					`Tried setting the '${prop}' property on '${name}' after it was already set`
+				);
+			obj[prop] = value;
+		},
+	});
+}
+
+/**
+ * Snaps a single value to an infinite grid
+ *
+ * @param {number} i Original value to be snapped
+ * @param {boolean} scaled If grid will change alignment for odd scaleFactor values (default: true)
+ * @param {number} gridSize Size of the grid
+ * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
 function snap(i, scaled = true, gridSize = 64) {
 	// very cheap test proof of concept but it works surprisingly well
@@ -74,6 +168,16 @@ function snap(i, scaled = true, gridSize = 64) {
 	return -snapOffset;
 }
 
+/**
+ * Gets a bounding box centered on a given set of coordinates. Supports grid snapping
+ *
+ * @param {number} cx - x-coordinate of the center of the box
+ * @param {number} cy - y-coordinate of the center of the box
+ * @param {number} w - the width of the box
+ * @param {height} h - the height of the box
+ * @param {number | null} gridSnap - The size of the grid to snap to
+ * @returns {BoundingBox} - A bounding box object centered at (cx, cy)
+ */
 function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 	const offset = {x: 0, y: 0};
 	const box = {x: 0, y: 0};
@@ -94,7 +198,10 @@ function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 }
 
 /**
- * Triggers Canvas Download
+ * Crops a given canvas to content, returning a new canvas object with the content in it.
+ *
+ * @param {HTMLCanvasElement} sourceCanvas Canvas to get a content crop from
+ * @returns {HTMLCanvasElement} A new canvas with the cropped part of the image
  */
 function cropCanvas(sourceCanvas) {
 	var w = sourceCanvas.width;
@@ -143,6 +250,15 @@ function cropCanvas(sourceCanvas) {
 	return cutCanvas;
 }
 
+/**
+ * Downloads the content of a canvas to the disk, or opens it
+ *
+ * @param {Object} options - Optional Information
+ * @param {boolean} [options.cropToContent] - If we wish to crop to content first (default: true)
+ * @param {HTMLCanvasElement} [options.canvas] - The source canvas (default: imgCanvas)
+ * @param {string} [options.filename] - The filename to save as (default: '[ISO date] [Hours] [Minutes] [Seconds] openOutpaint image.png').\
+ * If null, opens image in new tab.
+ */
 function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
@@ -156,7 +272,8 @@ function downloadCanvas(options = {}) {
 	});
 
 	var link = document.createElement("a");
-	link.download = options.filename;
+	link.target = "_blank";
+	if (options.filename) link.download = options.filename;
 
 	var croppedCanvas = options.cropToContent
 		? cropCanvas(options.canvas)
