@@ -1,7 +1,7 @@
 // Layering
 const imageCollection = layers.registerCollection(
 	"image",
-	{w: 2560, h: 1472},
+	{w: 1536, h: 1536},
 	{
 		name: "Image Layers",
 	}
@@ -132,6 +132,7 @@ viewport.transform(imageCollection.element);
 
 mouse.listen.window.onwheel.on((evn) => {
 	if (evn.evn.ctrlKey) {
+		evn.evn.preventDefault();
 		const pcx = viewport.cx;
 		const pcy = viewport.cy;
 		if (evn.delta < 0) {

@@ -117,8 +117,7 @@ const _generate = async (endpoint, request, bb) => {
 
 	// Layer for the images
 	const layer = imageCollection.registerLayer(null, {
-		bb,
-		after: imgLayer,
+		after: maskPaintLayer,
 	});
 
 	const redraw = () => {
@@ -126,7 +125,7 @@ const _generate = async (endpoint, request, bb) => {
 		image.src = "data:image/png;base64," + images[at];
 		image.addEventListener("load", () => {
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-			if (images[at]) layer.ctx.drawImage(image, 0, 0);
+			if (images[at]) layer.ctx.drawImage(image, bb.x, bb.y);
 		});
 	};
 
@@ -211,12 +210,17 @@ const _generate = async (endpoint, request, bb) => {
 	acceptbtn.textContent = "Y";
 	acceptbtn.title = "Apply Current";
 	acceptbtn.addEventListener("click", async () => {
-		commands.runCommand("drawImage", "Image Dream", {
-			x: bb.x,
-			y: bb.y,
-			image: layer.canvas,
+		const img = new Image();
+		// load the image data after defining the closure
+		img.src = "data:image/png;base64," + images[at];
+		img.addEventListener("load", () => {
+			commands.runCommand("drawImage", "Image Dream", {
+				x: bb.x,
+				y: bb.y,
+				image: img,
+			});
+			clean();
 		});
-		clean();
 	});
 	imageSelectMenu.appendChild(acceptbtn);
 
