@@ -1,7 +1,7 @@
 // Layering
 const imageCollection = layers.registerCollection(
 	"image",
-	{w: 1536, h: 1536},
+	{w: 2560, h: 1536},
 	{
 		name: "Image Layers",
 	}
