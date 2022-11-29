@@ -5,12 +5,12 @@ const stampTool = () =>
 		(state, opt) => {
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-			state.movecb({...mouse.coords.canvas.pos, target: {id: "overlayCanvas"}});
+			state.movecb({...mouse.coords.world.pos});
 
 			// Start Listeners
-			mouse.listen.canvas.onmousemove.on(state.movecb);
-			mouse.listen.canvas.btn.left.onclick.on(state.drawcb);
-			mouse.listen.canvas.btn.right.onclick.on(state.cancelcb);
+			mouse.listen.world.onmousemove.on(state.movecb);
+			mouse.listen.world.btn.left.onclick.on(state.drawcb);
+			mouse.listen.world.btn.right.onclick.on(state.cancelcb);
 
 			// For calls from other tools to paste image
 			if (opt && opt.image) {
@@ -32,9 +32,9 @@ const stampTool = () =>
 		},
 		(state, opt) => {
 			// Clear Listeners
-			mouse.listen.canvas.onmousemove.clear(state.movecb);
-			mouse.listen.canvas.btn.left.onclick.clear(state.drawcb);
-			mouse.listen.canvas.btn.right.onclick.clear(state.cancelcb);
+			mouse.listen.world.onmousemove.clear(state.movecb);
+			mouse.listen.world.btn.left.onclick.clear(state.drawcb);
+			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
 
 			// Deselect
 			state.selected = null;
@@ -153,73 +153,69 @@ const stampTool = () =>
 				};
 
 				state.movecb = (evn) => {
-					if (evn.target && evn.target.id === "overlayCanvas") {
-						let x = evn.x;
-						let y = evn.y;
-						if (state.snapToGrid) {
-							x += snap(evn.x, true, 64);
-							y += snap(evn.y, true, 64);
-						}
-
-						state.lastMouseMove = evn;
-
-						// Draw selected image
-						if (state.selected) {
-							ovCtx.drawImage(state.selected.image, x, y);
-						}
-
-						// Draw current cursor location
-						ovCtx.lineWidth = 3;
-						ovCtx.strokeStyle = "#FFF";
-
-						ovCtx.beginPath();
-						ovCtx.moveTo(x, y + 10);
-						ovCtx.lineTo(x, y - 10);
-						ovCtx.moveTo(x + 10, y);
-						ovCtx.lineTo(x - 10, y);
-						ovCtx.stroke();
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, true, 64);
+						y += snap(evn.y, true, 64);
 					}
+
+					state.lastMouseMove = evn;
+
+					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+
+					// Draw selected image
+					if (state.selected) {
+						ovCtx.drawImage(state.selected.image, x, y);
+					}
+
+					// Draw current cursor location
+					ovCtx.lineWidth = 3;
+					ovCtx.strokeStyle = "#FFF";
+
+					ovCtx.beginPath();
+					ovCtx.moveTo(x, y + 10);
+					ovCtx.lineTo(x, y - 10);
+					ovCtx.moveTo(x + 10, y);
+					ovCtx.lineTo(x - 10, y);
+					ovCtx.stroke();
 				};
 
 				state.drawcb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
-						let x = evn.x;
-						let y = evn.y;
-						if (state.snapToGrid) {
-							x += snap(evn.x, true, 64);
-							y += snap(evn.y, true, 64);
-						}
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, true, 64);
+						y += snap(evn.y, true, 64);
+					}
 
-						const resource = state.selected;
+					const resource = state.selected;
 
-						if (resource) {
-							commands.runCommand("drawImage", "Image Stamp", {
-								image: resource.image,
-								x,
-								y,
-							});
+					if (resource) {
+						commands.runCommand("drawImage", "Image Stamp", {
+							image: resource.image,
+							x,
+							y,
+						});
 
-							if (resource.temporary) state.deleteResource(resource.id);
-						}
+						if (resource.temporary) state.deleteResource(resource.id);
+					}
 
-						if (state.back) {
-							toolbar.unlock();
-							const backfn = state.back;
-							state.back = null;
-							backfn({message: "Returning from stamp", pasted: true});
-						}
+					if (state.back) {
+						toolbar.unlock();
+						const backfn = state.back;
+						state.back = null;
+						backfn({message: "Returning from stamp", pasted: true});
 					}
 				};
 				state.cancelcb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
-						state.selectResource(null);
+					state.selectResource(null);
 
-						if (state.back) {
-							toolbar.unlock();
-							const backfn = state.back;
-							state.back = null;
-							backfn({message: "Returning from stamp", pasted: false});
-						}
+					if (state.back) {
+						toolbar.unlock();
+						const backfn = state.back;
+						state.back = null;
+						backfn({message: "Returning from stamp", pasted: false});
 					}
 				};
 
