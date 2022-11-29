@@ -647,7 +647,6 @@ const img2imgTool = () =>
 							bb.w,
 							state.keepBorderSize
 						);
-						console.debug("hey");
 					}
 
 					const tmp = ovCtx.globalAlpha;

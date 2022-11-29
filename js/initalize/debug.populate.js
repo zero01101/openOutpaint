@@ -15,8 +15,8 @@ mouse.listen.window.onmousemove.on((evn) => {
 mouse.listen.world.onmousemove.on((evn) => {
 	canvasXInfo.textContent = evn.x;
 	canvasYInfo.textContent = evn.y;
-	snapXInfo.textContent = snap(evn.x);
-	snapYInfo.textContent = snap(evn.y);
+	snapXInfo.textContent = evn.x + snap(evn.x);
+	snapYInfo.textContent = evn.y + snap(evn.y);
 });
 
 /**
