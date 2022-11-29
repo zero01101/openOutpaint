@@ -5,16 +5,16 @@ const selectTransformTool = () =>
 		(state, opt) => {
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-			state.movecb({...mouse.coords.canvas.pos, target: {id: "overlayCanvas"}});
+			state.movecb(mouse.coords.world.pos);
 
 			// Canvas left mouse handlers
-			mouse.listen.canvas.onmousemove.on(state.movecb);
-			mouse.listen.canvas.btn.left.onclick.on(state.clickcb);
-			mouse.listen.canvas.btn.left.ondragstart.on(state.dragstartcb);
-			mouse.listen.canvas.btn.left.ondragend.on(state.dragendcb);
+			mouse.listen.world.onmousemove.on(state.movecb);
+			mouse.listen.world.btn.left.onclick.on(state.clickcb);
+			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 
 			// Canvas right mouse handler
-			mouse.listen.canvas.btn.right.onclick.on(state.cancelcb);
+			mouse.listen.world.btn.right.onclick.on(state.cancelcb);
 
 			// Keyboard click handlers
 			keyboard.listen.onkeyclick.on(state.keyclickcb);
@@ -29,12 +29,12 @@ const selectTransformTool = () =>
 		},
 		(state, opt) => {
 			// Clear all those listeners and shortcuts we set up
-			mouse.listen.canvas.onmousemove.clear(state.movecb);
-			mouse.listen.canvas.btn.left.onclick.clear(state.clickcb);
-			mouse.listen.canvas.btn.left.ondragstart.clear(state.dragstartcb);
-			mouse.listen.canvas.btn.left.ondragend.clear(state.dragendcb);
+			mouse.listen.world.onmousemove.clear(state.movecb);
+			mouse.listen.world.btn.left.onclick.clear(state.clickcb);
+			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
-			mouse.listen.canvas.btn.right.onclick.clear(state.cancelcb);
+			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
 
 			keyboard.listen.onkeyclick.clear(state.keyclickcb);
 			keyboard.listen.onkeydown.clear(state.keydowncb);
@@ -46,7 +46,7 @@ const selectTransformTool = () =>
 			state.reset();
 
 			// Resets cursor
-			ovCanvas.style.cursor = "auto";
+			imageCollection.inputElement.style.cursor = "auto";
 		},
 		{
 			init: (state) => {
@@ -185,274 +185,259 @@ const selectTransformTool = () =>
 
 				// Mouse move handelr. As always, also renders cursor
 				state.movecb = (evn) => {
-					ovCanvas.style.cursor = "auto";
+					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					imageCollection.inputElement.style.cursor = "auto";
 					state.lastMouseTarget = evn.target;
 					state.lastMouseMove = evn;
-					if (evn.target.id === "overlayCanvas") {
-						let x = evn.x;
-						let y = evn.y;
-						if (state.snapToGrid) {
-							x += snap(evn.x, true, 64);
-							y += snap(evn.y, true, 64);
-						}
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, true, 64);
+						y += snap(evn.y, true, 64);
+					}
 
-						// Update scale
-						if (state.scaling) {
-							state.scaling.scaleTo(x, y, state.keepAspectRatio);
-						}
+					// Update scale
+					if (state.scaling) {
+						state.scaling.scaleTo(x, y, state.keepAspectRatio);
+					}
 
-						// Update position
-						if (state.moving) {
-							state.selected.x = x - state.moving.offset.x;
-							state.selected.y = y - state.moving.offset.y;
-							state.selected.updateOriginal();
-						}
+					// Update position
+					if (state.moving) {
+						state.selected.x = x - state.moving.offset.x;
+						state.selected.y = y - state.moving.offset.y;
+						state.selected.updateOriginal();
+					}
 
-						// Draw dragging box
-						if (state.dragging) {
-							ovCtx.setLineDash([2, 2]);
-							ovCtx.lineWidth = 1;
-							ovCtx.strokeStyle = "#FFF";
-
-							const ix = state.dragging.ix;
-							const iy = state.dragging.iy;
-
-							const bb = selectionBB(ix, iy, x, y);
-
-							ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-							ovCtx.setLineDash([]);
-						}
-
-						if (state.selected) {
-							ovCtx.lineWidth = 1;
-							ovCtx.strokeStyle = "#FFF";
-
-							const bb = {
-								x: state.selected.x,
-								y: state.selected.y,
-								w: state.selected.w,
-								h: state.selected.h,
-							};
-
-							// Draw Image
-							ovCtx.drawImage(
-								state.selected.image,
-								0,
-								0,
-								state.selected.image.width,
-								state.selected.image.height,
-								state.selected.x,
-								state.selected.y,
-								state.selected.w,
-								state.selected.h
-							);
-
-							// Draw selection box
-							ovCtx.setLineDash([4, 2]);
-							ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-							ovCtx.setLineDash([]);
-
-							// Draw Scaling/Rotation Origin
-							ovCtx.beginPath();
-							ovCtx.arc(
-								state.selected.x + state.selected.w / 2,
-								state.selected.y + state.selected.h / 2,
-								5,
-								0,
-								2 * Math.PI
-							);
-							ovCtx.stroke();
-
-							// Draw Scaling Handles
-							let cursorInHandle = false;
-							state.selected.handles().forEach((handle) => {
-								if (handle.contains(evn.x, evn.y)) {
-									cursorInHandle = true;
-									ovCtx.strokeRect(
-										handle.x - 1,
-										handle.y - 1,
-										handle.w + 2,
-										handle.h + 2
-									);
-								} else {
-									ovCtx.strokeRect(handle.x, handle.y, handle.w, handle.h);
-								}
-							});
-
-							// Change cursor
-							if (cursorInHandle || state.selected.contains(evn.x, evn.y))
-								ovCanvas.style.cursor = "pointer";
-						}
-
-						// Draw current cursor location
-						ovCtx.lineWidth = 3;
+					// Draw dragging box
+					if (state.dragging) {
+						ovCtx.setLineDash([2, 2]);
+						ovCtx.lineWidth = 1;
 						ovCtx.strokeStyle = "#FFF";
 
-						ovCtx.beginPath();
-						ovCtx.moveTo(x, y + 10);
-						ovCtx.lineTo(x, y - 10);
-						ovCtx.moveTo(x + 10, y);
-						ovCtx.lineTo(x - 10, y);
-						ovCtx.stroke();
+						const ix = state.dragging.ix;
+						const iy = state.dragging.iy;
+
+						const bb = selectionBB(ix, iy, x, y);
+
+						ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
+						ovCtx.setLineDash([]);
 					}
+
+					if (state.selected) {
+						ovCtx.lineWidth = 1;
+						ovCtx.strokeStyle = "#FFF";
+
+						const bb = {
+							x: state.selected.x,
+							y: state.selected.y,
+							w: state.selected.w,
+							h: state.selected.h,
+						};
+
+						// Draw Image
+						ovCtx.drawImage(
+							state.selected.image,
+							0,
+							0,
+							state.selected.image.width,
+							state.selected.image.height,
+							state.selected.x,
+							state.selected.y,
+							state.selected.w,
+							state.selected.h
+						);
+
+						// Draw selection box
+						ovCtx.setLineDash([4, 2]);
+						ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
+						ovCtx.setLineDash([]);
+
+						// Draw Scaling/Rotation Origin
+						ovCtx.beginPath();
+						ovCtx.arc(
+							state.selected.x + state.selected.w / 2,
+							state.selected.y + state.selected.h / 2,
+							5,
+							0,
+							2 * Math.PI
+						);
+						ovCtx.stroke();
+
+						// Draw Scaling Handles
+						let cursorInHandle = false;
+						state.selected.handles().forEach((handle) => {
+							if (handle.contains(evn.x, evn.y)) {
+								cursorInHandle = true;
+								ovCtx.strokeRect(
+									handle.x - 1,
+									handle.y - 1,
+									handle.w + 2,
+									handle.h + 2
+								);
+							} else {
+								ovCtx.strokeRect(handle.x, handle.y, handle.w, handle.h);
+							}
+						});
+
+						// Change cursor
+						if (cursorInHandle || state.selected.contains(evn.x, evn.y))
+							imageCollection.inputElement.style.cursor = "pointer";
+					}
+
+					// Draw current cursor location
+					ovCtx.lineWidth = 3;
+					ovCtx.strokeStyle = "#FFF";
+
+					ovCtx.beginPath();
+					ovCtx.moveTo(x, y + 10);
+					ovCtx.lineTo(x, y - 10);
+					ovCtx.moveTo(x + 10, y);
+					ovCtx.lineTo(x - 10, y);
+					ovCtx.stroke();
 				};
 
 				// Handles left mouse clicks
 				state.clickcb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
-						// If something is selected, commit changes to the canvas
-						if (state.selected) {
-							imgCtx.drawImage(
-								state.selected.image,
-								state.original.x,
-								state.original.y
-							);
-							commands.runCommand(
-								"eraseImage",
-								"Image Transform Erase",
-								state.original
-							);
-							commands.runCommand(
-								"drawImage",
-								"Image Transform Draw",
-								state.selected
-							);
-							state.original = null;
-							state.selected = null;
+					// If something is selected, commit changes to the canvas
+					if (state.selected) {
+						imgCtx.drawImage(
+							state.selected.image,
+							state.original.x,
+							state.original.y
+						);
+						commands.runCommand(
+							"eraseImage",
+							"Image Transform Erase",
+							state.original
+						);
+						commands.runCommand(
+							"drawImage",
+							"Image Transform Draw",
+							state.selected
+						);
+						state.original = null;
+						state.selected = null;
 
-							redraw();
-						}
+						redraw();
 					}
 				};
 
 				// Handles left mouse drag events
 				state.dragstartcb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
-						let ix = evn.ix;
-						let iy = evn.iy;
-						if (state.snapToGrid) {
-							ix += snap(evn.ix, true, 64);
-							iy += snap(evn.iy, true, 64);
-						}
-
-						// If is selected, check if drag is in handles/body and act accordingly
-						if (state.selected) {
-							const handles = state.selected.handles();
-
-							const activeHandle = handles.find((v) =>
-								v.contains(evn.ix, evn.iy)
-							);
-							if (activeHandle) {
-								state.scaling = activeHandle;
-								return;
-							} else if (state.selected.contains(ix, iy)) {
-								state.moving = {
-									offset: {x: ix - state.selected.x, y: iy - state.selected.y},
-								};
-								return;
-							}
-						}
-						// If it is not, just create new selection
-						state.reset();
-						state.dragging = {ix, iy};
+					let ix = evn.ix;
+					let iy = evn.iy;
+					if (state.snapToGrid) {
+						ix += snap(evn.ix, true, 64);
+						iy += snap(evn.iy, true, 64);
 					}
+
+					// If is selected, check if drag is in handles/body and act accordingly
+					if (state.selected) {
+						const handles = state.selected.handles();
+
+						const activeHandle = handles.find((v) =>
+							v.contains(evn.ix, evn.iy)
+						);
+						if (activeHandle) {
+							state.scaling = activeHandle;
+							return;
+						} else if (state.selected.contains(ix, iy)) {
+							state.moving = {
+								offset: {x: ix - state.selected.x, y: iy - state.selected.y},
+							};
+							return;
+						}
+					}
+					// If it is not, just create new selection
+					state.reset();
+					state.dragging = {ix, iy};
 				};
 
 				// Handles left mouse drag end events
 				state.dragendcb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
-						let x = evn.x;
-						let y = evn.y;
-						if (state.snapToGrid) {
-							x += snap(evn.x, true, 64);
-							y += snap(evn.y, true, 64);
-						}
-
-						// If we are scaling, stop scaling and do some handler magic
-						if (state.scaling) {
-							state.selected.updateOriginal();
-							state.scaling = null;
-							// If we are moving the selection, just... stop
-						} else if (state.moving) {
-							state.moving = null;
-							/**
-							 * If we are dragging, create a cutout selection area and save to an auxiliar image
-							 * We will be rendering the image to the overlay, so it will not be noticeable
-							 */
-						} else if (state.dragging) {
-							state.original = selectionBB(
-								state.dragging.ix,
-								state.dragging.iy,
-								x,
-								y
-							);
-							state.selected = selectionBB(
-								state.dragging.ix,
-								state.dragging.iy,
-								x,
-								y
-							);
-
-							// Cut out selected portion of the image for manipulation
-							const cvs = document.createElement("canvas");
-							cvs.width = state.selected.w;
-							cvs.height = state.selected.h;
-							const ctx = cvs.getContext("2d");
-
-							ctx.drawImage(
-								imgCanvas,
-								state.selected.x,
-								state.selected.y,
-								state.selected.w,
-								state.selected.h,
-								0,
-								0,
-								state.selected.w,
-								state.selected.h
-							);
-
-							imgCtx.clearRect(
-								state.selected.x,
-								state.selected.y,
-								state.selected.w,
-								state.selected.h
-							);
-							state.selected.image = cvs;
-							state.original.image = cvs;
-
-							if (state.selected.w === 0 || state.selected.h === 0)
-								state.selected = null;
-
-							state.dragging = null;
-						}
-						redraw();
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, true, 64);
+						y += snap(evn.y, true, 64);
 					}
+
+					// If we are scaling, stop scaling and do some handler magic
+					if (state.scaling) {
+						state.selected.updateOriginal();
+						state.scaling = null;
+						// If we are moving the selection, just... stop
+					} else if (state.moving) {
+						state.moving = null;
+						/**
+						 * If we are dragging, create a cutout selection area and save to an auxiliar image
+						 * We will be rendering the image to the overlay, so it will not be noticeable
+						 */
+					} else if (state.dragging) {
+						state.original = selectionBB(
+							state.dragging.ix,
+							state.dragging.iy,
+							x,
+							y
+						);
+						state.selected = selectionBB(
+							state.dragging.ix,
+							state.dragging.iy,
+							x,
+							y
+						);
+
+						// Cut out selected portion of the image for manipulation
+						const cvs = document.createElement("canvas");
+						cvs.width = state.selected.w;
+						cvs.height = state.selected.h;
+						const ctx = cvs.getContext("2d");
+
+						ctx.drawImage(
+							imgCanvas,
+							state.selected.x,
+							state.selected.y,
+							state.selected.w,
+							state.selected.h,
+							0,
+							0,
+							state.selected.w,
+							state.selected.h
+						);
+
+						imgCtx.clearRect(
+							state.selected.x,
+							state.selected.y,
+							state.selected.w,
+							state.selected.h
+						);
+						state.selected.image = cvs;
+						state.original.image = cvs;
+
+						if (state.selected.w === 0 || state.selected.h === 0)
+							state.selected = null;
+
+						state.dragging = null;
+					}
+					redraw();
 				};
 
 				// Handler for right clicks. Basically resets everything
 				state.cancelcb = (evn) => {
-					if (evn.target.id === "overlayCanvas") {
-						state.reset();
-					}
+					state.reset();
 				};
 
 				// Keyboard callbacks (For now, they just handle the "delete" key)
 				state.keydowncb = (evn) => {};
 
 				state.keyclickcb = (evn) => {
-					if (state.lastMouseTarget.id === "overlayCanvas") {
-						switch (evn.code) {
-							case "Delete":
-								// Deletes selected area
-								state.selected &&
-									commands.runCommand(
-										"eraseImage",
-										"Erase Area",
-										state.selected
-									);
-								state.selected = null;
-								redraw();
-						}
+					switch (evn.code) {
+						case "Delete":
+							// Deletes selected area
+							state.selected &&
+								commands.runCommand("eraseImage", "Erase Area", state.selected);
+							state.selected = null;
+							redraw();
 					}
 				};
 
@@ -460,47 +445,45 @@ const selectTransformTool = () =>
 
 				// Handles copying
 				state.ctrlccb = (evn, cut = false) => {
-					if (state.selected && state.lastMouseTarget.id === "overlayCanvas") {
-						// We create a new canvas to store the data
-						state.clipboard.copy = document.createElement("canvas");
+					// We create a new canvas to store the data
+					state.clipboard.copy = document.createElement("canvas");
 
-						state.clipboard.copy.width = state.selected.w;
-						state.clipboard.copy.height = state.selected.h;
+					state.clipboard.copy.width = state.selected.w;
+					state.clipboard.copy.height = state.selected.h;
 
-						const ctx = state.clipboard.copy.getContext("2d");
+					const ctx = state.clipboard.copy.getContext("2d");
 
-						ctx.clearRect(0, 0, state.selected.w, state.selected.h);
-						ctx.drawImage(
-							state.selected.image,
-							0,
-							0,
-							state.selected.image.width,
-							state.selected.image.height,
-							0,
-							0,
-							state.selected.w,
-							state.selected.h
-						);
+					ctx.clearRect(0, 0, state.selected.w, state.selected.h);
+					ctx.drawImage(
+						state.selected.image,
+						0,
+						0,
+						state.selected.image.width,
+						state.selected.image.height,
+						0,
+						0,
+						state.selected.w,
+						state.selected.h
+					);
 
-						// If cutting, we reverse the selection and erase the selection area
-						if (cut) {
-							const aux = state.original;
-							state.reset();
+					// If cutting, we reverse the selection and erase the selection area
+					if (cut) {
+						const aux = state.original;
+						state.reset();
 
-							commands.runCommand("eraseImage", "Cut Image", aux);
-						}
+						commands.runCommand("eraseImage", "Cut Image", aux);
+					}
 
-						// Because firefox needs manual activation of the feature
-						if (state.useClipboard) {
-							// Send to clipboard
-							state.clipboard.copy.toBlob((blob) => {
-								const item = new ClipboardItem({"image/png": blob});
-								navigator.clipboard.write([item]).catch((e) => {
-									console.warn("Error sending to clipboard");
-									console.warn(e);
-								});
+					// Because firefox needs manual activation of the feature
+					if (state.useClipboard) {
+						// Send to clipboard
+						state.clipboard.copy.toBlob((blob) => {
+							const item = new ClipboardItem({"image/png": blob});
+							navigator.clipboard.write([item]).catch((e) => {
+								console.warn("Error sending to clipboard");
+								console.warn(e);
 							});
-						}
+						});
 					}
 				};
 

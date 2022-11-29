@@ -104,31 +104,27 @@ body {
 	grid-row-gap: 0px;
 }
 
-.maskCanvasMonitor .overMaskCanvasMonitor .initImgCanvasMonitor {
-	position: absolute;
-}
-
 /* Mask colors for mask inversion */
 /* Filters are some magic acquired at https://codepen.io/sosuke/pen/Pjoqqp */
-.maskPaintCanvas {
+.mask-canvas {
 	opacity: 0%;
 }
 
-.maskPaintCanvas.display {
+.mask-canvas.display {
 	opacity: 40%;
 	filter: invert(100%);
 }
 
-.maskPaintCanvas.display.opaque {
+.mask-canvas.display.opaque {
 	opacity: 100%;
 }
 
-.maskPaintCanvas.display.clear {
+.mask-canvas.display.clear {
 	filter: invert(71%) sepia(46%) saturate(6615%) hue-rotate(321deg)
 		brightness(106%) contrast(100%);
 }
 
-.maskPaintCanvas.display.hold {
+.mask-canvas.display.hold {
 	filter: invert(41%) sepia(16%) saturate(5181%) hue-rotate(218deg)
 		brightness(103%) contrast(108%);
 }
@@ -215,11 +211,6 @@ div.prompt-wrapper > textarea {
 	margin: 0;
 	padding: 0;
 
-	top: 0px;
-	bottom: 0px;
-	left: 0px;
-	right: 0;
-
 	resize: vertical;
 }
 
@@ -228,7 +219,6 @@ div.prompt-wrapper > textarea:focus {
 }
 
 /* Tool buttons */
-
 .button-array {
 	display: flex;
 	justify-content: stretch;

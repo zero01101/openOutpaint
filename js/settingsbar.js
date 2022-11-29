@@ -150,7 +150,7 @@ function createSlider(name, wrapper, options = {}) {
 	});
 
 	mouse.listen.window.btn.left.ondrag.on((evn) => {
-		if (evn.target === overEl) {
+		if (evn.initialTarget === overEl) {
 			setValue(
 				Math.max(
 					options.min,

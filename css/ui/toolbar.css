@@ -9,6 +9,10 @@
 	background-color: var(--c-primary);
 }
 
+#ui-toolbar * {
+	user-select: none;
+}
+
 #ui-toolbar .handle {
 	display: flex;
 	align-items: center;

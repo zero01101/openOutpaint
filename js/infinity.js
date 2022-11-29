@@ -106,7 +106,7 @@ const infinity = {
 	},
 };
 
-infinity._init();
+//infinity._init();
 Array.from(document.getElementsByClassName("display-canvas")).forEach(
 	(canvas) => infinity.registerViewport(canvas)
 );

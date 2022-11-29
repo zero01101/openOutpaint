@@ -4,3 +4,43 @@
 	width: 100%;
 	height: 150px;
 }
+
+#layer-manager .menu-container {
+	height: 200px;
+}
+
+.layer-render-target {
+	position: fixed;
+	background-color: #466;
+
+	margin: 0;
+	padding: 0;
+
+	top: 0;
+	left: 0;
+
+	width: 100%;
+	height: 100%;
+}
+
+.layer-render-target .collection {
+	position: absolute;
+}
+
+.layer-render-target .collection > .collection-input-overlay {
+	position: absolute;
+
+	top: 0;
+	left: 0;
+
+	z-index: 10;
+}
+
+.layer-render-target canvas {
+	position: absolute;
+
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+}
