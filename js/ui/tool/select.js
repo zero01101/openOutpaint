@@ -183,7 +183,7 @@ const selectTransformTool = () =>
 					};
 				};
 
-				// Mouse move handelr. As always, also renders cursor
+				// Mouse move handler. As always, also renders cursor
 				state.movecb = (evn) => {
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 					imageCollection.inputElement.style.cursor = "auto";
@@ -298,6 +298,16 @@ const selectTransformTool = () =>
 
 				// Handles left mouse clicks
 				state.clickcb = (evn) => {
+					if (
+						state.original.x === state.selected.x &&
+						state.original.y === state.selected.y &&
+						state.original.w === state.selected.w &&
+						state.original.h === state.selected.h
+					) {
+						state.reset();
+						return;
+					}
+
 					// If something is selected, commit changes to the canvas
 					if (state.selected) {
 						imgCtx.drawImage(
