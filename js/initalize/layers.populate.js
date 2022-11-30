@@ -49,10 +49,30 @@ layers.registerCollection("mask", {name: "Mask Layers", requiresActive: true});
 mouse.registerContext(
 	"world",
 	(evn, ctx) => {
+		// Fix because in chrome layerX and layerY simply doesnt work
+		/** @type {HTMLDivElement} */
+		const target = evn.target;
+
+		// Get element bounding rect
+		const bb = target.getBoundingClientRect();
+
+		// Get element width/height (css, cause I don't trust client sizes in chrome anymore)
+		const w = imageCollection.size.w;
+		const h = imageCollection.size.h;
+
+		// Get cursor position
+		const x = evn.clientX;
+		const y = evn.clientY;
+
+		// Map to layer space
+		const layerX = ((x - bb.left) / bb.width) * w;
+		const layerY = ((y - bb.top) / bb.height) * h;
+
+		//
 		ctx.coords.prev.x = ctx.coords.pos.x;
 		ctx.coords.prev.y = ctx.coords.pos.y;
-		ctx.coords.pos.x = evn.layerX;
-		ctx.coords.pos.y = evn.layerY;
+		ctx.coords.pos.x = layerX;
+		ctx.coords.pos.y = layerY;
 	},
 	{target: imageCollection.inputElement}
 );
@@ -105,25 +125,8 @@ const viewport = {
 	},
 };
 
-let rotation = 0;
-let lastTime = performance.now();
-
-const onframe = () => {
-	const nowTime = performance.now();
-	const dt = nowTime - lastTime;
-	rotation += (10 * dt) / 1000.0;
-
-	lastTime = nowTime;
-
-	viewport.transform(imageCollection.element);
-
-	requestAnimationFrame(onframe);
-};
-
-onframe();
-
-viewport.cx = viewport.w / 2;
-viewport.cy = viewport.h / 2;
+viewport.cx = imageCollection.size.w / 2;
+viewport.cy = imageCollection.size.h / 2;
 
 let worldInit = null;
 
