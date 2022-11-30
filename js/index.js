@@ -82,18 +82,19 @@ var marchCoords = {};
 //
 function startup() {
 	testHostConfiguration();
-	testHostConnection();
-
 	loadSettings();
 
 	const hostEl = document.getElementById("host");
-	hostEl.onchange = () => {
-		host = hostEl.value.endsWith("/")
-			? hostEl.value.substring(0, hostEl.value.length - 1)
-			: hostEl.value;
-		hostEl.value = host;
-		localStorage.setItem("host", host);
-	};
+	testHostConnection().then((checkConnection) => {
+		hostEl.onchange = () => {
+			host = hostEl.value.endsWith("/")
+				? hostEl.value.substring(0, hostEl.value.length - 1)
+				: hostEl.value;
+			hostEl.value = host;
+			localStorage.setItem("host", host);
+			checkConnection();
+		};
+	});
 
 	const promptEl = document.getElementById("prompt");
 	promptEl.oninput = () => {
@@ -157,7 +158,7 @@ function testHostConfiguration() {
 	}
 }
 
-function testHostConnection() {
+async function testHostConnection() {
 	class CheckInProgressError extends Error {}
 
 	const connectionIndicator = document.getElementById(
@@ -174,6 +175,7 @@ function testHostConnection() {
 				connectionIndicator.classList.remove(
 					"cors-issue",
 					"offline",
+					"before",
 					"server-error"
 				);
 				connectionIndicator.title = "Connected";
@@ -181,7 +183,12 @@ function testHostConnection() {
 			},
 			error: () => {
 				connectionIndicator.classList.add("server-error");
-				connectionIndicator.classList.remove("online", "offline", "cors-issue");
+				connectionIndicator.classList.remove(
+					"online",
+					"offline",
+					"before",
+					"cors-issue"
+				);
 				connectionIndicator.title =
 					"Server is online, but is returning an error response";
 				connectionStatus = false;
@@ -191,6 +198,7 @@ function testHostConnection() {
 				connectionIndicator.classList.remove(
 					"online",
 					"offline",
+					"before",
 					"server-error"
 				);
 				connectionIndicator.title =
@@ -202,16 +210,30 @@ function testHostConnection() {
 				connectionIndicator.classList.remove(
 					"cors-issue",
 					"online",
+					"before",
 					"server-error"
 				);
 				connectionIndicator.title =
 					"Server seems to be offline. Please check the console for more information.";
 				connectionStatus = false;
 			},
+			before: () => {
+				connectionIndicator.classList.add("before");
+				connectionIndicator.classList.remove(
+					"cors-issue",
+					"online",
+					"offline",
+					"server-error"
+				);
+				connectionIndicator.title = "Waiting for check to complete.";
+				connectionStatus = false;
+			},
 		};
 
 		statuses[status] && statuses[status]();
 	};
+
+	setConnectionStatus("before");
 
 	let checkInProgress = false;
 
@@ -224,7 +246,10 @@ function testHostConnection() {
 		var url = document.getElementById("host").value + "/startup-events";
 		// Attempt normal request
 		try {
-			const response = await fetch(url);
+			/** @type {Response} */
+			const response = await fetch(url, {
+				signal: AbortSignal.timeout(5000),
+			});
 
 			if (response.status === 200) {
 				setConnectionStatus("online");
@@ -243,6 +268,7 @@ function testHostConnection() {
 			}
 		} catch (e) {
 			try {
+				if (e instanceof DOMException) throw "offline";
 				// Tests if problem is CORS
 				await fetch(url, {mode: "no-cors"});
 
@@ -266,7 +292,7 @@ function testHostConnection() {
 		return status;
 	};
 
-	checkConnection(true);
+	await checkConnection(true);
 
 	// On click, attempt to refresh
 	connectionIndicator.onclick = async () => {
@@ -281,8 +307,8 @@ function testHostConnection() {
 	// Checks every 5 seconds if offline, 30 seconds if online
 	const checkAgain = () => {
 		setTimeout(
-			() => {
-				checkConnection();
+			async () => {
+				await checkConnection();
 				checkAgain();
 			},
 			connectionStatus ? 30000 : 5000
@@ -290,6 +316,10 @@ function testHostConnection() {
 	};
 
 	checkAgain();
+
+	return () => {
+		checkConnection().catch(() => {});
+	};
 }
 
 function newImage(evt) {

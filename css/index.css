@@ -197,6 +197,10 @@ body {
 	background-color: #dddd49;
 }
 
+.host-field-wrapper .connection-status.before {
+	background-color: #777;
+}
+
 input#host {
 	box-sizing: border-box;
 }
