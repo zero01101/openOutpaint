@@ -204,8 +204,11 @@ const _generate = async (endpoint, request, bb) => {
 					case "ArrowLeft":
 						prevImg();
 						break;
-					case "Escape":
+					case "Enter":
 						applyImg();
+						break;
+					case "Escape":
+						discardImg();
 						break;
 					default:
 						break;
