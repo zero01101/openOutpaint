@@ -167,6 +167,14 @@ const _generate = async (endpoint, request, bb) => {
 		});
 	};
 
+	const makeMore = async () => {
+		let stopProgress = _monitorProgress(bb);
+		images.push(...(await _dream(endpoint, requestCopy)));
+		stopProgress();
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+	};
+
 	const discardImg = async () => {
 		clean();
 	};
@@ -184,20 +192,24 @@ const _generate = async (endpoint, request, bb) => {
 				break;
 		}
 
-		switch (evn.code) {
-			case "ArrowRight":
-				nextImg();
-				break;
-			case "ArrowLeft":
-				prevImg();
-				break;
-			case "Enter":
-				applyImg();
-				break;
-			case "Esc":
-				applyImg();
+		switch (evn.key) {
+			case "+":
+				makeMore();
 				break;
 			default:
+				switch (evn.code) {
+					case "ArrowRight":
+						nextImg();
+						break;
+					case "ArrowLeft":
+						prevImg();
+						break;
+					case "Escape":
+						applyImg();
+						break;
+					default:
+						break;
+				}
 				break;
 		}
 	};
@@ -254,13 +266,7 @@ const _generate = async (endpoint, request, bb) => {
 	const morebtn = document.createElement("button");
 	morebtn.textContent = "+";
 	morebtn.title = "Generate More";
-	morebtn.addEventListener("click", async () => {
-		let stopProgress = _monitorProgress(bb);
-		images.push(...(await _dream(endpoint, requestCopy)));
-		stopProgress();
-
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
-	});
+	morebtn.addEventListener("click", makeMore);
 	imageSelectMenu.appendChild(morebtn);
 
 	const acceptbtn = document.createElement("button");
