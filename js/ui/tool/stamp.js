@@ -3,6 +3,8 @@ const stampTool = () =>
 		"res/icons/file-up.svg",
 		"Stamp Image",
 		(state, opt) => {
+			state.loaded = true;
+
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 			state.movecb({...mouse.coords.world.pos});
@@ -31,6 +33,8 @@ const stampTool = () =>
 			}
 		},
 		(state, opt) => {
+			state.loaded = false;
+
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.movecb);
 			mouse.listen.world.btn.left.onclick.clear(state.drawcb);
@@ -44,6 +48,7 @@ const stampTool = () =>
 		},
 		{
 			init: (state) => {
+				state.loaded = false;
 				state.snapToGrid = true;
 				state.resources = [];
 				state.selected = null;
@@ -75,7 +80,7 @@ const stampTool = () =>
 					}
 
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-					state.movecb(state.lastMouseMove);
+					if (state.loaded) state.movecb(state.lastMouseMove);
 				};
 
 				// Synchronizes resources array with the DOM

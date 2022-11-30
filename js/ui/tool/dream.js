@@ -136,12 +136,81 @@ const _generate = async (endpoint, request, bb) => {
 	images.push(...(await _dream(endpoint, requestCopy)));
 	stopProgress();
 
+	// Image navigation
+	const prevImg = () => {
+		at--;
+		if (at < 0) at = images.length - 1;
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		redraw();
+	};
+
+	const nextImg = () => {
+		at++;
+		if (at >= images.length) at = 0;
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		redraw();
+	};
+
+	const applyImg = async () => {
+		const img = new Image();
+		// load the image data after defining the closure
+		img.src = "data:image/png;base64," + images[at];
+		img.addEventListener("load", () => {
+			commands.runCommand("drawImage", "Image Dream", {
+				x: bb.x,
+				y: bb.y,
+				image: img,
+			});
+			clean();
+		});
+	};
+
+	const discardImg = async () => {
+		clean();
+	};
+
+	// Listen for keyboard arrows
+	const onarrow = (evn) => {
+		switch (evn.target.tagName.toLowerCase()) {
+			case "input":
+			case "textarea":
+			case "select":
+			case "button":
+				return; // If in an input field, do not process arrow input
+			default:
+				// Do nothing
+				break;
+		}
+
+		switch (evn.code) {
+			case "ArrowRight":
+				nextImg();
+				break;
+			case "ArrowLeft":
+				prevImg();
+				break;
+			case "Enter":
+				applyImg();
+				break;
+			case "Esc":
+				applyImg();
+				break;
+			default:
+				break;
+		}
+	};
+
+	keyboard.listen.onkeyclick.on(onarrow);
+
 	// Cleans up
 	const clean = () => {
 		stopMarchingAnts();
 		imageCollection.inputElement.removeChild(imageSelectMenu);
 		imageCollection.deleteLayer(layer);
 		blockNewImages = false;
+		keyboard.listen.onkeyclick.clear(onarrow);
 	};
 
 	const makeElement = (type, x, y) => {
@@ -172,26 +241,14 @@ const _generate = async (endpoint, request, bb) => {
 	const backbtn = document.createElement("button");
 	backbtn.textContent = "<";
 	backbtn.title = "Previous Image";
-	backbtn.addEventListener("click", () => {
-		at--;
-		if (at < 0) at = images.length - 1;
-
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
-		redraw();
-	});
+	backbtn.addEventListener("click", prevImg);
 	imageSelectMenu.appendChild(backbtn);
 	imageSelectMenu.appendChild(imageindextxt);
 
 	const nextbtn = document.createElement("button");
 	nextbtn.textContent = ">";
 	nextbtn.title = "Next Image";
-	nextbtn.addEventListener("click", () => {
-		at++;
-		if (at >= images.length) at = 0;
-
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
-		redraw();
-	});
+	nextbtn.addEventListener("click", nextImg);
 	imageSelectMenu.appendChild(nextbtn);
 
 	const morebtn = document.createElement("button");
@@ -209,27 +266,13 @@ const _generate = async (endpoint, request, bb) => {
 	const acceptbtn = document.createElement("button");
 	acceptbtn.textContent = "Y";
 	acceptbtn.title = "Apply Current";
-	acceptbtn.addEventListener("click", async () => {
-		const img = new Image();
-		// load the image data after defining the closure
-		img.src = "data:image/png;base64," + images[at];
-		img.addEventListener("load", () => {
-			commands.runCommand("drawImage", "Image Dream", {
-				x: bb.x,
-				y: bb.y,
-				image: img,
-			});
-			clean();
-		});
-	});
+	acceptbtn.addEventListener("click", applyImg);
 	imageSelectMenu.appendChild(acceptbtn);
 
 	const discardbtn = document.createElement("button");
 	discardbtn.textContent = "N";
 	discardbtn.title = "Cancel";
-	discardbtn.addEventListener("click", async () => {
-		clean();
-	});
+	discardbtn.addEventListener("click", discardImg);
 	imageSelectMenu.appendChild(discardbtn);
 
 	const resourcebtn = document.createElement("button");
@@ -241,7 +284,10 @@ const _generate = async (endpoint, request, bb) => {
 		img.src = "data:image/png;base64," + images[at];
 		img.addEventListener("load", () => {
 			const response = prompt("Enter new resource name", "Dream Resource");
-			if (response) tools.stamp.state.addResource(response, img);
+			if (response) {
+				tools.stamp.state.addResource(response, img);
+				redraw(); // Redraw to avoid strange cursor behavior
+			}
 		});
 	});
 	imageSelectMenu.appendChild(resourcebtn);
