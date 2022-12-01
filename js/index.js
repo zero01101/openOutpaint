@@ -75,7 +75,6 @@ var arbitraryImageBitmap;
 var arbitraryImageBase64; // seriously js cmon work with me here
 var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
 var marchOffset = 0;
-var stopMarching = null;
 var inProgress = false;
 var marchCoords = {};
 

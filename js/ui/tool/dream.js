@@ -481,9 +481,6 @@ const dream_img2img_callback = (evn, state) => {
 		// Don't allow another image until is finished
 		blockNewImages = true;
 
-		// Setup marching ants
-		stopMarching = march(bb);
-
 		// Setup some basic information for SD
 		request.width = bb.w;
 		request.height = bb.h;
