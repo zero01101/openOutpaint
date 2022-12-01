@@ -163,7 +163,7 @@ const _generate = async (endpoint, request, bb) => {
 				y: bb.y,
 				image: img,
 			});
-			clean();
+			clean(true);
 		});
 	};
 
@@ -220,7 +220,20 @@ const _generate = async (endpoint, request, bb) => {
 	keyboard.listen.onkeyclick.on(onarrow);
 
 	// Cleans up
-	const clean = () => {
+	const clean = (removeBrushMask = false) => {
+		if (removeBrushMask) {
+			// don't want to put this in history, so not applicable for runCommand()
+			// probably a better way to do this though
+			var clearArea = maskPaintLayer.ctx.createImageData(bb.w, bb.h);
+			var clearD = clearArea.data;
+			for (i = 0; i < clearD.length; i += 4) {
+				clearD[i] = 0;
+				clearD[i + 1] = 0;
+				clearD[i + 2] = 0;
+				clearD[i + 3] = 0;
+			}
+			maskPaintLayer.ctx.putImageData(clearArea, bb.x, bb.y);
+		}
 		stopMarchingAnts();
 		imageCollection.inputElement.removeChild(imageSelectMenu);
 		imageCollection.deleteLayer(layer);
