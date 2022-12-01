@@ -545,6 +545,28 @@ const dream_img2img_callback = (evn, state) => {
 };
 
 /**
+ * Dream and img2img tools
+ */
+const _reticle_draw = (evn, snapToGrid = true) => {
+	const bb = getBoundingBox(
+		evn.x,
+		evn.y,
+		basePixelCount * scaleFactor,
+		basePixelCount * scaleFactor,
+		snapToGrid && basePixelCount
+	);
+
+	// draw targeting square reticle thingy cursor
+	ovCtx.lineWidth = 1;
+	ovCtx.strokeStyle = "#FFF";
+	ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h); //origin is middle of the frame
+
+	return () => {
+		ovCtx.clearRect(bb.x - 10, bb.y - 10, bb.w + 20, bb.h + 20);
+	};
+};
+
+/**
  * Registers Tools
  */
 const dreamTool = () =>
@@ -580,9 +602,13 @@ const dreamTool = () =>
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
-				state.mousemovecb = (evn) => {
+
+				state.erasePrevReticle = () =>
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-					_reticle_draw(evn, state.snapToGrid);
+
+				state.mousemovecb = (evn) => {
+					state.erasePrevReticle();
+					state.erasePrevReticle = _reticle_draw(evn, state.snapToGrid);
 				};
 				state.dreamcb = (evn) => {
 					dream_generate_callback(evn, state);
@@ -669,9 +695,12 @@ const img2imgTool = () =>
 
 				state.keepBorderSize = 64;
 
-				state.mousemovecb = (evn) => {
+				state.erasePrevReticle = () =>
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-					_reticle_draw(evn, state.snapToGrid);
+
+				state.mousemovecb = (evn) => {
+					state.erasePrevReticle();
+					state.erasePrevReticle = _reticle_draw(evn, state.snapToGrid);
 					const bb = getBoundingBox(
 						evn.x,
 						evn.y,
@@ -687,7 +716,7 @@ const img2imgTool = () =>
 					const auxCtx = auxCanvas.getContext("2d");
 
 					if (state.keepBorderSize > 0) {
-						auxCtx.fillStyle = "#6A6AFF7F";
+						auxCtx.fillStyle = "#6A6AFF30";
 						auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
 						auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
 						auxCtx.fillRect(
@@ -702,12 +731,8 @@ const img2imgTool = () =>
 							bb.w,
 							state.keepBorderSize
 						);
+						ovCtx.drawImage(auxCanvas, bb.x, bb.y);
 					}
-
-					const tmp = ovCtx.globalAlpha;
-					ovCtx.globalAlpha = 0.4;
-					ovCtx.drawImage(auxCanvas, bb.x, bb.y);
-					ovCtx.globalAlpha = tmp;
 				};
 				state.dreamcb = (evn) => {
 					dream_img2img_callback(evn, state);

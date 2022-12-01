@@ -150,7 +150,7 @@ const _toolbar_input = {
 		return {checkbox, label};
 	},
 
-	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1) => {
+	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1, cb = null) => {
 		const slider = document.createElement("div");
 
 		const value = createSlider(text, slider, {
@@ -159,6 +159,7 @@ const _toolbar_input = {
 			step,
 			valuecb: (v) => {
 				state[dataKey] = v;
+				cb && cb(v);
 			},
 			defaultValue: state[dataKey],
 		});
@@ -171,22 +172,4 @@ const _toolbar_input = {
 			},
 		};
 	},
-};
-
-/**
- * Dream and img2img tools
- */
-const _reticle_draw = (evn, snapToGrid = true) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		basePixelCount * scaleFactor,
-		basePixelCount * scaleFactor,
-		snapToGrid && basePixelCount
-	);
-
-	// draw targeting square reticle thingy cursor
-	ovCtx.lineWidth = 1;
-	ovCtx.strokeStyle = "#FFF";
-	ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h); //origin is middle of the frame
 };

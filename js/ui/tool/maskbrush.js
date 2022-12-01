@@ -52,11 +52,47 @@ const _mask_brush_erase_callback = (evn, state) => {
 	maskPaintCtx.stroke();
 };
 
+const _paint_mb_cursor = (state) => {
+	const v = state.brushSize;
+	state.cursorLayer.resize(v + 20, v + 20);
+
+	const ctx = state.cursorLayer.ctx;
+
+	ctx.clearRect(0, 0, v + 20, v + 20);
+	ctx.beginPath();
+	ctx.arc(
+		(v + 20) / 2,
+		(v + 20) / 2,
+		state.brushSize / 2,
+		0,
+		2 * Math.PI,
+		true
+	);
+	ctx.fillStyle = "#FFFFFF50";
+
+	ctx.fill();
+
+	if (state.preview) {
+		ctx.strokeStyle = "#000F";
+		ctx.setLineDash([4, 2]);
+		ctx.stroke();
+		ctx.setLineDash([]);
+	}
+};
+
 const maskBrushTool = () =>
 	toolbar.registerTool(
 		"res/icons/paintbrush.svg",
 		"Mask Brush",
 		(state, opt) => {
+			// New layer for the cursor
+			state.cursorLayer = imageCollection.registerLayer(null, {
+				after: maskPaintLayer,
+				bb: {x: 0, y: 0, w: state.brushSize + 20, h: state.brushSize + 20},
+			});
+
+			_paint_mb_cursor(state);
+
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 			state.movecb({...mouse.coords.world.pos});
@@ -73,6 +109,10 @@ const maskBrushTool = () =>
 			setMask("neutral");
 		},
 		(state, opt) => {
+			// Don't want to keep hogging resources
+			imageCollection.deleteLayer(state.cursorLayer);
+			state.cursorLayer = null;
+
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.movecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
@@ -104,21 +144,22 @@ const maskBrushTool = () =>
 
 				state.preview = false;
 
-				state.movecb = (evn) => {
-					// draw big translucent white blob cursor
+				state.clearPrevCursor = () =>
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-					ovCtx.beginPath();
-					ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-					ovCtx.fillStyle = "#FFFFFF50";
 
-					ovCtx.fill();
+				state.movecb = (evn) => {
+					state.cursorLayer.moveTo(
+						evn.x - state.brushSize / 2 - 10,
+						evn.y - state.brushSize / 2 - 10
+					);
 
-					if (state.preview) {
-						ovCtx.strokeStyle = "#000F";
-						ovCtx.setLineDash([4, 2]);
-						ovCtx.stroke();
-						ovCtx.setLineDash([]);
-					}
+					state.clearPrevCursor = () =>
+						ovCtx.clearRect(
+							evn.x - state.brushSize / 2 - 10,
+							evn.y - state.brushSize / 2 - 10,
+							evn.x + state.brushSize / 2 + 10,
+							evn.y + state.brushSize / 2 + 10
+						);
 				};
 
 				state.wheelcb = (evn) => {
@@ -127,7 +168,6 @@ const maskBrushTool = () =>
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
-						ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 						state.movecb(evn);
 					}
 				};
@@ -144,7 +184,11 @@ const maskBrushTool = () =>
 						"Brush Size",
 						state.config.minBrushSize,
 						state.config.maxBrushSize,
-						1
+						1,
+						(v) => {
+							if (!state.cursorLayer) return;
+							_paint_mb_cursor(state);
+						}
 					);
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
@@ -174,9 +218,11 @@ const maskBrushTool = () =>
 						if (previewMaskButton.classList.contains("active")) {
 							maskPaintCanvas.classList.remove("opaque");
 							state.preview = false;
+							_paint_mb_cursor(state);
 						} else {
 							maskPaintCanvas.classList.add("opaque");
 							state.preview = true;
+							_paint_mb_cursor(state);
 						}
 						previewMaskButton.classList.toggle("active");
 					};
