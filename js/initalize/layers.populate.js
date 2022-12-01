@@ -130,7 +130,6 @@ viewport.cy = imageCollection.size.h / 2;
 
 let worldInit = null;
 
-imageCollection.element.style.transformOrigin = `${viewport.cx}px ${viewport.cy}px`;
 viewport.transform(imageCollection.element);
 
 mouse.listen.window.onwheel.on((evn) => {
@@ -183,4 +182,8 @@ mouse.listen.window.btn.middle.onpaint.on((evn) => {
 
 mouse.listen.window.btn.middle.onpaintend.on((evn) => {
 	worldInit = null;
+});
+
+window.addEventListener("resize", () => {
+	viewport.transform(imageCollection.element);
 });
