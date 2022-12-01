@@ -1,5 +1,318 @@
-const dream_generate_callback = (evn, state) => {
-	if (evn.target.id === "overlayCanvas" && !blockNewImages) {
+let blockNewImages = false;
+
+/**
+ * Starts progress monitoring bar
+ *
+ * @param {BoundingBox} bb Bouding Box to draw progress to
+ * @returns {() => void}
+ */
+const _monitorProgress = (bb) => {
+	const minDelay = 1000;
+
+	const apiURL = `${host}${url}progress?skip_current_image=true`;
+
+	const expanded = {...bb};
+	expanded.x--;
+	expanded.y--;
+	expanded.w += 2;
+	expanded.h += 2;
+
+	// Get temporary layer to draw progress bar
+	const layer = imageCollection.registerLayer(null, {
+		bb: expanded,
+	});
+	layer.canvas.style.opacity = "70%";
+
+	let running = true;
+
+	const _checkProgress = async () => {
+		const init = performance.now();
+
+		try {
+			const response = await fetch(apiURL);
+			/** @type {StableDiffusionProgressResponse} */
+			const data = await response.json();
+
+			// Draw Progress Bar
+			layer.ctx.fillStyle = "#5F5";
+			layer.ctx.fillRect(1, 1, bb.w * data.progress, 10);
+
+			// Draw Progress Text
+			layer.ctx.clearRect(0, 11, expanded.w, 40);
+			layer.ctx.fillStyle = "#FFF";
+
+			layer.ctx.fillRect(0, 15, 60, 25);
+			layer.ctx.fillRect(bb.w - 58, 15, 60, 25);
+
+			layer.ctx.font = "20px Open Sans";
+			layer.ctx.fillStyle = "#000";
+			layer.ctx.textAlign = "right";
+			layer.ctx.fillText(`${Math.round(data.progress * 100)}%`, 55, 35);
+
+			// Draw ETA Text
+			layer.ctx.fillText(`${Math.round(data.eta_relative)}s`, bb.w - 5, 35);
+		} finally {
+		}
+
+		const timeSpent = performance.now() - init;
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
+	};
+
+	_checkProgress();
+
+	return () => {
+		imageCollection.deleteLayer(layer);
+		running = false;
+	};
+};
+
+/**
+ * Starts a dream
+ *
+ * @param {"txt2img" | "img2img"} endpoint Endpoint to send the request to
+ * @param {StableDiffusionRequest} request Stable diffusion request
+ * @returns {Promise<string[]>}
+ */
+const _dream = async (endpoint, request) => {
+	const apiURL = `${host}${url}${endpoint}`;
+
+	/** @type {StableDiffusionResponse} */
+	let data = null;
+	try {
+		const response = await fetch(apiURL, {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(request),
+		});
+
+		data = await response.json();
+	} finally {
+	}
+
+	return data.images;
+};
+
+/**
+ * Generate and pick an image for placement
+ *
+ * @param {"txt2img" | "img2img"} endpoint Endpoint to send the request to
+ * @param {StableDiffusionRequest} request Stable diffusion request
+ * @param {BoundingBox} bb Generated image placement location
+ * @returns {Promise<HTMLImageElement | null>}
+ */
+const _generate = async (endpoint, request, bb) => {
+	const requestCopy = {...request};
+
+	// Images to select through
+	let at = 0;
+	/** @type {Image[]} */
+	const images = [];
+	/** @type {HTMLDivElement} */
+	let imageSelectMenu = null;
+
+	// Layer for the images
+	const layer = imageCollection.registerLayer(null, {
+		after: maskPaintLayer,
+	});
+
+	const redraw = () => {
+		const image = new Image();
+		image.src = "data:image/png;base64," + images[at];
+		image.addEventListener("load", () => {
+			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+			if (images[at]) layer.ctx.drawImage(image, bb.x, bb.y);
+		});
+	};
+
+	const stopMarchingAnts = march(bb);
+
+	// First Dream Run
+	let stopProgress = _monitorProgress(bb);
+	images.push(...(await _dream(endpoint, requestCopy)));
+	stopProgress();
+
+	// Image navigation
+	const prevImg = () => {
+		at--;
+		if (at < 0) at = images.length - 1;
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		redraw();
+	};
+
+	const nextImg = () => {
+		at++;
+		if (at >= images.length) at = 0;
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		redraw();
+	};
+
+	const applyImg = async () => {
+		const img = new Image();
+		// load the image data after defining the closure
+		img.src = "data:image/png;base64," + images[at];
+		img.addEventListener("load", () => {
+			commands.runCommand("drawImage", "Image Dream", {
+				x: bb.x,
+				y: bb.y,
+				image: img,
+			});
+			clean(true);
+		});
+	};
+
+	const makeMore = async () => {
+		let stopProgress = _monitorProgress(bb);
+		images.push(...(await _dream(endpoint, requestCopy)));
+		stopProgress();
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+	};
+
+	const discardImg = async () => {
+		clean();
+	};
+
+	// Listen for keyboard arrows
+	const onarrow = (evn) => {
+		switch (evn.target.tagName.toLowerCase()) {
+			case "input":
+			case "textarea":
+			case "select":
+			case "button":
+				return; // If in an input field, do not process arrow input
+			default:
+				// Do nothing
+				break;
+		}
+
+		switch (evn.key) {
+			case "+":
+				makeMore();
+				break;
+			default:
+				switch (evn.code) {
+					case "ArrowRight":
+						nextImg();
+						break;
+					case "ArrowLeft":
+						prevImg();
+						break;
+					case "Enter":
+						applyImg();
+						break;
+					case "Escape":
+						discardImg();
+						break;
+					default:
+						break;
+				}
+				break;
+		}
+	};
+
+	keyboard.listen.onkeyclick.on(onarrow);
+
+	// Cleans up
+	const clean = (removeBrushMask = false) => {
+		if (removeBrushMask) {
+			maskPaintCtx.clearRect(bb.x, bb.y, bb.w, bb.h);
+		}
+		stopMarchingAnts();
+		imageCollection.inputElement.removeChild(imageSelectMenu);
+		imageCollection.deleteLayer(layer);
+		blockNewImages = false;
+		keyboard.listen.onkeyclick.clear(onarrow);
+	};
+
+	const makeElement = (type, x, y) => {
+		const el = document.createElement(type);
+		el.style.position = "absolute";
+		el.style.left = `${x}px`;
+		el.style.top = `${y}px`;
+
+		// We can use the input element to add interactible html elements in the world
+		imageCollection.inputElement.appendChild(el);
+
+		return el;
+	};
+
+	redraw();
+
+	imageSelectMenu = makeElement("div", bb.x, bb.y + bb.h);
+
+	const imageindextxt = document.createElement("button");
+	imageindextxt.textContent = `${at + 1}/${images.length}`;
+	imageindextxt.addEventListener("click", () => {
+		at = 0;
+
+		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		redraw();
+	});
+
+	const backbtn = document.createElement("button");
+	backbtn.textContent = "<";
+	backbtn.title = "Previous Image";
+	backbtn.addEventListener("click", prevImg);
+	imageSelectMenu.appendChild(backbtn);
+	imageSelectMenu.appendChild(imageindextxt);
+
+	const nextbtn = document.createElement("button");
+	nextbtn.textContent = ">";
+	nextbtn.title = "Next Image";
+	nextbtn.addEventListener("click", nextImg);
+	imageSelectMenu.appendChild(nextbtn);
+
+	const morebtn = document.createElement("button");
+	morebtn.textContent = "+";
+	morebtn.title = "Generate More";
+	morebtn.addEventListener("click", makeMore);
+	imageSelectMenu.appendChild(morebtn);
+
+	const acceptbtn = document.createElement("button");
+	acceptbtn.textContent = "Y";
+	acceptbtn.title = "Apply Current";
+	acceptbtn.addEventListener("click", applyImg);
+	imageSelectMenu.appendChild(acceptbtn);
+
+	const discardbtn = document.createElement("button");
+	discardbtn.textContent = "N";
+	discardbtn.title = "Cancel";
+	discardbtn.addEventListener("click", discardImg);
+	imageSelectMenu.appendChild(discardbtn);
+
+	const resourcebtn = document.createElement("button");
+	resourcebtn.textContent = "R";
+	resourcebtn.title = "Save to Resources";
+	resourcebtn.addEventListener("click", async () => {
+		const img = new Image();
+		// load the image data after defining the closure
+		img.src = "data:image/png;base64," + images[at];
+		img.addEventListener("load", () => {
+			const response = prompt("Enter new resource name", "Dream Resource");
+			if (response) {
+				tools.stamp.state.addResource(response, img);
+				redraw(); // Redraw to avoid strange cursor behavior
+			}
+		});
+	});
+	imageSelectMenu.appendChild(resourcebtn);
+};
+
+/**
+ * Callback for generating a image (dream tool)
+ *
+ * @param {*} evn
+ * @param {*} state
+ */
+const dream_generate_callback = async (evn, state) => {
+	if (!blockNewImages) {
 		const bb = getBoundingBox(
 			evn.x,
 			evn.y,
@@ -19,9 +332,6 @@ const dream_generate_callback = (evn, state) => {
 		// Don't allow another image until is finished
 		blockNewImages = true;
 
-		// Setup marching ants
-		stopMarching = march(bb);
-
 		// Setup some basic information for SD
 		request.width = bb.w;
 		request.height = bb.h;
@@ -32,7 +342,7 @@ const dream_generate_callback = (evn, state) => {
 		// Use txt2img if canvas is blank
 		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, imgCanvas)) {
 			// Dream
-			dream(bb.x, bb.y, request, {method: "txt2img", stopMarching, bb});
+			_generate("txt2img", request, bb);
 		} else {
 			// Use img2img if not
 
@@ -101,7 +411,7 @@ const dream_generate_callback = (evn, state) => {
 			auxCtx.fillRect(0, 0, bb.w, bb.h);
 			request.mask = auxCanvas.toDataURL();
 			// Dream
-			dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
+			_generate("img2img", request, bb);
 		}
 	}
 };
@@ -148,7 +458,7 @@ function applyOvermask(canvas, ctx, px) {
  * Image to Image
  */
 const dream_img2img_callback = (evn, state) => {
-	if (evn.target.id === "overlayCanvas" && !blockNewImages) {
+	if (!blockNewImages) {
 		const bb = getBoundingBox(
 			evn.x,
 			evn.y,
@@ -173,9 +483,6 @@ const dream_img2img_callback = (evn, state) => {
 
 		// Don't allow another image until is finished
 		blockNewImages = true;
-
-		// Setup marching ants
-		stopMarching = march(bb);
 
 		// Setup some basic information for SD
 		request.width = bb.w;
@@ -233,7 +540,7 @@ const dream_img2img_callback = (evn, state) => {
 		request.inpaint_full_res = state.fullResolution;
 
 		// Dream
-		dream(bb.x, bb.y, request, {method: "img2img", stopMarching, bb});
+		_generate("img2img", request, bb);
 	}
 };
 
@@ -248,23 +555,22 @@ const dreamTool = () =>
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 			state.mousemovecb({
-				...mouse.coords.canvas.pos,
-				target: {id: "overlayCanvas"},
+				...mouse.coords.world.pos,
 			});
 
 			// Start Listeners
-			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
-			mouse.listen.canvas.btn.left.onclick.on(state.dreamcb);
-			mouse.listen.canvas.btn.right.onclick.on(state.erasecb);
+			mouse.listen.world.onmousemove.on(state.mousemovecb);
+			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.on(state.erasecb);
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
 		},
 		(state, opt) => {
 			// Clear Listeners
-			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
-			mouse.listen.canvas.btn.left.onclick.clear(state.dreamcb);
-			mouse.listen.canvas.btn.right.onclick.clear(state.erasecb);
+			mouse.listen.world.onmousemove.clear(state.mousemovecb);
+			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
 
 			// Hide Mask
 			setMask("none");
@@ -274,7 +580,10 @@ const dreamTool = () =>
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
-				state.mousemovecb = (evn) => _reticle_draw(evn, state.snapToGrid);
+				state.mousemovecb = (evn) => {
+					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					_reticle_draw(evn, state.snapToGrid);
+				};
 				state.dreamcb = (evn) => {
 					dream_generate_callback(evn, state);
 				};
@@ -330,23 +639,22 @@ const img2imgTool = () =>
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 			state.mousemovecb({
-				...mouse.coords.canvas.pos,
-				target: {id: "overlayCanvas"},
+				...mouse.coords.world.pos,
 			});
 
 			// Start Listeners
-			mouse.listen.canvas.onmousemove.on(state.mousemovecb);
-			mouse.listen.canvas.btn.left.onclick.on(state.dreamcb);
-			mouse.listen.canvas.btn.right.onclick.on(state.erasecb);
+			mouse.listen.world.onmousemove.on(state.mousemovecb);
+			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.on(state.erasecb);
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
 		},
 		(state, opt) => {
 			// Clear Listeners
-			mouse.listen.canvas.onmousemove.clear(state.mousemovecb);
-			mouse.listen.canvas.btn.left.onclick.clear(state.dreamcb);
-			mouse.listen.canvas.btn.right.onclick.clear(state.erasecb);
+			mouse.listen.world.onmousemove.clear(state.mousemovecb);
+			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
 
 			// Hide mask
 			setMask("none");
@@ -362,45 +670,44 @@ const img2imgTool = () =>
 				state.keepBorderSize = 64;
 
 				state.mousemovecb = (evn) => {
+					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 					_reticle_draw(evn, state.snapToGrid);
-					if (evn.target.id === "overlayCanvas") {
-						const bb = getBoundingBox(
-							evn.x,
-							evn.y,
-							basePixelCount * scaleFactor,
-							basePixelCount * scaleFactor,
-							state.snapToGrid && basePixelCount
+					const bb = getBoundingBox(
+						evn.x,
+						evn.y,
+						basePixelCount * scaleFactor,
+						basePixelCount * scaleFactor,
+						state.snapToGrid && basePixelCount
+					);
+
+					// For displaying border mask
+					const auxCanvas = document.createElement("canvas");
+					auxCanvas.width = bb.w;
+					auxCanvas.height = bb.h;
+					const auxCtx = auxCanvas.getContext("2d");
+
+					if (state.keepBorderSize > 0) {
+						auxCtx.fillStyle = "#6A6AFF7F";
+						auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
+						auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
+						auxCtx.fillRect(
+							bb.w - state.keepBorderSize,
+							0,
+							state.keepBorderSize,
+							bb.h
 						);
-
-						// For displaying border mask
-						const auxCanvas = document.createElement("canvas");
-						auxCanvas.width = bb.w;
-						auxCanvas.height = bb.h;
-						const auxCtx = auxCanvas.getContext("2d");
-
-						if (state.keepBorderSize > 0) {
-							auxCtx.fillStyle = "#6A6AFF7F";
-							auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
-							auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
-							auxCtx.fillRect(
-								bb.w - state.keepBorderSize,
-								0,
-								state.keepBorderSize,
-								bb.h
-							);
-							auxCtx.fillRect(
-								0,
-								bb.h - state.keepBorderSize,
-								bb.w,
-								state.keepBorderSize
-							);
-						}
-
-						const tmp = ovCtx.globalAlpha;
-						ovCtx.globalAlpha = 0.4;
-						ovCtx.drawImage(auxCanvas, bb.x, bb.y);
-						ovCtx.globalAlpha = tmp;
+						auxCtx.fillRect(
+							0,
+							bb.h - state.keepBorderSize,
+							bb.w,
+							state.keepBorderSize
+						);
 					}
+
+					const tmp = ovCtx.globalAlpha;
+					ovCtx.globalAlpha = 0.4;
+					ovCtx.drawImage(auxCanvas, bb.x, bb.y);
+					ovCtx.globalAlpha = tmp;
 				};
 				state.dreamcb = (evn) => {
 					dream_img2img_callback(evn, state);

@@ -177,46 +177,16 @@ const _toolbar_input = {
  * Dream and img2img tools
  */
 const _reticle_draw = (evn, snapToGrid = true) => {
-	if (evn.target.id === "overlayCanvas") {
-		const bb = getBoundingBox(
-			evn.x,
-			evn.y,
-			basePixelCount * scaleFactor,
-			basePixelCount * scaleFactor,
-			snapToGrid && basePixelCount
-		);
+	const bb = getBoundingBox(
+		evn.x,
+		evn.y,
+		basePixelCount * scaleFactor,
+		basePixelCount * scaleFactor,
+		snapToGrid && basePixelCount
+	);
 
-		// draw targeting square reticle thingy cursor
-		ovCtx.lineWidth = 1;
-		ovCtx.strokeStyle = "#FFF";
-		ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h); //origin is middle of the frame
-	}
+	// draw targeting square reticle thingy cursor
+	ovCtx.lineWidth = 1;
+	ovCtx.strokeStyle = "#FFF";
+	ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h); //origin is middle of the frame
 };
-
-const tools = {};
-
-/**
- * Dream tool
- */
-tools.dream = dreamTool();
-tools.img2img = img2imgTool();
-
-/**
- * Mask Editing tools
- */
-toolbar.addSeparator();
-
-/**
- * Mask Brush tool
- */
-tools.maskbrush = maskBrushTool();
-
-/**
- * Image Editing tools
- */
-toolbar.addSeparator();
-
-tools.selecttransform = selectTransformTool();
-tools.stamp = stampTool();
-
-toolbar.tools[0].enable();

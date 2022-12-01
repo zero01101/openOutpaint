@@ -48,7 +48,6 @@ var stableDiffusionData = {
 };
 
 // stuff things use
-var blockNewImages = false;
 var returnedImages;
 var imageIndex = 0;
 var tmpImgXYWH = {};
@@ -57,15 +56,6 @@ var url = "/sdapi/v1/";
 var endpoint = "txt2img";
 var frameX = 512;
 var frameY = 512;
-var prevMouseX = 0;
-var prevMouseY = 0;
-var mouseX = 0;
-var mouseY = 0;
-var canvasX = 0;
-var canvasY = 0;
-var heldButton = 0;
-var snapX = 0;
-var snapY = 0;
 var drawThis = {};
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var scaleFactor = 8; //x64 px
@@ -85,47 +75,25 @@ var arbitraryImageBitmap;
 var arbitraryImageBase64; // seriously js cmon work with me here
 var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
 var marchOffset = 0;
-var stopMarching = null;
 var inProgress = false;
 var marchCoords = {};
 
-// info div, sometimes hidden
-let mouseXInfo = document.getElementById("mouseX");
-let mouseYInfo = document.getElementById("mouseY");
-let canvasXInfo = document.getElementById("canvasX");
-let canvasYInfo = document.getElementById("canvasY");
-let snapXInfo = document.getElementById("snapX");
-let snapYInfo = document.getElementById("snapY");
-let heldButtonInfo = document.getElementById("heldButton");
-
-// canvases and related
-const ovCanvas = document.getElementById("overlayCanvas"); // where mouse cursor renders
-const ovCtx = ovCanvas.getContext("2d");
-const tgtCanvas = document.getElementById("targetCanvas"); // where "box" gets drawn before dream happens
-const tgtCtx = tgtCanvas.getContext("2d");
-const maskPaintCanvas = document.getElementById("maskPaintCanvas"); // where masking brush gets painted
-const maskPaintCtx = maskPaintCanvas.getContext("2d");
-const tempCanvas = document.getElementById("tempCanvas"); // where select/rejects get superimposed temporarily
-const tempCtx = tempCanvas.getContext("2d");
-const imgCanvas = document.getElementById("canvas"); // where dreams go
-const imgCtx = imgCanvas.getContext("2d");
-const bgCanvas = document.getElementById("backgroundCanvas"); // gray bg grid
-const bgCtx = bgCanvas.getContext("2d");
-
+//
 function startup() {
 	testHostConfiguration();
-	testHostConnection();
-
 	loadSettings();
 
 	const hostEl = document.getElementById("host");
-	hostEl.onchange = () => {
-		host = hostEl.value.endsWith("/")
-			? hostEl.value.substring(0, hostEl.value.length - 1)
-			: hostEl.value;
-		hostEl.value = host;
-		localStorage.setItem("host", host);
-	};
+	testHostConnection().then((checkConnection) => {
+		hostEl.onchange = () => {
+			host = hostEl.value.endsWith("/")
+				? hostEl.value.substring(0, hostEl.value.length - 1)
+				: hostEl.value;
+			hostEl.value = host;
+			localStorage.setItem("host", host);
+			checkConnection();
+		};
+	});
 
 	const promptEl = document.getElementById("prompt");
 	promptEl.oninput = () => {
@@ -147,9 +115,6 @@ function startup() {
 	changeSeed();
 	changeOverMaskPx();
 	changeHiResFix();
-	document.getElementById("overlayCanvas").onmousemove = mouseMove;
-	document.getElementById("overlayCanvas").onmousedown = mouseDown;
-	document.getElementById("overlayCanvas").onmouseup = mouseUp;
 	document.getElementById("scaleFactor").value = scaleFactor;
 }
 
@@ -181,6 +146,10 @@ function testHostConfiguration() {
 				"Host seems to be invalid! Please fix your host here:",
 				current
 			);
+		else
+			host = current.endsWith("/")
+				? current.substring(0, current.length - 1)
+				: current;
 	} else {
 		requestHost(
 			"This seems to be the first time you are using openOutpaint! Please set your host here:"
@@ -188,12 +157,8 @@ function testHostConfiguration() {
 	}
 }
 
-function testHostConnection() {
-	function CheckInProgressError(message = "") {
-		this.name = "CheckInProgressError";
-		this.message = message;
-	}
-	CheckInProgressError.prototype = Object.create(Error.prototype);
+async function testHostConnection() {
+	class CheckInProgressError extends Error {}
 
 	const connectionIndicator = document.getElementById(
 		"connection-status-indicator"
@@ -209,6 +174,7 @@ function testHostConnection() {
 				connectionIndicator.classList.remove(
 					"cors-issue",
 					"offline",
+					"before",
 					"server-error"
 				);
 				connectionIndicator.title = "Connected";
@@ -216,7 +182,12 @@ function testHostConnection() {
 			},
 			error: () => {
 				connectionIndicator.classList.add("server-error");
-				connectionIndicator.classList.remove("online", "offline", "cors-issue");
+				connectionIndicator.classList.remove(
+					"online",
+					"offline",
+					"before",
+					"cors-issue"
+				);
 				connectionIndicator.title =
 					"Server is online, but is returning an error response";
 				connectionStatus = false;
@@ -226,6 +197,7 @@ function testHostConnection() {
 				connectionIndicator.classList.remove(
 					"online",
 					"offline",
+					"before",
 					"server-error"
 				);
 				connectionIndicator.title =
@@ -237,16 +209,30 @@ function testHostConnection() {
 				connectionIndicator.classList.remove(
 					"cors-issue",
 					"online",
+					"before",
 					"server-error"
 				);
 				connectionIndicator.title =
 					"Server seems to be offline. Please check the console for more information.";
 				connectionStatus = false;
 			},
+			before: () => {
+				connectionIndicator.classList.add("before");
+				connectionIndicator.classList.remove(
+					"cors-issue",
+					"online",
+					"offline",
+					"server-error"
+				);
+				connectionIndicator.title = "Waiting for check to complete.";
+				connectionStatus = false;
+			},
 		};
 
 		statuses[status] && statuses[status]();
 	};
+
+	setConnectionStatus("before");
 
 	let checkInProgress = false;
 
@@ -259,7 +245,10 @@ function testHostConnection() {
 		var url = document.getElementById("host").value + "/startup-events";
 		// Attempt normal request
 		try {
-			const response = await fetch(url);
+			/** @type {Response} */
+			const response = await fetch(url, {
+				signal: AbortSignal.timeout(5000),
+			});
 
 			if (response.status === 200) {
 				setConnectionStatus("online");
@@ -278,6 +267,7 @@ function testHostConnection() {
 			}
 		} catch (e) {
 			try {
+				if (e instanceof DOMException) throw "offline";
 				// Tests if problem is CORS
 				await fetch(url, {mode: "no-cors"});
 
@@ -301,7 +291,7 @@ function testHostConnection() {
 		return status;
 	};
 
-	checkConnection(true);
+	await checkConnection(true);
 
 	// On click, attempt to refresh
 	connectionIndicator.onclick = async () => {
@@ -316,8 +306,8 @@ function testHostConnection() {
 	// Checks every 5 seconds if offline, 30 seconds if online
 	const checkAgain = () => {
 		setTimeout(
-			() => {
-				checkConnection();
+			async () => {
+				await checkConnection();
 				checkAgain();
 			},
 			connectionStatus ? 30000 : 5000
@@ -325,133 +315,15 @@ function testHostConnection() {
 	};
 
 	checkAgain();
-}
 
-function dream(
-	x,
-	y,
-	prompt,
-	extra = {
-		method: endpoint,
-		stopMarching: () => {},
-		bb: {x, y, w: prompt.width, h: prompt.height},
-	}
-) {
-	tmpImgXYWH.x = x;
-	tmpImgXYWH.y = y;
-	tmpImgXYWH.w = prompt.width;
-	tmpImgXYWH.h = prompt.height;
-	console.log(
-		"dreaming to " +
-			host +
-			url +
-			(extra.method || endpoint) +
-			":\r\n" +
-			JSON.stringify(prompt)
-	);
-	console.info(`dreaming "${prompt.prompt}"`);
-	console.debug(prompt);
-
-	// Start checking for progress
-	const progressCheck = checkProgress(extra.bb);
-	postData(prompt, extra)
-		.then((data) => {
-			returnedImages = data.images;
-			totalImagesReturned = data.images.length;
-			blockNewImages = true;
-			//console.log(data); // JSON data parsed by `data.json()` call
-			imageAcceptReject(x, y, data, extra);
-		})
-		.finally(() => clearInterval(progressCheck));
-}
-
-async function postData(promptData, extra = null) {
-	this.host = document.getElementById("host").value;
-	// Default options are marked with *
-	const response = await fetch(
-		this.host + this.url + extra.method || endpoint,
-		{
-			method: "POST", // *GET, POST, PUT, DELETE, etc.
-			mode: "cors", // no-cors, *cors, same-origin
-			cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-			credentials: "same-origin", // include, *same-origin, omit
-			headers: {
-				Accept: "application/json",
-				"Content-Type": "application/json",
-			},
-			redirect: "follow", // manual, *follow, error
-			referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-			body: JSON.stringify(promptData), // body data type must match "Content-Type" header
-		}
-	);
-	return response.json(); // parses JSON response into native JavaScript objects
-}
-
-function imageAcceptReject(x, y, data, extra = null) {
-	inProgress = false;
-	document.getElementById("progressDiv").remove();
-	const img = new Image();
-	img.onload = function () {
-		backupAndClearMask(x, y, img.width, img.height);
-		tempCtx.drawImage(img, x, y); //imgCtx for actual image, tmp for... holding?
-		var div = document.createElement("div");
-		div.id = "veryTempDiv";
-		div.style.position = "absolute";
-		div.style.left = parseInt(x) < 0 ? 0 + "px" : parseInt(x) + "px";
-		div.style.top = parseInt(y + data.parameters.height) + "px";
-		div.style.width = "200px";
-		div.style.height = "70px";
-		div.innerHTML =
-			'<button onclick="prevImg(this)">&lt;</button><button onclick="nextImg(this)">&gt;</button><span class="strokeText" id="currentImgIndex"></span><span class="strokeText"> of </span><span class="strokeText" id="totalImgIndex"></span><button onclick="accept(this)">Y</button><button onclick="reject(this)">N</button><button onclick="resource(this)">RES</button><span class="strokeText" id="estRemaining"></span>';
-
-		document.getElementById("tempDiv").appendChild(div);
-		document.getElementById("currentImgIndex").innerText = "1";
-		document.getElementById("totalImgIndex").innerText = totalImagesReturned;
+	return () => {
+		checkConnection().catch(() => {});
 	};
-	// set the image displayed as the first regardless of batch size/count
-	imageIndex = 0;
-	// load the image data after defining the closure
-	img.src = "data:image/png;base64," + returnedImages[imageIndex];
-}
-
-function accept(evt) {
-	// write image to imgcanvas
-	stopMarching && stopMarching();
-	stopMarching = null;
-	clearBackupMask();
-	placeImage();
-	removeChoiceButtons();
-	clearTargetMask();
-	blockNewImages = false;
-}
-
-function reject(evt) {
-	// remove image entirely
-	stopMarching && stopMarching();
-	stopMarching = null;
-	restoreBackupMask();
-	clearBackupMask();
-	clearTargetMask();
-	removeChoiceButtons();
-	blockNewImages = false;
-}
-
-function resource(evt) {
-	// send image to resources
-	const img = new Image();
-	// load the image data after defining the closure
-	img.src = "data:image/png;base64," + returnedImages[imageIndex];
-
-	tools.stamp.state.addResource(
-		prompt("Enter new resource name", "Dream Resource"),
-		img
-	);
 }
 
 function newImage(evt) {
 	clearPaintedMask();
 	clearBackupMask();
-	clearTargetMask();
 	commands.runCommand("eraseImage", "Clear Canvas", {
 		x: 0,
 		y: 0,
@@ -532,10 +404,6 @@ function clearBackupMask() {
 	backupMaskY = null;
 }
 
-function clearTargetMask() {
-	tgtCtx.clearRect(0, 0, tgtCanvas.width, tgtCanvas.height);
-}
-
 function clearImgMask() {
 	imgCtx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
 }
@@ -565,122 +433,37 @@ function sleep(ms) {
 }
 
 function march(bb) {
+	const expanded = {...bb};
+	expanded.x--;
+	expanded.y--;
+	expanded.w += 2;
+	expanded.h += 2;
+
+	// Get temporary layer to draw marching ants
+	const layer = imageCollection.registerLayer(null, {
+		bb: expanded,
+	});
+	layer.canvas.style.imageRendering = "pixelated";
 	let offset = 0;
 
 	const interval = setInterval(() => {
-		drawMarchingAnts(bb, offset++);
-		offset %= 16;
+		drawMarchingAnts(layer.ctx, bb, offset++);
+		offset %= 12;
 	}, 20);
 
-	return () => clearInterval(interval);
+	return () => {
+		clearInterval(interval);
+		imageCollection.deleteLayer(layer);
+	};
 }
 
-function drawMarchingAnts(bb, offset) {
-	clearTargetMask();
-	tgtCtx.strokeStyle = "#FFFFFFFF"; //"#55000077";
-	tgtCtx.setLineDash([4, 2]);
-	tgtCtx.lineDashOffset = -offset;
-	tgtCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-}
-
-function checkProgress(bb) {
-	document.getElementById("progressDiv") &&
-		document.getElementById("progressDiv").remove();
-	// Skip image to stop using a ton of networking resources
-	endpoint = "progress?skip_current_image=true";
-	var div = document.createElement("div");
-	div.id = "progressDiv";
-	div.style.position = "absolute";
-	div.style.width = "200px";
-	div.style.height = "70px";
-	div.style.left = parseInt(bb.x + bb.w - 100) + "px";
-	div.style.top = parseInt(bb.y + bb.h) + "px";
-	div.innerHTML = '<span class="strokeText" id="estRemaining"></span>';
-	document.getElementById("tempDiv").appendChild(div);
-	return setInterval(() => {
-		fetch(host + url + endpoint)
-			.then((response) => response.json())
-			.then((data) => {
-				var estimate =
-					Math.round(data.progress * 100) +
-					"% :: " +
-					Math.floor(data.eta_relative) +
-					" sec.";
-
-				document.getElementById("estRemaining").innerText = estimate;
-			});
-	}, 1000);
-}
-
-function mouseMove(evt) {
-	const rect = ovCanvas.getBoundingClientRect(); // not-quite pixel offset was driving me insane
-	const canvasOffsetX = rect.left;
-	const canvasOffsetY = rect.top;
-	heldButton = evt.buttons;
-	mouseXInfo.innerText = mouseX = evt.clientX;
-	mouseYInfo.innerText = mouseY = evt.clientY;
-	canvasXInfo.innerText = canvasX = parseInt(evt.clientX - rect.left);
-	canvasYInfo.innerText = canvasY = parseInt(evt.clientY - rect.top);
-	snapXInfo.innerText = canvasX + snap(canvasX);
-	snapYInfo.innerText = canvasY + snap(canvasY);
-	heldButtonInfo.innerText = heldButton;
-	ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height); // clear out the previous mouse cursor
-	if (placingArbitraryImage) {
-		// ugh refactor so this isn't duplicated between arbitrary image and dream reticle modes
-		snapOffsetX = 0;
-		snapOffsetY = 0;
-		if (snapToGrid) {
-			snapOffsetX = snap(canvasX, false);
-			snapOffsetY = snap(canvasY, false);
-		}
-		finalX = snapOffsetX + canvasX;
-		finalY = snapOffsetY + canvasY;
-		ovCtx.drawImage(arbitraryImage, finalX, finalY);
-	}
-}
-
-function mouseDown(evt) {
-	const rect = ovCanvas.getBoundingClientRect();
-	var oddOffset = 0;
-	if (scaleFactor % 2 != 0) {
-		oddOffset = basePixelCount / 2;
-	}
-	if (evt.button == 0) {
-		// left click
-		if (placingArbitraryImage) {
-			var nextBox = {};
-			nextBox.x = evt.offsetX;
-			nextBox.y = evt.offsetY;
-			nextBox.w = arbitraryImageData.width;
-			nextBox.h = arbitraryImageData.height;
-			dropTargets.push(nextBox);
-		}
-	}
-}
-
-function mouseUp(evt) {
-	if (evt.button == 0) {
-		// left click
-		if (placingArbitraryImage) {
-			// jeez i REALLY need to refactor tons of this to not be duplicated all over, that's definitely my next chore after figuring out that razza frazza overmask fade
-			var target = dropTargets[dropTargets.length - 1]; //get the last one... why am i storing all of them?
-			snapOffsetX = 0;
-			snapOffsetY = 0;
-			if (snapToGrid) {
-				snapOffsetX = snap(target.x, false);
-				snapOffsetY = snap(target.y, false);
-			}
-			finalX = snapOffsetX + target.x;
-			finalY = snapOffsetY + target.y;
-
-			drawThis.x = finalX;
-			drawThis.y = finalY;
-			drawThis.w = target.w;
-			drawThis.h = target.h;
-			drawIt = drawThis; // i still think this is really stupid and redundant and unnecessary and redundant
-			drop(drawIt);
-		}
-	}
+function drawMarchingAnts(ctx, bb, offset) {
+	ctx.clearRect(0, 0, bb.w + 2, bb.h + 2);
+	ctx.strokeStyle = "#FFFFFFFF"; //"#55000077";
+	ctx.strokeWidth = "2px";
+	ctx.setLineDash([4, 2]);
+	ctx.lineDashOffset = -offset;
+	ctx.strokeRect(1, 1, bb.w, bb.h);
 }
 
 function changeSampler() {
@@ -799,10 +582,11 @@ function drawBackground() {
 	// Checkerboard
 	let darkTileColor = "#333";
 	let lightTileColor = "#555";
-	for (var x = 0; x < bgCanvas.width; x += 64) {
-		for (var y = 0; y < bgCanvas.height; y += 64) {
-			bgCtx.fillStyle = (x + y) % 128 === 0 ? lightTileColor : darkTileColor;
-			bgCtx.fillRect(x, y, 64, 64);
+	for (var x = 0; x < bgLayer.canvas.width; x += 64) {
+		for (var y = 0; y < bgLayer.canvas.height; y += 64) {
+			bgLayer.ctx.fillStyle =
+				(x + y) % 128 === 0 ? lightTileColor : darkTileColor;
+			bgLayer.ctx.fillRect(x, y, 64, 64);
 		}
 	}
 }
@@ -1081,6 +865,18 @@ function loadSettings() {
 	// document.getElementById("overMaskPx").value = Number(_overmask_px);
 }
 
-document.getElementById("mainHSplit").addEventListener("wheel", (evn) => {
-	evn.preventDefault();
-});
+imageCollection.element.addEventListener(
+	"wheel",
+	(evn) => {
+		evn.preventDefault();
+	},
+	{passive: false}
+);
+
+imageCollection.element.addEventListener(
+	"contextmenu",
+	(evn) => {
+		evn.preventDefault();
+	},
+	{passive: false}
+);

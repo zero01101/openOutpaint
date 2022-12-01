@@ -1,10 +1,21 @@
 function makeDraggable(element) {
-	const startbb = element.getBoundingClientRect();
 	let dragging = false;
 	let offset = {x: 0, y: 0};
 
-	element.style.top = startbb.y + "px";
-	element.style.left = startbb.x + "px";
+	const margin = 10;
+
+	const fixPos = () => {
+		const dbb = element.getBoundingClientRect();
+		if (dbb.left < margin) element.style.left = margin + "px";
+		else if (dbb.right > window.innerWidth - margin)
+			element.style.left =
+				dbb.left + (window.innerWidth - margin - dbb.right) + "px";
+
+		if (dbb.top < margin) element.style.top = margin + "px";
+		else if (dbb.bottom > window.innerHeight - margin)
+			element.style.top =
+				dbb.top + (window.innerHeight - margin - dbb.bottom) + "px";
+	};
 
 	mouse.listen.window.btn.left.onpaintstart.on((evn) => {
 		if (
@@ -20,13 +31,21 @@ function makeDraggable(element) {
 
 	mouse.listen.window.btn.left.onpaint.on((evn) => {
 		if (dragging) {
+			element.style.right = null;
+			element.style.bottom = null;
 			element.style.top = evn.y - offset.y + "px";
 			element.style.left = evn.x - offset.x + "px";
+
+			fixPos();
 		}
 	});
 
 	mouse.listen.window.btn.left.onpaintend.on((evn) => {
 		dragging = false;
+	});
+
+	window.addEventListener("resize", () => {
+		fixPos();
 	});
 }
 
@@ -150,7 +169,7 @@ function createSlider(name, wrapper, options = {}) {
 	});
 
 	mouse.listen.window.btn.left.ondrag.on((evn) => {
-		if (evn.target === overEl) {
+		if (evn.initialTarget === overEl) {
 			setValue(
 				Math.max(
 					options.min,
