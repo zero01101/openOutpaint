@@ -24,6 +24,11 @@ mouse.listen.world.onmousemove.on((evn) => {
  */
 const toggledebug = () => {
 	const hidden = debugCanvas.style.display === "none";
-	if (hidden) debugLayer.unhide();
-	else debugLayer.hide();
+	if (hidden) {
+		debugLayer.unhide();
+		debug = true;
+	} else {
+		debugLayer.hide();
+		debug = false;
+	}
 };

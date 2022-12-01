@@ -48,6 +48,7 @@ var stableDiffusionData = {
 };
 
 // stuff things use
+let debug = false;
 var returnedImages;
 var imageIndex = 0;
 var tmpImgXYWH = {};
@@ -126,6 +127,7 @@ function testHostConfiguration() {
 	 * Check host configuration
 	 */
 	const hostEl = document.getElementById("host");
+	hostEl.value = localStorage.getItem("host");
 
 	const requestHost = (prompt, def = "http://127.0.0.1:7860") => {
 		let value = window.prompt(prompt, def);
@@ -549,7 +551,9 @@ function changeSnapMode() {
 }
 
 function changeMaskBlur() {
-	stableDiffusionData.mask_blur = document.getElementById("maskBlur").value;
+	stableDiffusionData.mask_blur = parseInt(
+		document.getElementById("maskBlur").value
+	);
 	localStorage.setItem("mask_blur", stableDiffusionData.mask_blur);
 }
 

@@ -288,7 +288,7 @@ window.addEventListener(
 window.addEventListener(
 	"mousemove",
 	(evn) => {
-		mouse._contexts.forEach((context) => {
+		mouse._contexts.forEach(async (context) => {
 			const target = context.target;
 			const name = context.name;
 

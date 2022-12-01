@@ -15,6 +15,7 @@ toolbar.addSeparator();
  * Mask Brush tool
  */
 tools.maskbrush = maskBrushTool();
+tools.colorbrush = colorBrushTool();
 
 /**
  * Image Editing tools

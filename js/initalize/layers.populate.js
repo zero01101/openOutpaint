@@ -54,7 +54,7 @@ mouse.registerContext(
 		const target = evn.target;
 
 		// Get element bounding rect
-		const bb = target.getBoundingClientRect();
+		const bb = imageCollection.element.getBoundingClientRect();
 
 		// Get element width/height (css, cause I don't trust client sizes in chrome anymore)
 		const w = imageCollection.size.w;
@@ -148,11 +148,13 @@ mouse.listen.window.onwheel.on((evn) => {
 
 		viewport.transform(imageCollection.element);
 
-		debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-		debugCtx.fillStyle = "#F0F";
-		debugCtx.beginPath();
-		debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
-		debugCtx.fill();
+		if (debug) {
+			debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
+			debugCtx.fillStyle = "#F0F";
+			debugCtx.beginPath();
+			debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
+			debugCtx.fill();
+		}
 	}
 });
 
@@ -173,11 +175,13 @@ mouse.listen.window.btn.middle.onpaint.on((evn) => {
 	}
 
 	viewport.transform(imageCollection.element);
-	debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-	debugCtx.fillStyle = "#F0F";
-	debugCtx.beginPath();
-	debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
-	debugCtx.fill();
+	if (debug) {
+		debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
+		debugCtx.fillStyle = "#F0F";
+		debugCtx.beginPath();
+		debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
+		debugCtx.fill();
+	}
 });
 
 mouse.listen.window.btn.middle.onpaintend.on((evn) => {
