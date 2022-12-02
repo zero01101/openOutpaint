@@ -43,8 +43,6 @@
 
 	padding: 0;
 
-	background-color: var(--c-text);
-
 	right: 2px;
 	top: 10px;
 
@@ -78,6 +76,8 @@
 	border-radius: 5px;
 
 	cursor: pointer;
+
+	transition-duration: 50ms;
 }
 
 #ui-toolbar .tool.using {
@@ -86,4 +86,9 @@
 
 #ui-toolbar .tool:hover {
 	background-color: var(--c-hover);
+}
+
+#ui-toolbar .tool:active {
+	background-color: var(--c-hover);
+	filter: brightness(120%);
 }

@@ -24,6 +24,7 @@ var stableDiffusionData = {
 	enable_hr: false,
 	firstphase_width: 0,
 	firstphase_height: 0,
+	styles: [],
 	// here's some more fields that might be useful
 
 	// ---txt2img specific:
@@ -170,6 +171,10 @@ async function testHostConnection() {
 	let firstTimeOnline = true;
 
 	const setConnectionStatus = (status) => {
+		const connectionIndicatorText = document.getElementById(
+			"connection-status-indicator-text"
+		);
+
 		const statuses = {
 			online: () => {
 				connectionIndicator.classList.add("online");
@@ -179,7 +184,8 @@ async function testHostConnection() {
 					"before",
 					"server-error"
 				);
-				connectionIndicator.title = "Connected";
+				connectionIndicatorText.textContent = connectionIndicator.title =
+					"Connected";
 				connectionStatus = true;
 			},
 			error: () => {
@@ -190,6 +196,7 @@ async function testHostConnection() {
 					"before",
 					"cors-issue"
 				);
+				connectionIndicatorText.textContent = "Error";
 				connectionIndicator.title =
 					"Server is online, but is returning an error response";
 				connectionStatus = false;
@@ -202,6 +209,7 @@ async function testHostConnection() {
 					"before",
 					"server-error"
 				);
+				connectionIndicatorText.textContent = "CORS";
 				connectionIndicator.title =
 					"Server is online, but CORS is blocking our requests";
 				connectionStatus = false;
@@ -214,6 +222,7 @@ async function testHostConnection() {
 					"before",
 					"server-error"
 				);
+				connectionIndicatorText.textContent = "Offline";
 				connectionIndicator.title =
 					"Server seems to be offline. Please check the console for more information.";
 				connectionStatus = false;
@@ -226,6 +235,7 @@ async function testHostConnection() {
 					"offline",
 					"server-error"
 				);
+				connectionIndicatorText.textContent = "Waiting";
 				connectionIndicator.title = "Waiting for check to complete.";
 				connectionStatus = false;
 			},
@@ -256,6 +266,7 @@ async function testHostConnection() {
 				setConnectionStatus("online");
 				// Load data as soon as connection is first stablished
 				if (firstTimeOnline) {
+					getStyles();
 					getSamplers();
 					getUpscalers();
 					getModels();
@@ -274,10 +285,7 @@ async function testHostConnection() {
 				await fetch(url, {mode: "no-cors"});
 
 				setConnectionStatus("corsissue");
-				const message = `CORS is blocking our requests. Try running the webui with the flag '--cors-allow-origins=${document.URL.substring(
-					0,
-					document.URL.length - 1
-				)}'`;
+				const message = `CORS is blocking our requests. Try running the webui with the flag '--cors-allow-origins=${window.location.protocol}//${window.location.host}/'`;
 				console.error(message);
 				if (notify) alert(message);
 			} catch (e) {
@@ -744,6 +752,63 @@ function changeModel() {
 					error
 			);
 		});
+}
+
+async function getStyles() {
+	/** @type {HTMLSelectElement} */
+	var styleSelect = document.getElementById("styleSelect");
+	var url = document.getElementById("host").value + "/sdapi/v1/prompt-styles";
+	try {
+		const response = await fetch(url);
+		/** @type {{name: string, prompt: string, negative_prompt: string}[]} */
+		const data = await response.json();
+
+		/** @type {string[]} */
+		let stored = null;
+		try {
+			stored = JSON.parse(localStorage.getItem("promptStyle"));
+		} catch (e) {
+			stored = [];
+		}
+
+		data.forEach((style) => {
+			if (style.name === "None") return;
+			const option = document.createElement("option");
+			option.classList.add("style-select-option");
+			option.text = style.name;
+			option.value = style.name;
+			option.title = `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`;
+			option.selected = !!stored.find((styleName) => style.name === styleName);
+			styleSelect.add(option);
+		});
+
+		changeStyles();
+
+		stored.forEach((styleName, index) => {
+			if (!data.findIndex((style) => style.name === styleName)) {
+				stored.splice(index, 1);
+			}
+		});
+		localStorage.setItem("promptStyle", JSON.stringify(stored));
+	} catch (e) {
+		console.warn("[index] Failed to fetch prompt styles");
+		console.warn(e);
+	}
+}
+
+function changeStyles() {
+	/** @type {HTMLSelectElement} */
+	const styleSelectEl = document.getElementById("styleSelect");
+	const selected = Array.from(styleSelectEl.options).filter(
+		(option) => option.selected
+	);
+	const selectedString = selected.map((option) => option.value);
+
+	localStorage.setItem("promptStyle", JSON.stringify(selectedString));
+
+	// change the model
+	console.log(`[index] Changing styles to ${selectedString.join(", ")}`);
+	stableDiffusionData.styles = selectedString;
 }
 
 function getSamplers() {

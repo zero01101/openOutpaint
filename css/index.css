@@ -1,6 +1,12 @@
 * {
 	font-size: 100%;
 	font-family: Arial, Helvetica, sans-serif;
+	user-select: none;
+}
+
+input,
+textarea {
+	user-select: auto;
 }
 
 /* Body is stuck with no scroll */
@@ -146,59 +152,83 @@ body {
 	position: relative;
 	display: flex;
 
-	align-items: center;
+	align-items: stretch;
 	justify-content: space-between;
 
 	width: 100%;
-	height: fit-content;
 }
 
 .host-field-wrapper input {
+	flex-shrink: 0;
+	width: calc(100% - 15px);
+
 	display: block;
+
+	border: 0;
 }
 
 .host-field-wrapper .connection-status {
 	width: 15px;
-	height: 15px;
+
+	position: absolute;
+	left: calc(100% - 15px);
+
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
 
 	box-sizing: inherit;
 
-	border-radius: 50%;
-	margin: 5px;
-
 	cursor: pointer;
 
-	aspect-ratio: 1;
+	transition-duration: 50ms;
+
+	padding-top: 1px;
+	padding-bottom: 1px;
+
+	overflow: hidden;
 }
-
+.host-field-wrapper .connection-status:active,
 .host-field-wrapper .connection-status:hover {
-	width: 19px;
-	height: 19px;
+	width: fit-content;
+	padding-left: 5px;
+	padding-right: 6px;
 
-	margin: 3px;
+	filter: brightness(110%);
 }
 
 .host-field-wrapper .connection-status:active {
-	width: 17px;
-	height: 17px;
+	filter: brightness(80%);
+}
 
-	margin: 4px;
+.host-field-wrapper .connection-status > #connection-status-indicator-text {
+	opacity: 0%;
+	transition-duration: 20ms;
+}
+
+.host-field-wrapper
+	.connection-status:hover
+	> #connection-status-indicator-text {
+	opacity: 100%;
 }
 
 .host-field-wrapper .connection-status.online {
 	background-color: #49dd49;
+	color: #1f3f1f;
 }
 
 .host-field-wrapper .connection-status.offline {
 	background-color: #dd4949;
+	color: #3f1f1f;
 }
 
 .host-field-wrapper .connection-status.cors-issue {
 	background-color: #dddd49;
+	color: #3f3f1f;
 }
 
 .host-field-wrapper .connection-status.before {
 	background-color: #777;
+	color: #1f1f1f;
 }
 
 input#host {
@@ -220,6 +250,19 @@ div.prompt-wrapper > textarea {
 
 div.prompt-wrapper > textarea:focus {
 	width: 700px;
+}
+
+/* Style Field */
+select > .style-select-option {
+	cursor: pointer;
+}
+
+select > .style-select-option:hover {
+	background-color: #999;
+}
+
+select > .style-select-option:active {
+	background-color: #aaa;
 }
 
 /* Tool buttons */

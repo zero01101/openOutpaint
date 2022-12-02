@@ -104,8 +104,11 @@ const stampTool = () =>
 							);
 							const resourceWrapper = document.createElement("div");
 							resourceWrapper.id = `resource-${resource.id}`;
-							resourceWrapper.textContent = resource.name;
 							resourceWrapper.classList.add("resource");
+							const resourceTitle = document.createElement("span");
+							resourceTitle.textContent = resource.name;
+							resourceTitle.classList.add("resource-title");
+							resourceWrapper.appendChild(resourceTitle);
 
 							resourceWrapper.addEventListener("click", () =>
 								state.selectResource(resource)
@@ -119,6 +122,34 @@ const stampTool = () =>
 								state.ctxmenu.previewPane.style.display = "none";
 							});
 
+							// Add action buttons
+							const actionArray = document.createElement("div");
+							actionArray.classList.add("actions");
+
+							const renameButton = document.createElement("button");
+							renameButton.addEventListener("click", () => {
+								const name = prompt("Rename your resource:", resource.name);
+								if (name) {
+									resource.name = name;
+									resourceTitle.textContent = name;
+								}
+							});
+							renameButton.title = "Rename Resource";
+							renameButton.appendChild(document.createElement("div"));
+							renameButton.classList.add("rename-btn");
+
+							const trashButton = document.createElement("button");
+							trashButton.addEventListener("click", () => {
+								state.ctxmenu.previewPane.style.display = "none";
+								state.deleteResource(resource.id);
+							});
+							trashButton.title = "Delete Resource";
+							trashButton.appendChild(document.createElement("div"));
+							trashButton.classList.add("delete-btn");
+
+							actionArray.appendChild(renameButton);
+							actionArray.appendChild(trashButton);
+							resourceWrapper.appendChild(actionArray);
 							state.ctxmenu.resourceList.appendChild(resourceWrapper);
 							resource.dom = {wrapper: resourceWrapper};
 						}

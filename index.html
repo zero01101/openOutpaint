@@ -34,9 +34,9 @@
 					Host
 					<div class="host-field-wrapper">
 						<input id="host" value="http://127.0.0.1:7860" />
-						<div
-							id="connection-status-indicator"
-							class="connection-status"></div>
+						<div id="connection-status-indicator" class="connection-status">
+							<span id="connection-status-indicator-text">Connected</span>
+						</div>
 					</div>
 				</label>
 				<!-- Prompts section -->
@@ -51,6 +51,12 @@
 					<div class="prompt-wrapper">
 						<textarea id="negPrompt"></textarea>
 					</div>
+					<label for="styleSelect">Styles:</label>
+					<select
+						id="styleSelect"
+						class="wideSelect"
+						onchange="changeStyles()"
+						multiple></select>
 					<!-- <hr /> -->
 				</div>
 				<!-- SD section -->
