@@ -787,7 +787,7 @@ async function upscaleAndDownload() {
 		var upscaler = document.getElementById("upscalers").value;
 		var url =
 			document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
-		var imgdata = croppedCanvas.toDataURL("image/png");
+		var imgdata = croppedCanvas.canvas.toDataURL("image/png");
 		var data = {
 			"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
 			upscaling_resize: upscale_factor,
