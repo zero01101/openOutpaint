@@ -767,6 +767,8 @@ async function getStyles() {
 		let stored = null;
 		try {
 			stored = JSON.parse(localStorage.getItem("promptStyle"));
+			// doesn't seem to throw a syntaxerror if the localstorage item simply doesn't exist?
+			if (stored == null) stored = [];
 		} catch (e) {
 			stored = [];
 		}
