@@ -19,7 +19,8 @@ const stampTool = () =>
 				state.addResource(
 					opt.name || "Clipboard",
 					opt.image,
-					opt.temporary === undefined ? true : opt.temporary
+					opt.temporary === undefined ? true : opt.temporary,
+					false
 				);
 				state.ctxmenu.uploadButton.disabled = true;
 				state.back = opt.back || null;
@@ -56,8 +57,14 @@ const stampTool = () =>
 
 				state.lastMouseMove = {x: 0, y: 0};
 
-				state.selectResource = (resource) => {
-					if (state.ctxmenu.uploadButton.disabled) return;
+				state.selectResource = (resource, nolock = true) => {
+					if (nolock && state.ctxmenu.uploadButton.disabled) return;
+
+					console.debug(
+						`[stamp] Selecting Resource '${resource && resource.name}'[${
+							resource && resource.id
+						}]`
+					);
 
 					const resourceWrapper = resource && resource.dom.wrapper;
 
@@ -93,7 +100,7 @@ const stampTool = () =>
 							)
 						) {
 							console.debug(
-								`Creating resource element 'resource-${resource.id}'`
+								`[stamp] Creating Resource Element [resource-${resource.id}]`
 							);
 							const resourceWrapper = document.createElement("div");
 							resourceWrapper.id = `resource-${resource.id}`;
@@ -124,15 +131,20 @@ const stampTool = () =>
 						elements.forEach((element) => {
 							let remove = true;
 							state.resources.some((resource) => {
-								if (element.id.endsWith(resource.id)) remove = false;
+								if (element.id.endsWith(resource.id)) {
+									remove = false;
+								}
 							});
 
-							if (remove) state.ctxmenu.resourceList.removeChild(element);
+							if (remove) {
+								console.debug(`[stamp] Sync Removing Element [${element.id}]`);
+								state.ctxmenu.resourceList.removeChild(element);
+							}
 						});
 				};
 
 				// Adds a image resource (temporary allows only one draw, used for pasting)
-				state.addResource = (name, image, temporary = false) => {
+				state.addResource = (name, image, temporary = false, nolock = true) => {
 					const id = guid();
 					const resource = {
 						id,
@@ -140,11 +152,14 @@ const stampTool = () =>
 						image,
 						temporary,
 					};
+
+					console.info(`[stamp] Adding Resource '${name}'[${id}]`);
+
 					state.resources.push(resource);
 					syncResources();
 
 					// Select this resource
-					state.selectResource(resource);
+					state.selectResource(resource, nolock);
 
 					return resource;
 				};
@@ -152,7 +167,13 @@ const stampTool = () =>
 				// Deletes a resource (Yes, functionality is here, but we don't have an UI for this yet)
 				// Used for temporary images too
 				state.deleteResource = (id) => {
-					state.resources = state.resources.filter((v) => v.id !== id);
+					const resourceIndex = state.resources.findIndex((v) => v.id === id);
+					const resource = state.resources[resourceIndex];
+					console.info(
+						`[stamp] Deleting Resource '${resource.name}'[${resource.id}]`
+					);
+
+					state.resources.splice(resourceIndex, 1);
 
 					syncResources();
 				};
@@ -203,7 +224,9 @@ const stampTool = () =>
 							y,
 						});
 
-						if (resource.temporary) state.deleteResource(resource.id);
+						if (resource.temporary) {
+							state.deleteResource(resource.id);
+						}
 					}
 
 					if (state.back) {
