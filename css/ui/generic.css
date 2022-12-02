@@ -90,8 +90,7 @@ div.slider-wrapper > input.text {
 	appearance: textfield;
 	border: 0px;
 
-	padding-top: 5px;
-	height: 15px;
+	height: 100%;
 	text-align: center;
 	background-color: transparent;
 }
