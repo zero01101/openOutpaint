@@ -59,7 +59,10 @@
 				</button>
 				<div class="content">
 					<label for="models">Model:</label>
-					<select id="models" onchange="changeModel()"></select>
+					<select
+						id="models"
+						class="wideSelect"
+						onchange="changeModel()"></select>
 					<br />
 					<label for="samplerSelect">Sampler:</label>
 					<select id="samplerSelect" onchange="changeSampler()"></select>
@@ -104,7 +107,7 @@
 					<button onclick="downloadCanvas()">Save canvas</button>
 					<br />
 					<label for="upscalers">Choose upscaler</label>
-					<select id="upscalers"></select>
+					<select id="upscalers" class="wideSelect"></select>
 					<button onclick="upscaleAndDownload()">
 						Upscale (might take a sec)
 					</button>
@@ -135,6 +138,10 @@
 					<br />
 					<label for="heldButton">Mouse button:</label>
 					<span id="heldButton"></span>
+					<br />
+					<button id="resetToDefaults" onclick="resetToDefaults()">
+						Reset to defaults
+					</button>
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">

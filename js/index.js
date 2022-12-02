@@ -884,3 +884,9 @@ imageCollection.element.addEventListener(
 	},
 	{passive: false}
 );
+
+function resetToDefaults() {
+	if (confirm("Are you sure you want to clear your settings?")) {
+		localStorage.clear();
+	}
+}

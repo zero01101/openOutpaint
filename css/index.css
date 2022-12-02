@@ -136,7 +136,7 @@ body {
 	color: #fff;
 }
 
-#models {
+.wideSelect {
 	width: 100%;
 	text-overflow: ellipsis;
 }
