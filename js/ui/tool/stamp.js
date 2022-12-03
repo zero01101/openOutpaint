@@ -99,11 +99,20 @@ const stampTool = () =>
 							JSON.stringify(
 								state.resources
 									.filter((resource) => !resource.temporary)
-									.map((resource) => ({
-										id: resource.id,
-										name: resource.name,
-										src: resource.image.src,
-									}))
+									.map((resource) => {
+										const canvas = document.createElement("canvas");
+										canvas.width = resource.image.width;
+										canvas.height = resource.image.height;
+
+										const ctx = canvas.getContext("2d");
+										ctx.drawImage(resource.image, 0, 0);
+
+										return {
+											id: resource.id,
+											name: resource.name,
+											src: canvas.toDataURL(),
+										};
+									})
 							)
 						);
 					} catch (e) {
@@ -350,7 +359,7 @@ const stampTool = () =>
 								const image = document.createElement("img");
 								image.src = url.createObjectURL(file);
 
-								state.addResource(file.name, image, false);
+								image.onload = () => state.addResource(file.name, image, false);
 							}
 						});
 
