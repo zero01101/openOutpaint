@@ -1,0 +1,42 @@
+.brush-color-picker.wrapper {
+	position: relative;
+
+	height: 32px;
+
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	justify-content: space-between;
+}
+
+.brush-color-picker.picker {
+	cursor: pointer;
+
+	flex: 1;
+
+	height: 100%;
+
+	border-bottom-left-radius: 3px;
+	border-top-left-radius: 3px;
+
+	padding: 0;
+	border: 0;
+}
+
+.brush-color-picker.eyedropper {
+	cursor: pointer;
+
+	border-radius: 3px;
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0;
+
+	height: 100%;
+	aspect-ratio: 1;
+
+	border: 0;
+
+	background-image: url("/res/icons/pipette.svg");
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+}

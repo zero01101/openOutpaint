@@ -37,6 +37,17 @@ const colorBrushTool = () =>
 			// Draw new cursor immediately
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 			state.movecb({...mouse.coords.world.pos});
+
+			// Layer for eyedropper magnifiying glass
+			state.glassLayer = imageCollection.registerLayer(null, {
+				bb: {x: 0, y: 0, w: 100, h: 100},
+				resolution: {w: 7, h: 7},
+				after: maskPaintLayer,
+			});
+			state.glassLayer.canvas.style.display = "none";
+			state.glassLayer.canvas.style.imageRendering = "pixelated";
+			state.glassLayer.canvas.style.borderRadius = "50%";
+
 			state.drawLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
 			});
@@ -52,6 +63,10 @@ const colorBrushTool = () =>
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.movecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
+
+			keyboard.listen.onkeydown.on(state.keydowncb);
+			keyboard.listen.onkeyup.on(state.keyupcb);
+			mouse.listen.world.btn.left.onclick.on(state.leftclickcb);
 
 			mouse.listen.world.btn.left.onpaintstart.on(state.drawstartcb);
 			mouse.listen.world.btn.left.onpaint.on(state.drawcb);
@@ -69,6 +84,10 @@ const colorBrushTool = () =>
 			mouse.listen.world.onmousemove.clear(state.movecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
 
+			keyboard.listen.onkeydown.clear(state.keydowncb);
+			keyboard.listen.onkeyup.clear(state.keyupcb);
+			mouse.listen.world.btn.left.onclick.clear(state.leftclickcb);
+
 			mouse.listen.world.btn.left.onpaintstart.clear(state.drawstartcb);
 			mouse.listen.world.btn.left.onpaint.clear(state.drawcb);
 			mouse.listen.world.btn.left.onpaintend.clear(state.drawendcb);
@@ -81,6 +100,11 @@ const colorBrushTool = () =>
 			imageCollection.deleteLayer(state.drawLayer);
 			imageCollection.deleteLayer(state.eraseBackup);
 			imageCollection.deleteLayer(state.eraseLayer);
+			imageCollection.deleteLayer(state.glassLayer);
+
+			// Cancel any eyedropping
+			state.drawing = false;
+			state.disableDropper();
 		},
 		{
 			init: (state) => {
@@ -102,13 +126,46 @@ const colorBrushTool = () =>
 					state.ctxmenu.brushSizeText.value = size;
 				};
 
+				state.eyedropper = false;
+
+				state.enableDropper = () => {
+					state.eyedropper = true;
+					state.movecb(lastMouseMoveEvn);
+					state.glassLayer.canvas.style.display = "block";
+				};
+
+				state.disableDropper = () => {
+					state.eyedropper = false;
+					state.movecb(lastMouseMoveEvn);
+					state.glassLayer.canvas.style.display = "none";
+				};
+
+				let lastMouseMoveEvn = {x: 0, y: 0};
+
 				state.movecb = (evn) => {
-					// draw big translucent white blob cursor
+					lastMouseMoveEvn = evn;
+
+					// draw drawing cursor
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-					ovCtx.beginPath();
-					ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 8x on a line???
-					ovCtx.fillStyle = state.color + "50";
-					ovCtx.fill();
+
+					if (state.eyedropper) {
+						const bb = getBoundingBox(evn.x, evn.y, 7, 7, false);
+
+						const canvas = getVisible(bb);
+						state.glassLayer.ctx.clearRect(0, 0, 7, 7);
+						state.glassLayer.ctx.drawImage(canvas, 0, 0);
+						state.glassLayer.moveTo(evn.x - 50, evn.y - 50);
+
+						ovCtx.beginPath();
+						ovCtx.arc(evn.x, evn.y, 50, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 7x on a line???
+						ovCtx.strokeStyle = "black";
+						ovCtx.stroke();
+					} else {
+						ovCtx.beginPath();
+						ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 7x on a line???
+						ovCtx.fillStyle = state.color + "50";
+						ovCtx.fill();
+					}
 				};
 
 				state.wheelcb = (evn) => {
@@ -122,17 +179,68 @@ const colorBrushTool = () =>
 					}
 				};
 
+				/**
+				 * These are basically for eyedropper purposes
+				 */
+
+				state.keydowncb = (evn) => {
+					if (lastMouseMoveEvn.target === imageCollection.inputElement)
+						switch (evn.code) {
+							case "ShiftLeft":
+							case "ShiftRight":
+								state.enableDropper();
+								break;
+						}
+				};
+
+				state.keyupcb = (evn) => {
+					switch (evn.code) {
+						case "ShiftLeft":
+							if (!keyboard.isPressed("ShiftRight")) {
+								state.disableDropper();
+							}
+							break;
+						case "ShiftRight":
+							if (!keyboard.isPressed("ShiftLeft")) {
+								state.disableDropper();
+							}
+							break;
+					}
+				};
+
+				state.leftclickcb = (evn) => {
+					if (evn.target === imageCollection.inputElement && state.eyedropper) {
+						const bb = getBoundingBox(evn.x, evn.y, 1, 1, false);
+						const visibleCanvas = getVisible(bb);
+						const dat = visibleCanvas
+							.getContext("2d")
+							.getImageData(0, 0, 1, 1).data;
+						state.setColor(
+							"#" + ((dat[0] << 16) | (dat[1] << 8) | dat[2]).toString(16)
+						);
+					}
+				};
+
+				/**
+				 * Here we actually paint things
+				 */
 				state.drawstartcb = (evn) => {
+					if (state.eyedropper) return;
+					state.drawing = true;
 					if (state.affectMask) _mask_brush_draw_callback(evn, state);
 					_color_brush_draw_callback(evn, state);
 				};
 
 				state.drawcb = (evn) => {
+					if (state.eyedropper || !state.drawing) return;
 					if (state.affectMask) _mask_brush_draw_callback(evn, state);
 					_color_brush_draw_callback(evn, state);
 				};
 
 				state.drawendcb = (evn) => {
+					if (!state.drawing) return;
+					state.drawing = false;
+
 					const canvas = state.drawLayer.canvas;
 					const ctx = state.drawLayer.ctx;
 
@@ -231,15 +339,38 @@ const colorBrushTool = () =>
 					state.ctxmenu.brushBlurSlider = brushBlurSlider.slider;
 
 					// Brush color
+					const brushColorPickerWrapper = document.createElement("div");
+					brushColorPickerWrapper.classList.add(
+						"brush-color-picker",
+						"wrapper"
+					);
+
 					const brushColorPicker = document.createElement("input");
+					brushColorPicker.classList.add("brush-color-picker", "picker");
 					brushColorPicker.type = "color";
-					brushColorPicker.style.width = "100%";
 					brushColorPicker.value = state.color;
 					brushColorPicker.addEventListener("input", (evn) => {
 						state.color = evn.target.value;
 					});
 
-					state.ctxmenu.brushColorPicker = brushColorPicker;
+					state.setColor = (color) => {
+						brushColorPicker.value = color;
+						state.color = brushColorPicker.value;
+					};
+
+					const brushColorEyeDropper = document.createElement("button");
+					brushColorEyeDropper.classList.add(
+						"brush-color-picker",
+						"eyedropper"
+					);
+					brushColorEyeDropper.addEventListener("click", () => {
+						state.enableDropper();
+					});
+
+					brushColorPickerWrapper.appendChild(brushColorPicker);
+					brushColorPickerWrapper.appendChild(brushColorEyeDropper);
+
+					state.ctxmenu.brushColorPicker = brushColorPickerWrapper;
 				}
 
 				menu.appendChild(state.ctxmenu.affectMaskCheckbox);
