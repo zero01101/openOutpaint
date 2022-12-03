@@ -86,16 +86,15 @@
 						value="-1"
 						step="1" />
 					<br />
+					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
+					<label for="cbxHRFix">Auto txt2img HRfix</label>
+					<div id="resolution"></div>
 					<div id="steps"></div>
 					<div id="cfgScale"></div>
 					<div id="batchSize"></div>
 					<div id="batchCount"></div>
 				</div>
 				<!-- Unsectioned -->
-				<div id="scaleFactor"></div>
-				<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
-				<label for="cbxHRFix">Auto txt2img HRfix</label>
-				<br />
 				<label for="maskBlur">Mask blur:</label>
 				<span id="maskBlurText"></span>
 				<br />

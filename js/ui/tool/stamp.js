@@ -213,8 +213,8 @@ const stampTool = () =>
 					let x = evn.x;
 					let y = evn.y;
 					if (state.snapToGrid) {
-						x += snap(evn.x, true, 64);
-						y += snap(evn.y, true, 64);
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
 					}
 
 					state.lastMouseMove = evn;
@@ -242,8 +242,8 @@ const stampTool = () =>
 					let x = evn.x;
 					let y = evn.y;
 					if (state.snapToGrid) {
-						x += snap(evn.x, true, 64);
-						y += snap(evn.y, true, 64);
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
 					}
 
 					const resource = state.selected;

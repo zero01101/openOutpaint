@@ -125,13 +125,27 @@ const _generate = async (endpoint, request, bb) => {
 		image.src = "data:image/png;base64," + images[at];
 		image.addEventListener("load", () => {
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-			if (images[at]) layer.ctx.drawImage(image, bb.x, bb.y);
+			if (images[at])
+				layer.ctx.drawImage(
+					image,
+					0,
+					0,
+					image.width,
+					image.height,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h
+				);
 		});
 	};
 
 	const stopMarchingAnts = march(bb);
 
 	// First Dream Run
+	console.info(`[dream] Generating images for prompt '${request.prompt}'`);
+	console.debug(request);
+
 	let stopProgress = _monitorProgress(bb);
 	images.push(...(await _dream(endpoint, requestCopy)));
 	stopProgress();
@@ -161,6 +175,8 @@ const _generate = async (endpoint, request, bb) => {
 			commands.runCommand("drawImage", "Image Dream", {
 				x: bb.x,
 				y: bb.y,
+				w: bb.w,
+				h: bb.h,
 				image: img,
 			});
 			clean(true);
@@ -316,8 +332,8 @@ const dream_generate_callback = async (evn, state) => {
 		const bb = getBoundingBox(
 			evn.x,
 			evn.y,
-			basePixelCount * scaleFactor,
-			basePixelCount * scaleFactor,
+			state.cursorSize,
+			state.cursorSize,
 			state.snapToGrid && basePixelCount
 		);
 
@@ -331,13 +347,6 @@ const dream_generate_callback = async (evn, state) => {
 
 		// Don't allow another image until is finished
 		blockNewImages = true;
-
-		// Setup some basic information for SD
-		request.width = bb.w;
-		request.height = bb.h;
-
-		request.firstphase_width = bb.w / 2;
-		request.firstphase_height = bb.h / 2;
 
 		// Use txt2img if canvas is blank
 		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, imgCanvas)) {
@@ -355,13 +364,23 @@ const dream_generate_callback = async (evn, state) => {
 			auxCtx.fillStyle = "#000F";
 
 			// Get init image
-			auxCtx.fillRect(0, 0, bb.w, bb.h);
-			auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+			auxCtx.fillRect(0, 0, request.width, request.height);
+			auxCtx.drawImage(
+				imgCanvas,
+				bb.x,
+				bb.y,
+				bb.w,
+				bb.h,
+				0,
+				0,
+				request.width,
+				request.height
+			);
 			request.init_images = [auxCanvas.toDataURL()];
 
 			// Get mask image
 			auxCtx.fillStyle = "#000F";
-			auxCtx.fillRect(0, 0, bb.w, bb.h);
+			auxCtx.fillRect(0, 0, request.width, request.height);
 			if (state.invertMask) {
 				// overmasking by definition is entirely pointless with an inverted mask outpaint
 				// since it should explicitly avoid brushed masks too, we just won't even bother
@@ -374,23 +393,45 @@ const dream_generate_callback = async (evn, state) => {
 					bb.h,
 					0,
 					0,
-					bb.w,
-					bb.h
+					request.width,
+					request.height
 				);
 
 				auxCtx.globalCompositeOperation = "destination-in";
-				auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+				auxCtx.drawImage(
+					imgCanvas,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h,
+					0,
+					0,
+					request.width,
+					request.height
+				);
 			} else {
 				auxCtx.globalCompositeOperation = "destination-in";
-				auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+				auxCtx.drawImage(
+					imgCanvas,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h,
+					0,
+					0,
+					request.width,
+					request.height
+				);
 				// here's where to overmask to avoid including the brushed mask
 				// 99% of my issues were from failing to set source-over for the overmask blotches
 				if (state.overMaskPx > 0) {
 					// transparent to white first
 					auxCtx.globalCompositeOperation = "destination-atop";
 					auxCtx.fillStyle = "#FFFF";
-					auxCtx.fillRect(0, 0, bb.w, bb.h);
+					auxCtx.fillRect(0, 0, request.width, request.height);
+					downloadCanvas({canvas: auxCanvas, filename: null});
 					applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
+					downloadCanvas({canvas: auxCanvas, filename: null});
 				}
 
 				auxCtx.globalCompositeOperation = "destination-out"; // ???
@@ -402,13 +443,13 @@ const dream_generate_callback = async (evn, state) => {
 					bb.h,
 					0,
 					0,
-					bb.w,
-					bb.h
+					request.width,
+					request.height
 				);
 			}
 			auxCtx.globalCompositeOperation = "destination-atop";
 			auxCtx.fillStyle = "#FFFF";
-			auxCtx.fillRect(0, 0, bb.w, bb.h);
+			auxCtx.fillRect(0, 0, request.width, request.height);
 			request.mask = auxCanvas.toDataURL();
 			// Dream
 			_generate("img2img", request, bb);
@@ -419,8 +460,8 @@ const dream_erase_callback = (evn, state) => {
 	const bb = getBoundingBox(
 		evn.x,
 		evn.y,
-		basePixelCount * scaleFactor,
-		basePixelCount * scaleFactor,
+		state.cursorSize,
+		state.cursorSize,
 		state.snapToGrid && basePixelCount
 	);
 	commands.runCommand("eraseImage", "Erase Area", bb);
@@ -436,14 +477,25 @@ function applyOvermask(canvas, ctx, px) {
 		if (ctxImgData.data[i] == 255) {
 			// white pixel?
 			// just blotch all over the thing
-			var rando = Math.floor(Math.random() * px);
+			/**
+			 * This should probably have a better randomness profile for the overmasking
+			 *
+			 * Essentially, we want to have much more smaller values for randomness than big ones,
+			 * because big values overshadow smaller circles and kinda ignores their randomness.
+			 *
+			 * And also, we want the profile to become more extreme the bigger the overmask size,
+			 * because bigger px values also make bigger circles ocuppy more horizontal space.
+			 */
+			let lowRandom =
+				Math.atan(Math.random() * 10 - 10) / Math.abs(Math.atan(-10)) + 1;
+			lowRandom = Math.pow(lowRandom, px / 8);
+
+			var rando = Math.floor(lowRandom * px);
 			ctx.beginPath();
 			ctx.arc(
 				(i / 4) % canvas.width,
 				Math.floor(i / 4 / canvas.width),
-				scaleFactor +
-					rando +
-					(rando > scaleFactor ? rando / scaleFactor : scaleFactor / rando), // was 4 * sf + rando, too big, but i think i want it more ... random
+				rando, // was 4 * sf + rando, too big, but i think i want it more ... random
 				0,
 				2 * Math.PI,
 				true
@@ -462,8 +514,8 @@ const dream_img2img_callback = (evn, state) => {
 		const bb = getBoundingBox(
 			evn.x,
 			evn.y,
-			basePixelCount * scaleFactor,
-			basePixelCount * scaleFactor,
+			state.cursorSize,
+			state.cursorSize,
 			state.snapToGrid && basePixelCount
 		);
 
@@ -484,13 +536,6 @@ const dream_img2img_callback = (evn, state) => {
 		// Don't allow another image until is finished
 		blockNewImages = true;
 
-		// Setup some basic information for SD
-		request.width = bb.w;
-		request.height = bb.h;
-
-		request.firstphase_width = bb.w / 2;
-		request.firstphase_height = bb.h / 2;
-
 		// Use img2img
 
 		// Temporary canvas for init image and mask generation
@@ -502,36 +547,56 @@ const dream_img2img_callback = (evn, state) => {
 		auxCtx.fillStyle = "#000F";
 
 		// Get init image
-		auxCtx.fillRect(0, 0, bb.w, bb.h);
-		auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+		auxCtx.fillRect(0, 0, request.width, request.height);
+		auxCtx.drawImage(
+			imgCanvas,
+			bb.x,
+			bb.y,
+			bb.w,
+			bb.h,
+			0,
+			0,
+			request.width,
+			request.height
+		);
 		request.init_images = [auxCanvas.toDataURL()];
 
 		// Get mask image
 		auxCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
-		auxCtx.fillRect(0, 0, bb.w, bb.h);
+		auxCtx.fillRect(0, 0, request.width, request.height);
 		auxCtx.globalCompositeOperation = "destination-out";
-		auxCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+		auxCtx.drawImage(
+			maskPaintCanvas,
+			bb.x,
+			bb.y,
+			bb.w,
+			bb.h,
+			0,
+			0,
+			request.width,
+			request.height
+		);
 
 		auxCtx.globalCompositeOperation = "destination-atop";
 		auxCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
-		auxCtx.fillRect(0, 0, bb.w, bb.h);
+		auxCtx.fillRect(0, 0, request.width, request.height);
 
 		// Border Mask
 		if (state.keepBorderSize > 0) {
 			auxCtx.globalCompositeOperation = "source-over";
 			auxCtx.fillStyle = "#000F";
-			auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
-			auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
+			auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+			auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
 			auxCtx.fillRect(
-				bb.w - state.keepBorderSize,
+				request.width - state.keepBorderSize,
 				0,
 				state.keepBorderSize,
-				bb.h
+				request.height
 			);
 			auxCtx.fillRect(
 				0,
-				bb.h - state.keepBorderSize,
-				bb.w,
+				request.height - state.keepBorderSize,
+				request.width,
 				state.keepBorderSize
 			);
 		}
@@ -547,13 +612,13 @@ const dream_img2img_callback = (evn, state) => {
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (evn, snapToGrid = true) => {
+const _reticle_draw = (evn, state) => {
 	const bb = getBoundingBox(
 		evn.x,
 		evn.y,
-		basePixelCount * scaleFactor,
-		basePixelCount * scaleFactor,
-		snapToGrid && basePixelCount
+		state.cursorSize,
+		state.cursorSize,
+		state.snapToGrid && basePixelCount
 	);
 
 	// draw targeting square reticle thingy cursor
@@ -564,6 +629,20 @@ const _reticle_draw = (evn, snapToGrid = true) => {
 	return () => {
 		ovCtx.clearRect(bb.x - 10, bb.y - 10, bb.w + 20, bb.h + 20);
 	};
+};
+
+/**
+ * Generic wheel handler
+ */
+
+const _dream_onwheel = (evn, state) => {
+	if (!evn.evn.ctrlKey) {
+		const v =
+			state.cursorSize -
+			Math.floor(state.config.cursorSizeScrollSpeed * evn.delta);
+		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
+		state.mousemovecb(evn);
+	}
 };
 
 /**
@@ -582,6 +661,7 @@ const dreamTool = () =>
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
+			mouse.listen.world.onwheel.on(state.wheelcb);
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
 
@@ -591,6 +671,7 @@ const dreamTool = () =>
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
+			mouse.listen.world.onwheel.clear(state.wheelcb);
 			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
 
@@ -599,6 +680,12 @@ const dreamTool = () =>
 		},
 		{
 			init: (state) => {
+				state.config = {
+					cursorSizeScrollSpeed: 1,
+				};
+
+				state.cursorSize = 512;
+
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
@@ -608,7 +695,10 @@ const dreamTool = () =>
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state.snapToGrid);
+					state.erasePrevReticle = _reticle_draw(evn, state);
+				};
+				state.wheelcb = (evn) => {
+					_dream_onwheel(evn, state);
 				};
 				state.dreamcb = (evn) => {
 					dream_generate_callback(evn, state);
@@ -618,6 +708,22 @@ const dreamTool = () =>
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
+
+					// Cursor Size Slider
+					const cursorSizeSlider = _toolbar_input.slider(
+						state,
+						"cursorSize",
+						"Cursor Size",
+						{
+							min: 0,
+							max: 2048,
+							step: 128,
+							textStep: 2,
+						}
+					);
+
+					state.setCursorSize = cursorSizeSlider.setValue;
+					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
 
 					// Snap to Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
@@ -643,12 +749,14 @@ const dreamTool = () =>
 						"Overmask px",
 						{
 							min: 0,
-							max: 128,
-							step: 1,
+							max: 64,
+							step: 5,
+							textStep: 1,
 						}
 					).slider;
 				}
 
+				menu.appendChild(state.ctxmenu.cursorSizeSlider);
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
@@ -672,6 +780,7 @@ const img2imgTool = () =>
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
+			mouse.listen.world.onwheel.on(state.wheelcb);
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
 
@@ -681,6 +790,7 @@ const img2imgTool = () =>
 		(state, opt) => {
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
+			mouse.listen.world.onwheel.clear(state.wheelcb);
 			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
 
@@ -689,6 +799,11 @@ const img2imgTool = () =>
 		},
 		{
 			init: (state) => {
+				state.config = {
+					cursorSizeScrollSpeed: 1,
+				};
+
+				state.cursorSize = 512;
 				state.snapToGrid = true;
 				state.invertMask = true;
 				state.fullResolution = false;
@@ -702,39 +817,58 @@ const img2imgTool = () =>
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state.snapToGrid);
+					state.erasePrevReticle = _reticle_draw(evn, state);
 					const bb = getBoundingBox(
 						evn.x,
 						evn.y,
-						basePixelCount * scaleFactor,
-						basePixelCount * scaleFactor,
+						state.cursorSize,
+						state.cursorSize,
 						state.snapToGrid && basePixelCount
 					);
 
+					// Resolution
+					const request = {
+						width: stableDiffusionData.width,
+						height: stableDiffusionData.height,
+					};
+
 					// For displaying border mask
 					const auxCanvas = document.createElement("canvas");
-					auxCanvas.width = bb.w;
-					auxCanvas.height = bb.h;
+					auxCanvas.width = request.width;
+					auxCanvas.height = request.height;
 					const auxCtx = auxCanvas.getContext("2d");
 
 					if (state.keepBorderSize > 0) {
 						auxCtx.fillStyle = "#6A6AFF30";
-						auxCtx.fillRect(0, 0, state.keepBorderSize, bb.h);
-						auxCtx.fillRect(0, 0, bb.w, state.keepBorderSize);
+						auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+						auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
 						auxCtx.fillRect(
-							bb.w - state.keepBorderSize,
+							request.width - state.keepBorderSize,
 							0,
 							state.keepBorderSize,
-							bb.h
+							request.height
 						);
 						auxCtx.fillRect(
 							0,
-							bb.h - state.keepBorderSize,
-							bb.w,
+							request.height - state.keepBorderSize,
+							request.width,
 							state.keepBorderSize
 						);
-						ovCtx.drawImage(auxCanvas, bb.x, bb.y);
+						ovCtx.drawImage(
+							auxCanvas,
+							0,
+							0,
+							request.width,
+							request.height,
+							bb.x,
+							bb.y,
+							bb.w,
+							bb.h
+						);
 					}
+				};
+				state.wheelcb = (evn) => {
+					_dream_onwheel(evn, state);
 				};
 				state.dreamcb = (evn) => {
 					dream_img2img_callback(evn, state);
@@ -744,6 +878,23 @@ const img2imgTool = () =>
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
+
+					// Cursor Size Slider
+					const cursorSizeSlider = _toolbar_input.slider(
+						state,
+						"cursorSize",
+						"Cursor Size",
+						{
+							min: 0,
+							max: 2048,
+							step: 128,
+							textStep: 2,
+						}
+					);
+
+					state.setCursorSize = cursorSizeSlider.setValue;
+					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
+
 					// Snap To Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
@@ -795,6 +946,7 @@ const img2imgTool = () =>
 					).slider;
 				}
 
+				menu.appendChild(state.ctxmenu.cursorSizeSlider);
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);

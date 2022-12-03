@@ -60,7 +60,6 @@ var frameX = 512;
 var frameY = 512;
 var drawThis = {};
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
-var scaleFactor = 8; //x64 px
 var snapToGrid = true;
 var backupMaskPaintCanvas; //???
 var backupMaskPaintCtx; //...? look i am bad at this
@@ -117,7 +116,6 @@ function startup() {
 	changeSeed();
 	changeOverMaskPx();
 	changeHiResFix();
-	document.getElementById("scaleFactor").value = scaleFactor;
 }
 
 /**
@@ -497,15 +495,20 @@ const makeSlider = (
 	textStep = null,
 	valuecb = null
 ) => {
-	const local = localStorage.getItem(lsKey);
+	const local = lsKey && localStorage.getItem(lsKey);
 	const def = parseFloat(local === null ? defaultValue : local);
+	let cb = (v) => {
+		stableDiffusionData[lsKey] = v;
+		if (lsKey) localStorage.setItem(lsKey, v);
+	};
+	if (valuecb) {
+		cb = (v) => {
+			valuecb(v);
+			localStorage.setItem(lsKey, v);
+		};
+	}
 	return createSlider(label, el, {
-		valuecb:
-			valuecb ||
-			((v) => {
-				stableDiffusionData[lsKey] = v;
-				localStorage.setItem(lsKey, v);
-			}),
+		valuecb: cb,
 		min,
 		max,
 		step,
@@ -514,6 +517,21 @@ const makeSlider = (
 	});
 };
 
+makeSlider(
+	"Resolution",
+	document.getElementById("resolution"),
+	"resolution",
+	64,
+	1024,
+	64,
+	512,
+	2,
+	(v) => {
+		stableDiffusionData.width = stableDiffusionData.height = v;
+		stableDiffusionData.firstphase_width =
+			stableDiffusionData.firstphase_height = v / 2;
+	}
+);
 makeSlider(
 	"CFG Scale",
 	document.getElementById("cfgScale"),
@@ -541,19 +559,6 @@ makeSlider(
 	8,
 	1,
 	2
-);
-makeSlider(
-	"Scale Factor",
-	document.getElementById("scaleFactor"),
-	"scale_factor",
-	1,
-	16,
-	1,
-	8,
-	null,
-	(v) => {
-		scaleFactor = v;
-	}
 );
 
 makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);

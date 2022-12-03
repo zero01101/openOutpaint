@@ -145,21 +145,14 @@ function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
  * Snaps a single value to an infinite grid
  *
  * @param {number} i Original value to be snapped
- * @param {boolean} scaled If grid will change alignment for odd scaleFactor values (default: true)
- * @param {number} gridSize Size of the grid
+ * @param {number} [offset=0] Value to offset the grid. Should be in the rande [0, gridSize[
+ * @param {number} [gridSize=64] Size of the grid
  * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
-function snap(i, scaled = true, gridSize = 64) {
-	// very cheap test proof of concept but it works surprisingly well
-	var scaleOffset = 0;
-	if (scaled) {
-		if (scaleFactor % 2 != 0) {
-			// odd number, snaps to center of cell, oops
-			scaleOffset = gridSize / 2;
-		}
-	}
-	const modulus = i % gridSize;
-	var snapOffset = modulus - scaleOffset;
+function snap(i, offset = 0, gridSize = 64) {
+	const modulus = (i - offset) % gridSize;
+	var snapOffset = modulus;
+
 	if (modulus > gridSize / 2) snapOffset = modulus - gridSize;
 
 	if (snapOffset == 0) {
@@ -175,19 +168,20 @@ function snap(i, scaled = true, gridSize = 64) {
  * @param {number} cy - y-coordinate of the center of the box
  * @param {number} w - the width of the box
  * @param {height} h - the height of the box
- * @param {number | null} gridSnap - The size of the grid to snap to
+ * @param {?number} gridSnap - The size of the grid to snap to
+ * @param {number} [offset=0] - How much to offset the grid by
  * @returns {BoundingBox} - A bounding box object centered at (cx, cy)
  */
-function getBoundingBox(cx, cy, w, h, gridSnap = null) {
-	const offset = {x: 0, y: 0};
+function getBoundingBox(cx, cy, w, h, gridSnap = null, offset = 0) {
+	const offs = {x: 0, y: 0};
 	const box = {x: 0, y: 0};
 
 	if (gridSnap) {
-		offset.x = snap(cx, true, gridSnap);
-		offset.y = snap(cy, true, gridSnap);
+		offs.x = snap(cx, offset, gridSnap);
+		offs.y = snap(cy, offset, gridSnap);
 	}
-	box.x = offset.x + cx;
-	box.y = offset.y + cy;
+	box.x = offs.x + cx;
+	box.y = offs.y + cy;
 
 	return {
 		x: Math.floor(box.x - w / 2),
