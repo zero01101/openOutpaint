@@ -146,9 +146,19 @@ const _generate = async (endpoint, request, bb) => {
 	console.info(`[dream] Generating images for prompt '${request.prompt}'`);
 	console.debug(request);
 
-	let stopProgress = _monitorProgress(bb);
-	images.push(...(await _dream(endpoint, requestCopy)));
-	stopProgress();
+	let stopProgress = null;
+	try {
+		stopProgress = _monitorProgress(bb);
+		images.push(...(await _dream(endpoint, requestCopy)));
+	} catch (e) {
+		alert(
+			`Error generating images. Please try again or see consolde for more details`
+		);
+		console.warn(`[dream] Error generating images:`);
+		console.warn(e);
+	} finally {
+		stopProgress();
+	}
 
 	// Image navigation
 	const prevImg = () => {
@@ -184,11 +194,19 @@ const _generate = async (endpoint, request, bb) => {
 	};
 
 	const makeMore = async () => {
-		let stopProgress = _monitorProgress(bb);
-		images.push(...(await _dream(endpoint, requestCopy)));
-		stopProgress();
-
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		try {
+			stopProgress = _monitorProgress(bb);
+			images.push(...(await _dream(endpoint, requestCopy)));
+			imageindextxt.textContent = `${at + 1}/${images.length}`;
+		} catch (e) {
+			alert(
+				`Error generating images. Please try again or see consolde for more details`
+			);
+			console.warn(`[dream] Error generating images:`);
+			console.warn(e);
+		} finally {
+			stopProgress();
+		}
 	};
 
 	const discardImg = async () => {
@@ -429,9 +447,7 @@ const dream_generate_callback = async (evn, state) => {
 					auxCtx.globalCompositeOperation = "destination-atop";
 					auxCtx.fillStyle = "#FFFF";
 					auxCtx.fillRect(0, 0, request.width, request.height);
-					downloadCanvas({canvas: auxCanvas, filename: null});
 					applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
-					downloadCanvas({canvas: auxCanvas, filename: null});
 				}
 
 				auxCtx.globalCompositeOperation = "destination-out"; // ???
