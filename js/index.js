@@ -777,7 +777,7 @@ async function getStyles() {
 			const option = document.createElement("option");
 			option.classList.add("style-select-option");
 			option.text = style.name;
-			option.value = style.name != "None" ? style.name : "";
+			option.value = style.name;
 			option.title = `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`;
 			option.selected = !!stored.find((styleName) => style.name === styleName);
 			styleSelect.add(option);
@@ -805,7 +805,7 @@ function changeStyles() {
 	);
 	const selectedString = selected.map((option) => option.value);
 
-	selectedString != ""
+	selectedString != "None"
 		? localStorage.setItem("promptStyle", JSON.stringify(selectedString))
 		: localStorage.setItem("promptStyle", "[]");
 
