@@ -90,8 +90,29 @@ const stampTool = () =>
 					if (state.loaded) state.movecb(state.lastMouseMove);
 				};
 
-				// Synchronizes resources array with the DOM
+				// Synchronizes resources array with the DOM and Local Storage
 				const syncResources = () => {
+					// Saves to local storage
+					try {
+						localStorage.setItem(
+							"tools.stamp.resources",
+							JSON.stringify(
+								state.resources
+									.filter((resource) => !resource.temporary)
+									.map((resource) => ({
+										id: resource.id,
+										name: resource.name,
+										src: resource.image.src,
+									}))
+							)
+						);
+					} catch (e) {
+						console.warn(
+							"[stamp] Failed to synchronize resources with local storage"
+						);
+						console.warn(e);
+					}
+
 					// Creates DOM elements when needed
 					state.resources.forEach((resource) => {
 						if (
@@ -132,6 +153,8 @@ const stampTool = () =>
 								if (name) {
 									resource.name = name;
 									resourceTitle.textContent = name;
+
+									syncResources();
 								}
 							});
 							renameButton.title = "Rename Resource";
@@ -195,7 +218,6 @@ const stampTool = () =>
 					return resource;
 				};
 
-				// Deletes a resource (Yes, functionality is here, but we don't have an UI for this yet)
 				// Used for temporary images too
 				state.deleteResource = (id) => {
 					const resourceIndex = state.resources.findIndex((v) => v.id === id);
@@ -375,6 +397,29 @@ const stampTool = () =>
 					state.ctxmenu.previewPane = previewPane;
 					state.ctxmenu.resourceManager = resourceManager;
 					state.ctxmenu.resourceList = resourceList;
+
+					// Performs resource fetch from local storage
+					{
+						const storageResources = localStorage.getItem(
+							"tools.stamp.resources"
+						);
+						if (storageResources) {
+							const parsed = JSON.parse(storageResources);
+							state.resources.push(
+								...parsed.map((resource) => {
+									const image = document.createElement("img");
+									image.src = resource.src;
+
+									return {
+										id: resource.id,
+										name: resource.name,
+										image,
+									};
+								})
+							);
+							syncResources();
+						}
+					}
 				}
 			},
 			populateContextMenu: (menu, state) => {
