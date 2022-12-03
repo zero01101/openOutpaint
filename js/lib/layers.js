@@ -172,11 +172,28 @@ const layers = {
 							 * Moves this layer to another location
 							 *
 							 * @param {number} x X coordinate of the top left of the canvas
-							 * @param {number} y X coordinate of the top left of the canvas
+							 * @param {number} y Y coordinate of the top left of the canvas
 							 */
 							moveTo(x, y) {
 								canvas.style.left = `${x}px`;
 								canvas.style.top = `${y}px`;
+							},
+
+							/**
+							 * Resizes layer in place
+							 *
+							 * @param {number} w New width
+							 * @param {number} h New height
+							 */
+							resize(w, h) {
+								canvas.width = Math.round(
+									options.resolution.w * (w / options.bb.w)
+								);
+								canvas.height = Math.round(
+									options.resolution.h * (h / options.bb.h)
+								);
+								canvas.style.width = `${w}px`;
+								canvas.style.height = `${h}px`;
 							},
 
 							// Hides this layer (don't draw)

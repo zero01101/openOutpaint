@@ -24,6 +24,7 @@ var stableDiffusionData = {
 	enable_hr: false,
 	firstphase_width: 0,
 	firstphase_height: 0,
+	styles: [],
 	// here's some more fields that might be useful
 
 	// ---txt2img specific:
@@ -48,6 +49,7 @@ var stableDiffusionData = {
 };
 
 // stuff things use
+let debug = false;
 var returnedImages;
 var imageIndex = 0;
 var tmpImgXYWH = {};
@@ -58,7 +60,6 @@ var frameX = 512;
 var frameY = 512;
 var drawThis = {};
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
-var scaleFactor = 8; //x64 px
 var snapToGrid = true;
 var backupMaskPaintCanvas; //???
 var backupMaskPaintCtx; //...? look i am bad at this
@@ -115,7 +116,6 @@ function startup() {
 	changeSeed();
 	changeOverMaskPx();
 	changeHiResFix();
-	document.getElementById("scaleFactor").value = scaleFactor;
 }
 
 /**
@@ -126,6 +126,7 @@ function testHostConfiguration() {
 	 * Check host configuration
 	 */
 	const hostEl = document.getElementById("host");
+	hostEl.value = localStorage.getItem("host");
 
 	const requestHost = (prompt, def = "http://127.0.0.1:7860") => {
 		let value = window.prompt(prompt, def);
@@ -168,6 +169,10 @@ async function testHostConnection() {
 	let firstTimeOnline = true;
 
 	const setConnectionStatus = (status) => {
+		const connectionIndicatorText = document.getElementById(
+			"connection-status-indicator-text"
+		);
+
 		const statuses = {
 			online: () => {
 				connectionIndicator.classList.add("online");
@@ -177,7 +182,8 @@ async function testHostConnection() {
 					"before",
 					"server-error"
 				);
-				connectionIndicator.title = "Connected";
+				connectionIndicatorText.textContent = connectionIndicator.title =
+					"Connected";
 				connectionStatus = true;
 			},
 			error: () => {
@@ -188,6 +194,7 @@ async function testHostConnection() {
 					"before",
 					"cors-issue"
 				);
+				connectionIndicatorText.textContent = "Error";
 				connectionIndicator.title =
 					"Server is online, but is returning an error response";
 				connectionStatus = false;
@@ -200,6 +207,7 @@ async function testHostConnection() {
 					"before",
 					"server-error"
 				);
+				connectionIndicatorText.textContent = "CORS";
 				connectionIndicator.title =
 					"Server is online, but CORS is blocking our requests";
 				connectionStatus = false;
@@ -212,6 +220,7 @@ async function testHostConnection() {
 					"before",
 					"server-error"
 				);
+				connectionIndicatorText.textContent = "Offline";
 				connectionIndicator.title =
 					"Server seems to be offline. Please check the console for more information.";
 				connectionStatus = false;
@@ -224,6 +233,7 @@ async function testHostConnection() {
 					"offline",
 					"server-error"
 				);
+				connectionIndicatorText.textContent = "Waiting";
 				connectionIndicator.title = "Waiting for check to complete.";
 				connectionStatus = false;
 			},
@@ -254,6 +264,7 @@ async function testHostConnection() {
 				setConnectionStatus("online");
 				// Load data as soon as connection is first stablished
 				if (firstTimeOnline) {
+					getStyles();
 					getSamplers();
 					getUpscalers();
 					getModels();
@@ -272,10 +283,7 @@ async function testHostConnection() {
 				await fetch(url, {mode: "no-cors"});
 
 				setConnectionStatus("corsissue");
-				const message = `CORS is blocking our requests. Try running the webui with the flag '--cors-allow-origins=${document.URL.substring(
-					0,
-					document.URL.length - 1
-				)}'`;
+				const message = `CORS is blocking our requests. Try running the webui with the flag '--cors-allow-origins=${window.location.protocol}//${window.location.host}/'`;
 				console.error(message);
 				if (notify) alert(message);
 			} catch (e) {
@@ -484,24 +492,46 @@ const makeSlider = (
 	max,
 	step,
 	defaultValue,
+	textStep = null,
 	valuecb = null
 ) => {
-	const local = localStorage.getItem(lsKey);
+	const local = lsKey && localStorage.getItem(lsKey);
 	const def = parseFloat(local === null ? defaultValue : local);
+	let cb = (v) => {
+		stableDiffusionData[lsKey] = v;
+		if (lsKey) localStorage.setItem(lsKey, v);
+	};
+	if (valuecb) {
+		cb = (v) => {
+			valuecb(v);
+			localStorage.setItem(lsKey, v);
+		};
+	}
 	return createSlider(label, el, {
-		valuecb:
-			valuecb ||
-			((v) => {
-				stableDiffusionData[lsKey] = v;
-				localStorage.setItem(lsKey, v);
-			}),
+		valuecb: cb,
 		min,
 		max,
 		step,
 		defaultValue: def,
+		textStep,
 	});
 };
 
+makeSlider(
+	"Resolution",
+	document.getElementById("resolution"),
+	"resolution",
+	64,
+	1024,
+	64,
+	512,
+	2,
+	(v) => {
+		stableDiffusionData.width = stableDiffusionData.height = v;
+		stableDiffusionData.firstphase_width =
+			stableDiffusionData.firstphase_height = v / 2;
+	}
+);
 makeSlider(
 	"CFG Scale",
 	document.getElementById("cfgScale"),
@@ -509,7 +539,8 @@ makeSlider(
 	-1,
 	25,
 	0.5,
-	7.0
+	7.0,
+	0.1
 );
 makeSlider(
 	"Batch Size",
@@ -529,27 +560,17 @@ makeSlider(
 	1,
 	2
 );
-makeSlider(
-	"Scale Factor",
-	document.getElementById("scaleFactor"),
-	"scale_factor",
-	1,
-	16,
-	1,
-	8,
-	(v) => {
-		scaleFactor = v;
-	}
-);
 
-makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 1, 30);
+makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
 
 function changeSnapMode() {
 	snapToGrid = document.getElementById("cbxSnap").checked;
 }
 
 function changeMaskBlur() {
-	stableDiffusionData.mask_blur = document.getElementById("maskBlur").value;
+	stableDiffusionData.mask_blur = parseInt(
+		document.getElementById("maskBlur").value
+	);
 	localStorage.setItem("mask_blur", stableDiffusionData.mask_blur);
 }
 
@@ -742,6 +763,78 @@ function changeModel() {
 		});
 }
 
+async function getStyles() {
+	/** @type {HTMLSelectElement} */
+	var styleSelect = document.getElementById("styleSelect");
+	var url = document.getElementById("host").value + "/sdapi/v1/prompt-styles";
+	try {
+		const response = await fetch(url);
+		/** @type {{name: string, prompt: string, negative_prompt: string}[]} */
+		const data = await response.json();
+
+		/** @type {string[]} */
+		let stored = null;
+		try {
+			stored = JSON.parse(localStorage.getItem("promptStyle"));
+			// doesn't seem to throw a syntaxerror if the localstorage item simply doesn't exist?
+			if (stored == null) stored = [];
+		} catch (e) {
+			stored = [];
+		}
+
+		data.forEach((style) => {
+			const option = document.createElement("option");
+			option.classList.add("style-select-option");
+			option.text = style.name;
+			option.value = style.name;
+			option.title = `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`;
+			if (stored.length === 0) option.selected = style.name === "None";
+			else
+				option.selected = !!stored.find(
+					(styleName) => style.name === styleName
+				);
+
+			styleSelect.add(option);
+		});
+
+		changeStyles();
+
+		stored.forEach((styleName, index) => {
+			if (!data.findIndex((style) => style.name === styleName)) {
+				stored.splice(index, 1);
+			}
+		});
+		localStorage.setItem("promptStyle", JSON.stringify(stored));
+	} catch (e) {
+		console.warn("[index] Failed to fetch prompt styles");
+		console.warn(e);
+	}
+}
+
+function changeStyles() {
+	/** @type {HTMLSelectElement} */
+	const styleSelectEl = document.getElementById("styleSelect");
+	const selected = Array.from(styleSelectEl.options).filter(
+		(option) => option.selected
+	);
+	let selectedString = selected.map((option) => option.value);
+
+	if (selectedString.find((selected) => selected === "None")) {
+		selectedString = [];
+		Array.from(styleSelectEl.options).forEach((option) => {
+			if (option.value !== "None") option.selected = false;
+		});
+	}
+
+	localStorage.setItem("promptStyle", JSON.stringify(selectedString));
+
+	// change the model
+	if (selectedString.length > 0)
+		console.log(`[index] Changing styles to ${selectedString.join(", ")}`);
+	else console.log(`[index] Clearing styles`);
+	stableDiffusionData.styles = selectedString;
+}
+
 function getSamplers() {
 	var samplerSelect = document.getElementById("samplerSelect");
 	var url = document.getElementById("host").value + "/sdapi/v1/samplers";
@@ -783,7 +876,7 @@ async function upscaleAndDownload() {
 		var upscaler = document.getElementById("upscalers").value;
 		var url =
 			document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
-		var imgdata = croppedCanvas.toDataURL("image/png");
+		var imgdata = croppedCanvas.canvas.toDataURL("image/png");
 		var data = {
 			"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
 			upscaling_resize: upscale_factor,
@@ -880,3 +973,9 @@ imageCollection.element.addEventListener(
 	},
 	{passive: false}
 );
+
+function resetToDefaults() {
+	if (confirm("Are you sure you want to clear your settings?")) {
+		localStorage.clear();
+	}
+}

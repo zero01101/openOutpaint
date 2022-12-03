@@ -145,21 +145,14 @@ function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
  * Snaps a single value to an infinite grid
  *
  * @param {number} i Original value to be snapped
- * @param {boolean} scaled If grid will change alignment for odd scaleFactor values (default: true)
- * @param {number} gridSize Size of the grid
+ * @param {number} [offset=0] Value to offset the grid. Should be in the rande [0, gridSize[
+ * @param {number} [gridSize=64] Size of the grid
  * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
-function snap(i, scaled = true, gridSize = 64) {
-	// very cheap test proof of concept but it works surprisingly well
-	var scaleOffset = 0;
-	if (scaled) {
-		if (scaleFactor % 2 != 0) {
-			// odd number, snaps to center of cell, oops
-			scaleOffset = gridSize / 2;
-		}
-	}
-	const modulus = i % gridSize;
-	var snapOffset = modulus - scaleOffset;
+function snap(i, offset = 0, gridSize = 64) {
+	const modulus = (i - offset) % gridSize;
+	var snapOffset = modulus;
+
 	if (modulus > gridSize / 2) snapOffset = modulus - gridSize;
 
 	if (snapOffset == 0) {
@@ -175,19 +168,20 @@ function snap(i, scaled = true, gridSize = 64) {
  * @param {number} cy - y-coordinate of the center of the box
  * @param {number} w - the width of the box
  * @param {height} h - the height of the box
- * @param {number | null} gridSnap - The size of the grid to snap to
+ * @param {?number} gridSnap - The size of the grid to snap to
+ * @param {number} [offset=0] - How much to offset the grid by
  * @returns {BoundingBox} - A bounding box object centered at (cx, cy)
  */
-function getBoundingBox(cx, cy, w, h, gridSnap = null) {
-	const offset = {x: 0, y: 0};
+function getBoundingBox(cx, cy, w, h, gridSnap = null, offset = 0) {
+	const offs = {x: 0, y: 0};
 	const box = {x: 0, y: 0};
 
 	if (gridSnap) {
-		offset.x = snap(cx, true, gridSnap);
-		offset.y = snap(cy, true, gridSnap);
+		offs.x = snap(cx, offset, gridSnap);
+		offs.y = snap(cy, offset, gridSnap);
 	}
-	box.x = offset.x + cx;
-	box.y = offset.y + cy;
+	box.x = offs.x + cx;
+	box.y = offs.y + cy;
 
 	return {
 		x: Math.floor(box.x - w / 2),
@@ -197,57 +191,58 @@ function getBoundingBox(cx, cy, w, h, gridSnap = null) {
 	};
 }
 
+class NoContentError extends Error {}
+
 /**
  * Crops a given canvas to content, returning a new canvas object with the content in it.
  *
  * @param {HTMLCanvasElement} sourceCanvas Canvas to get a content crop from
- * @returns {HTMLCanvasElement} A new canvas with the cropped part of the image
+ * @param {object} options Extra options
+ * @param {number} [options.border=0] Extra border around the content
+ * @returns {{canvas: HTMLCanvasElement, bb: BoundingBox}} A new canvas with the cropped part of the image
  */
-function cropCanvas(sourceCanvas) {
-	var w = sourceCanvas.width;
-	var h = sourceCanvas.height;
-	var pix = {x: [], y: []};
-	var imageData = sourceCanvas.getContext("2d").getImageData(0, 0, w, h);
-	var x, y, index;
+function cropCanvas(sourceCanvas, options = {}) {
+	defaultOpt(options, {border: 0});
 
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
+	const w = sourceCanvas.width;
+	const h = sourceCanvas.height;
+	var imageData = sourceCanvas.getContext("2d").getImageData(0, 0, w, h);
+	/** @type {BoundingBox} */
+	const bb = {x: 0, y: 0, w: 0, h: 0};
+
+	let minx = w;
+	let maxx = -1;
+	let miny = h;
+	let maxy = -1;
+
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
 			// lol i need to learn what this part does
-			index = (y * w + x) * 4; // OHHH OK this is setting the imagedata.data uint8clampeddataarray index for the specified x/y coords
+			const index = (y * w + x) * 4; // OHHH OK this is setting the imagedata.data uint8clampeddataarray index for the specified x/y coords
 			//this part i get, this is checking that 4th RGBA byte for opacity
 			if (imageData.data[index + 3] > 0) {
-				pix.x.push(x);
-				pix.y.push(y);
+				minx = Math.min(minx, x);
+				maxx = Math.max(maxx, x);
+				miny = Math.min(miny, y);
+				maxy = Math.max(maxy, y);
 			}
 		}
 	}
-	// ...need to learn what this part does too :badpokerface:
-	// is this just determining the boundaries of non-transparent pixel data?
-	pix.x.sort(function (a, b) {
-		return a - b;
-	});
-	pix.y.sort(function (a, b) {
-		return a - b;
-	});
-	var n = pix.x.length - 1;
-	w = pix.x[n] - pix.x[0] + 1;
-	h = pix.y[n] - pix.y[0] + 1;
-	// yup sure looks like it
 
-	try {
-		var cut = sourceCanvas
-			.getContext("2d")
-			.getImageData(pix.x[0], pix.y[0], w, h);
-		var cutCanvas = document.createElement("canvas");
-		cutCanvas.width = w;
-		cutCanvas.height = h;
-		cutCanvas.getContext("2d").putImageData(cut, 0, 0);
-	} catch (ex) {
-		// probably empty image
-		//TODO confirm edge cases?
-		cutCanvas = null;
-	}
-	return cutCanvas;
+	bb.x = minx - options.border;
+	bb.y = miny - options.border;
+	bb.w = maxx - minx + 2 * options.border;
+	bb.h = maxy - miny + 2 * options.border;
+
+	if (maxx < 0) throw new NoContentError("Canvas has no content to crop");
+
+	var cutCanvas = document.createElement("canvas");
+	cutCanvas.width = bb.w;
+	cutCanvas.height = bb.h;
+	cutCanvas
+		.getContext("2d")
+		.drawImage(sourceCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	return {canvas: cutCanvas, bb};
 }
 
 /**
@@ -276,7 +271,7 @@ function downloadCanvas(options = {}) {
 	if (options.filename) link.download = options.filename;
 
 	var croppedCanvas = options.cropToContent
-		? cropCanvas(options.canvas)
+		? cropCanvas(options.canvas).canvas
 		: options.canvas;
 	if (croppedCanvas != null) {
 		link.href = croppedCanvas.toDataURL("image/png");

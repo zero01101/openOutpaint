@@ -36,7 +36,9 @@
 						<input id="host" value="http://127.0.0.1:7860" />
 						<div
 							id="connection-status-indicator"
-							class="connection-status"></div>
+							class="connection-status before">
+							<span id="connection-status-indicator-text">Waiting</span>
+						</div>
 					</div>
 				</label>
 				<!-- Prompts section -->
@@ -51,6 +53,12 @@
 					<div class="prompt-wrapper">
 						<textarea id="negPrompt"></textarea>
 					</div>
+					<label for="styleSelect">Styles:</label>
+					<select
+						id="styleSelect"
+						class="wideSelect"
+						onchange="changeStyles()"
+						multiple></select>
 					<!-- <hr /> -->
 				</div>
 				<!-- SD section -->
@@ -59,7 +67,10 @@
 				</button>
 				<div class="content">
 					<label for="models">Model:</label>
-					<select id="models" onchange="changeModel()"></select>
+					<select
+						id="models"
+						class="wideSelect"
+						onchange="changeModel()"></select>
 					<br />
 					<label for="samplerSelect">Sampler:</label>
 					<select id="samplerSelect" onchange="changeSampler()"></select>
@@ -75,16 +86,15 @@
 						value="-1"
 						step="1" />
 					<br />
+					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
+					<label for="cbxHRFix">Auto txt2img HRfix</label>
+					<div id="resolution"></div>
 					<div id="steps"></div>
 					<div id="cfgScale"></div>
 					<div id="batchSize"></div>
 					<div id="batchCount"></div>
 				</div>
 				<!-- Unsectioned -->
-				<div id="scaleFactor"></div>
-				<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
-				<label for="cbxHRFix">Auto txt2img HRfix</label>
-				<br />
 				<label for="maskBlur">Mask blur:</label>
 				<span id="maskBlurText"></span>
 				<br />
@@ -104,7 +114,7 @@
 					<button onclick="downloadCanvas()">Save canvas</button>
 					<br />
 					<label for="upscalers">Choose upscaler</label>
-					<select id="upscalers"></select>
+					<select id="upscalers" class="wideSelect"></select>
 					<button onclick="upscaleAndDownload()">
 						Upscale (might take a sec)
 					</button>
@@ -135,6 +145,10 @@
 					<br />
 					<label for="heldButton">Mouse button:</label>
 					<span id="heldButton"></span>
+					<br />
+					<button id="resetToDefaults" onclick="resetToDefaults()">
+						Reset to defaults
+					</button>
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
@@ -200,9 +214,8 @@
 		<script src="js/lib/layers.js" type="text/javascript"></script>
 		<script src="js/lib/commands.js" type="text/javascript"></script>
 
-		<script src="js/settingsbar.js" type="text/javascript"></script>
-
 		<script src="js/lib/toolbar.js" type="text/javascript"></script>
+		<script src="js/lib/ui.js" type="text/javascript"></script>
 
 		<script
 			src="js/initalize/layers.populate.js"
@@ -210,21 +223,25 @@
 
 		<!-- Content -->
 		<script src="js/index.js" type="text/javascript"></script>
-		<script src="js/shortcuts.js" type="text/javascript"></script>
 		<script src="js/ui/floating/history.js" type="text/javascript"></script>
 
 		<!-- Load Tools -->
 		<script src="js/ui/tool/dream.js" type="text/javascript"></script>
 		<script src="js/ui/tool/maskbrush.js" type="text/javascript"></script>
+		<script src="js/ui/tool/colorbrush.js" type="text/javascript"></script>
 		<script src="js/ui/tool/select.js" type="text/javascript"></script>
 		<script src="js/ui/tool/stamp.js" type="text/javascript"></script>
 
 		<!-- Initialize -->
+		<script
+			src="js/initalize/shortcuts.populate.js"
+			type="text/javascript"></script>
 		<script
 			src="js/initalize/toolbar.populate.js"
 			type="text/javascript"></script>
 		<script
 			src="js/initalize/debug.populate.js"
 			type="text/javascript"></script>
+		<script src="js/initalize/ui.populate.js" type="text/javascript"></script>
 	</body>
 </html>

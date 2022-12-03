@@ -278,7 +278,30 @@ commands.createCommand(
 		}
 
 		// Apply command
-		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
+		const style = state.context.fillStyle;
+		state.context.fillStyle = "black";
+
+		const op = state.context.globalCompositeOperation;
+		state.context.globalCompositeOperation = "destination-out";
+
+		if (options.mask)
+			state.context.drawImage(
+				options.mask,
+				state.box.x,
+				state.box.y,
+				state.box.w,
+				state.box.h
+			);
+		else
+			state.context.fillRect(
+				state.box.x,
+				state.box.y,
+				state.box.w,
+				state.box.h
+			);
+
+		state.context.fillStyle = style;
+		state.context.globalCompositeOperation = op;
 	},
 	(title, state) => {
 		// Clear destination area

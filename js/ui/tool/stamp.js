@@ -19,7 +19,8 @@ const stampTool = () =>
 				state.addResource(
 					opt.name || "Clipboard",
 					opt.image,
-					opt.temporary === undefined ? true : opt.temporary
+					opt.temporary === undefined ? true : opt.temporary,
+					false
 				);
 				state.ctxmenu.uploadButton.disabled = true;
 				state.back = opt.back || null;
@@ -56,8 +57,14 @@ const stampTool = () =>
 
 				state.lastMouseMove = {x: 0, y: 0};
 
-				state.selectResource = (resource) => {
-					if (state.ctxmenu.uploadButton.disabled) return;
+				state.selectResource = (resource, nolock = true) => {
+					if (nolock && state.ctxmenu.uploadButton.disabled) return;
+
+					console.debug(
+						`[stamp] Selecting Resource '${resource && resource.name}'[${
+							resource && resource.id
+						}]`
+					);
 
 					const resourceWrapper = resource && resource.dom.wrapper;
 
@@ -83,8 +90,38 @@ const stampTool = () =>
 					if (state.loaded) state.movecb(state.lastMouseMove);
 				};
 
-				// Synchronizes resources array with the DOM
+				// Synchronizes resources array with the DOM and Local Storage
 				const syncResources = () => {
+					// Saves to local storage
+					try {
+						localStorage.setItem(
+							"tools.stamp.resources",
+							JSON.stringify(
+								state.resources
+									.filter((resource) => !resource.temporary)
+									.map((resource) => {
+										const canvas = document.createElement("canvas");
+										canvas.width = resource.image.width;
+										canvas.height = resource.image.height;
+
+										const ctx = canvas.getContext("2d");
+										ctx.drawImage(resource.image, 0, 0);
+
+										return {
+											id: resource.id,
+											name: resource.name,
+											src: canvas.toDataURL(),
+										};
+									})
+							)
+						);
+					} catch (e) {
+						console.warn(
+							"[stamp] Failed to synchronize resources with local storage"
+						);
+						console.warn(e);
+					}
+
 					// Creates DOM elements when needed
 					state.resources.forEach((resource) => {
 						if (
@@ -93,12 +130,15 @@ const stampTool = () =>
 							)
 						) {
 							console.debug(
-								`Creating resource element 'resource-${resource.id}'`
+								`[stamp] Creating Resource Element [resource-${resource.id}]`
 							);
 							const resourceWrapper = document.createElement("div");
 							resourceWrapper.id = `resource-${resource.id}`;
-							resourceWrapper.textContent = resource.name;
 							resourceWrapper.classList.add("resource");
+							const resourceTitle = document.createElement("span");
+							resourceTitle.textContent = resource.name;
+							resourceTitle.classList.add("resource-title");
+							resourceWrapper.appendChild(resourceTitle);
 
 							resourceWrapper.addEventListener("click", () =>
 								state.selectResource(resource)
@@ -112,6 +152,41 @@ const stampTool = () =>
 								state.ctxmenu.previewPane.style.display = "none";
 							});
 
+							// Add action buttons
+							const actionArray = document.createElement("div");
+							actionArray.classList.add("actions");
+
+							const renameButton = document.createElement("button");
+							renameButton.addEventListener("click", () => {
+								const name = prompt("Rename your resource:", resource.name);
+								if (name) {
+									resource.name = name;
+									resourceTitle.textContent = name;
+
+									syncResources();
+								}
+							});
+							renameButton.title = "Rename Resource";
+							renameButton.appendChild(document.createElement("div"));
+							renameButton.classList.add("rename-btn");
+
+							const trashButton = document.createElement("button");
+							trashButton.addEventListener(
+								"click",
+								(evn) => {
+									evn.stopPropagation();
+									state.ctxmenu.previewPane.style.display = "none";
+									state.deleteResource(resource.id);
+								},
+								{passive: false}
+							);
+							trashButton.title = "Delete Resource";
+							trashButton.appendChild(document.createElement("div"));
+							trashButton.classList.add("delete-btn");
+
+							actionArray.appendChild(renameButton);
+							actionArray.appendChild(trashButton);
+							resourceWrapper.appendChild(actionArray);
 							state.ctxmenu.resourceList.appendChild(resourceWrapper);
 							resource.dom = {wrapper: resourceWrapper};
 						}
@@ -124,15 +199,20 @@ const stampTool = () =>
 						elements.forEach((element) => {
 							let remove = true;
 							state.resources.some((resource) => {
-								if (element.id.endsWith(resource.id)) remove = false;
+								if (element.id.endsWith(resource.id)) {
+									remove = false;
+								}
 							});
 
-							if (remove) state.ctxmenu.resourceList.removeChild(element);
+							if (remove) {
+								console.debug(`[stamp] Sync Removing Element [${element.id}]`);
+								state.ctxmenu.resourceList.removeChild(element);
+							}
 						});
 				};
 
 				// Adds a image resource (temporary allows only one draw, used for pasting)
-				state.addResource = (name, image, temporary = false) => {
+				state.addResource = (name, image, temporary = false, nolock = true) => {
 					const id = guid();
 					const resource = {
 						id,
@@ -140,19 +220,28 @@ const stampTool = () =>
 						image,
 						temporary,
 					};
+
+					console.info(`[stamp] Adding Resource '${name}'[${id}]`);
+
 					state.resources.push(resource);
 					syncResources();
 
 					// Select this resource
-					state.selectResource(resource);
+					state.selectResource(resource, nolock);
 
 					return resource;
 				};
 
-				// Deletes a resource (Yes, functionality is here, but we don't have an UI for this yet)
 				// Used for temporary images too
 				state.deleteResource = (id) => {
-					state.resources = state.resources.filter((v) => v.id !== id);
+					const resourceIndex = state.resources.findIndex((v) => v.id === id);
+					const resource = state.resources[resourceIndex];
+					if (state.selected === resource) state.selected = null;
+					console.info(
+						`[stamp] Deleting Resource '${resource.name}'[${resource.id}]`
+					);
+
+					state.resources.splice(resourceIndex, 1);
 
 					syncResources();
 				};
@@ -161,8 +250,8 @@ const stampTool = () =>
 					let x = evn.x;
 					let y = evn.y;
 					if (state.snapToGrid) {
-						x += snap(evn.x, true, 64);
-						y += snap(evn.y, true, 64);
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
 					}
 
 					state.lastMouseMove = evn;
@@ -190,8 +279,8 @@ const stampTool = () =>
 					let x = evn.x;
 					let y = evn.y;
 					if (state.snapToGrid) {
-						x += snap(evn.x, true, 64);
-						y += snap(evn.y, true, 64);
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
 					}
 
 					const resource = state.selected;
@@ -203,7 +292,9 @@ const stampTool = () =>
 							y,
 						});
 
-						if (resource.temporary) state.deleteResource(resource.id);
+						if (resource.temporary) {
+							state.deleteResource(resource.id);
+						}
 					}
 
 					if (state.back) {
@@ -268,7 +359,7 @@ const stampTool = () =>
 								const image = document.createElement("img");
 								image.src = url.createObjectURL(file);
 
-								state.addResource(file.name, image, false);
+								image.onload = () => state.addResource(file.name, image, false);
 							}
 						});
 
@@ -321,6 +412,29 @@ const stampTool = () =>
 					state.ctxmenu.previewPane = previewPane;
 					state.ctxmenu.resourceManager = resourceManager;
 					state.ctxmenu.resourceList = resourceList;
+
+					// Performs resource fetch from local storage
+					{
+						const storageResources = localStorage.getItem(
+							"tools.stamp.resources"
+						);
+						if (storageResources) {
+							const parsed = JSON.parse(storageResources);
+							state.resources.push(
+								...parsed.map((resource) => {
+									const image = document.createElement("img");
+									image.src = resource.src;
+
+									return {
+										id: resource.id,
+										name: resource.name,
+										image,
+									};
+								})
+							);
+							syncResources();
+						}
+					}
 				}
 			},
 			populateContextMenu: (menu, state) => {

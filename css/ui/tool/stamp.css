@@ -38,14 +38,69 @@
 }
 
 .resource-manager > .resource-list > * {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+
 	cursor: pointer;
-	overflow: hidden;
-	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
+.resource-manager > .resource-list > * > .resource-title {
+	overflow: hidden;
+	margin: 5px;
+	text-overflow: ellipsis;
+}
+
+.resource-manager > .resource-list > * > .actions {
+	display: flex;
+	align-items: center;
+}
+
+.resource-manager .actions > button {
+	display: flex;
+	align-items: stretch;
+
+	padding: 0;
+
+	width: 30px;
+	aspect-ratio: 1;
+
+	background-color: transparent;
+	border: 0;
+	cursor: pointer;
+}
+
+.resource-manager .actions > button:hover {
+	background-color: rgba(255, 255, 255, 0.5);
+}
+
+.resource-manager .actions > button:active {
+	background-color: rgba(255, 255, 255, 0.7);
+}
+
+.resource-manager .actions > button > *:first-child {
+	flex: 1;
+	margin: 3px;
+
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	background-color: var(--c-primary);
+}
+
+.resource-manager .actions > .rename-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/edit.svg");
+	mask-image: url("/res/icons/edit.svg");
+}
+
+.resource-manager .actions > .delete-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/trash.svg");
+	mask-image: url("/res/icons/trash.svg");
+}
+
+.resource-manager > .resource-list > .selected:hover,
 .resource-manager > .resource-list > *:hover {
-	background-color: #ffff;
+	background-color: #fff8;
 }
 .resource-manager > .resource-list > .selected {
 	background-color: #fff6;
