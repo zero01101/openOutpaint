@@ -182,12 +182,15 @@ const maskBrushTool = () =>
 						state,
 						"brushSize",
 						"Brush Size",
-						state.config.minBrushSize,
-						state.config.maxBrushSize,
-						1,
-						(v) => {
-							if (!state.cursorLayer) return;
-							_paint_mb_cursor(state);
+						{
+							min: state.config.minBrushSize,
+							max: state.config.maxBrushSize,
+							step: 5,
+							textStep: 1,
+							cb: (v) => {
+								if (!state.cursorLayer) return;
+								_paint_mb_cursor(state);
+							},
 						}
 					);
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;

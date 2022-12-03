@@ -494,6 +494,7 @@ const makeSlider = (
 	max,
 	step,
 	defaultValue,
+	textStep = null,
 	valuecb = null
 ) => {
 	const local = localStorage.getItem(lsKey);
@@ -509,6 +510,7 @@ const makeSlider = (
 		max,
 		step,
 		defaultValue: def,
+		textStep,
 	});
 };
 
@@ -519,7 +521,8 @@ makeSlider(
 	-1,
 	25,
 	0.5,
-	7.0
+	7.0,
+	0.1
 );
 makeSlider(
 	"Batch Size",
@@ -547,12 +550,13 @@ makeSlider(
 	16,
 	1,
 	8,
+	null,
 	(v) => {
 		scaleFactor = v;
 	}
 );
 
-makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 1, 30);
+makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
 
 function changeSnapMode() {
 	snapToGrid = document.getElementById("cbxSnap").checked;

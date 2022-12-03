@@ -207,9 +207,12 @@ const colorBrushTool = () =>
 						state,
 						"brushSize",
 						"Brush Size",
-						state.config.minBrushSize,
-						state.config.maxBrushSize,
-						1
+						{
+							min: state.config.minBrushSize,
+							max: state.config.maxBrushSize,
+							step: 5,
+							textStep: 1,
+						}
 					);
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
@@ -219,9 +222,11 @@ const colorBrushTool = () =>
 						state,
 						"brushBlur",
 						"Brush Blur",
-						state.config.minBlur,
-						state.config.maxBlur,
-						1
+						{
+							min: state.config.minBlur,
+							max: state.config.maxBlur,
+							step: 1,
+						}
 					);
 					state.ctxmenu.brushBlurSlider = brushBlurSlider.slider;
 

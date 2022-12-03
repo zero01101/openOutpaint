@@ -150,18 +150,20 @@ const _toolbar_input = {
 		return {checkbox, label};
 	},
 
-	slider: (state, dataKey, text, min = 0, max = 1, step = 0.1, cb = null) => {
+	slider: (state, dataKey, text, options = {}) => {
+		defaultOpt(options, {min: 0, max: 1, step: 0.1, textStep: null, cb: null});
 		const slider = document.createElement("div");
 
 		const value = createSlider(text, slider, {
-			min,
-			max,
-			step,
+			min: options.min,
+			max: options.max,
+			step: options.step,
 			valuecb: (v) => {
 				state[dataKey] = v;
-				cb && cb(v);
+				options.cb && options.cb(v);
 			},
 			defaultValue: state[dataKey],
+			textStep: options.textStep,
 		});
 
 		return {

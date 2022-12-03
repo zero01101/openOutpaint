@@ -72,6 +72,8 @@ function makeDraggable(element) {
  * @param {number} options.max The maximum value of the slider
  * @param {number} options.step The step size for the slider
  * @param {number} option.defaultValue The default value of the slider
+ * @param {number} [options.textStep=step] The step size for the slider text and setvalue \
+ * (usually finer, and an integer divisor of step size)
  * @returns {{value: number}} A reference to the value of the slider
  */
 function createSlider(name, wrapper, options = {}) {
@@ -81,6 +83,7 @@ function createSlider(name, wrapper, options = {}) {
 		max: 1,
 		step: 0.1,
 		defaultValue: 0.7,
+		textStep: null,
 	});
 
 	let value = options.defaultValue;
@@ -91,6 +94,15 @@ function createSlider(name, wrapper, options = {}) {
 	phantomRange.min = options.min;
 	phantomRange.max = options.max;
 	phantomRange.step = options.step;
+
+	let phantomTextRange = phantomRange;
+	if (options.textStep) {
+		phantomTextRange = document.createElement("input");
+		phantomTextRange.type = "range";
+		phantomTextRange.min = options.min;
+		phantomTextRange.max = options.max;
+		phantomTextRange.step = options.textStep;
+	}
 
 	// Build slider element
 	const underEl = document.createElement("div");
@@ -114,8 +126,8 @@ function createSlider(name, wrapper, options = {}) {
 
 	// Set value
 	const setValue = (val) => {
-		phantomRange.value = val;
-		value = parseFloat(phantomRange.value);
+		phantomTextRange.value = val;
+		value = parseFloat(phantomTextRange.value);
 		bar.style.width = `${
 			100 * ((value - options.min) / (options.max - options.min))
 		}%`;
@@ -156,17 +168,15 @@ function createSlider(name, wrapper, options = {}) {
 
 	mouse.listen.window.btn.left.ondrag.on((evn) => {
 		if (evn.initialTarget === overEl) {
-			setValue(
-				Math.max(
-					options.min,
-					Math.min(
-						options.max,
-						(evn.evn.layerX / wrapper.offsetWidth) *
-							(options.max - options.min) +
-							options.min
-					)
+			phantomRange.value = Math.max(
+				options.min,
+				Math.min(
+					options.max,
+					(evn.evn.layerX / wrapper.offsetWidth) * (options.max - options.min) +
+						options.min
 				)
 			);
+			setValue(parseFloat(phantomRange.value));
 		}
 	});
 

@@ -641,9 +641,11 @@ const dreamTool = () =>
 						state,
 						"overMaskPx",
 						"Overmask px",
-						0,
-						128,
-						1
+						{
+							min: 0,
+							max: 128,
+							step: 1,
+						}
 					).slider;
 				}
 
@@ -771,9 +773,12 @@ const img2imgTool = () =>
 						state,
 						"denoisingStrength",
 						"Denoising Strength",
-						0,
-						1,
-						0.05
+						{
+							min: 0,
+							max: 1,
+							step: 0.05,
+							textStep: 0.01,
+						}
 					).slider;
 
 					// Border Mask Size Slider
@@ -781,9 +786,12 @@ const img2imgTool = () =>
 						state,
 						"keepBorderSize",
 						"Keep Border Size",
-						0,
-						128,
-						1
+						{
+							min: 0,
+							max: 128,
+							step: 8,
+							textStep: 1,
+						}
 					).slider;
 				}
 
