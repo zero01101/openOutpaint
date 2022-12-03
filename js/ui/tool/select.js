@@ -54,7 +54,9 @@ const selectTransformTool = () =>
 
 				state.snapToGrid = true;
 				state.keepAspectRatio = true;
-				state.useClipboard = !!navigator.clipboard.write; // Use it by default if supported
+				state.useClipboard = !!(
+					navigator.clipboard && navigator.clipboard.write
+				); // Use it by default if supported
 
 				state.original = null;
 				state.dragging = null;
@@ -489,10 +491,11 @@ const selectTransformTool = () =>
 						// Send to clipboard
 						state.clipboard.copy.toBlob((blob) => {
 							const item = new ClipboardItem({"image/png": blob});
-							navigator.clipboard.write([item]).catch((e) => {
-								console.warn("Error sending to clipboard");
-								console.warn(e);
-							});
+							navigator.clipboard &&
+								navigator.clipboard.write([item]).catch((e) => {
+									console.warn("Error sending to clipboard");
+									console.warn(e);
+								});
 						});
 					}
 				};
@@ -501,24 +504,25 @@ const selectTransformTool = () =>
 				state.ctrlvcb = (evn) => {
 					if (state.useClipboard) {
 						// If we use the clipboard, do some proccessing of clipboard data (ugly but kind of minimum required)
-						navigator.clipboard.read().then((items) => {
-							for (const item of items) {
-								for (const type of item.types) {
-									if (type.startsWith("image/")) {
-										item.getType(type).then((blob) => {
-											// Converts blob to image
-											const url = window.URL || window.webkitURL;
-											const image = document.createElement("img");
-											image.src = url.createObjectURL(file);
-											tools.stamp.enable({
-												image,
-												back: tools.selecttransform.enable,
+						navigator.clipboard &&
+							navigator.clipboard.read().then((items) => {
+								for (const item of items) {
+									for (const type of item.types) {
+										if (type.startsWith("image/")) {
+											item.getType(type).then((blob) => {
+												// Converts blob to image
+												const url = window.URL || window.webkitURL;
+												const image = document.createElement("img");
+												image.src = url.createObjectURL(file);
+												tools.stamp.enable({
+													image,
+													back: tools.selecttransform.enable,
+												});
 											});
-										});
+										}
 									}
 								}
-							}
-						});
+							});
 					} else if (state.clipboard.copy) {
 						// Use internal clipboard
 						const image = document.createElement("img");
@@ -562,7 +566,7 @@ const selectTransformTool = () =>
 						"Use clipboard"
 					);
 					state.ctxmenu.useClipboardLabel = clipboardCheckbox.label;
-					if (!navigator.clipboard.write)
+					if (!(navigator.clipboard && navigator.clipboard.write))
 						clipboardCheckbox.checkbox.disabled = true; // Disable if not available
 
 					// Some useful actions to do with selection
