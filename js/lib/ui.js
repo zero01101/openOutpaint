@@ -1,9 +1,18 @@
+/**
+ * This is a function that makes an HTMLElement draggable.
+ *
+ * The element must contain at least one child element with the class
+ * 'draggable', which will make it the handle for dragging the element
+ *
+ * @param {HTMLElement} element Element to make Draggable
+ */
 function makeDraggable(element) {
 	let dragging = false;
 	let offset = {x: 0, y: 0};
 
 	const margin = 10;
 
+	// Keeps the draggable element inside the window
 	const fixPos = () => {
 		const dbb = element.getBoundingClientRect();
 		if (dbb.left < margin) element.style.left = margin + "px";
@@ -17,6 +26,7 @@ function makeDraggable(element) {
 				dbb.top + (window.innerHeight - margin - dbb.bottom) + "px";
 	};
 
+	// Detects the start of the mouse dragging event
 	mouse.listen.window.btn.left.onpaintstart.on((evn) => {
 		if (
 			element.contains(evn.target) &&
@@ -29,6 +39,7 @@ function makeDraggable(element) {
 		}
 	});
 
+	// Runs when mouse moves
 	mouse.listen.window.btn.left.onpaint.on((evn) => {
 		if (dragging) {
 			element.style.right = null;
@@ -40,53 +51,28 @@ function makeDraggable(element) {
 		}
 	});
 
+	// Stops dragging the element
 	mouse.listen.window.btn.left.onpaintend.on((evn) => {
 		dragging = false;
 	});
 
+	// Redraw after window resize
 	window.addEventListener("resize", () => {
 		fixPos();
 	});
 }
 
-document.querySelectorAll(".floating-window").forEach((w) => {
-	makeDraggable(w);
-});
-
-var coll = document.getElementsByClassName("collapsible");
-for (var i = 0; i < coll.length; i++) {
-	let active = false;
-	coll[i].addEventListener("click", function () {
-		var content = this.nextElementSibling;
-
-		if (!active) {
-			this.classList.add("active");
-			content.classList.add("active");
-		} else {
-			this.classList.remove("active");
-			content.classList.remove("active");
-		}
-
-		const observer = new ResizeObserver(() => {
-			if (active) content.style.maxHeight = content.scrollHeight + "px";
-		});
-
-		Array.from(content.children).forEach((child) => {
-			observer.observe(child);
-		});
-
-		if (active) {
-			content.style.maxHeight = null;
-			active = false;
-		} else {
-			content.style.maxHeight = content.scrollHeight + "px";
-			active = true;
-		}
-	});
-}
-
 /**
- * Slider Inputs
+ *	Creates a custom slider element from a given div element
+ *
+ * @param {string} name The display name of the sliders
+ * @param {HTMLElement} wrapper The element to transform into a slider
+ * @param {object} options Extra options
+ * @param {number} options.min The minimum value of the slider
+ * @param {number} options.max The maximum value of the slider
+ * @param {number} options.step The step size for the slider
+ * @param {number} option.defaultValue The default value of the slider
+ * @returns {{value: number}} A reference to the value of the slider
  */
 function createSlider(name, wrapper, options = {}) {
 	defaultOpt(options, {
