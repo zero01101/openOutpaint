@@ -421,7 +421,7 @@ const keyboard = {
 	 * @returns {boolean}
 	 */
 	isPressed(code) {
-		return this.keys[code].pressed;
+		return !!this.keys[code] && this.keys[code].pressed;
 	},
 
 	/**
@@ -431,7 +431,7 @@ const keyboard = {
 	 * @returns {boolean}
 	 */
 	isHeld(code) {
-		return this.keys[code].held;
+		return !!this.key[code] && this.keys[code].held;
 	},
 
 	/**

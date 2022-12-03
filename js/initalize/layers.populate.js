@@ -37,6 +37,26 @@ const ovCtx = ovLayer.ctx;
 const debugCanvas = debugLayer.canvas; // where mouse cursor renders
 const debugCtx = debugLayer.ctx;
 
+/**
+ * Function that returns a canvas with full visible information of a certain bounding box.
+ *
+ * For now, only the img is used.
+ *
+ * @param {BoundingBox} bb The bouding box to get visible data from
+ * @returns {HTMLCanvasElement}	The canvas element containing visible image data
+ */
+const getVisible = (bb) => {
+	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+
+	canvas.width = bb.w;
+	canvas.height = bb.h;
+	ctx.drawImage(bgLayer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	ctx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+
+	return canvas;
+};
+
 debugLayer.hide(); // Hidden by default
 
 layers.registerCollection("mask", {name: "Mask Layers", requiresActive: true});

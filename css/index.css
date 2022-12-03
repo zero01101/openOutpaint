@@ -254,6 +254,8 @@ div.prompt-wrapper > textarea:focus {
 
 /* Style Field */
 select > .style-select-option {
+	position: relative;
+
 	cursor: pointer;
 }
 
