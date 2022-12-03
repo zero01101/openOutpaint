@@ -162,10 +162,15 @@ const stampTool = () =>
 							renameButton.classList.add("rename-btn");
 
 							const trashButton = document.createElement("button");
-							trashButton.addEventListener("click", () => {
-								state.ctxmenu.previewPane.style.display = "none";
-								state.deleteResource(resource.id);
-							});
+							trashButton.addEventListener(
+								"click",
+								(evn) => {
+									evn.stopPropagation();
+									state.ctxmenu.previewPane.style.display = "none";
+									state.deleteResource(resource.id);
+								},
+								{passive: false}
+							);
 							trashButton.title = "Delete Resource";
 							trashButton.appendChild(document.createElement("div"));
 							trashButton.classList.add("delete-btn");
@@ -222,6 +227,7 @@ const stampTool = () =>
 				state.deleteResource = (id) => {
 					const resourceIndex = state.resources.findIndex((v) => v.id === id);
 					const resource = state.resources[resourceIndex];
+					if (state.selected === resource) state.selected = null;
 					console.info(
 						`[stamp] Deleting Resource '${resource.name}'[${resource.id}]`
 					);
