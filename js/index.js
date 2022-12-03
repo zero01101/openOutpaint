@@ -779,7 +779,12 @@ async function getStyles() {
 			option.text = style.name;
 			option.value = style.name;
 			option.title = `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`;
-			option.selected = !!stored.find((styleName) => style.name === styleName);
+			if (stored.length === 0) option.selected = style.name === "None";
+			else
+				option.selected = !!stored.find(
+					(styleName) => style.name === styleName
+				);
+
 			styleSelect.add(option);
 		});
 
@@ -803,14 +808,21 @@ function changeStyles() {
 	const selected = Array.from(styleSelectEl.options).filter(
 		(option) => option.selected
 	);
-	const selectedString = selected.map((option) => option.value);
+	let selectedString = selected.map((option) => option.value);
 
-	selectedString != "None"
-		? localStorage.setItem("promptStyle", JSON.stringify(selectedString))
-		: localStorage.setItem("promptStyle", "[]");
+	if (selectedString.find((selected) => selected === "None")) {
+		selectedString = [];
+		Array.from(styleSelectEl.options).forEach((option) => {
+			if (option.value !== "None") option.selected = false;
+		});
+	}
+
+	localStorage.setItem("promptStyle", JSON.stringify(selectedString));
 
 	// change the model
-	console.log(`[index] Changing styles to ${selectedString.join(", ")}`);
+	if (selectedString.length > 0)
+		console.log(`[index] Changing styles to ${selectedString.join(", ")}`);
+	else console.log(`[index] Clearing styles`);
 	stableDiffusionData.styles = selectedString;
 }
 

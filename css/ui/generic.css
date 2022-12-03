@@ -94,3 +94,22 @@ div.slider-wrapper > input.text {
 	text-align: center;
 	background-color: transparent;
 }
+
+/* Select Input */
+select > option:checked::after {
+	content: "";
+
+	position: absolute;
+	right: 5px;
+	top: 0;
+
+	height: 100%;
+	aspect-ratio: 1;
+
+	background-color: darkgreen;
+
+	-webkit-mask-image: url("/res/icons/check.svg");
+	-webkit-mask-size: contain;
+	mask-image: url("/res/icons/check.svg");
+	mask-size: contain;
+}
