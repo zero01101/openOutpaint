@@ -610,14 +610,48 @@ const dream_img2img_callback = (evn, state) => {
 		if (state.keepBorderSize > 0) {
 			auxCtx.globalCompositeOperation = "source-over";
 			auxCtx.fillStyle = "#000F";
+			if (state.gradient) {
+				const lg = auxCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
+				lg.addColorStop(0, "#000F");
+				lg.addColorStop(1, "#0000");
+				auxCtx.fillStyle = lg;
+			}
 			auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+			if (state.gradient) {
+				const tg = auxCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
+				tg.addColorStop(0, "#000F");
+				tg.addColorStop(1, "#0000");
+				auxCtx.fillStyle = tg;
+			}
 			auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+			if (state.gradient) {
+				const rg = auxCtx.createLinearGradient(
+					request.width,
+					0,
+					request.width - state.keepBorderSize,
+					0
+				);
+				rg.addColorStop(0, "#000F");
+				rg.addColorStop(1, "#0000");
+				auxCtx.fillStyle = rg;
+			}
 			auxCtx.fillRect(
 				request.width - state.keepBorderSize,
 				0,
 				state.keepBorderSize,
 				request.height
 			);
+			if (state.gradient) {
+				const bg = auxCtx.createLinearGradient(
+					0,
+					request.height,
+					0,
+					request.height - state.keepBorderSize
+				);
+				bg.addColorStop(0, "#000F");
+				bg.addColorStop(1, "#0000");
+				auxCtx.fillStyle = bg;
+			}
 			auxCtx.fillRect(
 				0,
 				request.height - state.keepBorderSize,
@@ -849,6 +883,7 @@ const img2imgTool = () =>
 				state.denoisingStrength = 0.7;
 
 				state.keepBorderSize = 64;
+				state.gradient = true;
 
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
@@ -884,14 +919,58 @@ const img2imgTool = () =>
 
 					if (state.keepBorderSize > 0) {
 						auxCtx.fillStyle = "#6A6AFF30";
+						if (state.gradient) {
+							const lg = auxCtx.createLinearGradient(
+								0,
+								0,
+								state.keepBorderSize,
+								0
+							);
+							lg.addColorStop(0, "#6A6AFF30");
+							lg.addColorStop(1, "#0000");
+							auxCtx.fillStyle = lg;
+						}
 						auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+						if (state.gradient) {
+							const tg = auxCtx.createLinearGradient(
+								0,
+								0,
+								0,
+								state.keepBorderSize
+							);
+							tg.addColorStop(0, "#6A6AFF30");
+							tg.addColorStop(1, "#6A6AFF00");
+							auxCtx.fillStyle = tg;
+						}
 						auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+						if (state.gradient) {
+							const rg = auxCtx.createLinearGradient(
+								request.width,
+								0,
+								request.width - state.keepBorderSize,
+								0
+							);
+							rg.addColorStop(0, "#6A6AFF30");
+							rg.addColorStop(1, "#6A6AFF00");
+							auxCtx.fillStyle = rg;
+						}
 						auxCtx.fillRect(
 							request.width - state.keepBorderSize,
 							0,
 							state.keepBorderSize,
 							request.height
 						);
+						if (state.gradient) {
+							const bg = auxCtx.createLinearGradient(
+								0,
+								request.height,
+								0,
+								request.height - state.keepBorderSize
+							);
+							bg.addColorStop(0, "#6A6AFF30");
+							bg.addColorStop(1, "#6A6AFF00");
+							auxCtx.fillStyle = bg;
+						}
 						auxCtx.fillRect(
 							0,
 							request.height - state.keepBorderSize,
@@ -976,6 +1055,13 @@ const img2imgTool = () =>
 						}
 					).slider;
 
+					// Border Mask Gradient Checkbox
+					state.ctxmenu.borderMaskGradientCheckbox = _toolbar_input.checkbox(
+						state,
+						"gradient",
+						"Border Mask Gradient"
+					).label;
+
 					// Border Mask Size Slider
 					state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
 						state,
@@ -998,6 +1084,7 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
+				menu.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
 			},
 			shortcut: "I",
