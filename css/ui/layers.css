@@ -1,0 +1,16 @@
+#layer-list {
+	height: 200px;
+}
+
+#layer-list .ui-layer {
+	cursor: pointer;
+	background-color: #fff3;
+}
+
+#layer-list .ui-layer:hover {
+	filter: brightness(90%);
+}
+
+#layer-list .ui-layer:active {
+	filter: brightness(80%);
+}

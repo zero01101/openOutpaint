@@ -52,7 +52,17 @@ const getVisible = (bb) => {
 	canvas.width = bb.w;
 	canvas.height = bb.h;
 	ctx.drawImage(bgLayer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-	ctx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	ctx.drawImage(
+		uiLayers.active.canvas,
+		bb.x,
+		bb.y,
+		bb.w,
+		bb.h,
+		0,
+		0,
+		bb.w,
+		bb.h
+	);
 
 	return canvas;
 };

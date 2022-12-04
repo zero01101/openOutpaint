@@ -334,8 +334,8 @@ function newImage(evt) {
 	commands.runCommand("eraseImage", "Clear Canvas", {
 		x: 0,
 		y: 0,
-		w: imgCanvas.width,
-		h: imgCanvas.height,
+		w: uiLayers.active.canvas.width,
+		h: uiLayers.active.canvas.height,
 	});
 }
 
@@ -765,7 +765,7 @@ async function upscaleAndDownload() {
 	// get cropped canvas, send it to upscaler, download result
 	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
 	var upscaler = document.getElementById("upscalers").value;
-	var croppedCanvas = cropCanvas(imgCanvas);
+	var croppedCanvas = cropCanvas(uiLayers.active.canvas);
 	if (croppedCanvas != null) {
 		var upscaler = document.getElementById("upscalers").value;
 		var url =

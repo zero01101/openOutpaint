@@ -271,20 +271,20 @@ const colorBrushTool = () =>
 					const bkpcanvas = state.eraseBackup.canvas;
 					const bkpctx = state.eraseBackup.ctx;
 					bkpctx.clearRect(0, 0, bkpcanvas.width, bkpcanvas.height);
-					bkpctx.drawImage(imgCanvas, 0, 0);
+					bkpctx.drawImage(uiLayers.active.canvas, 0, 0);
 
-					imgCtx.globalCompositeOperation = "destination-out";
-					_color_brush_erase_callback(evn, state, imgCtx);
-					imgCtx.globalCompositeOperation = "source-over";
+					uiLayers.active.ctx.globalCompositeOperation = "destination-out";
+					_color_brush_erase_callback(evn, state, uiLayers.active.ctx);
+					uiLayers.active.ctx.globalCompositeOperation = "source-over";
 					_color_brush_erase_callback(evn, state, state.eraseLayer.ctx);
 				};
 
 				state.erasecb = (evn) => {
 					if (state.eyedropper || !state.erasing) return;
 					if (state.affectMask) _mask_brush_erase_callback(evn, state);
-					imgCtx.globalCompositeOperation = "destination-out";
-					_color_brush_erase_callback(evn, state, imgCtx);
-					imgCtx.globalCompositeOperation = "source-over";
+					uiLayers.active.ctx.globalCompositeOperation = "destination-out";
+					_color_brush_erase_callback(evn, state, uiLayers.active.ctx);
+					uiLayers.active.ctx.globalCompositeOperation = "source-over";
 					_color_brush_erase_callback(evn, state, state.eraseLayer.ctx);
 				};
 
@@ -300,8 +300,13 @@ const colorBrushTool = () =>
 					const cropped = cropCanvas(canvas, {border: 10});
 					const bb = cropped.bb;
 
-					imgCtx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
-					imgCtx.drawImage(bkpcanvas, 0, 0);
+					uiLayers.active.ctx.clearRect(
+						0,
+						0,
+						uiLayers.active.canvas.width,
+						uiLayers.active.canvas.height
+					);
+					uiLayers.active.ctx.drawImage(bkpcanvas, 0, 0);
 
 					commands.runCommand("eraseImage", "Color Brush Erase", {
 						mask: cropped.canvas,

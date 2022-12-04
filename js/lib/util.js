@@ -250,14 +250,14 @@ function cropCanvas(sourceCanvas, options = {}) {
  *
  * @param {Object} options - Optional Information
  * @param {boolean} [options.cropToContent] - If we wish to crop to content first (default: true)
- * @param {HTMLCanvasElement} [options.canvas] - The source canvas (default: imgCanvas)
+ * @param {HTMLCanvasElement} [options.canvas] - The source canvas (default: uiLayers.active.canvas)
  * @param {string} [options.filename] - The filename to save as (default: '[ISO date] [Hours] [Minutes] [Seconds] openOutpaint image.png').\
  * If null, opens image in new tab.
  */
 function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
-		canvas: imgCanvas,
+		canvas: uiLayers.active.canvas,
 		filename:
 			new Date()
 				.toISOString()

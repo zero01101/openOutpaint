@@ -367,7 +367,7 @@ const dream_generate_callback = async (evn, state) => {
 		blockNewImages = true;
 
 		// Use txt2img if canvas is blank
-		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, imgCanvas)) {
+		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, uiLayers.active.canvas)) {
 			// Dream
 			_generate("txt2img", request, bb);
 		} else {
@@ -384,7 +384,7 @@ const dream_generate_callback = async (evn, state) => {
 			// Get init image
 			auxCtx.fillRect(0, 0, request.width, request.height);
 			auxCtx.drawImage(
-				imgCanvas,
+				uiLayers.active.canvas,
 				bb.x,
 				bb.y,
 				bb.w,
@@ -417,7 +417,7 @@ const dream_generate_callback = async (evn, state) => {
 
 				auxCtx.globalCompositeOperation = "destination-in";
 				auxCtx.drawImage(
-					imgCanvas,
+					uiLayers.active.canvas,
 					bb.x,
 					bb.y,
 					bb.w,
@@ -430,7 +430,7 @@ const dream_generate_callback = async (evn, state) => {
 			} else {
 				auxCtx.globalCompositeOperation = "destination-in";
 				auxCtx.drawImage(
-					imgCanvas,
+					uiLayers.active.canvas,
 					bb.x,
 					bb.y,
 					bb.w,
@@ -536,7 +536,7 @@ const dream_img2img_callback = (evn, state) => {
 		);
 
 		// Do nothing if no image exists
-		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, imgCanvas)) return;
+		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, uiLayers.active.canvas)) return;
 
 		// Build request to the API
 		const request = {};
@@ -565,7 +565,7 @@ const dream_img2img_callback = (evn, state) => {
 		// Get init image
 		auxCtx.fillRect(0, 0, request.width, request.height);
 		auxCtx.drawImage(
-			imgCanvas,
+			uiLayers.active.canvas,
 			bb.x,
 			bb.y,
 			bb.w,
