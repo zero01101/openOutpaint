@@ -414,27 +414,28 @@ const stampTool = () =>
 					state.ctxmenu.resourceList = resourceList;
 
 					// Performs resource fetch from local storage
-					{
+					(async () => {
 						const storageResources = localStorage.getItem(
 							"tools.stamp.resources"
 						);
 						if (storageResources) {
 							const parsed = JSON.parse(storageResources);
 							state.resources.push(
-								...parsed.map((resource) => {
-									const image = document.createElement("img");
-									image.src = resource.src;
+								...(await Promise.all(
+									parsed.map((resource) => {
+										const image = document.createElement("img");
+										image.src = resource.src;
 
-									return {
-										id: resource.id,
-										name: resource.name,
-										image,
-									};
-								})
+										return new Promise((resolve, reject) => {
+											image.onload = () =>
+												resolve({id: resource.id, name: resource.name, image});
+										});
+									})
+								))
 							);
 							syncResources();
 						}
-					}
+					})();
 				}
 			},
 			populateContextMenu: (menu, state) => {
