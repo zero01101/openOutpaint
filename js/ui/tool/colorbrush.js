@@ -3,7 +3,12 @@ const _color_brush_draw_callback = (evn, state) => {
 
 	ctx.strokeStyle = state.color;
 
-	ctx.filter = "blur(" + state.brushBlur + "px)";
+	ctx.filter =
+		"blur(" +
+		state.brushBlur +
+		"px) opacity(" +
+		state.brushOpacity * 100 +
+		"%)";
 	ctx.lineWidth = state.brushSize;
 	ctx.beginPath();
 	ctx.moveTo(
@@ -13,6 +18,7 @@ const _color_brush_draw_callback = (evn, state) => {
 	ctx.lineTo(evn.x, evn.y);
 	ctx.lineJoin = ctx.lineCap = "round";
 	ctx.stroke();
+	ctx.filter = null;
 };
 
 const _color_brush_erase_callback = (evn, state, ctx) => {
@@ -130,6 +136,7 @@ const colorBrushTool = () =>
 				state.color = "#FFFFFF";
 				state.brushSize = 32;
 				state.brushBlur = 0;
+				state.brushOpacity = 1;
 				state.affectMask = true;
 				state.setBrushSize = (size) => {
 					state.brushSize = size;
@@ -327,6 +334,7 @@ const colorBrushTool = () =>
 					const cropped = cropCanvas(canvas, {border: 10});
 					const bb = cropped.bb;
 
+					uil.ctx.filter = null;
 					uil.ctx.clearRect(0, 0, uil.canvas.width, uil.canvas.height);
 					uil.ctx.drawImage(bkpcanvas, 0, 0);
 
@@ -366,7 +374,21 @@ const colorBrushTool = () =>
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
 
-					// Brush size slider
+					// Brush opacity slider
+					const brushOpacitySlider = _toolbar_input.slider(
+						state,
+						"brushOpacity",
+						"Brush Opacity",
+						{
+							min: 0,
+							max: 1,
+							step: 0.05,
+							textStep: 0.001,
+						}
+					);
+					state.ctxmenu.brushOpacitySlider = brushOpacitySlider.slider;
+
+					// Brush blur slider
 					const brushBlurSlider = _toolbar_input.slider(
 						state,
 						"brushBlur",
@@ -417,6 +439,7 @@ const colorBrushTool = () =>
 
 				menu.appendChild(state.ctxmenu.affectMaskCheckbox);
 				menu.appendChild(state.ctxmenu.brushSizeSlider);
+				menu.appendChild(state.ctxmenu.brushOpacitySlider);
 				menu.appendChild(state.ctxmenu.brushBlurSlider);
 				menu.appendChild(state.ctxmenu.brushColorPicker);
 			},

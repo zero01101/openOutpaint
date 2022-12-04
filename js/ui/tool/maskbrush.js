@@ -22,10 +22,12 @@ const setMask = (state) => {
 	}
 };
 
-const _mask_brush_draw_callback = (evn, state) => {
+const _mask_brush_draw_callback = (evn, state, opacity = 100) => {
 	maskPaintCtx.globalCompositeOperation = "source-over";
 	maskPaintCtx.strokeStyle = "black";
 
+	maskPaintCtx.filter =
+		"blur(" + state.brushBlur + "px) opacity(" + opacity + "%)";
 	maskPaintCtx.lineWidth = state.brushSize;
 	maskPaintCtx.beginPath();
 	maskPaintCtx.moveTo(
@@ -35,12 +37,16 @@ const _mask_brush_draw_callback = (evn, state) => {
 	maskPaintCtx.lineTo(evn.x, evn.y);
 	maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
 	maskPaintCtx.stroke();
+	maskPaintCtx.filter = null;
 };
 
-const _mask_brush_erase_callback = (evn, state) => {
+const _mask_brush_erase_callback = (evn, state, opacity = 100) => {
 	maskPaintCtx.globalCompositeOperation = "destination-out";
 	maskPaintCtx.strokeStyle = "black";
 
+	maskPaintCtx.filter = "blur(" + state.brushBlur + "px)";
+	maskPaintCtx.filter =
+		"blur(" + state.brushBlur + "px) opacity(" + opacity + "%)";
 	maskPaintCtx.lineWidth = state.brushSize;
 	maskPaintCtx.beginPath();
 	maskPaintCtx.moveTo(
@@ -50,6 +56,7 @@ const _mask_brush_erase_callback = (evn, state) => {
 	maskPaintCtx.lineTo(evn.x, evn.y);
 	maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
 	maskPaintCtx.stroke();
+	maskPaintCtx.filter = null;
 };
 
 const maskBrushTool = () =>
@@ -95,9 +102,13 @@ const maskBrushTool = () =>
 					brushScrollSpeed: 1 / 4,
 					minBrushSize: 10,
 					maxBrushSize: 500,
+					minBlur: 0,
+					maxBlur: 30,
 				};
 
 				state.brushSize = 64;
+				state.brushBlur = 0;
+				state.brushOpacity = 1;
 				state.setBrushSize = (size) => {
 					state.brushSize = size;
 					state.ctxmenu.brushSizeRange.value = size;
@@ -156,12 +167,16 @@ const maskBrushTool = () =>
 					}
 				};
 
-				state.drawcb = (evn) => _mask_brush_draw_callback(evn, state);
-				state.erasecb = (evn) => _mask_brush_erase_callback(evn, state);
+				state.drawcb = (evn) =>
+					_mask_brush_draw_callback(evn, state, state.brushOpacity * 100);
+				state.erasecb = (evn) =>
+					_mask_brush_erase_callback(evn, state, state.brushOpacity * 100);
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
+
+					// Brush size slider
 					const brushSizeSlider = _toolbar_input.slider(
 						state,
 						"brushSize",
@@ -180,6 +195,33 @@ const maskBrushTool = () =>
 					);
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
+
+					// Brush opacity slider
+					const brushOpacitySlider = _toolbar_input.slider(
+						state,
+						"brushOpacity",
+						"Brush Opacity",
+						{
+							min: 0,
+							max: 1,
+							step: 0.05,
+							textStep: 0.001,
+						}
+					);
+					state.ctxmenu.brushOpacitySlider = brushOpacitySlider.slider;
+
+					// Brush blur slider
+					const brushBlurSlider = _toolbar_input.slider(
+						state,
+						"brushBlur",
+						"Brush Blur",
+						{
+							min: state.config.minBlur,
+							max: state.config.maxBlur,
+							step: 1,
+						}
+					);
+					state.ctxmenu.brushBlurSlider = brushBlurSlider.slider;
 
 					// Some mask-related action buttons
 					const actionArray = document.createElement("div");
@@ -225,6 +267,8 @@ const maskBrushTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.brushSizeSlider);
+				menu.appendChild(state.ctxmenu.brushOpacitySlider);
+				menu.appendChild(state.ctxmenu.brushBlurSlider);
 				menu.appendChild(state.ctxmenu.actionArray);
 			},
 			shortcut: "M",
