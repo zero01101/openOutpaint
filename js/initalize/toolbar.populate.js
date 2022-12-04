@@ -25,4 +25,9 @@ toolbar.addSeparator();
 tools.selecttransform = selectTransformTool();
 tools.stamp = stampTool();
 
+/**
+ * Interrogator tool
+ */
+toolbar.addSeparator();
+tools.interrogate = interrogateTool();
 toolbar.tools[0].enable();
