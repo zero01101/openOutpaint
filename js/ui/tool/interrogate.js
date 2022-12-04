@@ -111,8 +111,20 @@ const interrogate_callback = (evn, state) => {
 
 	// Build request to the API
 	const request = {};
-	//Object.assign(request, stableDiffusionData);
-	request.image = imgCanvas.toDataURL();
+
+	// Temporary canvas for interrogated image
+	const auxCanvas = document.createElement("canvas");
+	auxCanvas.width = bb.w;
+	auxCanvas.height = bb.h;
+	const auxCtx = auxCanvas.getContext("2d");
+
+	auxCtx.fillStyle = "#000F";
+
+	// Get init image
+	auxCtx.fillRect(0, 0, bb.w, bb.h);
+	auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	request.image = auxCanvas.toDataURL();
+
 	request.model = "clip"; //TODO maybe make a selectable option once A1111 supports the new openclip thingy?
 	const interrogation = _interrogate(request).then(function (result) {
 		if (confirm(result + "\n\nDo you want to replace your prompt with this?")) {
