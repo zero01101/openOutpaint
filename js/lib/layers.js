@@ -77,8 +77,6 @@ const layers = {
 				size,
 				resolution: options.resolution,
 
-				active: null,
-
 				/**
 				 * Registers a new layer
 				 *
@@ -87,6 +85,7 @@ const layers = {
 				 * @param {string} options.name
 				 * @param {?BoundingBox} options.bb
 				 * @param {{w: number, h: number}} options.resolution
+				 * @param {?string} options.group
 				 * @param {object} options.after
 				 * @returns
 				 */
@@ -101,8 +100,11 @@ const layers = {
 						// Bounding box for layer
 						bb: {x: 0, y: 0, w: collection.size.w, h: collection.size.h},
 
-						// Bounding box for layer
+						// Resolution for layer
 						resolution: null,
+
+						// Group for the layer ("group/subgroup/subsubgroup")
+						group: null,
 
 						// If set, will insert the layer after the given one
 						after: null,
@@ -169,6 +171,24 @@ const layers = {
 							ctx,
 
 							/**
+							 * Moves this layer to another level (after given layer)
+							 *
+							 * @param {Layer} layer Will move layer to after this one
+							 */
+							moveAfter(layer) {
+								layer.canvas.after(this.canvas);
+							},
+
+							/**
+							 * Moves this layer to another level (before given layer)
+							 *
+							 * @param {Layer} layer Will move layer to before this one
+							 */
+							moveBefore(layer) {
+								layer.canvas.before(this.canvas);
+							},
+
+							/**
 							 * Moves this layer to another location
 							 *
 							 * @param {number} x X coordinate of the top left of the canvas
@@ -204,14 +224,8 @@ const layers = {
 							unhide() {
 								this.canvas.style.display = "block";
 							},
-
-							// Activates this layer
-							activate() {
-								collection.active = this;
-							},
 						},
-						_layerlogpath,
-						["active"]
+						_layerlogpath
 					);
 
 					// Add to indexers
@@ -260,8 +274,7 @@ const layers = {
 					else console.debug(`[layers] Anonymous layer '${lobj.id}' deleted`);
 				},
 			},
-			_logpath,
-			["active"]
+			_logpath
 		);
 
 		layers._collections.push(collection);
@@ -270,11 +283,6 @@ const layers = {
 		console.info(
 			`[layers] Collection '${options.name}' at ${_logpath} registered`
 		);
-
-		// We must create a layer to select
-		collection
-			.registerLayer(options.initLayer.key, options.initLayer.options)
-			.activate();
 
 		return collection;
 	},
