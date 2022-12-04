@@ -26,3 +26,6 @@ keyboard.onShortcut({key: "KeyS"}, () => {
 keyboard.onShortcut({key: "KeyU"}, () => {
 	tools.stamp.enable();
 });
+keyboard.onShortcut({key: "KeyN"}, () => {
+	tools.interrogate.enable();
+});
