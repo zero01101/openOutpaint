@@ -157,15 +157,20 @@ const stampTool = () =>
 							actionArray.classList.add("actions");
 
 							const renameButton = document.createElement("button");
-							renameButton.addEventListener("click", () => {
-								const name = prompt("Rename your resource:", resource.name);
-								if (name) {
-									resource.name = name;
-									resourceTitle.textContent = name;
+							renameButton.addEventListener(
+								"click",
+								(evn) => {
+									evn.stopPropagation();
+									const name = prompt("Rename your resource:", resource.name);
+									if (name) {
+										resource.name = name;
+										resourceTitle.textContent = name;
 
-									syncResources();
-								}
-							});
+										syncResources();
+									}
+								},
+								{passive: false}
+							);
 							renameButton.title = "Rename Resource";
 							renameButton.appendChild(document.createElement("div"));
 							renameButton.classList.add("rename-btn");
