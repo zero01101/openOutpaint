@@ -192,7 +192,7 @@ commands.createCommand(
 
 		// Check if we have state
 		if (!state.context) {
-			const context = options.ctx || uiLayers.active.ctx;
+			const context = options.ctx || uil.ctx;
 			state.context = context;
 
 			// Saving what was in the canvas before the command
@@ -252,7 +252,7 @@ commands.createCommand(
 
 		// Check if we have state
 		if (!state.context) {
-			const context = options.ctx || uiLayers.active.ctx;
+			const context = options.ctx || uil.ctx;
 			state.context = context;
 
 			// Saving what was in the canvas before the command

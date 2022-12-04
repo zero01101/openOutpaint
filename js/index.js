@@ -330,12 +330,14 @@ async function testHostConnection() {
 
 function newImage(evt) {
 	clearPaintedMask();
-	clearBackupMask();
-	commands.runCommand("eraseImage", "Clear Canvas", {
-		x: 0,
-		y: 0,
-		w: uiLayers.active.canvas.width,
-		h: uiLayers.active.canvas.height,
+	uil.layers.forEach(({layer}) => {
+		commands.runCommand("eraseImage", "Clear Canvas", {
+			x: 0,
+			y: 0,
+			w: layer.canvas.width,
+			h: layer.canvas.height,
+			ctx: layer.ctx,
+		});
 	});
 }
 
@@ -484,9 +486,16 @@ function changeHiResFix() {
 	);
 	localStorage.setItem("enable_hr", stableDiffusionData.enable_hr);
 }
+function changeSmoothRendering() {
+	const layers = document.getElementById("layer-render");
+	if (document.getElementById("cbxSmooth").checked) {
+		layers.classList.remove("pixelated");
+	} else {
+		layers.classList.add("pixelated");
+	}
+}
 
-function isCanvasBlank(x, y, w, h, specifiedCanvas) {
-	var canvas = document.getElementById(specifiedCanvas.id);
+function isCanvasBlank(x, y, w, h, canvas) {
 	return !canvas
 		.getContext("2d")
 		.getImageData(x, y, w, h)
@@ -765,7 +774,7 @@ async function upscaleAndDownload() {
 	// get cropped canvas, send it to upscaler, download result
 	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
 	var upscaler = document.getElementById("upscalers").value;
-	var croppedCanvas = cropCanvas(uiLayers.active.canvas);
+	var croppedCanvas = cropCanvas(uil.canvas);
 	if (croppedCanvas != null) {
 		var upscaler = document.getElementById("upscalers").value;
 		var url =

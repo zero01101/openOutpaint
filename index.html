@@ -5,6 +5,7 @@
 		<title>openOutpaint 🐠</title>
 		<!-- CSS Variables -->
 		<link href="css/colors.css" rel="stylesheet" />
+		<link href="css/icons.css" rel="stylesheet" />
 
 		<link href="css/index.css" rel="stylesheet" />
 		<link href="css/layers.css" rel="stylesheet" />
@@ -110,6 +111,12 @@
 					step="1"
 					onchange="changeMaskBlur()" />
 				<br />
+				<input
+					type="checkbox"
+					id="cbxSmooth"
+					checked
+					onchange="changeSmoothRendering()" />
+				<label for="cbxSmooth">Smooth Rendering</label>
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>
 				<div class="content">
@@ -202,7 +209,35 @@
 			style="right: 10px; bottom: 10px">
 			<div class="draggable floating-window-title">Layers</div>
 			<div class="menu-container" style="min-width: 200px">
-				<div id="layer-list" class="layer-list"></div>
+				<div class="layer-manager">
+					<div id="layer-list" class="layer-list"></div>
+					<div class="ui separator"></div>
+					<div class="layer-list-actions">
+						<button
+							type="button"
+							title="Add Layer"
+							onclick="uil.addLayer(null, 'New Layer')"
+							class="ui icon button">
+							<div class="icon-file-plus"></div>
+						</button>
+
+						<button
+							type="button"
+							title="Move Layer Up"
+							onclick="uil.moveLayerUp()"
+							class="ui icon button">
+							<div class="icon-chevron-up"></div>
+						</button>
+
+						<button
+							type="button"
+							title="Move Layer Down"
+							onclick="uil.moveLayerDown()"
+							class="ui icon button">
+							<div class="icon-chevron-down"></div>
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -220,6 +255,9 @@
 
 		<!-- Canvases -->
 		<div id="layer-render" class="layer-render-target"></div>
+
+		<!-- Overlay -->
+		<canvas id="layer-overlay" class="layer-overlay"></canvas>
 
 		<!-- Base Libs -->
 		<script src="js/lib/util.js" type="text/javascript"></script>

@@ -366,8 +366,12 @@ const dream_generate_callback = async (evn, state) => {
 		// Don't allow another image until is finished
 		blockNewImages = true;
 
+		// Get visible pixels
+		const visibleCanvas = uil.getVisible(bb);
+		console.debug(visibleCanvas);
+
 		// Use txt2img if canvas is blank
-		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, uiLayers.active.canvas)) {
+		if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
 			// Dream
 			_generate("txt2img", request, bb);
 		} else {
@@ -384,9 +388,9 @@ const dream_generate_callback = async (evn, state) => {
 			// Get init image
 			auxCtx.fillRect(0, 0, request.width, request.height);
 			auxCtx.drawImage(
-				uiLayers.active.canvas,
-				bb.x,
-				bb.y,
+				visibleCanvas,
+				0,
+				0,
 				bb.w,
 				bb.h,
 				0,
@@ -417,9 +421,9 @@ const dream_generate_callback = async (evn, state) => {
 
 				auxCtx.globalCompositeOperation = "destination-in";
 				auxCtx.drawImage(
-					uiLayers.active.canvas,
-					bb.x,
-					bb.y,
+					visibleCanvas,
+					0,
+					0,
 					bb.w,
 					bb.h,
 					0,
@@ -430,9 +434,9 @@ const dream_generate_callback = async (evn, state) => {
 			} else {
 				auxCtx.globalCompositeOperation = "destination-in";
 				auxCtx.drawImage(
-					uiLayers.active.canvas,
-					bb.x,
-					bb.y,
+					visibleCanvas,
+					0,
+					0,
 					bb.w,
 					bb.h,
 					0,
@@ -535,8 +539,13 @@ const dream_img2img_callback = (evn, state) => {
 			state.snapToGrid && basePixelCount
 		);
 
+		// Get visible pixels
+		const visibleCanvas = uil.getVisible(bb);
+
+		console.debug(visibleCanvas);
+
 		// Do nothing if no image exists
-		if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, uiLayers.active.canvas)) return;
+		if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) return;
 
 		// Build request to the API
 		const request = {};
@@ -565,9 +574,9 @@ const dream_img2img_callback = (evn, state) => {
 		// Get init image
 		auxCtx.fillRect(0, 0, request.width, request.height);
 		auxCtx.drawImage(
-			uiLayers.active.canvas,
-			bb.x,
-			bb.y,
+			visibleCanvas,
+			0,
+			0,
 			bb.w,
 			bb.h,
 			0,
@@ -637,13 +646,20 @@ const _reticle_draw = (evn, state) => {
 		state.snapToGrid && basePixelCount
 	);
 
+	const cvp = viewport.canvasToView(evn.x, evn.y);
+	const bbvp = {
+		...viewport.canvasToView(bb.x, bb.y),
+		w: viewport.zoom * bb.w,
+		h: viewport.zoom * bb.h,
+	};
+
 	// draw targeting square reticle thingy cursor
-	ovCtx.lineWidth = 1;
-	ovCtx.strokeStyle = "#FFF";
-	ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h); //origin is middle of the frame
+	uiCtx.lineWidth = 1;
+	uiCtx.strokeStyle = "#FFF";
+	uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
 
 	return () => {
-		ovCtx.clearRect(bb.x - 10, bb.y - 10, bb.w + 20, bb.h + 20);
+		uiCtx.clearRect(bbvp.x - 10, bbvp.y - 10, bbvp.w + 20, bbvp.h + 20);
 	};
 };
 
@@ -652,6 +668,7 @@ const _reticle_draw = (evn, state) => {
  */
 
 const _dream_onwheel = (evn, state) => {
+	state.mousemovecb(evn);
 	if (!evn.evn.ctrlKey) {
 		const v =
 			state.cursorSize -
@@ -670,7 +687,7 @@ const dreamTool = () =>
 		"Dream",
 		(state, opt) => {
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 			state.mousemovecb({
 				...mouse.coords.world.pos,
 			});
@@ -693,6 +710,8 @@ const dreamTool = () =>
 
 			// Hide Mask
 			setMask("none");
+
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
 			init: (state) => {
@@ -707,7 +726,7 @@ const dreamTool = () =>
 				state.overMaskPx = 0;
 
 				state.erasePrevReticle = () =>
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
@@ -789,7 +808,7 @@ const img2imgTool = () =>
 		"Img2Img",
 		(state, opt) => {
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 			state.mousemovecb({
 				...mouse.coords.world.pos,
 			});
@@ -802,6 +821,8 @@ const img2imgTool = () =>
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
+
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -812,6 +833,7 @@ const img2imgTool = () =>
 
 			// Hide mask
 			setMask("none");
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
 			init: (state) => {
@@ -829,7 +851,7 @@ const img2imgTool = () =>
 				state.keepBorderSize = 64;
 
 				state.erasePrevReticle = () =>
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
@@ -846,6 +868,12 @@ const img2imgTool = () =>
 					const request = {
 						width: stableDiffusionData.width,
 						height: stableDiffusionData.height,
+					};
+
+					const bbvp = {
+						...viewport.canvasToView(bb.x, bb.y),
+						w: viewport.zoom * bb.w,
+						h: viewport.zoom * bb.h,
 					};
 
 					// For displaying border mask
@@ -870,16 +898,16 @@ const img2imgTool = () =>
 							request.width,
 							state.keepBorderSize
 						);
-						ovCtx.drawImage(
+						uiCtx.drawImage(
 							auxCanvas,
 							0,
 							0,
 							request.width,
 							request.height,
-							bb.x,
-							bb.y,
-							bb.w,
-							bb.h
+							bbvp.x,
+							bbvp.y,
+							bbvp.w,
+							bbvp.h
 						);
 					}
 				};

@@ -1,0 +1,24 @@
+.ui.icon > .icon-eye-off {
+	-webkit-mask-image: url("/res/icons/eye-off.svg");
+	mask-image: url("/res/icons/eye-off.svg");
+}
+
+.ui.icon > .icon-eye {
+	-webkit-mask-image: url("/res/icons/eye.svg");
+	mask-image: url("/res/icons/eye.svg");
+}
+
+.ui.icon > .icon-file-plus {
+	-webkit-mask-image: url("/res/icons/file-plus.svg");
+	mask-image: url("/res/icons/file-plus.svg");
+}
+
+.ui.icon > .icon-chevron-down {
+	-webkit-mask-image: url("/res/icons/chevron-down.svg");
+	mask-image: url("/res/icons/chevron-down.svg");
+}
+
+.ui.icon > .icon-chevron-up {
+	-webkit-mask-image: url("/res/icons/chevron-up.svg");
+	mask-image: url("/res/icons/chevron-up.svg");
+}

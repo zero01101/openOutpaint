@@ -46,6 +46,8 @@ const stampTool = () =>
 			Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
 				child.classList.remove("selected");
 			});
+
+			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 		},
 		{
 			init: (state) => {

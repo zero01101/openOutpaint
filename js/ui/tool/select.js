@@ -84,7 +84,7 @@ const selectTransformTool = () =>
 				// Clears selection and make things right
 				state.reset = () => {
 					if (state.selected)
-						uiLayers.active.ctx.drawImage(
+						uil.ctx.drawImage(
 							state.original.image,
 							state.original.x,
 							state.original.y
@@ -312,7 +312,7 @@ const selectTransformTool = () =>
 
 					// If something is selected, commit changes to the canvas
 					if (state.selected) {
-						uiLayers.active.ctx.drawImage(
+						uil.ctx.drawImage(
 							state.selected.image,
 							state.original.x,
 							state.original.y
@@ -406,7 +406,7 @@ const selectTransformTool = () =>
 						const ctx = cvs.getContext("2d");
 
 						ctx.drawImage(
-							uiLayers.active.canvas,
+							uil.canvas,
 							state.selected.x,
 							state.selected.y,
 							state.selected.w,
@@ -417,7 +417,7 @@ const selectTransformTool = () =>
 							state.selected.h
 						);
 
-						uiLayers.active.ctx.clearRect(
+						uil.ctx.clearRect(
 							state.selected.x,
 							state.selected.y,
 							state.selected.w,

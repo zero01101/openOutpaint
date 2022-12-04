@@ -35,8 +35,14 @@ const colorBrushTool = () =>
 		"Color Brush",
 		(state, opt) => {
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-			state.movecb({...mouse.coords.world.pos});
+			uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			state.movecb({
+				...mouse.coords.world.pos,
+				evn: {
+					clientX: mouse.coords.window.pos.x,
+					clientY: mouse.coords.window.pos.y,
+				},
+			});
 
 			// Layer for eyedropper magnifiying glass
 			state.glassLayer = imageCollection.registerLayer(null, {
@@ -106,6 +112,8 @@ const colorBrushTool = () =>
 			// Cancel any eyedropping
 			state.drawing = false;
 			state.disableDropper();
+
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
 			init: (state) => {
@@ -146,26 +154,43 @@ const colorBrushTool = () =>
 				state.movecb = (evn) => {
 					lastMouseMoveEvn = evn;
 
-					// draw drawing cursor
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					const vcp = {x: evn.evn.clientX, y: evn.evn.clientY};
 
+					// draw drawing cursor
+					uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+
+					uiCtx.beginPath();
+					uiCtx.arc(
+						vcp.x,
+						vcp.y,
+						state.eyedropper ? 50 : (state.brushSize / 2) * viewport.zoom,
+						0,
+						2 * Math.PI,
+						true
+					);
+					uiCtx.strokeStyle = "black";
+					uiCtx.stroke();
+
+					// Draw eyedropper cursor and magnifiying glass
 					if (state.eyedropper) {
 						const bb = getBoundingBox(evn.x, evn.y, 7, 7, false);
 
-						const canvas = getVisible(bb);
+						const canvas = uil.getVisible(bb, {includeBg: true});
 						state.glassLayer.ctx.clearRect(0, 0, 7, 7);
 						state.glassLayer.ctx.drawImage(canvas, 0, 0);
 						state.glassLayer.moveTo(evn.x - 50, evn.y - 50);
-
-						ovCtx.beginPath();
-						ovCtx.arc(evn.x, evn.y, 50, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 7x on a line???
-						ovCtx.strokeStyle = "black";
-						ovCtx.stroke();
 					} else {
-						ovCtx.beginPath();
-						ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 7x on a line???
-						ovCtx.fillStyle = state.color + "50";
-						ovCtx.fill();
+						uiCtx.beginPath();
+						uiCtx.arc(
+							vcp.x,
+							vcp.y,
+							(state.brushSize / 2) * viewport.zoom,
+							0,
+							2 * Math.PI,
+							true
+						);
+						uiCtx.fillStyle = state.color + "50";
+						uiCtx.fill();
 					}
 				};
 
@@ -175,7 +200,7 @@ const colorBrushTool = () =>
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
-						ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+						uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 						state.movecb(evn);
 					}
 				};
@@ -271,20 +296,20 @@ const colorBrushTool = () =>
 					const bkpcanvas = state.eraseBackup.canvas;
 					const bkpctx = state.eraseBackup.ctx;
 					bkpctx.clearRect(0, 0, bkpcanvas.width, bkpcanvas.height);
-					bkpctx.drawImage(uiLayers.active.canvas, 0, 0);
+					bkpctx.drawImage(uil.canvas, 0, 0);
 
-					uiLayers.active.ctx.globalCompositeOperation = "destination-out";
-					_color_brush_erase_callback(evn, state, uiLayers.active.ctx);
-					uiLayers.active.ctx.globalCompositeOperation = "source-over";
+					uil.ctx.globalCompositeOperation = "destination-out";
+					_color_brush_erase_callback(evn, state, uil.ctx);
+					uil.ctx.globalCompositeOperation = "source-over";
 					_color_brush_erase_callback(evn, state, state.eraseLayer.ctx);
 				};
 
 				state.erasecb = (evn) => {
 					if (state.eyedropper || !state.erasing) return;
 					if (state.affectMask) _mask_brush_erase_callback(evn, state);
-					uiLayers.active.ctx.globalCompositeOperation = "destination-out";
-					_color_brush_erase_callback(evn, state, uiLayers.active.ctx);
-					uiLayers.active.ctx.globalCompositeOperation = "source-over";
+					uil.ctx.globalCompositeOperation = "destination-out";
+					_color_brush_erase_callback(evn, state, uil.ctx);
+					uil.ctx.globalCompositeOperation = "source-over";
 					_color_brush_erase_callback(evn, state, state.eraseLayer.ctx);
 				};
 
@@ -300,13 +325,8 @@ const colorBrushTool = () =>
 					const cropped = cropCanvas(canvas, {border: 10});
 					const bb = cropped.bb;
 
-					uiLayers.active.ctx.clearRect(
-						0,
-						0,
-						uiLayers.active.canvas.width,
-						uiLayers.active.canvas.height
-					);
-					uiLayers.active.ctx.drawImage(bkpcanvas, 0, 0);
+					uil.ctx.clearRect(0, 0, uil.canvas.width, uil.canvas.height);
+					uil.ctx.drawImage(bkpcanvas, 0, 0);
 
 					commands.runCommand("eraseImage", "Color Brush Erase", {
 						mask: cropped.canvas,

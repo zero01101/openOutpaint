@@ -37,35 +37,12 @@ const ovCtx = ovLayer.ctx;
 const debugCanvas = debugLayer.canvas; // where mouse cursor renders
 const debugCtx = debugLayer.ctx;
 
-/**
- * Function that returns a canvas with full visible information of a certain bounding box.
- *
- * For now, only the img is used.
- *
- * @param {BoundingBox} bb The bouding box to get visible data from
- * @returns {HTMLCanvasElement}	The canvas element containing visible image data
- */
-const getVisible = (bb) => {
-	const canvas = document.createElement("canvas");
-	const ctx = canvas.getContext("2d");
-
-	canvas.width = bb.w;
-	canvas.height = bb.h;
-	ctx.drawImage(bgLayer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-	ctx.drawImage(
-		uiLayers.active.canvas,
-		bb.x,
-		bb.y,
-		bb.w,
-		bb.h,
-		0,
-		0,
-		bb.w,
-		bb.h
-	);
-
-	return canvas;
-};
+/* WIP: Most cursors shouldn't need a zoomable canvas */
+/** @type {HTMLCanvasElement} */
+const uiCanvas = document.getElementById("layer-overlay"); // where mouse cursor renders
+uiCanvas.width = uiCanvas.clientWidth;
+uiCanvas.height = uiCanvas.clientHeight;
+const uiCtx = uiCanvas.getContext("2d");
 
 debugLayer.hide(); // Hidden by default
 
@@ -140,6 +117,15 @@ const viewport = {
 	},
 	get h() {
 		return (window.innerHeight * 1) / this.zoom;
+	},
+	viewToCanvas(x, y) {
+		return {x, y};
+	},
+	canvasToView(x, y) {
+		return {
+			x: window.innerWidth * ((x - this.cx) / this.w) + window.innerWidth / 2,
+			y: window.innerHeight * ((y - this.cy) / this.h) + window.innerHeight / 2,
+		};
 	},
 	/**
 	 * Apply transformation
@@ -220,4 +206,6 @@ mouse.listen.window.btn.middle.onpaintend.on((evn) => {
 
 window.addEventListener("resize", () => {
 	viewport.transform(imageCollection.element);
+	uiCanvas.width = uiCanvas.clientWidth;
+	uiCanvas.height = uiCanvas.clientHeight;
 });
