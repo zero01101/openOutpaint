@@ -94,6 +94,7 @@ _keyboard shortcuts are listed as code blocks in brackets, i.e. enter/return is_
 - color brush [`c`] is for drawing pretty pictures for feeding into img2img, change the color with the giant color button at the bottom of the context menu
 - overmask and related px value expands the area masked in outpaint requests, so as to attempt to minimize the seam between images
 - border mask (applicable only to img2img tool [`i`]) and related value compresses the area masked in img2img towards the image section being "replaced" to maximize possible coherence
+- interrogate tool [`n`] asks what CLIP thinks is in the bounding box you just clicked on
 - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
 
 14. open the "save/upscaling" menu and click "save canvas" (or choose an upscaler and click "upscale", but heed its warning) to save the cropped region of outpainted canvas
@@ -201,6 +202,7 @@ requested "a desert" and drew Fine Art on top of it, then requested "a cabin" an
 - 0.0.7 - floating toolbar, img2img tool, border masking, change model from UI, general _very needed_ code cleanup and modernization [9916ee8](https://github.com/zero01101/openOutpaint/commit/9916ee891738a56cb827e67f9fbe0cffab27fc60)
 - 0.0.7.5 - giant arbitary image handling and marquee select tool update [bbdfef9](https://github.com/zero01101/openOutpaint/commit/bbdfef937d28f607b601013c75de0f9049739488)
 - 0.0.8 - inpaint color brush, stamp resource management, error handling, style selector, big ol' QOL shine [9b174d6](https://github.com/zero01101/openOutpaint/commit/9b174d66c9b9d83ce8657128c97f917b473b13a9)
+- 0.0.8.1 - interrogate tool [083f481](https://github.com/zero01101/openOutpaint/commit/083f481e17e0d63baddae3a735412e622119b640)
 
 ## hey what's with the fish
 
