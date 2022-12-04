@@ -593,8 +593,10 @@ const selectTransformTool = () =>
 					createResourceButton.onclick = () => {
 						const image = document.createElement("img");
 						image.src = state.selected.image.toDataURL();
-						tools.stamp.state.addResource("Selection Resource", image);
-						tools.stamp.enable();
+						image.onload = () => {
+							tools.stamp.state.addResource("Selection Resource", image);
+							tools.stamp.enable();
+						};
 					};
 
 					actionArray.appendChild(saveSelectionButton);
