@@ -12,9 +12,11 @@ const bgLayer = imageCollection.registerLayer("bg", {
 });
 const imgLayer = imageCollection.registerLayer("image", {
 	name: "Image",
+	ctxOptions: {desynchronized: true},
 });
 const maskPaintLayer = imageCollection.registerLayer("mask", {
 	name: "Mask Paint",
+	ctxOptions: {desynchronized: true},
 });
 const ovLayer = imageCollection.registerLayer("overlay", {
 	name: "Overlay",
@@ -42,7 +44,7 @@ const debugCtx = debugLayer.ctx;
 const uiCanvas = document.getElementById("layer-overlay"); // where mouse cursor renders
 uiCanvas.width = uiCanvas.clientWidth;
 uiCanvas.height = uiCanvas.clientHeight;
-const uiCtx = uiCanvas.getContext("2d");
+const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 
 debugLayer.hide(); // Hidden by default
 

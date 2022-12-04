@@ -56,9 +56,11 @@ const colorBrushTool = () =>
 
 			state.drawLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				ctxOptions: {willReadFrequently: true},
 			});
 			state.eraseLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				ctxOptions: {willReadFrequently: true},
 			});
 			state.eraseLayer.canvas.style.display = "none";
 			state.eraseLayer.hide();

@@ -146,6 +146,7 @@ select > option:checked::after {
 	flex: 1;
 	margin: 3px;
 
+	-webkit-mask-position: center;
 	mask-position: center;
 
 	-webkit-mask-size: contain;

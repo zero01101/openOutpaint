@@ -60,5 +60,6 @@
 }
 
 #layer-render.pixelated canvas {
+	image-rendering: pixelated;
 	image-rendering: crisp-edges;
 }

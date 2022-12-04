@@ -87,6 +87,7 @@ const layers = {
 				 * @param {{w: number, h: number}} options.resolution
 				 * @param {?string} options.group
 				 * @param {object} options.after
+				 * @param {object} options.ctxOptions
 				 * @returns
 				 */
 				registerLayer: (key = null, options = {}) => {
@@ -108,6 +109,9 @@ const layers = {
 
 						// If set, will insert the layer after the given one
 						after: null,
+
+						// Context creation options
+						ctxOptions: {},
 					});
 
 					// Calculate resolution
@@ -137,7 +141,7 @@ const layers = {
 						options.after.canvas.after(canvas);
 					}
 
-					const ctx = canvas.getContext("2d");
+					const ctx = canvas.getContext("2d", options.ctxOptions);
 
 					// Path used for logging purposes
 					const _layerlogpath = key
