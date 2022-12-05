@@ -345,7 +345,13 @@ function clearPaintedMask() {
 	maskPaintCtx.clearRect(0, 0, maskPaintCanvas.width, maskPaintCanvas.height);
 }
 
-function march(bb) {
+function march(bb, options = {}) {
+	defaultOpt(options, {
+		style: "#FFFF",
+		width: "2px",
+		filter: null,
+	});
+
 	const expanded = {...bb};
 	expanded.x--;
 	expanded.y--;
@@ -360,7 +366,7 @@ function march(bb) {
 	let offset = 0;
 
 	const interval = setInterval(() => {
-		drawMarchingAnts(layer.ctx, bb, offset++);
+		drawMarchingAnts(layer.ctx, bb, offset++, options);
 		offset %= 12;
 	}, 20);
 
@@ -370,13 +376,18 @@ function march(bb) {
 	};
 }
 
-function drawMarchingAnts(ctx, bb, offset) {
+function drawMarchingAnts(ctx, bb, offset, options) {
+	ctx.save();
+
 	ctx.clearRect(0, 0, bb.w + 2, bb.h + 2);
-	ctx.strokeStyle = "#FFFFFFFF"; //"#55000077";
-	ctx.strokeWidth = "2px";
+	ctx.strokeStyle = options.style;
+	ctx.strokeWidth = options.width;
+	ctx.filter = options.filter;
 	ctx.setLineDash([4, 2]);
 	ctx.lineDashOffset = -offset;
 	ctx.strokeRect(1, 1, bb.w, bb.h);
+
+	ctx.restore();
 }
 
 function changeSampler() {

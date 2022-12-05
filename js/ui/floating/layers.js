@@ -31,6 +31,13 @@ const uil = {
 		return this.layer && this.active.layer.ctx;
 	},
 
+	get w() {
+		return imageCollection.size.w;
+	},
+	get h() {
+		return imageCollection.size.h;
+	},
+
 	/**
 	 * Synchronizes layer array to DOM
 	 */

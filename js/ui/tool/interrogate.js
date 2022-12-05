@@ -22,6 +22,8 @@ const interrogateTool = () =>
 
 			// Hide Mask
 			setMask("none");
+
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
 			init: (state) => {
@@ -98,7 +100,7 @@ const _interrogate_onwheel = (evn, state) => {
 	}
 };
 
-const interrogate_callback = (evn, state) => {
+const interrogate_callback = async (evn, state) => {
 	const bb = getBoundingBox(
 		evn.x,
 		evn.y,
@@ -107,7 +109,9 @@ const interrogate_callback = (evn, state) => {
 		state.snapToGrid && basePixelCount
 	);
 	// Do nothing if no image exists
-	if (isCanvasBlank(bb.x, bb.y, bb.w, bb.h, imgCanvas)) return;
+	const sectionCanvas = uil.getVisible({x: bb.x, y: bb.y, w: bb.w, h: bb.h});
+
+	if (isCanvasBlank(0, 0, bb.w, bb.h, sectionCanvas)) return;
 
 	// Build request to the API
 	const request = {};
@@ -122,16 +126,25 @@ const interrogate_callback = (evn, state) => {
 
 	// Get init image
 	auxCtx.fillRect(0, 0, bb.w, bb.h);
-	auxCtx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	auxCtx.drawImage(sectionCanvas, 0, 0);
 	request.image = auxCanvas.toDataURL();
 
 	request.model = "clip"; //TODO maybe make a selectable option once A1111 supports the new openclip thingy?
-	const interrogation = _interrogate(request).then(function (result) {
-		if (confirm(result + "\n\nDo you want to replace your prompt with this?")) {
-			document.getElementById("prompt").value = result;
+	const stopMarching = march(bb, {style: "#AFAF"});
+	try {
+		const result = await _interrogate(request);
+		const text = prompt(
+			result +
+				"\n\nDo you want to replace your prompt with this? You can change it down below:",
+			result
+		);
+		if (text) {
+			document.getElementById("prompt").value = text;
 			tools.dream.enable();
 		}
-	});
+	} finally {
+		stopMarching();
+	}
 };
 
 /**
