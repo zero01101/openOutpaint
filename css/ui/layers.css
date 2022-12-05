@@ -12,6 +12,8 @@
 #layer-list {
 	height: 200px;
 
+	overflow-y: auto;
+
 	background-color: var(--c-primary);
 
 	border-top-left-radius: 5px;
