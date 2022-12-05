@@ -774,7 +774,14 @@ async function upscaleAndDownload() {
 	// get cropped canvas, send it to upscaler, download result
 	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
 	var upscaler = document.getElementById("upscalers").value;
-	var croppedCanvas = cropCanvas(uil.canvas);
+	var croppedCanvas = cropCanvas(
+		uil.getVisible({
+			x: 0,
+			y: 0,
+			w: imageCollection.size.w,
+			h: imageCollection.size.h,
+		})
+	);
 	if (croppedCanvas != null) {
 		var upscaler = document.getElementById("upscalers").value;
 		var url =
