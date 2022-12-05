@@ -172,7 +172,7 @@ const colorBrushTool = () =>
 					uiCtx.arc(
 						vcp.x,
 						vcp.y,
-						state.eyedropper ? 50 : (state.brushSize / 2) * viewport.zoom,
+						(state.eyedropper ? 50 : state.brushSize / 2) * viewport.zoom,
 						0,
 						2 * Math.PI,
 						true
@@ -246,7 +246,7 @@ const colorBrushTool = () =>
 				state.leftclickcb = (evn) => {
 					if (evn.target === imageCollection.inputElement && state.eyedropper) {
 						const bb = getBoundingBox(evn.x, evn.y, 1, 1, false);
-						const visibleCanvas = getVisible(bb);
+						const visibleCanvas = uil.getVisible(bb);
 						const dat = visibleCanvas
 							.getContext("2d")
 							.getImageData(0, 0, 1, 1).data;
