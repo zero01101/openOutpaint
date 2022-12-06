@@ -1,12 +1,14 @@
 let blockNewImages = false;
+let generating = false;
 
 /**
  * Starts progress monitoring bar
  *
  * @param {BoundingBox} bb Bouding Box to draw progress to
+ * @param {(data: object) => void} [oncheck] Callback function for when a progress check returns
  * @returns {() => void}
  */
-const _monitorProgress = (bb) => {
+const _monitorProgress = (bb, oncheck = null) => {
 	const minDelay = 1000;
 
 	const apiURL = `${host}${url}progress?skip_current_image=true`;
@@ -32,6 +34,8 @@ const _monitorProgress = (bb) => {
 			const response = await fetch(apiURL);
 			/** @type {StableDiffusionProgressResponse} */
 			const data = await response.json();
+
+			oncheck && oncheck(data);
 
 			// Draw Progress Bar
 			layer.ctx.fillStyle = "#5F5";
@@ -81,6 +85,7 @@ const _dream = async (endpoint, request) => {
 	/** @type {StableDiffusionResponse} */
 	let data = null;
 	try {
+		generating = true;
 		const response = await fetch(apiURL, {
 			method: "POST",
 			headers: {
@@ -92,6 +97,7 @@ const _dream = async (endpoint, request) => {
 
 		data = await response.json();
 	} finally {
+		generating = false;
 	}
 
 	return data.images;
@@ -103,9 +109,15 @@ const _dream = async (endpoint, request) => {
  * @param {"txt2img" | "img2img"} endpoint Endpoint to send the request to
  * @param {StableDiffusionRequest} request Stable diffusion request
  * @param {BoundingBox} bb Generated image placement location
+ * @param {number} [drawEvery=0.2 / request.n_iter] Percentage delta to draw progress at (by default 20% of each iteration)
  * @returns {Promise<HTMLImageElement | null>}
  */
-const _generate = async (endpoint, request, bb) => {
+const _generate = async (
+	endpoint,
+	request,
+	bb,
+	drawEvery = 0.2 / request.n_iter
+) => {
 	const requestCopy = {...request};
 
 	// Images to select through
@@ -120,26 +132,47 @@ const _generate = async (endpoint, request, bb) => {
 		after: maskPaintLayer,
 	});
 
-	const redraw = () => {
+	const makeElement = (type, x, y) => {
+		const el = document.createElement(type);
+		el.style.position = "absolute";
+		el.style.left = `${x}px`;
+		el.style.top = `${y}px`;
+
+		// We can use the input element to add interactible html elements in the world
+		imageCollection.inputElement.appendChild(el);
+
+		return el;
+	};
+
+	const redraw = (url = images[at]) => {
+		if (!url) return;
+
 		const image = new Image();
-		image.src = "data:image/png;base64," + images[at];
+		image.src = "data:image/png;base64," + url;
 		image.addEventListener("load", () => {
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-			if (images[at])
-				layer.ctx.drawImage(
-					image,
-					0,
-					0,
-					image.width,
-					image.height,
-					bb.x,
-					bb.y,
-					bb.w,
-					bb.h
-				);
+			layer.ctx.drawImage(
+				image,
+				0,
+				0,
+				image.width,
+				image.height,
+				bb.x,
+				bb.y,
+				bb.w,
+				bb.h
+			);
 		});
 	};
 
+	// Add Interrupt Button
+	const interruptButton = makeElement("button", bb.x + bb.w - 100, bb.y + bb.h);
+	interruptButton.classList.add("dream-interrupt-btn");
+	interruptButton.textContent = "Interrupt";
+	interruptButton.addEventListener("click", () => {
+		fetch(`${host}${url}interrupt`, {method: "POST"});
+		interruptButton.disabled = true;
+	});
 	const stopMarchingAnts = march(bb);
 
 	// First Dream Run
@@ -148,8 +181,28 @@ const _generate = async (endpoint, request, bb) => {
 
 	let stopProgress = null;
 	try {
-		stopProgress = _monitorProgress(bb);
+		let stopDrawingStatus = false;
+		let lastProgress = 0;
+		let nextCP = drawEvery;
+		stopProgress = _monitorProgress(bb, (data) => {
+			if (stopDrawingStatus) return;
+
+			if (lastProgress < nextCP && data.progress >= nextCP) {
+				nextCP += drawEvery;
+				fetch(`${host}${url}progress?skip_current_image=false`).then(
+					async (response) => {
+						if (stopDrawingStatus) return;
+						const imagedata = await response.json();
+						redraw(imagedata.current_image);
+					}
+				);
+			}
+			lastProgress = data.progress;
+		});
+
+		imageCollection.inputElement.appendChild(interruptButton);
 		images.push(...(await _dream(endpoint, requestCopy)));
+		stopDrawingStatus = true;
 	} catch (e) {
 		alert(
 			`Error generating images. Please try again or see consolde for more details`
@@ -158,6 +211,7 @@ const _generate = async (endpoint, request, bb) => {
 		console.warn(e);
 	} finally {
 		stopProgress();
+		imageCollection.inputElement.removeChild(interruptButton);
 	}
 
 	// Image navigation
@@ -196,6 +250,8 @@ const _generate = async (endpoint, request, bb) => {
 	const makeMore = async () => {
 		try {
 			stopProgress = _monitorProgress(bb);
+			interruptButton.disabled = false;
+			imageCollection.inputElement.appendChild(interruptButton);
 			images.push(...(await _dream(endpoint, requestCopy)));
 			imageindextxt.textContent = `${at + 1}/${images.length}`;
 		} catch (e) {
@@ -206,6 +262,7 @@ const _generate = async (endpoint, request, bb) => {
 			console.warn(e);
 		} finally {
 			stopProgress();
+			imageCollection.inputElement.removeChild(interruptButton);
 		}
 	};
 
@@ -263,18 +320,6 @@ const _generate = async (endpoint, request, bb) => {
 		imageCollection.deleteLayer(layer);
 		blockNewImages = false;
 		keyboard.listen.onkeyclick.clear(onarrow);
-	};
-
-	const makeElement = (type, x, y) => {
-		const el = document.createElement(type);
-		el.style.position = "absolute";
-		el.style.left = `${x}px`;
-		el.style.top = `${y}px`;
-
-		// We can use the input element to add interactible html elements in the world
-		imageCollection.inputElement.appendChild(el);
-
-		return el;
 	};
 
 	redraw();
@@ -541,8 +586,6 @@ const dream_img2img_callback = (evn, state) => {
 		// Get visible pixels
 		const visibleCanvas = uil.getVisible(bb);
 
-		console.debug(visibleCanvas);
-
 		// Do nothing if no image exists
 		if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) return;
 
@@ -670,7 +713,7 @@ const dream_img2img_callback = (evn, state) => {
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (evn, state) => {
+const _reticle_draw = (evn, state, textStyle = "#FFF5") => {
 	const bb = getBoundingBox(
 		evn.x,
 		evn.y,
@@ -678,21 +721,56 @@ const _reticle_draw = (evn, state) => {
 		state.cursorSize,
 		state.snapToGrid && basePixelCount
 	);
-
-	const cvp = viewport.canvasToView(evn.x, evn.y);
 	const bbvp = {
 		...viewport.canvasToView(bb.x, bb.y),
 		w: viewport.zoom * bb.w,
 		h: viewport.zoom * bb.h,
 	};
 
+	uiCtx.save();
+
 	// draw targeting square reticle thingy cursor
 	uiCtx.lineWidth = 1;
 	uiCtx.strokeStyle = "#FFF";
 	uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
 
+	// Draw width and height
+	uiCtx.textAlign = "center";
+	uiCtx.fillStyle = textStyle;
+	uiCtx.font = `bold 20px Open Sans`;
+	uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
+	const xshrink = Math.min(
+		1,
+		(bbvp.w - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
+	);
+	const yshrink = Math.min(
+		1,
+		(bbvp.h - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
+	);
+	uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
+	uiCtx.fillText(
+		`${state.cursorSize}px`,
+		0,
+		bbvp.h / 2 - 10 * xshrink,
+		state.cursorSize
+	);
+	uiCtx.rotate(-Math.PI / 2);
+	uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
+	uiCtx.fillText(
+		`${state.cursorSize}px`,
+		0,
+		bbvp.h / 2 - 10 * yshrink,
+		state.cursorSize
+	);
+
+	uiCtx.restore();
+
 	return () => {
+		uiCtx.save();
+
 		uiCtx.clearRect(bbvp.x - 10, bbvp.y - 10, bbvp.w + 20, bbvp.h + 20);
+
+		uiCtx.restore();
 	};
 };
 
@@ -701,7 +779,6 @@ const _reticle_draw = (evn, state) => {
  */
 
 const _dream_onwheel = (evn, state) => {
-	state.mousemovecb(evn);
 	if (!evn.evn.ctrlKey) {
 		const v =
 			state.cursorSize -
@@ -761,10 +838,26 @@ const dreamTool = () =>
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
-				state.mousemovecb = (evn) => {
-					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state);
+				let lastMouseMove = {
+					...mouse.coords.world.pos,
 				};
+
+				state.mousemovecb = (evn) => {
+					lastMouseMove = evn;
+					state.erasePrevReticle();
+					const style =
+						state.cursorSize > stableDiffusionData.width
+							? "#FBB5"
+							: state.cursorSize < stableDiffusionData.width
+							? "#BFB5"
+							: "#FFF5";
+					state.erasePrevReticle = _reticle_draw(evn, state, style);
+				};
+
+				state.redraw = () => {
+					state.mousemovecb(lastMouseMove);
+				};
+
 				state.wheelcb = (evn) => {
 					_dream_onwheel(evn, state);
 				};
@@ -887,7 +980,11 @@ const img2imgTool = () =>
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
+				let lastMouseMove = {
+					...mouse.coords.world.pos,
+				};
 				state.mousemovecb = (evn) => {
+					lastMouseMove = evn;
 					state.erasePrevReticle();
 					state.erasePrevReticle = _reticle_draw(evn, state);
 					const bb = getBoundingBox(
@@ -989,6 +1086,11 @@ const img2imgTool = () =>
 						);
 					}
 				};
+
+				state.redraw = () => {
+					state.mousemovecb(lastMouseMove);
+				};
+
 				state.wheelcb = (evn) => {
 					_dream_onwheel(evn, state);
 				};
@@ -1089,3 +1191,8 @@ const img2imgTool = () =>
 			shortcut: "I",
 		}
 	);
+
+window.onbeforeunload = async () => {
+	// Stop current generation on page close
+	if (generating) await fetch(`${host}${url}interrupt`, {method: "POST"});
+};

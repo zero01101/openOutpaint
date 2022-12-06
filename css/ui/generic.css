@@ -126,20 +126,33 @@ select > option:checked::after {
 }
 
 /* Icon button */
-.ui.squaer {
+.ui.square {
 	aspect-ratio: 1;
 }
 
-.ui.button.icon {
-	display: flex;
-	align-items: stretch;
-
+.ui.button {
 	cursor: pointer;
 
 	padding: 0;
 	margin: 0;
 	border: 0;
-	background-color: transparent;
+	color: var(--c-text);
+	background-color: var(--c-primary);
+	transition-duration: 50ms;
+}
+
+.ui.button:hover {
+	background-color: var(--c-hover);
+}
+
+.ui.button:active {
+	background-color: var(--c-hover);
+	filter: brightness(120%);
+}
+
+.ui.button.icon {
+	display: flex;
+	align-items: stretch;
 }
 
 .ui.button.icon > *:first-child {
@@ -154,8 +167,4 @@ select > option:checked::after {
 	-webkit-mask-repeat: no-repeat;
 	mask-repeat: no-repeat;
 	background-color: var(--c-text);
-}
-
-.ui.button.icon:hover {
-	background-color: var(--c-hover);
 }
