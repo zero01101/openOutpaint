@@ -13,6 +13,11 @@
 	mask-image: url("/res/icons/file-plus.svg");
 }
 
+.ui.icon > .icon-file-x {
+	-webkit-mask-image: url("/res/icons/file-x.svg");
+	mask-image: url("/res/icons/file-x.svg");
+}
+
 .ui.icon > .icon-chevron-down {
 	-webkit-mask-image: url("/res/icons/chevron-down.svg");
 	mask-image: url("/res/icons/chevron-down.svg");
@@ -21,4 +26,14 @@
 .ui.icon > .icon-chevron-up {
 	-webkit-mask-image: url("/res/icons/chevron-up.svg");
 	mask-image: url("/res/icons/chevron-up.svg");
+}
+.ui.icon > .icon-chevron-first {
+	-webkit-mask-image: url("/res/icons/chevron-first.svg");
+	mask-image: url("/res/icons/chevron-first.svg");
+}
+
+.ui.icon > .icon-chevron-flat-down {
+	-webkit-mask-image: url("/res/icons/chevron-first.svg");
+	mask-image: url("/res/icons/chevron-first.svg");
+	transform: rotate(-90deg);
 }

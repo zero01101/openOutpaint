@@ -216,7 +216,7 @@
 						<button
 							type="button"
 							title="Add Layer"
-							onclick="uil.addLayer(null, 'New Layer')"
+							onclick="commands.runCommand('addLayer', 'Added Layer')"
 							class="ui icon button">
 							<div class="icon-file-plus"></div>
 						</button>
@@ -224,7 +224,7 @@
 						<button
 							type="button"
 							title="Move Layer Up"
-							onclick="uil.moveLayerUp()"
+							onclick="commands.runCommand('moveLayer', 'Moved Layer Up',{delta: 1})"
 							class="ui icon button">
 							<div class="icon-chevron-up"></div>
 						</button>
@@ -232,9 +232,25 @@
 						<button
 							type="button"
 							title="Move Layer Down"
-							onclick="uil.moveLayerDown()"
+							onclick="commands.runCommand('moveLayer', 'Moved Layer Down', {delta: -1})"
 							class="ui icon button">
 							<div class="icon-chevron-down"></div>
+						</button>
+
+						<button
+							type="button"
+							title="Merge Layer Down"
+							onclick="commands.runCommand('mergeLayer', 'Merged Layer Down')"
+							class="ui icon button">
+							<div class="icon-chevron-flat-down"></div>
+						</button>
+
+						<button
+							type="button"
+							title="Move Layer Down"
+							onclick="commands.runCommand('deleteLayer', 'Deleted Layer')"
+							class="ui icon button">
+							<div class="icon-file-x"></div>
 						</button>
 					</div>
 				</div>
