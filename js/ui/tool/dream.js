@@ -713,7 +713,7 @@ const dream_img2img_callback = (evn, state) => {
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (evn, state, textStyle = "#FFF5") => {
+const _reticle_draw = (evn, state, tool, textStyle = "#FFF5") => {
 	const bb = getBoundingBox(
 		evn.x,
 		evn.y,
@@ -734,36 +734,50 @@ const _reticle_draw = (evn, state, textStyle = "#FFF5") => {
 	uiCtx.strokeStyle = "#FFF";
 	uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
 
-	// Draw width and height
-	uiCtx.textAlign = "center";
-	uiCtx.fillStyle = textStyle;
 	uiCtx.font = `bold 20px Open Sans`;
-	uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
-	const xshrink = Math.min(
-		1,
-		(bbvp.w - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
-	);
-	const yshrink = Math.min(
-		1,
-		(bbvp.h - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
-	);
-	uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
-	uiCtx.fillText(
-		`${state.cursorSize}px`,
-		0,
-		bbvp.h / 2 - 10 * xshrink,
-		state.cursorSize
-	);
-	uiCtx.rotate(-Math.PI / 2);
-	uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
-	uiCtx.fillText(
-		`${state.cursorSize}px`,
-		0,
-		bbvp.h / 2 - 10 * yshrink,
-		state.cursorSize
-	);
 
-	uiCtx.restore();
+	// Draw Tool Name
+	{
+		const xshrink = Math.min(1, (bbvp.w - 20) / uiCtx.measureText(tool).width);
+
+		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
+
+		uiCtx.textAlign = "left";
+		uiCtx.fillStyle = "#FFF5";
+		uiCtx.fillText(tool, bbvp.x + 10, bbvp.y + 10 + 20 * xshrink);
+	}
+
+	// Draw width and height
+	{
+		uiCtx.textAlign = "center";
+		uiCtx.fillStyle = textStyle;
+		uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
+		const xshrink = Math.min(
+			1,
+			(bbvp.w - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
+		);
+		const yshrink = Math.min(
+			1,
+			(bbvp.h - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
+		);
+		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
+		uiCtx.fillText(
+			`${state.cursorSize}px`,
+			0,
+			bbvp.h / 2 - 10 * xshrink,
+			state.cursorSize
+		);
+		uiCtx.rotate(-Math.PI / 2);
+		uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
+		uiCtx.fillText(
+			`${state.cursorSize}px`,
+			0,
+			bbvp.h / 2 - 10 * yshrink,
+			state.cursorSize
+		);
+
+		uiCtx.restore();
+	}
 
 	return () => {
 		uiCtx.save();
@@ -798,9 +812,10 @@ const dreamTool = () =>
 		(state, opt) => {
 			// Draw new cursor immediately
 			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
-			state.mousemovecb({
+			state.lastMouseMove = {
 				...mouse.coords.world.pos,
-			});
+			};
+			state.redraw();
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
@@ -838,12 +853,12 @@ const dreamTool = () =>
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
-				let lastMouseMove = {
+				state.lastMouseMove = {
 					...mouse.coords.world.pos,
 				};
 
 				state.mousemovecb = (evn) => {
-					lastMouseMove = evn;
+					state.lastMouseMove = evn;
 					state.erasePrevReticle();
 					const style =
 						state.cursorSize > stableDiffusionData.width
@@ -851,11 +866,11 @@ const dreamTool = () =>
 							: state.cursorSize < stableDiffusionData.width
 							? "#BFB5"
 							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(evn, state, style);
+					state.erasePrevReticle = _reticle_draw(evn, state, "Dream", style);
 				};
 
 				state.redraw = () => {
-					state.mousemovecb(lastMouseMove);
+					state.mousemovecb(state.lastMouseMove);
 				};
 
 				state.wheelcb = (evn) => {
@@ -934,10 +949,10 @@ const img2imgTool = () =>
 		"Img2Img",
 		(state, opt) => {
 			// Draw new cursor immediately
-			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
-			state.mousemovecb({
+			state.lastMouseMove = {
 				...mouse.coords.world.pos,
-			});
+			};
+			state.redraw();
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
@@ -947,8 +962,6 @@ const img2imgTool = () =>
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
-
-			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -980,13 +993,14 @@ const img2imgTool = () =>
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
-				let lastMouseMove = {
+				state.lastMouseMove = {
 					...mouse.coords.world.pos,
 				};
 				state.mousemovecb = (evn) => {
-					lastMouseMove = evn;
+					state.lastMouseMove = evn;
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state);
+					state.erasePrevReticle = _reticle_draw(evn, state, "Img2Img");
+
 					const bb = getBoundingBox(
 						evn.x,
 						evn.y,
@@ -1088,7 +1102,7 @@ const img2imgTool = () =>
 				};
 
 				state.redraw = () => {
-					state.mousemovecb(lastMouseMove);
+					state.mousemovecb(state.lastMouseMove);
 				};
 
 				state.wheelcb = (evn) => {

@@ -42,11 +42,12 @@ const interrogateTool = () =>
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state);
+					state.erasePrevReticle = _reticle_draw(evn, state, "Interrogate");
 				};
 				state.wheelcb = (evn) => {
 					_interrogate_onwheel(evn, state);
 				};
+
 				state.interrogatecb = (evn) => {
 					interrogate_callback(evn, state);
 				};
