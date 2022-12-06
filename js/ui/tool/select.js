@@ -271,7 +271,6 @@ const selectTransformTool = () =>
 
 						// Draw selection box
 						uiCtx.strokeStyle = "#FFF";
-						console.debug(bbvp);
 						uiCtx.setLineDash([4, 2]);
 						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
 						uiCtx.setLineDash([]);

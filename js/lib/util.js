@@ -255,7 +255,6 @@ function cropCanvas(sourceCanvas, options = {}) {
  * If null, opens image in new tab.
  */
 function downloadCanvas(options = {}) {
-	console.debug(imageCollection);
 	defaultOpt(options, {
 		cropToContent: true,
 		canvas: uil.getVisible({

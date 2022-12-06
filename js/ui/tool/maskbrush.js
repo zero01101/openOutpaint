@@ -17,7 +17,7 @@ const setMask = (state) => {
 			canvas.classList.remove("display", "hold", "clear");
 			break;
 		default:
-			console.debug(`Invalid mask type: ${state}`);
+			console.debug(`[maskbrush.setMask] Invalid mask type: ${state}`);
 			break;
 	}
 };

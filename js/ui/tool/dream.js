@@ -368,7 +368,6 @@ const dream_generate_callback = async (evn, state) => {
 
 		// Get visible pixels
 		const visibleCanvas = uil.getVisible(bb);
-		console.debug(visibleCanvas);
 
 		// Use txt2img if canvas is blank
 		if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
