@@ -713,7 +713,14 @@ const dream_img2img_callback = (evn, state) => {
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (evn, state, tool, textStyle = "#FFF5") => {
+const _reticle_draw = (evn, state, tool, style = {}) => {
+	defaultOpt(style, {
+		sizeTextStyle: "#FFF5",
+		toolTextStyle: "#FFF5",
+		reticleWidth: 1,
+		reticleStyle: "#FFF",
+	});
+
 	const bb = getBoundingBox(
 		evn.x,
 		evn.y,
@@ -730,8 +737,8 @@ const _reticle_draw = (evn, state, tool, textStyle = "#FFF5") => {
 	uiCtx.save();
 
 	// draw targeting square reticle thingy cursor
-	uiCtx.lineWidth = 1;
-	uiCtx.strokeStyle = "#FFF";
+	uiCtx.lineWidth = style.reticleWidth;
+	uiCtx.strokeStyle = style.reticleStyle;
 	uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
 
 	uiCtx.font = `bold 20px Open Sans`;
@@ -743,14 +750,14 @@ const _reticle_draw = (evn, state, tool, textStyle = "#FFF5") => {
 		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
 
 		uiCtx.textAlign = "left";
-		uiCtx.fillStyle = "#FFF5";
+		uiCtx.fillStyle = style.toolTextStyle;
 		uiCtx.fillText(tool, bbvp.x + 10, bbvp.y + 10 + 20 * xshrink);
 	}
 
 	// Draw width and height
 	{
 		uiCtx.textAlign = "center";
-		uiCtx.fillStyle = textStyle;
+		uiCtx.fillStyle = style.sizeTextStyle;
 		uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
 		const xshrink = Math.min(
 			1,
@@ -866,7 +873,9 @@ const dreamTool = () =>
 							: state.cursorSize < stableDiffusionData.width
 							? "#BFB5"
 							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(evn, state, "Dream", style);
+					state.erasePrevReticle = _reticle_draw(evn, state, "Dream", {
+						sizeTextStyle: style,
+					});
 				};
 
 				state.redraw = () => {
@@ -999,7 +1008,16 @@ const img2imgTool = () =>
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state, "Img2Img");
+
+					const style =
+						state.cursorSize > stableDiffusionData.width
+							? "#FBB5"
+							: state.cursorSize < stableDiffusionData.width
+							? "#BFB5"
+							: "#FFF5";
+					state.erasePrevReticle = _reticle_draw(evn, state, "Img2Img", {
+						sizeTextStyle: style,
+					});
 
 					const bb = getBoundingBox(
 						evn.x,

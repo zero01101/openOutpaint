@@ -42,7 +42,11 @@ const interrogateTool = () =>
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state, "Interrogate");
+					state.erasePrevReticle = _reticle_draw(evn, state, "Interrogate", {
+						toolTextStyle: "#AFA5",
+						sizeTextStyle: "#AFA5",
+						reticleStyle: "#AFAF",
+					});
 				};
 				state.wheelcb = (evn) => {
 					_interrogate_onwheel(evn, state);
