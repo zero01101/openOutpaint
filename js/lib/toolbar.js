@@ -8,6 +8,10 @@ const toolbar = {
 	_toolbar_lock_indicator: document.getElementById("toolbar-lock-indicator"),
 
 	tools: [],
+	_current_tool: null,
+	get currentTool() {
+		return this._current_tool;
+	},
 
 	lock() {
 		toolbar._locked = true;
@@ -88,6 +92,12 @@ const toolbar = {
 			_element: null,
 			state: {},
 			options,
+			/**
+			 * If the tool has a redraw() function in its state, then run it
+			 */
+			redraw: () => {
+				tool.state.redraw && tool.state.redraw();
+			},
 			enable: (opt = null) => {
 				if (toolbar._locked) return;
 
@@ -100,12 +110,15 @@ const toolbar = {
 
 				tool._element && tool._element.classList.add("using");
 				tool.enabled = true;
+
+				this._current_tool = tool;
 				enable(tool.state, opt);
 			},
 			disable: (opt = null) => {
 				tool._element && tool._element.classList.remove("using");
-				disable(tool.state, opt);
+				this._current_tool = null;
 				tool.enabled = false;
+				disable(tool.state, opt);
 			},
 		};
 

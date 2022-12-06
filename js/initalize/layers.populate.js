@@ -153,6 +153,7 @@ viewport.transform(imageCollection.element);
 mouse.listen.window.onwheel.on((evn) => {
 	if (evn.evn.ctrlKey) {
 		evn.evn.preventDefault();
+
 		const pcx = viewport.cx;
 		const pcy = viewport.cy;
 		if (evn.delta < 0) {
@@ -165,6 +166,8 @@ mouse.listen.window.onwheel.on((evn) => {
 		viewport.cy = pcy;
 
 		viewport.transform(imageCollection.element);
+
+		toolbar.currentTool.redraw();
 
 		if (debug) {
 			debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
