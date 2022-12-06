@@ -113,6 +113,7 @@ function startup() {
 	drawBackground();
 	changeSampler();
 	changeMaskBlur();
+	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
 }
