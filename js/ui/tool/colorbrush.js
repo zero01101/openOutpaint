@@ -3,7 +3,12 @@ const _color_brush_draw_callback = (evn, state) => {
 
 	ctx.strokeStyle = state.color;
 
-	ctx.filter = "blur(" + state.brushBlur + "px)";
+	ctx.filter =
+		"blur(" +
+		state.brushBlur +
+		"px) opacity(" +
+		state.brushOpacity * 100 +
+		"%)";
 	ctx.lineWidth = state.brushSize;
 	ctx.beginPath();
 	ctx.moveTo(
@@ -13,6 +18,7 @@ const _color_brush_draw_callback = (evn, state) => {
 	ctx.lineTo(evn.x, evn.y);
 	ctx.lineJoin = ctx.lineCap = "round";
 	ctx.stroke();
+	ctx.filter = null;
 };
 
 const _color_brush_erase_callback = (evn, state, ctx) => {
@@ -35,8 +41,14 @@ const colorBrushTool = () =>
 		"Color Brush",
 		(state, opt) => {
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-			state.movecb({...mouse.coords.world.pos});
+			uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			state.movecb({
+				...mouse.coords.world.pos,
+				evn: {
+					clientX: mouse.coords.window.pos.x,
+					clientY: mouse.coords.window.pos.y,
+				},
+			});
 
 			// Layer for eyedropper magnifiying glass
 			state.glassLayer = imageCollection.registerLayer(null, {
@@ -44,21 +56,24 @@ const colorBrushTool = () =>
 				resolution: {w: 7, h: 7},
 				after: maskPaintLayer,
 			});
-			state.glassLayer.canvas.style.display = "none";
+			state.glassLayer.hide();
 			state.glassLayer.canvas.style.imageRendering = "pixelated";
 			state.glassLayer.canvas.style.borderRadius = "50%";
 
 			state.drawLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				ctxOptions: {willReadFrequently: true},
 			});
 			state.eraseLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				ctxOptions: {willReadFrequently: true},
 			});
 			state.eraseLayer.canvas.style.display = "none";
+			state.eraseLayer.hide();
 			state.eraseBackup = imageCollection.registerLayer(null, {
 				after: imgLayer,
 			});
-			state.eraseBackup.canvas.style.display = "none";
+			state.eraseBackup.hide();
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.movecb);
@@ -105,6 +120,8 @@ const colorBrushTool = () =>
 			// Cancel any eyedropping
 			state.drawing = false;
 			state.disableDropper();
+
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
 			init: (state) => {
@@ -119,6 +136,7 @@ const colorBrushTool = () =>
 				state.color = "#FFFFFF";
 				state.brushSize = 32;
 				state.brushBlur = 0;
+				state.brushOpacity = 1;
 				state.affectMask = true;
 				state.setBrushSize = (size) => {
 					state.brushSize = size;
@@ -131,13 +149,13 @@ const colorBrushTool = () =>
 				state.enableDropper = () => {
 					state.eyedropper = true;
 					state.movecb(lastMouseMoveEvn);
-					state.glassLayer.canvas.style.display = "block";
+					state.glassLayer.unhide();
 				};
 
 				state.disableDropper = () => {
 					state.eyedropper = false;
 					state.movecb(lastMouseMoveEvn);
-					state.glassLayer.canvas.style.display = "none";
+					state.glassLayer.hide();
 				};
 
 				let lastMouseMoveEvn = {x: 0, y: 0};
@@ -145,26 +163,43 @@ const colorBrushTool = () =>
 				state.movecb = (evn) => {
 					lastMouseMoveEvn = evn;
 
-					// draw drawing cursor
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					const vcp = {x: evn.evn.clientX, y: evn.evn.clientY};
 
+					// draw drawing cursor
+					uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+
+					uiCtx.beginPath();
+					uiCtx.arc(
+						vcp.x,
+						vcp.y,
+						(state.eyedropper ? 50 : state.brushSize / 2) * viewport.zoom,
+						0,
+						2 * Math.PI,
+						true
+					);
+					uiCtx.strokeStyle = "black";
+					uiCtx.stroke();
+
+					// Draw eyedropper cursor and magnifiying glass
 					if (state.eyedropper) {
 						const bb = getBoundingBox(evn.x, evn.y, 7, 7, false);
 
-						const canvas = getVisible(bb);
+						const canvas = uil.getVisible(bb, {includeBg: true});
 						state.glassLayer.ctx.clearRect(0, 0, 7, 7);
 						state.glassLayer.ctx.drawImage(canvas, 0, 0);
 						state.glassLayer.moveTo(evn.x - 50, evn.y - 50);
-
-						ovCtx.beginPath();
-						ovCtx.arc(evn.x, evn.y, 50, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 7x on a line???
-						ovCtx.strokeStyle = "black";
-						ovCtx.stroke();
 					} else {
-						ovCtx.beginPath();
-						ovCtx.arc(evn.x, evn.y, state.brushSize / 2, 0, 2 * Math.PI, true); // for some reason 4x on an arc is === to 7x on a line???
-						ovCtx.fillStyle = state.color + "50";
-						ovCtx.fill();
+						uiCtx.beginPath();
+						uiCtx.arc(
+							vcp.x,
+							vcp.y,
+							(state.brushSize / 2) * viewport.zoom,
+							0,
+							2 * Math.PI,
+							true
+						);
+						uiCtx.fillStyle = state.color + "50";
+						uiCtx.fill();
 					}
 				};
 
@@ -174,7 +209,7 @@ const colorBrushTool = () =>
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
-						ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+						uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 						state.movecb(evn);
 					}
 				};
@@ -211,13 +246,20 @@ const colorBrushTool = () =>
 				state.leftclickcb = (evn) => {
 					if (evn.target === imageCollection.inputElement && state.eyedropper) {
 						const bb = getBoundingBox(evn.x, evn.y, 1, 1, false);
-						const visibleCanvas = getVisible(bb);
+						const visibleCanvas = uil.getVisible(bb);
 						const dat = visibleCanvas
 							.getContext("2d")
 							.getImageData(0, 0, 1, 1).data;
 						state.setColor(
 							"#" + ((dat[0] << 16) | (dat[1] << 8) | dat[2]).toString(16)
 						);
+						state.disableDropper();
+					}
+				};
+
+				state.rightclickcb = (evn) => {
+					if (evn.target === imageCollection.inputElement && state.eyedropper) {
+						state.disableDropper();
 					}
 				};
 
@@ -255,29 +297,35 @@ const colorBrushTool = () =>
 				};
 
 				state.erasestartcb = (evn) => {
+					if (state.eyedropper) return;
+					state.erasing = true;
 					if (state.affectMask) _mask_brush_erase_callback(evn, state);
 
 					// Make a backup of the current image to apply erase later
 					const bkpcanvas = state.eraseBackup.canvas;
 					const bkpctx = state.eraseBackup.ctx;
 					bkpctx.clearRect(0, 0, bkpcanvas.width, bkpcanvas.height);
-					bkpctx.drawImage(imgCanvas, 0, 0);
+					bkpctx.drawImage(uil.canvas, 0, 0);
 
-					imgCtx.globalCompositeOperation = "destination-out";
-					_color_brush_erase_callback(evn, state, imgCtx);
-					imgCtx.globalCompositeOperation = "source-over";
+					uil.ctx.globalCompositeOperation = "destination-out";
+					_color_brush_erase_callback(evn, state, uil.ctx);
+					uil.ctx.globalCompositeOperation = "source-over";
 					_color_brush_erase_callback(evn, state, state.eraseLayer.ctx);
 				};
 
 				state.erasecb = (evn) => {
+					if (state.eyedropper || !state.erasing) return;
 					if (state.affectMask) _mask_brush_erase_callback(evn, state);
-					imgCtx.globalCompositeOperation = "destination-out";
-					_color_brush_erase_callback(evn, state, imgCtx);
-					imgCtx.globalCompositeOperation = "source-over";
+					uil.ctx.globalCompositeOperation = "destination-out";
+					_color_brush_erase_callback(evn, state, uil.ctx);
+					uil.ctx.globalCompositeOperation = "source-over";
 					_color_brush_erase_callback(evn, state, state.eraseLayer.ctx);
 				};
 
 				state.eraseendcb = (evn) => {
+					if (!state.erasing) return;
+					state.erasing = false;
+
 					const canvas = state.eraseLayer.canvas;
 					const ctx = state.eraseLayer.ctx;
 
@@ -286,8 +334,9 @@ const colorBrushTool = () =>
 					const cropped = cropCanvas(canvas, {border: 10});
 					const bb = cropped.bb;
 
-					imgCtx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
-					imgCtx.drawImage(bkpcanvas, 0, 0);
+					uil.ctx.filter = null;
+					uil.ctx.clearRect(0, 0, uil.canvas.width, uil.canvas.height);
+					uil.ctx.drawImage(bkpcanvas, 0, 0);
 
 					commands.runCommand("eraseImage", "Color Brush Erase", {
 						mask: cropped.canvas,
@@ -325,7 +374,21 @@ const colorBrushTool = () =>
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
 
-					// Brush size slider
+					// Brush opacity slider
+					const brushOpacitySlider = _toolbar_input.slider(
+						state,
+						"brushOpacity",
+						"Brush Opacity",
+						{
+							min: 0,
+							max: 1,
+							step: 0.05,
+							textStep: 0.001,
+						}
+					);
+					state.ctxmenu.brushOpacitySlider = brushOpacitySlider.slider;
+
+					// Brush blur slider
 					const brushBlurSlider = _toolbar_input.slider(
 						state,
 						"brushBlur",
@@ -364,7 +427,8 @@ const colorBrushTool = () =>
 						"eyedropper"
 					);
 					brushColorEyeDropper.addEventListener("click", () => {
-						state.enableDropper();
+						if (state.eyedropper) state.disableDropper();
+						else state.enableDropper();
 					});
 
 					brushColorPickerWrapper.appendChild(brushColorPicker);
@@ -375,6 +439,7 @@ const colorBrushTool = () =>
 
 				menu.appendChild(state.ctxmenu.affectMaskCheckbox);
 				menu.appendChild(state.ctxmenu.brushSizeSlider);
+				menu.appendChild(state.ctxmenu.brushOpacitySlider);
 				menu.appendChild(state.ctxmenu.brushBlurSlider);
 				menu.appendChild(state.ctxmenu.brushColorPicker);
 			},

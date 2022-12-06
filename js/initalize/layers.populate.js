@@ -12,9 +12,11 @@ const bgLayer = imageCollection.registerLayer("bg", {
 });
 const imgLayer = imageCollection.registerLayer("image", {
 	name: "Image",
+	ctxOptions: {desynchronized: true},
 });
 const maskPaintLayer = imageCollection.registerLayer("mask", {
 	name: "Mask Paint",
+	ctxOptions: {desynchronized: true},
 });
 const ovLayer = imageCollection.registerLayer("overlay", {
 	name: "Overlay",
@@ -37,25 +39,12 @@ const ovCtx = ovLayer.ctx;
 const debugCanvas = debugLayer.canvas; // where mouse cursor renders
 const debugCtx = debugLayer.ctx;
 
-/**
- * Function that returns a canvas with full visible information of a certain bounding box.
- *
- * For now, only the img is used.
- *
- * @param {BoundingBox} bb The bouding box to get visible data from
- * @returns {HTMLCanvasElement}	The canvas element containing visible image data
- */
-const getVisible = (bb) => {
-	const canvas = document.createElement("canvas");
-	const ctx = canvas.getContext("2d");
-
-	canvas.width = bb.w;
-	canvas.height = bb.h;
-	ctx.drawImage(bgLayer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-	ctx.drawImage(imgCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-
-	return canvas;
-};
+/* WIP: Most cursors shouldn't need a zoomable canvas */
+/** @type {HTMLCanvasElement} */
+const uiCanvas = document.getElementById("layer-overlay"); // where mouse cursor renders
+uiCanvas.width = uiCanvas.clientWidth;
+uiCanvas.height = uiCanvas.clientHeight;
+const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 
 debugLayer.hide(); // Hidden by default
 
@@ -131,6 +120,15 @@ const viewport = {
 	get h() {
 		return (window.innerHeight * 1) / this.zoom;
 	},
+	viewToCanvas(x, y) {
+		return {x, y};
+	},
+	canvasToView(x, y) {
+		return {
+			x: window.innerWidth * ((x - this.cx) / this.w) + window.innerWidth / 2,
+			y: window.innerHeight * ((y - this.cy) / this.h) + window.innerHeight / 2,
+		};
+	},
 	/**
 	 * Apply transformation
 	 *
@@ -155,6 +153,7 @@ viewport.transform(imageCollection.element);
 mouse.listen.window.onwheel.on((evn) => {
 	if (evn.evn.ctrlKey) {
 		evn.evn.preventDefault();
+
 		const pcx = viewport.cx;
 		const pcy = viewport.cy;
 		if (evn.delta < 0) {
@@ -167,6 +166,8 @@ mouse.listen.window.onwheel.on((evn) => {
 		viewport.cy = pcy;
 
 		viewport.transform(imageCollection.element);
+
+		toolbar.currentTool.redraw();
 
 		if (debug) {
 			debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
@@ -210,4 +211,6 @@ mouse.listen.window.btn.middle.onpaintend.on((evn) => {
 
 window.addEventListener("resize", () => {
 	viewport.transform(imageCollection.element);
+	uiCanvas.width = uiCanvas.clientWidth;
+	uiCanvas.height = uiCanvas.clientHeight;
 });

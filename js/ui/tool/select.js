@@ -46,6 +46,9 @@ const selectTransformTool = () =>
 			state.reset();
 
 			// Resets cursor
+			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+
+			// Clears overlay
 			imageCollection.inputElement.style.cursor = "auto";
 		},
 		{
@@ -76,7 +79,7 @@ const selectTransformTool = () =>
 				state.lastMouseTarget = null;
 				state.lastMouseMove = null;
 
-				const redraw = () => {
+				state.redraw = () => {
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
 					state.movecb(state.lastMouseMove);
 				};
@@ -84,7 +87,7 @@ const selectTransformTool = () =>
 				// Clears selection and make things right
 				state.reset = () => {
 					if (state.selected)
-						imgCtx.drawImage(
+						uil.ctx.drawImage(
 							state.original.image,
 							state.original.x,
 							state.original.y
@@ -93,7 +96,7 @@ const selectTransformTool = () =>
 					if (state.dragging) state.dragging = null;
 					else state.selected = null;
 
-					redraw();
+					state.redraw();
 				};
 
 				// Selection bounding box object. Has some witchery to deal with handles.
@@ -188,6 +191,7 @@ const selectTransformTool = () =>
 				// Mouse move handler. As always, also renders cursor
 				state.movecb = (evn) => {
 					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 					imageCollection.inputElement.style.cursor = "auto";
 					state.lastMouseTarget = evn.target;
 					state.lastMouseMove = evn;
@@ -197,6 +201,10 @@ const selectTransformTool = () =>
 						x += snap(evn.x, 0, 64);
 						y += snap(evn.y, 0, 64);
 					}
+
+					const vpc = viewport.canvasToView(x, y);
+
+					uiCtx.save();
 
 					// Update scale
 					if (state.scaling) {
@@ -212,17 +220,23 @@ const selectTransformTool = () =>
 
 					// Draw dragging box
 					if (state.dragging) {
-						ovCtx.setLineDash([2, 2]);
-						ovCtx.lineWidth = 1;
-						ovCtx.strokeStyle = "#FFF";
+						uiCtx.setLineDash([2, 2]);
+						uiCtx.lineWidth = 1;
+						uiCtx.strokeStyle = "#FFF";
 
 						const ix = state.dragging.ix;
 						const iy = state.dragging.iy;
 
 						const bb = selectionBB(ix, iy, x, y);
 
-						ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-						ovCtx.setLineDash([]);
+						const bbvp = {
+							...viewport.canvasToView(bb.x, bb.y),
+							w: viewport.zoom * bb.w,
+							h: viewport.zoom * bb.h,
+						};
+
+						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
+						uiCtx.setLineDash([]);
 					}
 
 					if (state.selected) {
@@ -234,6 +248,12 @@ const selectTransformTool = () =>
 							y: state.selected.y,
 							w: state.selected.w,
 							h: state.selected.h,
+						};
+
+						const bbvp = {
+							...viewport.canvasToView(bb.x, bb.y),
+							w: viewport.zoom * bb.w,
+							h: viewport.zoom * bb.h,
 						};
 
 						// Draw Image
@@ -250,34 +270,40 @@ const selectTransformTool = () =>
 						);
 
 						// Draw selection box
-						ovCtx.setLineDash([4, 2]);
-						ovCtx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-						ovCtx.setLineDash([]);
+						uiCtx.strokeStyle = "#FFF";
+						uiCtx.setLineDash([4, 2]);
+						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
+						uiCtx.setLineDash([]);
 
 						// Draw Scaling/Rotation Origin
-						ovCtx.beginPath();
-						ovCtx.arc(
-							state.selected.x + state.selected.w / 2,
-							state.selected.y + state.selected.h / 2,
+						uiCtx.beginPath();
+						uiCtx.arc(
+							bbvp.x + bbvp.w / 2,
+							bbvp.y + bbvp.h / 2,
 							5,
 							0,
 							2 * Math.PI
 						);
-						ovCtx.stroke();
+						uiCtx.stroke();
 
 						// Draw Scaling Handles
 						let cursorInHandle = false;
 						state.selected.handles().forEach((handle) => {
+							const bbvph = {
+								...viewport.canvasToView(handle.x, handle.y),
+								w: viewport.zoom * handle.w,
+								h: viewport.zoom * handle.h,
+							};
 							if (handle.contains(evn.x, evn.y)) {
 								cursorInHandle = true;
-								ovCtx.strokeRect(
-									handle.x - 1,
-									handle.y - 1,
-									handle.w + 2,
-									handle.h + 2
+								uiCtx.strokeRect(
+									bbvph.x - 1,
+									bbvph.y - 1,
+									bbvph.w + 2,
+									bbvph.h + 2
 								);
 							} else {
-								ovCtx.strokeRect(handle.x, handle.y, handle.w, handle.h);
+								uiCtx.strokeRect(bbvph.x, bbvph.y, bbvph.w, bbvph.h);
 							}
 						});
 
@@ -287,15 +313,17 @@ const selectTransformTool = () =>
 					}
 
 					// Draw current cursor location
-					ovCtx.lineWidth = 3;
-					ovCtx.strokeStyle = "#FFF";
+					uiCtx.lineWidth = 3;
+					uiCtx.strokeStyle = "#FFF";
 
-					ovCtx.beginPath();
-					ovCtx.moveTo(x, y + 10);
-					ovCtx.lineTo(x, y - 10);
-					ovCtx.moveTo(x + 10, y);
-					ovCtx.lineTo(x - 10, y);
-					ovCtx.stroke();
+					uiCtx.beginPath();
+					uiCtx.moveTo(vpc.x, vpc.y + 10);
+					uiCtx.lineTo(vpc.x, vpc.y - 10);
+					uiCtx.moveTo(vpc.x + 10, vpc.y);
+					uiCtx.lineTo(vpc.x - 10, vpc.y);
+					uiCtx.stroke();
+
+					uiCtx.restore();
 				};
 
 				// Handles left mouse clicks
@@ -312,7 +340,7 @@ const selectTransformTool = () =>
 
 					// If something is selected, commit changes to the canvas
 					if (state.selected) {
-						imgCtx.drawImage(
+						uil.ctx.drawImage(
 							state.selected.image,
 							state.original.x,
 							state.original.y
@@ -330,7 +358,7 @@ const selectTransformTool = () =>
 						state.original = null;
 						state.selected = null;
 
-						redraw();
+						state.redraw();
 					}
 				};
 
@@ -406,7 +434,7 @@ const selectTransformTool = () =>
 						const ctx = cvs.getContext("2d");
 
 						ctx.drawImage(
-							imgCanvas,
+							uil.canvas,
 							state.selected.x,
 							state.selected.y,
 							state.selected.w,
@@ -417,7 +445,7 @@ const selectTransformTool = () =>
 							state.selected.h
 						);
 
-						imgCtx.clearRect(
+						uil.ctx.clearRect(
 							state.selected.x,
 							state.selected.y,
 							state.selected.w,
@@ -431,7 +459,7 @@ const selectTransformTool = () =>
 
 						state.dragging = null;
 					}
-					redraw();
+					state.redraw();
 				};
 
 				// Handler for right clicks. Basically resets everything
@@ -449,7 +477,7 @@ const selectTransformTool = () =>
 							state.selected &&
 								commands.runCommand("eraseImage", "Erase Area", state.selected);
 							state.selected = null;
-							redraw();
+							state.redraw();
 					}
 				};
 
@@ -593,8 +621,10 @@ const selectTransformTool = () =>
 					createResourceButton.onclick = () => {
 						const image = document.createElement("img");
 						image.src = state.selected.image.toDataURL();
-						tools.stamp.state.addResource("Selection Resource", image);
-						tools.stamp.enable();
+						image.onload = () => {
+							tools.stamp.state.addResource("Selection Resource", image);
+							tools.stamp.enable();
+						};
 					};
 
 					actionArray.appendChild(saveSelectionButton);

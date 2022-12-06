@@ -17,15 +17,17 @@ const setMask = (state) => {
 			canvas.classList.remove("display", "hold", "clear");
 			break;
 		default:
-			console.debug(`Invalid mask type: ${state}`);
+			console.debug(`[maskbrush.setMask] Invalid mask type: ${state}`);
 			break;
 	}
 };
 
-const _mask_brush_draw_callback = (evn, state) => {
+const _mask_brush_draw_callback = (evn, state, opacity = 100) => {
 	maskPaintCtx.globalCompositeOperation = "source-over";
 	maskPaintCtx.strokeStyle = "black";
 
+	maskPaintCtx.filter =
+		"blur(" + state.brushBlur + "px) opacity(" + opacity + "%)";
 	maskPaintCtx.lineWidth = state.brushSize;
 	maskPaintCtx.beginPath();
 	maskPaintCtx.moveTo(
@@ -35,12 +37,16 @@ const _mask_brush_draw_callback = (evn, state) => {
 	maskPaintCtx.lineTo(evn.x, evn.y);
 	maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
 	maskPaintCtx.stroke();
+	maskPaintCtx.filter = null;
 };
 
-const _mask_brush_erase_callback = (evn, state) => {
+const _mask_brush_erase_callback = (evn, state, opacity = 100) => {
 	maskPaintCtx.globalCompositeOperation = "destination-out";
 	maskPaintCtx.strokeStyle = "black";
 
+	maskPaintCtx.filter = "blur(" + state.brushBlur + "px)";
+	maskPaintCtx.filter =
+		"blur(" + state.brushBlur + "px) opacity(" + opacity + "%)";
 	maskPaintCtx.lineWidth = state.brushSize;
 	maskPaintCtx.beginPath();
 	maskPaintCtx.moveTo(
@@ -50,34 +56,7 @@ const _mask_brush_erase_callback = (evn, state) => {
 	maskPaintCtx.lineTo(evn.x, evn.y);
 	maskPaintCtx.lineJoin = maskPaintCtx.lineCap = "round";
 	maskPaintCtx.stroke();
-};
-
-const _paint_mb_cursor = (state) => {
-	const v = state.brushSize;
-	state.cursorLayer.resize(v + 20, v + 20);
-
-	const ctx = state.cursorLayer.ctx;
-
-	ctx.clearRect(0, 0, v + 20, v + 20);
-	ctx.beginPath();
-	ctx.arc(
-		(v + 20) / 2,
-		(v + 20) / 2,
-		state.brushSize / 2,
-		0,
-		2 * Math.PI,
-		true
-	);
-	ctx.fillStyle = "#FFFFFF50";
-
-	ctx.fill();
-
-	if (state.preview) {
-		ctx.strokeStyle = "#000F";
-		ctx.setLineDash([4, 2]);
-		ctx.stroke();
-		ctx.setLineDash([]);
-	}
+	maskPaintCtx.filter = null;
 };
 
 const maskBrushTool = () =>
@@ -85,17 +64,9 @@ const maskBrushTool = () =>
 		"res/icons/paintbrush.svg",
 		"Mask Brush",
 		(state, opt) => {
-			// New layer for the cursor
-			state.cursorLayer = imageCollection.registerLayer(null, {
-				after: maskPaintLayer,
-				bb: {x: 0, y: 0, w: state.brushSize + 20, h: state.brushSize + 20},
-			});
-
-			_paint_mb_cursor(state);
-
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-			state.movecb({...mouse.coords.world.pos});
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+			state.redraw();
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.movecb);
@@ -109,10 +80,6 @@ const maskBrushTool = () =>
 			setMask("neutral");
 		},
 		(state, opt) => {
-			// Don't want to keep hogging resources
-			imageCollection.deleteLayer(state.cursorLayer);
-			state.cursorLayer = null;
-
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.movecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
@@ -126,6 +93,8 @@ const maskBrushTool = () =>
 			state.ctxmenu.previewMaskButton.classList.remove("active");
 			maskPaintCanvas.classList.remove("opaque");
 			state.preview = false;
+
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
 			init: (state) => {
@@ -133,9 +102,13 @@ const maskBrushTool = () =>
 					brushScrollSpeed: 1 / 4,
 					minBrushSize: 10,
 					maxBrushSize: 500,
+					minBlur: 0,
+					maxBlur: 30,
 				};
 
 				state.brushSize = 64;
+				state.brushBlur = 0;
+				state.brushOpacity = 1;
 				state.setBrushSize = (size) => {
 					state.brushSize = size;
 					state.ctxmenu.brushSizeRange.value = size;
@@ -145,21 +118,41 @@ const maskBrushTool = () =>
 				state.preview = false;
 
 				state.clearPrevCursor = () =>
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+
+				state.redraw = () => {
+					state.movecb({
+						...mouse.coords.world.pos,
+						evn: {
+							clientX: mouse.coords.window.pos.x,
+							clientY: mouse.coords.window.pos.y,
+						},
+					});
+				};
 
 				state.movecb = (evn) => {
-					state.cursorLayer.moveTo(
-						evn.x - state.brushSize / 2 - 10,
-						evn.y - state.brushSize / 2 - 10
-					);
+					const vcp = {x: evn.evn.clientX, y: evn.evn.clientY};
+					const scp = state.brushSize * viewport.zoom;
 
-					state.clearPrevCursor = () =>
-						ovCtx.clearRect(
-							evn.x - state.brushSize / 2 - 10,
-							evn.y - state.brushSize / 2 - 10,
-							evn.x + state.brushSize / 2 + 10,
-							evn.y + state.brushSize / 2 + 10
+					state.clearPrevCursor();
+					state;
+					clearPrevCursor = () =>
+						uiCtx.clearRect(
+							vcp.x - scp / 2 - 10,
+							vcp.y - scp / 2 - 10,
+							vcp.x + scp / 2 + 10,
+							vcp.y + scp / 2 + 10
 						);
+
+					uiCtx.beginPath();
+					uiCtx.arc(vcp.x, vcp.y, scp / 2, 0, 2 * Math.PI, true);
+					uiCtx.strokeStyle = "black";
+					uiCtx.stroke();
+
+					uiCtx.beginPath();
+					uiCtx.arc(vcp.x, vcp.y, scp / 2, 0, 2 * Math.PI, true);
+					uiCtx.fillStyle = "#FFFFFF50";
+					uiCtx.fill();
 				};
 
 				state.wheelcb = (evn) => {
@@ -168,16 +161,19 @@ const maskBrushTool = () =>
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
-						state.movecb(evn);
 					}
 				};
 
-				state.drawcb = (evn) => _mask_brush_draw_callback(evn, state);
-				state.erasecb = (evn) => _mask_brush_erase_callback(evn, state);
+				state.drawcb = (evn) =>
+					_mask_brush_draw_callback(evn, state, state.brushOpacity * 100);
+				state.erasecb = (evn) =>
+					_mask_brush_erase_callback(evn, state, state.brushOpacity * 100);
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
+
+					// Brush size slider
 					const brushSizeSlider = _toolbar_input.slider(
 						state,
 						"brushSize",
@@ -189,12 +185,40 @@ const maskBrushTool = () =>
 							textStep: 1,
 							cb: (v) => {
 								if (!state.cursorLayer) return;
-								_paint_mb_cursor(state);
+
+								state.redraw();
 							},
 						}
 					);
 					state.ctxmenu.brushSizeSlider = brushSizeSlider.slider;
 					state.setBrushSize = brushSizeSlider.setValue;
+
+					// Brush opacity slider
+					const brushOpacitySlider = _toolbar_input.slider(
+						state,
+						"brushOpacity",
+						"Brush Opacity",
+						{
+							min: 0,
+							max: 1,
+							step: 0.05,
+							textStep: 0.001,
+						}
+					);
+					state.ctxmenu.brushOpacitySlider = brushOpacitySlider.slider;
+
+					// Brush blur slider
+					const brushBlurSlider = _toolbar_input.slider(
+						state,
+						"brushBlur",
+						"Brush Blur",
+						{
+							min: state.config.minBlur,
+							max: state.config.maxBlur,
+							step: 1,
+						}
+					);
+					state.ctxmenu.brushBlurSlider = brushBlurSlider.slider;
 
 					// Some mask-related action buttons
 					const actionArray = document.createElement("div");
@@ -221,11 +245,12 @@ const maskBrushTool = () =>
 						if (previewMaskButton.classList.contains("active")) {
 							maskPaintCanvas.classList.remove("opaque");
 							state.preview = false;
-							_paint_mb_cursor(state);
+
+							state.redraw();
 						} else {
 							maskPaintCanvas.classList.add("opaque");
 							state.preview = true;
-							_paint_mb_cursor(state);
+							state.redraw();
 						}
 						previewMaskButton.classList.toggle("active");
 					};
@@ -239,6 +264,8 @@ const maskBrushTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.brushSizeSlider);
+				menu.appendChild(state.ctxmenu.brushOpacitySlider);
+				menu.appendChild(state.ctxmenu.brushBlurSlider);
 				menu.appendChild(state.ctxmenu.actionArray);
 			},
 			shortcut: "M",

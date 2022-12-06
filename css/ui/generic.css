@@ -113,3 +113,58 @@ select > option:checked::after {
 	mask-image: url("/res/icons/check.svg");
 	mask-size: contain;
 }
+/*************/
+/* UI styles */
+/*************/
+
+/* The separator */
+.ui.separator {
+	width: 80%;
+	margin: auto;
+	align-self: center;
+	border-top: 1px var(--c-hover) solid;
+}
+
+/* Icon button */
+.ui.square {
+	aspect-ratio: 1;
+}
+
+.ui.button {
+	cursor: pointer;
+
+	padding: 0;
+	margin: 0;
+	border: 0;
+	color: var(--c-text);
+	background-color: var(--c-primary);
+	transition-duration: 50ms;
+}
+
+.ui.button:hover {
+	background-color: var(--c-hover);
+}
+
+.ui.button:active {
+	background-color: var(--c-hover);
+	filter: brightness(120%);
+}
+
+.ui.button.icon {
+	display: flex;
+	align-items: stretch;
+}
+
+.ui.button.icon > *:first-child {
+	flex: 1;
+	margin: 3px;
+
+	-webkit-mask-position: center;
+	mask-position: center;
+
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	background-color: var(--c-text);
+}

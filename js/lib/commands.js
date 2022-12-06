@@ -4,9 +4,6 @@
 
 const _commands_events = new Observer();
 
-/** CommandNonExistentError */
-class CommandNonExistentError extends Error {}
-
 /** Global Commands Object */
 const commands = makeReadOnly(
 	{
@@ -32,7 +29,14 @@ const commands = makeReadOnly(
 		 */
 		async undo(n = 1) {
 			for (var i = 0; i < n && this.current > -1; i++) {
-				await this._history[this._current--].undo();
+				try {
+					await this._history[this._current--].undo();
+				} catch (e) {
+					console.warn("[commands] Failed to undo command");
+					console.warn(e);
+					this._current++;
+					break;
+				}
 			}
 		},
 		/**
@@ -42,7 +46,14 @@ const commands = makeReadOnly(
 		 */
 		async redo(n = 1) {
 			for (var i = 0; i < n && this.current + 1 < this._history.length; i++) {
-				await this._history[++this._current].redo();
+				try {
+					await this._history[++this._current].redo();
+				} catch {
+					console.warn("[commands] Failed to redo command");
+					console.warn(e);
+					this._current--;
+					break;
+				}
 			}
 		},
 
@@ -67,7 +78,7 @@ const commands = makeReadOnly(
 		 * @returns {Command}
 		 */
 		createCommand(name, run, undo, redo = run) {
-			const command = async function runWrapper(title, options) {
+			const command = async function runWrapper(title, options, extra) {
 				// Create copy of options and state object
 				const copy = {};
 				Object.assign(copy, options);
@@ -93,11 +104,11 @@ const commands = makeReadOnly(
 					return;
 				}
 
-				const undoWrapper = () => {
+				const undoWrapper = async () => {
 					console.debug(
 						`[commands] Undoing '${title}'[${name}], currently ${this._current}`
 					);
-					undo(title, state);
+					await undo(title, state);
 					_commands_events.emit({
 						id: entry.id,
 						name,
@@ -106,11 +117,11 @@ const commands = makeReadOnly(
 						current: this._current,
 					});
 				};
-				const redoWrapper = () => {
+				const redoWrapper = async () => {
 					console.debug(
 						`[commands] Redoing '${title}'[${name}], currently ${this._current}`
 					);
-					redo(title, copy, state);
+					await redo(title, copy, state);
 					_commands_events.emit({
 						id: entry.id,
 						name,
@@ -119,6 +130,11 @@ const commands = makeReadOnly(
 						current: this._current,
 					});
 				};
+
+				entry.undo = undoWrapper;
+				entry.redo = redoWrapper;
+
+				if (!extra.recordHistory) return entry;
 
 				// Add to history
 				if (commands._history.length > commands._current + 1) {
@@ -138,9 +154,6 @@ const commands = makeReadOnly(
 
 				commands._history.push(entry);
 				commands._current++;
-
-				entry.undo = undoWrapper;
-				entry.redo = redoWrapper;
 
 				_commands_events.emit({
 					id: entry.id,
@@ -163,13 +176,16 @@ const commands = makeReadOnly(
 		 * @param {string} name The name of the command to run
 		 * @param {string} title The display name of the command on the history panel view
 		 * @param {any} options The options to be sent to the command to be run
+		 * @return {Promise<{undo: () => void, redo: () => void}>} The command's return value
 		 */
-		runCommand(name, title, options = null) {
+		async runCommand(name, title, options = null, extra = {}) {
+			defaultOpt(extra, {
+				recordHistory: true,
+			});
 			if (!this._types[name])
-				throw new CommandNonExistentError(
-					`[commands] Command '${name}' does not exist`
-				);
-			this._types[name](title, options);
+				throw new ReferenceError(`[commands] Command '${name}' does not exist`);
+
+			return this._types[name](title, options, extra);
 		},
 	},
 	"commands",
@@ -192,7 +208,7 @@ commands.createCommand(
 
 		// Check if we have state
 		if (!state.context) {
-			const context = options.ctx || imgCtx;
+			const context = options.ctx || uil.ctx;
 			state.context = context;
 
 			// Saving what was in the canvas before the command
@@ -252,16 +268,10 @@ commands.createCommand(
 
 		// Check if we have state
 		if (!state.context) {
-			const context = options.ctx || imgCtx;
+			const context = options.ctx || uil.ctx;
 			state.context = context;
 
 			// Saving what was in the canvas before the command
-			const imgData = context.getImageData(
-				options.x,
-				options.y,
-				options.w,
-				options.h
-			);
 			state.box = {
 				x: options.x,
 				y: options.y,
@@ -272,7 +282,19 @@ commands.createCommand(
 			const cutout = document.createElement("canvas");
 			cutout.width = state.box.w;
 			cutout.height = state.box.h;
-			cutout.getContext("2d").putImageData(imgData, 0, 0);
+			cutout
+				.getContext("2d")
+				.drawImage(
+					context.canvas,
+					options.x,
+					options.y,
+					options.w,
+					options.h,
+					0,
+					0,
+					options.w,
+					options.h
+				);
 			state.original = new Image();
 			state.original.src = cutout.toDataURL();
 		}

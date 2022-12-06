@@ -20,30 +20,6 @@ body {
 	overflow: clip;
 }
 
-.container {
-	position: relative;
-}
-
-.backgroundCanvas {
-	background-color: #ccc;
-}
-
-.mainHSplit {
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-template-rows: repeat(2, 1fr);
-	grid-column-gap: 5px;
-	grid-row-gap: 5px;
-}
-
-.uiWrapper {
-	display: grid;
-	grid-template-columns: 1fr 15fr;
-	grid-template-rows: 1fr;
-	grid-column-gap: 5px;
-	grid-row-gap: 5px;
-}
-
 .collapsible {
 	background-color: rgb(0, 0, 0);
 	color: rgb(255, 255, 255);
@@ -88,28 +64,6 @@ body {
 	cursor: auto;
 }
 
-.canvasHolder {
-	position: relative;
-	width: 2560px;
-	height: 1440px;
-}
-
-.mainCanvases {
-	position: absolute;
-	top: 0px;
-	left: 0px;
-	width: 2560px;
-	height: 1440px;
-}
-
-.masks {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	grid-template-rows: 1fr;
-	grid-column-gap: 0px;
-	grid-row-gap: 0px;
-}
-
 /* Mask colors for mask inversion */
 /* Filters are some magic acquired at https://codepen.io/sosuke/pen/Pjoqqp */
 .mask-canvas {
@@ -133,13 +87,6 @@ body {
 .mask-canvas.display.hold {
 	filter: invert(41%) sepia(16%) saturate(5181%) hue-rotate(218deg)
 		brightness(103%) contrast(108%);
-}
-
-.strokeText {
-	-webkit-text-stroke: 1px #000;
-	font-size: 150%;
-	font-weight: 600;
-	color: #fff;
 }
 
 .wideSelect {

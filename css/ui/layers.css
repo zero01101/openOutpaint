@@ -1,0 +1,134 @@
+.layer-manager {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+
+	border-radius: 5px;
+	overflow: hidden;
+
+	background-color: var(--c-primary);
+}
+
+#layer-list {
+	height: 200px;
+
+	overflow-y: auto;
+
+	background-color: var(--c-primary);
+
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+#layer-list > *:first-child {
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+#layer-list .ui-layer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	height: 25px;
+	padding-left: 5px;
+	padding-right: 5px;
+
+	cursor: pointer;
+
+	color: var(--c-text);
+
+	transition-duration: 50ms;
+}
+
+#layer-list .ui-layer.active {
+	background-color: var(--c-active);
+}
+#layer-list .ui-layer.active:hover,
+#layer-list .ui-layer:hover {
+	background-color: var(--c-hover);
+}
+#layer-list .ui-layer.active:active,
+#layer-list .ui-layer:active {
+	background-color: var(--c-hover);
+	filter: brightness(120%);
+}
+
+#layer-list .ui-layer > .title {
+	flex: 1;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+
+	background-color: transparent;
+
+	border: 0;
+	color: var(--c-text);
+}
+
+#layer-list .ui-layer > .actions {
+	display: flex;
+	align-self: stretch;
+}
+
+#layer-list .actions > button {
+	display: flex;
+	align-items: stretch;
+
+	padding: 0;
+
+	width: 25px;
+	aspect-ratio: 1;
+
+	background-color: transparent;
+	border: 0;
+	cursor: pointer;
+}
+
+#layer-list .ui-layer > .actions > *:hover > * {
+	margin: 2px;
+}
+
+#layer-list .actions > button > *:first-child {
+	flex: 1;
+	margin: 3px;
+
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	background-color: var(--c-text);
+}
+
+#layer-list .actions > .rename-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/edit.svg");
+	mask-image: url("/res/icons/edit.svg");
+}
+
+#layer-list .actions > .delete-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/trash.svg");
+	mask-image: url("/res/icons/trash.svg");
+}
+
+#layer-list .actions > .hide-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/eye.svg");
+	mask-image: url("/res/icons/eye.svg");
+}
+#layer-list .hidden .actions > .hide-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/eye-off.svg");
+	mask-image: url("/res/icons/eye-off.svg");
+}
+
+.layer-manager > .separator {
+	width: calc(100% - 10px);
+}
+
+.layer-manager > .layer-list-actions {
+	display: flex;
+	padding: 0;
+
+	justify-content: stretch;
+}
+
+.layer-manager > .layer-list-actions > * {
+	flex: 1;
+	height: 25px;
+}

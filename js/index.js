@@ -113,8 +113,8 @@ function startup() {
 	drawBackground();
 	changeSampler();
 	changeMaskBlur();
+	changeSmoothRendering();
 	changeSeed();
-	changeOverMaskPx();
 	changeHiResFix();
 }
 
@@ -331,116 +331,28 @@ async function testHostConnection() {
 
 function newImage(evt) {
 	clearPaintedMask();
-	clearBackupMask();
-	commands.runCommand("eraseImage", "Clear Canvas", {
-		x: 0,
-		y: 0,
-		w: imgCanvas.width,
-		h: imgCanvas.height,
+	uil.layers.forEach(({layer}) => {
+		commands.runCommand("eraseImage", "Clear Canvas", {
+			x: 0,
+			y: 0,
+			w: layer.canvas.width,
+			h: layer.canvas.height,
+			ctx: layer.ctx,
+		});
 	});
-}
-
-function prevImg(evt) {
-	if (imageIndex == 0) {
-		imageIndex = totalImagesReturned;
-	}
-	changeImg(false);
-}
-
-function nextImg(evt) {
-	if (imageIndex == totalImagesReturned - 1) {
-		imageIndex = -1;
-	}
-	changeImg(true);
-}
-
-function changeImg(forward) {
-	const img = new Image();
-	tempCtx.clearRect(0, 0, tempCtx.width, tempCtx.height);
-	img.onload = function () {
-		tempCtx.drawImage(img, tmpImgXYWH.x, tmpImgXYWH.y); //imgCtx for actual image, tmp for... holding?
-	};
-	var tmpIndex = document.getElementById("currentImgIndex");
-	if (forward) {
-		imageIndex++;
-	} else {
-		imageIndex--;
-	}
-	tmpIndex.innerText = imageIndex + 1;
-	// load the image data after defining the closure
-	img.src = "data:image/png;base64," + returnedImages[imageIndex]; //TODO need way to dream batches and select from results
-}
-
-function removeChoiceButtons(evt) {
-	const element = document.getElementById("veryTempDiv");
-	element.remove();
-	tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-}
-
-function backupAndClearMask(x, y, w, h) {
-	var clearArea = maskPaintCtx.createImageData(w, h);
-	backupMaskChunk = maskPaintCtx.getImageData(x, y, w, h);
-	backupMaskX = x;
-	backupMaskY = y;
-	var clearD = clearArea.data;
-	for (i = 0; i < clearD.length; i += 4) {
-		clearD[i] = 0;
-		clearD[i + 1] = 0;
-		clearD[i + 2] = 0;
-		clearD[i + 3] = 0;
-	}
-	maskPaintCtx.putImageData(clearArea, x, y);
-}
-
-function restoreBackupMask() {
-	// reapply mask if exists
-	if (backupMaskChunk != null && backupMaskX != null && backupMaskY != null) {
-		// backup mask data exists
-		var iData = new ImageData(
-			backupMaskChunk.data,
-			backupMaskChunk.height,
-			backupMaskChunk.width
-		);
-		maskPaintCtx.putImageData(iData, backupMaskX, backupMaskY);
-	}
-}
-
-function clearBackupMask() {
-	// clear backupmask
-	backupMaskChunk = null;
-	backupMaskX = null;
-	backupMaskY = null;
-}
-
-function clearImgMask() {
-	imgCtx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
 }
 
 function clearPaintedMask() {
 	maskPaintCtx.clearRect(0, 0, maskPaintCanvas.width, maskPaintCanvas.height);
 }
 
-function placeImage() {
-	const img = new Image();
-	img.onload = function () {
-		commands.runCommand("drawImage", "Image Dream", {
-			x: tmpImgXYWH.x,
-			y: tmpImgXYWH.y,
-			image: img,
-		});
-		tmpImgXYWH = {};
-		returnedImages = null;
-	};
-	// load the image data after defining the closure
-	img.src = "data:image/png;base64," + returnedImages[imageIndex];
-}
+function march(bb, options = {}) {
+	defaultOpt(options, {
+		style: "#FFFF",
+		width: "2px",
+		filter: null,
+	});
 
-function sleep(ms) {
-	// what was this even for, anyway?
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function march(bb) {
 	const expanded = {...bb};
 	expanded.x--;
 	expanded.y--;
@@ -455,7 +367,7 @@ function march(bb) {
 	let offset = 0;
 
 	const interval = setInterval(() => {
-		drawMarchingAnts(layer.ctx, bb, offset++);
+		drawMarchingAnts(layer.ctx, bb, offset++, options);
 		offset %= 12;
 	}, 20);
 
@@ -465,13 +377,18 @@ function march(bb) {
 	};
 }
 
-function drawMarchingAnts(ctx, bb, offset) {
+function drawMarchingAnts(ctx, bb, offset, options) {
+	ctx.save();
+
 	ctx.clearRect(0, 0, bb.w + 2, bb.h + 2);
-	ctx.strokeStyle = "#FFFFFFFF"; //"#55000077";
-	ctx.strokeWidth = "2px";
+	ctx.strokeStyle = options.style;
+	ctx.strokeWidth = options.width;
+	ctx.filter = options.filter;
 	ctx.setLineDash([4, 2]);
 	ctx.lineDashOffset = -offset;
 	ctx.strokeRect(1, 1, bb.w, bb.h);
+
+	ctx.restore();
 }
 
 function changeSampler() {
@@ -563,10 +480,6 @@ makeSlider(
 
 makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
 
-function changeSnapMode() {
-	snapToGrid = document.getElementById("cbxSnap").checked;
-}
-
 function changeMaskBlur() {
 	stableDiffusionData.mask_blur = parseInt(
 		document.getElementById("maskBlur").value
@@ -579,20 +492,22 @@ function changeSeed() {
 	localStorage.setItem("seed", stableDiffusionData.seed);
 }
 
-function changeOverMaskPx() {
-	// overMaskPx = document.getElementById("overMaskPx").value;
-	// localStorage.setItem("overmask_px", overMaskPx);
-}
-
 function changeHiResFix() {
 	stableDiffusionData.enable_hr = Boolean(
 		document.getElementById("cbxHRFix").checked
 	);
 	localStorage.setItem("enable_hr", stableDiffusionData.enable_hr);
 }
+function changeSmoothRendering() {
+	const layers = document.getElementById("layer-render");
+	if (document.getElementById("cbxSmooth").checked) {
+		layers.classList.remove("pixelated");
+	} else {
+		layers.classList.add("pixelated");
+	}
+}
 
-function isCanvasBlank(x, y, w, h, specifiedCanvas) {
-	var canvas = document.getElementById(specifiedCanvas.id);
+function isCanvasBlank(x, y, w, h, canvas) {
 	return !canvas
 		.getContext("2d")
 		.getImageData(x, y, w, h)
@@ -871,7 +786,14 @@ async function upscaleAndDownload() {
 	// get cropped canvas, send it to upscaler, download result
 	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
 	var upscaler = document.getElementById("upscalers").value;
-	var croppedCanvas = cropCanvas(imgCanvas);
+	var croppedCanvas = cropCanvas(
+		uil.getVisible({
+			x: 0,
+			y: 0,
+			w: imageCollection.size.w,
+			h: imageCollection.size.h,
+		})
+	);
 	if (croppedCanvas != null) {
 		var upscaler = document.getElementById("upscalers").value;
 		var url =
@@ -936,15 +858,6 @@ function loadSettings() {
 			? false
 			: localStorage.getItem("enable_hr")
 	);
-	var _enable_erase = Boolean(
-		localStorage.getItem("enable_erase") == (null || "false")
-			? false
-			: localStorage.getItem("enable_erase")
-	);
-	var _overmask_px =
-		localStorage.getItem("overmask_px") == null
-			? 0
-			: localStorage.getItem("overmask_px");
 
 	// set the values into the UI
 	document.getElementById("prompt").value = String(_prompt);
@@ -955,7 +868,6 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
-	// document.getElementById("overMaskPx").value = Number(_overmask_px);
 }
 
 imageCollection.element.addEventListener(
