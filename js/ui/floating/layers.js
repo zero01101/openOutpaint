@@ -349,15 +349,15 @@ commands.createCommand(
 				_hidden: false,
 				set hidden(v) {
 					if (v) {
-						uil._hidden = true;
-						uil.layer.hide(v);
+						this._hidden = true;
+						this.layer.hide(v);
 					} else {
-						uil._hidden = false;
-						uil.layer.unhide(v);
+						this._hidden = false;
+						this.layer.unhide(v);
 					}
 				},
 				get hidden() {
-					return uil._hidden;
+					return this._hidden;
 				},
 				entry: null,
 				layer,
