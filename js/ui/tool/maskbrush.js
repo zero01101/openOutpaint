@@ -161,9 +161,6 @@ const maskBrushTool = () =>
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
-						state.movecb(evn);
-					} else {
-						state.movecb(evn);
 					}
 				};
 
