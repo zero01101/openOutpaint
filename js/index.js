@@ -264,6 +264,7 @@ async function testHostConnection() {
 				setConnectionStatus("online");
 				// Load data as soon as connection is first stablished
 				if (firstTimeOnline) {
+					getConfig();
 					getStyles();
 					getSamplers();
 					getUpscalers();
@@ -676,6 +677,65 @@ function changeModel() {
 					error
 			);
 		});
+}
+
+async function getConfig() {
+	var url = document.getElementById("host").value + "/sdapi/v1/options";
+
+	let message =
+		"The following options for the AUTOMATIC1111's webui are not recommended to use with this software:";
+
+	try {
+		const response = await fetch(url);
+
+		const data = await response.json();
+
+		let wrong = false;
+
+		// Check if img2img color correction is disabled and inpainting mask weight is set to one
+		// TODO: API Seems bugged for retrieving inpainting mask weight - returning 0 for all values different than 1.0
+		if (data.img2img_color_correction) {
+			message += "\n - Image to Image Color Correction: false recommended";
+			wrong = true;
+		}
+
+		if (data.inpainting_mask_weight < 1.0) {
+			message += `\n - Inpainting Conditioning Mask Strength: 1.0 recommended`;
+			wrong = true;
+		}
+
+		message += "\n\nShould these values be changed to the recommended ones?";
+
+		if (!wrong) {
+			console.info("[index] WebUI Settings set as recommended.");
+			return;
+		}
+
+		console.info(
+			"[index] WebUI Settings not set as recommended. Prompting for changing settings automatically."
+		);
+
+		if (!confirm(message)) return;
+
+		try {
+			await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					img2img_color_correction: false,
+					inpainting_mask_weight: 1.0,
+				}),
+			});
+		} catch (e) {
+			console.warn("[index] Failed to fetch WebUI Configuration");
+			console.warn(e);
+		}
+	} catch (e) {
+		console.warn("[index] Failed to fetch WebUI Configuration");
+		console.warn(e);
+	}
 }
 
 async function getStyles() {
