@@ -101,6 +101,10 @@ const selectTransformTool = () =>
 
 				// Selection bounding box object. Has some witchery to deal with handles.
 				const selectionBB = (x1, y1, x2, y2) => {
+					x1 = Math.round(x1);
+					y1 = Math.round(y1);
+					x2 = Math.round(x2);
+					y2 = Math.round(y2);
 					return {
 						original: {
 							x: Math.min(x1, x2),
