@@ -7,7 +7,6 @@ const uil = {
 	layers: [],
 	_active: null,
 	set active(v) {
-		console.debug(v);
 		Array.from(this._ui_layer_list.children).forEach((child) => {
 			child.classList.remove("active");
 		});
