@@ -1,6 +1,28 @@
-document.querySelectorAll(".floating-window").forEach((w) => {
-	makeDraggable(w);
-});
+document.querySelectorAll(".floating-window").forEach(
+	/**
+	 * Runs for each floating window
+	 *
+	 * @param {HTMLDivElement} w
+	 */
+	(w) => {
+		makeDraggable(w);
+		w.addEventListener(
+			"wheel",
+			(e) => {
+				e.stopPropagation();
+			},
+			{passive: false}
+		);
+
+		w.addEventListener(
+			"click",
+			(e) => {
+				e.stopPropagation();
+			},
+			{passive: false}
+		);
+	}
+);
 
 var coll = document.getElementsByClassName("collapsible");
 for (var i = 0; i < coll.length; i++) {
