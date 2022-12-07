@@ -155,12 +155,23 @@ const maskBrushTool = () =>
 					uiCtx.fill();
 				};
 
+				state.redraw = () => {
+					state.movecb({
+						...mouse.coords.world.pos,
+						evn: {
+							clientX: mouse.coords.window.pos.x,
+							clientY: mouse.coords.window.pos.y,
+						},
+					});
+				};
+
 				state.wheelcb = (evn) => {
 					if (!evn.evn.ctrlKey) {
 						state.brushSize = state.setBrushSize(
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
+						state.redraw();
 					}
 				};
 
