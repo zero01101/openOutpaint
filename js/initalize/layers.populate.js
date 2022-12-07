@@ -80,8 +80,8 @@ mouse.registerContext(
 		//
 		ctx.coords.prev.x = ctx.coords.pos.x;
 		ctx.coords.prev.y = ctx.coords.pos.y;
-		ctx.coords.pos.x = layerX;
-		ctx.coords.pos.y = layerY;
+		ctx.coords.pos.x = Math.round(layerX);
+		ctx.coords.pos.y = Math.round(layerY);
 	},
 	{target: imageCollection.inputElement}
 );
