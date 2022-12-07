@@ -37,7 +37,7 @@ const _color_brush_erase_callback = (evn, state, ctx) => {
 
 const colorBrushTool = () =>
 	toolbar.registerTool(
-		"res/icons/brush.svg",
+		"/res/icons/brush.svg",
 		"Color Brush",
 		(state, opt) => {
 			// Draw new cursor immediately

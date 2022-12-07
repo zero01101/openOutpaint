@@ -168,14 +168,17 @@ function createSlider(name, wrapper, options = {}) {
 
 	mouse.listen.window.btn.left.ondrag.on((evn) => {
 		if (evn.initialTarget === overEl) {
-			phantomRange.value = Math.max(
+			const newv = Math.max(
 				options.min,
 				Math.min(
 					options.max,
-					(evn.evn.layerX / wrapper.offsetWidth) * (options.max - options.min) +
+					((evn.evn.clientX - evn.initialTarget.getBoundingClientRect().left) /
+						wrapper.offsetWidth) *
+						(options.max - options.min) +
 						options.min
 				)
 			);
+			phantomRange.value = newv;
 			setValue(parseFloat(phantomRange.value));
 		}
 	});

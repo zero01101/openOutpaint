@@ -61,7 +61,7 @@ const _mask_brush_erase_callback = (evn, state, opacity = 100) => {
 
 const maskBrushTool = () =>
 	toolbar.registerTool(
-		"res/icons/paintbrush.svg",
+		"/res/icons/paintbrush.svg",
 		"Mask Brush",
 		(state, opt) => {
 			// Draw new cursor immediately

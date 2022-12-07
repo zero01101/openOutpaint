@@ -1,6 +1,6 @@
 const interrogateTool = () =>
 	toolbar.registerTool(
-		"res/icons/microscope.svg",
+		"/res/icons/microscope.svg",
 		"Interrogate",
 		(state, opt) => {
 			// Draw new cursor immediately

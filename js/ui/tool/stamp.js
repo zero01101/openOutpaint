@@ -1,6 +1,6 @@
 const stampTool = () =>
 	toolbar.registerTool(
-		"res/icons/file-up.svg",
+		"/res/icons/file-up.svg",
 		"Stamp Image",
 		(state, opt) => {
 			state.loaded = true;
