@@ -48,8 +48,16 @@ const interrogateTool = () =>
 						reticleStyle: "#AFAF",
 					});
 				};
+
+				state.redraw = () => {
+					state.mousemovecb({
+						x: mouse.coords.world.pos.x,
+						y: mouse.coords.world.pos.y,
+					});
+				};
+
 				state.wheelcb = (evn) => {
-					_interrogate_onwheel(evn, state);
+					_dream_onwheel(evn, state);
 				};
 
 				state.interrogatecb = (evn) => {
@@ -90,20 +98,6 @@ const interrogateTool = () =>
 			shortcut: "N",
 		}
 	);
-
-/**
- * Generic wheel handler
- */
-
-const _interrogate_onwheel = (evn, state) => {
-	if (!evn.evn.ctrlKey) {
-		const v =
-			state.cursorSize -
-			Math.floor(state.config.cursorSizeScrollSpeed * evn.delta);
-		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
-		state.mousemovecb(evn);
-	}
-};
 
 const interrogate_callback = async (evn, state) => {
 	const bb = getBoundingBox(
