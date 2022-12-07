@@ -7,6 +7,7 @@ const uil = {
 	layers: [],
 	_active: null,
 	set active(v) {
+		console.debug(v);
 		Array.from(this._ui_layer_list.children).forEach((child) => {
 			child.classList.remove("active");
 		});
@@ -104,6 +105,7 @@ const uil = {
 					deleteButton.addEventListener(
 						"click",
 						(evn) => {
+							evn.stopPropagation();
 							commands.runCommand("deleteLayer", "Deleted Layer", {
 								layer: uiLayer,
 							});
@@ -131,9 +133,6 @@ const uil = {
 					(evn) => {
 						evn.stopPropagation();
 						uiLayer.hidden = !uiLayer.hidden;
-						if (uiLayer.hidden) {
-							uiLayer.entry.classList.add("hidden");
-						} else uiLayer.entry.classList.remove("hidden");
 					},
 					{passive: false}
 				);
@@ -204,9 +203,11 @@ const uil = {
 				if (v) {
 					this._hidden = true;
 					this.layer.hide(v);
+					this.entry && this.entry.classList.add("hidden");
 				} else {
 					this._hidden = false;
 					this.layer.unhide(v);
+					this.entry && this.entry.classList.remove("hidden");
 				}
 			},
 			get hidden() {
@@ -351,9 +352,11 @@ commands.createCommand(
 					if (v) {
 						this._hidden = true;
 						this.layer.hide(v);
+						this.entry && this.entry.classList.add("hidden");
 					} else {
 						this._hidden = false;
 						this.layer.unhide(v);
+						this.entry && this.entry.classList.remove("hidden");
 					}
 				},
 				get hidden() {
@@ -448,12 +451,14 @@ commands.createCommand(
 			state.position = index;
 		}
 
+		if (uil.active === state.layer)
+			uil.active =
+				uil.layers[state.position - 1] || uil.layers[state.position + 1];
 		uil.layers.splice(state.position, 1);
-		uil.active = uil.layers[state.position - 1] || uil.layers[state.position];
 
 		uil._syncLayers();
 
-		state.layer.layer.hide();
+		state.layer.hidden = true;
 	},
 	(title, state) => {
 		uil.layers.splice(state.position, 0, state.layer);
@@ -461,7 +466,7 @@ commands.createCommand(
 
 		uil._syncLayers();
 
-		state.layer.layer.unhide();
+		state.layer.hidden = false;
 	}
 );
 
