@@ -839,8 +839,8 @@ async function upscaleAndDownload() {
 					" openOutpaint image upscaler_" +
 					upscaler +
 					"_x" +
-					upscale_factor;
-				(".png");
+					upscale_factor +
+					".png";
 				link.href = "data:image/png;base64," + data["image"];
 				link.click();
 			});
