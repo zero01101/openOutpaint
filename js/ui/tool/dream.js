@@ -751,7 +751,12 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 
 		uiCtx.textAlign = "left";
 		uiCtx.fillStyle = style.toolTextStyle;
-		uiCtx.fillText(tool, bbvp.x + 10, bbvp.y + 10 + 20 * xshrink);
+		uiCtx.fillText(
+			tool,
+			bbvp.x + 10,
+			bbvp.y + 10 + 20 * xshrink,
+			state.cursorSize
+		);
 	}
 
 	// Draw width and height
