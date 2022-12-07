@@ -18,12 +18,14 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 - intuitive, convenient outpainting - that's like the whole point right
 - a big ol' 2560x1440 scalable canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
+- a very nicely functional and familiar layer system
 - inpainting/touchup mask brush
 - optional (visibly) inverted mask mode - red masks get mutated, blue masks stay the same, but you can't take both pills at once
 - inpainting color brush to bring out your inner vincent van bob ross
 - dedicated img2img tool with optional border masking for enhanced output coherence with existing subject matter
 - marquee select tool to select regions and arbitrarily scale, create stamps, move chunks, do all sorts of damage
 - decoupled cursor size and output resolution
+- interrogate tool
 - floating control panel to easily change models/samplers/steps/prompts/CFG/etc options for each dream summoned from the latent void _(NOTE: model switching requires A1111 webUI to be on commit [5a6387e](https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/5a6387e189dc365c47a7979b9040d5b6fdd7ba43) or more recent)_
 - floating toolbox with handy keyboard shortcuts
 - optional grid snapping for precision
@@ -32,12 +34,12 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - import arbitrary images and scale/stamp on the canvas whenever, wherever you'd like ([extra fun with transparent .pngs!](#arbitrary_transparent))
 - upscaler support for final output images
 - saves your preferences/imported images to browser localstorage for maximum convenience
-- reset button to unsave your preferences if things go squirrely
+- reset to defaults button to unsave your preferences if things go squirrely
 - floating navigable undo/redo palette with ctrl+z/y keyboard shortcuts for additional maximum convenience and desquirreliness
 
 ## collaborator credits 👑
 
-- [@seijihariki](https://github.com/seijihariki) - effectively (and mathematically) lead developer; [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [even more wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22), [undo/redo keyboard shortcuts and keyboard input support](https://github.com/zero01101/openOutpaint/pull/30), [scrumptious photography-shoppe-style history palette](https://github.com/zero01101/openOutpaint/pull/31), [dedicated img2img tool/floating toolbar/general code modularization and future-proofing](https://github.com/zero01101/openOutpaint/pull/37), [enormous revamp to image importing, supports copy/pasting, scaling, multiple stampable images holy crap](https://github.com/zero01101/openOutpaint/pull/49), [mask inversion](https://github.com/zero01101/openOutpaint/pull/56), [jsdocs and extensibility](https://github.com/zero01101/openOutpaint/pull/58), [support for layers like your favorite image editor, beginnings of infinite canvas, UI/UX sugar](https://github.com/zero01101/openOutpaint/pull/60), [inpaint sketch tools that are so incredibly fun, stamp resource management and persistence, styles selector, server status indicator fanciness buff, decoupled dream/output resolution, error handling for dream failures](https://github.com/zero01101/openOutpaint/pull/64)
+- [@seijihariki](https://github.com/seijihariki) - effectively (and mathematically) lead developer; [realtime slider value updates, gracious code cleanup](https://github.com/zero01101/openOutpaint/pull/14), [blessed undo/redo](https://github.com/zero01101/openOutpaint/pull/21), [even more wildly massive rework of loads of my miserable of JS holy crap](https://github.com/zero01101/openOutpaint/pull/22), [undo/redo keyboard shortcuts and keyboard input support](https://github.com/zero01101/openOutpaint/pull/30), [scrumptious photography-shoppe-style history palette](https://github.com/zero01101/openOutpaint/pull/31), [dedicated img2img tool/floating toolbar/general code modularization and future-proofing](https://github.com/zero01101/openOutpaint/pull/37), [enormous revamp to image importing, supports copy/pasting, scaling, multiple stampable images holy crap](https://github.com/zero01101/openOutpaint/pull/49), [mask inversion](https://github.com/zero01101/openOutpaint/pull/56), [jsdocs and extensibility](https://github.com/zero01101/openOutpaint/pull/58), [support for layers like your favorite image editor, beginnings of infinite canvas, UI/UX sugar](https://github.com/zero01101/openOutpaint/pull/60), [inpaint sketch tools that are so incredibly fun, stamp resource management and persistence, styles selector, server status indicator fanciness buff, decoupled dream/output resolution, error handling for dream failures](https://github.com/zero01101/openOutpaint/pull/64), [management of those aforementioned layers, tool UI visual spiffing, optional output smoothing](https://github.com/zero01101/openOutpaint/pull/67)
 - [@Kalekki](https://github.com/Kalekki) - [what i was calling "smart crop"](https://github.com/zero01101/openOutpaint/pull/2), [localstorage](https://github.com/zero01101/openOutpaint/pull/5), [right-click erase](https://github.com/zero01101/openOutpaint/pull/7), [delightful floating UI](https://github.com/zero01101/openOutpaint/pull/11), [mask erase fix](https://github.com/zero01101/openOutpaint/pull/17), [checkerboard background and non bonkers canvas borders](https://github.com/zero01101/openOutpaint/pull/24), [upscaling output image](https://github.com/zero01101/openOutpaint/pull/35), [switch models from UI, API call to get samplers instead of hardcoded list haha whoops](https://github.com/zero01101/openOutpaint/pull/39)
 - [@lifeh2o](https://www.reddit.com/user/lifeh2o/overview) - overmasking concept ([a](https://www.reddit.com/r/StableDiffusion/comments/ywf8np/i_made_a_completely_local_offline_opensource/iwl6s06/),[b](https://www.reddit.com/r/StableDiffusion/comments/ys9lhq/kollai_an_infinite_multiuser_canvas_running_on/ivzygwk/?context=3)) [implementation](https://github.com/zero01101/openOutpaint/commit/5600d360fbf78350ff1ced70a7d85f9a8624d2d0)
 - [@jasonmhead](https://github.com/jasonmhead) - [the most minimal launch script](https://github.com/zero01101/openOutpaint/pull/1)
@@ -78,10 +80,10 @@ _keyboard shortcuts are listed as code blocks in brackets, i.e. enter/return is_
 6.  open your locally-hosted web server at http://127.0.0.1:3456 (or wherever, i'm not your boss)
 7.  update the host field if necessary to point at your stable diffusion API address, change my stupid prompts with whatever you want, click somewhere in the canvas using the dream [`d`] tool, and wait (**OR** you can load as many existing images from your computer as you'd like using the "stamp image" tool [`U`]). If you've requested a batch of generated images and one of them sparks you as something you might want to use later, you can click the "res" button to add the image to the stampable dream resources as well. _(NOTE: you can select or deselect imported images/added resources freely simply by clicking on them)_
 8.  once an image appears\*, click the `<` [`←`] and `>` [`→`] buttons at the bottom-left corner of the image to cycle through the others in the batch if you requested multiple (it defaults to 2 batch size, 2 batch count) - click `y` [`<CR>`] to choose one you like, or `n` [`<ESC>`] to cancel that image generation batch outright, or press `+` [`+`] to generate another batch and add them to the options. you can also click `r` to save a specific image as a stampable resource.
-9.  now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence, or you can right-click to remove some of it if you want to completely retry a chunk but leave the rest alone
+9.  now that you've got a starter, click somewhere near it to outpaint - try and include as much of the "context" as possible in the reticle for the best result convergence, or you can right-click to remove some of it if you want to completely retry a chunk but leave the rest alone. you can also add a new layer and outpaint directly onto that - it will sample any existing layers automatically
 10. select the mask tool [`m`] to prepare previously rendered imagery for touchups/inpainting, then paint over the objectionable region; once your masked region is drawn, select the txt2img dream tool and change your prompt if necessary, then click over the canvas containing the mask you just painted to request the refined image(s)
 11. choose the img2img tool and write a new prompt and click over a section of your image to mutate the contents to your tastes, or try leaving the prompt blank and see what kind of "alternatives" are summoned
-12. try drawing something with the color brush [`c`] and change your prompt to reflect what you've created, choose img2img tool and ensure "invert mask" is **not** enabled, and click over your masterpiece to (hopefully) magically transform it into your request
+12. _(it's recommended to do this on a new layer)_ try drawing something with the color brush [`c`] and change your prompt to reflect what you've created, choose img2img tool and ensure "invert mask" is **not** enabled, and click over your masterpiece to (hopefully) magically transform it into your request
 13. just play around with the available options!
 
 - hold CTRL and scroll the mousewheel to zoom in/out
@@ -95,6 +97,7 @@ _keyboard shortcuts are listed as code blocks in brackets, i.e. enter/return is_
 - overmask and related px value expands the area masked in outpaint requests, so as to attempt to minimize the seam between images
 - border mask (applicable only to img2img tool [`i`]) and related value compresses the area masked in img2img towards the image section being "replaced" to maximize possible coherence
 - interrogate tool [`n`] asks what CLIP thinks is in the bounding box you just clicked on
+- layers are very similar to how they operate in any traditional image editor fancier than mspaint - feel free to rearrange them, delete them, merge them down
 - ...everything else is pretty much just a regular stable diffusion option so i presume you know how you use those
 
 14. open the "save/upscaling" menu and click "save canvas" (or choose an upscaler and click "upscale", but heed its warning) to save the cropped region of outpainted canvas
@@ -124,7 +127,7 @@ _keyboard shortcuts are listed as code blocks in brackets, i.e. enter/return is_
 - [x] ~~smart crop downloaded image~~
 - [x] import external image and ~~scale/~~ superimpose at will on canvas for in/outpainting
 - [x] ~~scaling of imported arbitrary image before superimposition~~
-- [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm)
+- [ ] "numpad" selector for determining how reticle is anchored against actual mouse cursor (currently works like a "5" [center] on the "numpad" paradigm) // is this even useful? sounds more like a solution in search of a problem
 - [ ] ~~discrete size control for mask and target reticle~~, discrete x/y axes for reticle
 - [x] ~~floating/togglable menu leftnav bar with categorized/sensibly laid-out options~~
 - [ ] infinite canvas
@@ -156,7 +159,7 @@ please do! kindly indicate your OS, browser, versions of both, any errors in dev
 - not sure if "bug" since it occurs in stable diffusion and not openOutpaint, but auto txt2img HRfix + odd number scale factors returns an "Exception in ASGI application" in SD console output; for example using scale factor of 9 results in "RuntimeError: Sizes of tensors must match except in dimension 1. Expected size 10 but got size 9 for tensor number 1 in the list."
 - similarly, seems to be an issue with stable diffusion more than anything, but if GPU memory becomes too scarce, the 3d rendering hardware starts to spike to 100% if you're looking at the tab (happens in both openOutpaint OR A1111 webUI, happens if image generation is occurring in background and i'm watching youtube, etc) - this manifests as the seconds remaining counter increasing around 100 seconds each time it's checked while completion percentage stays unchanged. simply opening an empty new tab usually kicks some sense back into things in my experience but your mileage may vary
 - ~~if you request a dream beyond the left border of the canvas you can kinda end up in a softlock state~~
-- not exactly a bug but kind of a gotcha; if you undo a color brush sketch that was made with the affect mask option enabled, the mask persists
+- not exactly a bug but kind of a gotcha; if you undo a color brush sketch that was made with the affect mask option enabled, the mask persists - masks aren't a history item, so you'll need to remove it manually - this doesn't happen if you manually erase the sketch however, so making the sketch on its own layer prevents erasure from affecting the original dreamed image. tl;dr masks don't undo, paint does
 
 ## warranty
 
@@ -203,6 +206,7 @@ requested "a desert" and drew Fine Art on top of it, then requested "a cabin" an
 - 0.0.7.5 - giant arbitary image handling and marquee select tool update [bbdfef9](https://github.com/zero01101/openOutpaint/commit/bbdfef937d28f607b601013c75de0f9049739488)
 - 0.0.8 - inpaint color brush, stamp resource management, error handling, style selector, big ol' QOL shine [9b174d6](https://github.com/zero01101/openOutpaint/commit/9b174d66c9b9d83ce8657128c97f917b473b13a9)
 - 0.0.8.1 - interrogate tool [083f481](https://github.com/zero01101/openOutpaint/commit/083f481e17e0d63baddae3a735412e622119b640)
+- 0.0.9 - layer functionality and management, tool spitshine, interrogate tool [de05a1e](https://github.com/zero01101/openOutpaint/commit/de05a1ecbac2e527ed9cf65c966542da0a8bed7a)
 
 ## hey what's with the fish
 
