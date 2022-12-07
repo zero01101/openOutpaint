@@ -156,7 +156,7 @@ const interrogate_callback = async (evn, state) => {
  * our private eye
  *
  * @param {StableDiffusionRequest} request Stable diffusion request
- * @returns {Promise<string[]>}
+ * @returns {Promise<string>}
  */
 const _interrogate = async (request) => {
 	const apiURL = `${host}${url}` + "interrogate";
