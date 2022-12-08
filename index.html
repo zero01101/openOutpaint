@@ -32,6 +32,10 @@
 			style="left: 10px; top: 10px">
 			<div id="infoTitleBar" class="draggable floating-window-title">
 				openOutpaint 🐠
+				<div style="flex: 1"></div>
+				<button id="settings-btn" class="ui icon header-button">
+					<div class="icon-settings"></div>
+				</button>
 			</div>
 			<div id="info" class="menu-container" style="min-width: 200px">
 				<label>
@@ -271,6 +275,18 @@
 
 		<!-- Overlay -->
 		<canvas id="layer-overlay" class="layer-overlay"></canvas>
+
+		<!-- Page Overlay -->
+		<div id="page-overlay-wrapper" class="page-overlay invisible">
+			<div class="page-overlay-window">
+				<div class="title">
+					Settings
+					<button id="settings-btn-close" class="close"></button>
+				</div>
+				<div class="ui separator"></div>
+				<iframe id="page-overlay" src="/pages/configuration.html"></iframe>
+			</div>
+		</div>
 
 		<!-- Base Libs -->
 		<script src="js/lib/util.js" type="text/javascript"></script>

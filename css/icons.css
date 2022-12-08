@@ -37,3 +37,8 @@
 	mask-image: url("/res/icons/chevron-first.svg");
 	transform: rotate(-90deg);
 }
+
+.ui.icon > .icon-settings {
+	-webkit-mask-image: url("/res/icons/settings.svg");
+	mask-image: url("/res/icons/settings.svg");
+}

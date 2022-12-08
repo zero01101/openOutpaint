@@ -1,3 +1,6 @@
+/**
+ * Floating window setup
+ */
 document.querySelectorAll(".floating-window").forEach(
 	/**
 	 * Runs for each floating window
@@ -24,6 +27,9 @@ document.querySelectorAll(".floating-window").forEach(
 	}
 );
 
+/**
+ * Collapsible element setup
+ */
 var coll = document.getElementsByClassName("collapsible");
 for (var i = 0; i < coll.length; i++) {
 	let active = false;
@@ -55,3 +61,14 @@ for (var i = 0; i < coll.length; i++) {
 		}
 	});
 }
+
+/**
+ * Settings overlay setup
+ */
+document.getElementById("settings-btn").addEventListener("click", () => {
+	document.getElementById("page-overlay-wrapper").classList.toggle("invisible");
+});
+
+document.getElementById("settings-btn-close").addEventListener("click", () => {
+	document.getElementById("page-overlay-wrapper").classList.toggle("invisible");
+});

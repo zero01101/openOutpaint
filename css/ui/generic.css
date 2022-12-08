@@ -7,15 +7,18 @@
 }
 
 .floating-window-title {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
 	cursor: move;
 	background-color: rgba(104, 104, 104, 0.75);
 
 	user-select: none;
 
-	padding-left: 5px;
-	padding-right: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding: 5px;
+	padding-left: 10px;
+
 	margin-bottom: auto;
 	font-size: 1.5em;
 	color: black;

@@ -1,7 +1,14 @@
 // Layering
 const imageCollection = layers.registerCollection(
 	"image",
-	{w: 2560, h: 1536},
+	{
+		w: parseInt(
+			(localStorage && localStorage.getItem("settings.canvas-width")) || 2048
+		),
+		h: parseInt(
+			(localStorage && localStorage.getItem("settings.canvas-height")) || 2048
+		),
+	},
 	{
 		name: "Image Layers",
 	}

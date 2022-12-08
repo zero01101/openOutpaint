@@ -20,6 +20,10 @@ body {
 	overflow: clip;
 }
 
+.invisible {
+	display: none !important;
+}
+
 .collapsible {
 	background-color: rgb(0, 0, 0);
 	color: rgb(255, 255, 255);
@@ -66,6 +70,89 @@ body {
 	max-height: fit-content;
 	overflow: visible;
 	cursor: auto;
+}
+
+#page-overlay-wrapper {
+	position: fixed;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+
+	background-color: #fff6;
+	backdrop-filter: blur(5px);
+
+	transition-duration: 50ms;
+
+	z-index: 1000;
+}
+
+.page-overlay-window {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+
+	border-radius: 10px;
+
+	color: var(--c-text);
+
+	overflow: hidden;
+
+	position: absolute;
+
+	margin: auto;
+
+	background-color: var(--c-primary);
+}
+
+.page-overlay-window .close {
+	position: absolute;
+
+	cursor: pointer;
+
+	top: 0;
+	right: 0;
+
+	margin: 5px;
+
+	width: 25px;
+	height: 25px;
+
+	-webkit-mask-image: url("/res/icon/x.svg");
+	mask-image: url("/res/icons/x.svg");
+
+	background-color: var(--c-text);
+}
+
+.page-overlay-window .close:hover {
+	transform: scale(1.1);
+}
+
+.page-overlay-window .title {
+	padding: 10px;
+	padding-top: 7px;
+
+	font-size: large;
+	font-weight: bold;
+
+	margin: auto;
+
+	background-color: var(--c-primary);
+}
+
+#page-overlay {
+	border: 0;
+
+	max-width: 300px;
+	max-height: 400px;
+
+	width: 100%;
+	height: 100%;
 }
 
 /* Mask colors for mask inversion */
@@ -184,6 +271,31 @@ body {
 
 input#host {
 	box-sizing: border-box;
+}
+
+/* Settings button */
+.ui.icon.header-button {
+	padding: 0;
+	border: 0;
+
+	cursor: pointer;
+
+	background-color: transparent;
+}
+
+.ui.icon.header-button > *:first-child {
+	background-color: black;
+
+	-webkit-mask-size: contain;
+	mask-size: contain;
+
+	width: 28px;
+	height: 28px;
+	transition-duration: 30ms;
+}
+
+.ui.icon.header-button:hover > *:last-child {
+	transform: scale(1.1);
 }
 
 /* Prompt Fields */
