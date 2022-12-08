@@ -658,7 +658,6 @@ async function getModels() {
 		.then((data) => {
 			var model = data.sd_model_checkpoint;
 			console.log("Current model: " + model);
-			console.debug((modelAutoComplete.value = model));
 		});
 
 	modelAutoComplete.onchange.on(async ({value}) => {

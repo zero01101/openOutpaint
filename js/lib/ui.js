@@ -253,7 +253,6 @@ function createAutoComplete(name, wrapper, options = {}) {
 			return this._options;
 		},
 		set options(val) {
-			console.debug(val);
 			this._options = [];
 
 			while (autocompleteEl.lastChild) {
