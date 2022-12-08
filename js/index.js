@@ -668,7 +668,6 @@ async function getModels() {
 		console.warn("[index] Failed to fetch models:");
 		console.warn(e);
 	}
-	// get currently loaded model
 
 	modelAutoComplete.onchange.on(async ({value}) => {
 		console.log(`[index] Changing model to [${value}]`);

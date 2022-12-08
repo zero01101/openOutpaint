@@ -29,7 +29,7 @@ const layers = {
 			},
 
 			// Input multiplier (Size of the input element div)
-			inputSizeMultiplier: 999,
+			inputSizeMultiplier: 3,
 
 			// Target
 			targetElement: document.getElementById("layer-render"),
