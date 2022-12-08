@@ -135,8 +135,8 @@ const _generate = async (
 	const makeElement = (type, x, y) => {
 		const el = document.createElement(type);
 		el.style.position = "absolute";
-		el.style.left = `${x}px`;
-		el.style.top = `${y}px`;
+		el.style.left = `${x - imageCollection.inputOffset.x}px`;
+		el.style.top = `${y - imageCollection.inputOffset.y}px`;
 
 		// We can use the input element to add interactible html elements in the world
 		imageCollection.inputElement.appendChild(el);

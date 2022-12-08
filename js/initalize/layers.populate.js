@@ -63,8 +63,8 @@ mouse.registerContext(
 		ctx.coords.prev.y = ctx.coords.pos.y;
 
 		if (evn.layerX !== evn.clientX || evn.layerY !== evn.clientY) {
-			ctx.coords.pos.x = evn.layerX;
-			ctx.coords.pos.y = evn.layerY;
+			ctx.coords.pos.x = Math.round(evn.layerX + imageCollection.inputOffset.x);
+			ctx.coords.pos.y = Math.round(evn.layerY + imageCollection.inputOffset.y);
 			return;
 		}
 
