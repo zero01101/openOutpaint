@@ -354,11 +354,13 @@ const selectTransformTool = () =>
 							"Image Transform Erase",
 							state.original
 						);
-						commands.runCommand(
-							"drawImage",
-							"Image Transform Draw",
-							state.selected
-						);
+						commands.runCommand("drawImage", "Image Transform Draw", {
+							image: state.selected.image,
+							x: Math.round(state.selected.x),
+							y: Math.round(state.selected.y),
+							w: Math.round(state.selected.w),
+							h: Math.round(state.selected.h),
+						});
 						state.original = null;
 						state.selected = null;
 
