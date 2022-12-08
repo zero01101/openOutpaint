@@ -35,6 +35,10 @@ body {
 	margin-bottom: 5px;
 }
 
+.display-none {
+	display: none;
+}
+
 .collapsible:hover {
 	background-color: #777;
 }

@@ -111,7 +111,6 @@ function startup() {
 	};
 
 	drawBackground();
-	changeSampler();
 	changeMaskBlur();
 	changeSmoothRendering();
 	changeSeed();
@@ -392,16 +391,6 @@ function drawMarchingAnts(ctx, bb, offset, options) {
 	ctx.restore();
 }
 
-function changeSampler() {
-	if (!document.getElementById("samplerSelect").value == "") {
-		// must be done, since before getSamplers is done, the options are empty
-		console.log(document.getElementById("samplerSelect").value == "");
-		stableDiffusionData.sampler_index =
-			document.getElementById("samplerSelect").value;
-		localStorage.setItem("sampler", stableDiffusionData.sampler_index);
-	}
-}
-
 const makeSlider = (
 	label,
 	el,
@@ -434,6 +423,21 @@ const makeSlider = (
 		textStep,
 	});
 };
+
+const modelAutoComplete = createAutoComplete(
+	"Model",
+	document.getElementById("models-ac-select")
+);
+
+const samplerAutoComplete = createAutoComplete(
+	"Sampler",
+	document.getElementById("sampler-ac-select")
+);
+
+const upscalerAutoComplete = createAutoComplete(
+	"Upscaler",
+	document.getElementById("upscaler-ac-select")
+);
 
 makeSlider(
 	"Resolution",
@@ -528,7 +532,7 @@ function drawBackground() {
 	}
 }
 
-function getUpscalers() {
+async function getUpscalers() {
 	/*
 	 so for some reason when upscalers request returns upscalers, the real-esrgan model names are incorrect, and need to be fetched from /sdapi/v1/realesrgan-models
 	 also the realesrgan models returned are not all correct, extra fun!
@@ -541,12 +545,9 @@ function getUpscalers() {
 	*/
 
 	// hacky way to get the correct list of upscalers
-	var upscalerSelect = document.getElementById("upscalers");
 	var extras_url =
 		document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
-	var empty_image = new Image(512, 512);
-	empty_image.src =
-		"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAFCAAAAABCAYAAAChpRsuAAAALklEQVR42u3BAQ0AAAgDoJvc6LeHAybtBgAAAAAAAAAAAAAAAAAAAAAAAAB47QD2wAJ/LnnqGgAAAABJRU5ErkJggg=="; //transparent pixel
+	var empty_image = new Image(1, 1);
 	var purposefully_incorrect_data = {
 		"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
 		upscaling_resize: 2,
@@ -554,27 +555,36 @@ function getUpscalers() {
 		image: empty_image.src,
 	};
 
-	fetch(extras_url, {
-		method: "POST",
-		headers: {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(purposefully_incorrect_data),
-	})
-		.then((response) => response.json())
-		.then((data) => {
-			console.log("purposefully_incorrect_data response, ignore above error");
-			// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
-			let upscalers = data.detail.split(": ")[1].trim().split(" , "); // converting the result to a list of upscalers
-			for (var i = 0; i < upscalers.length; i++) {
-				// if(upscalers[i] == "LDSR") continue; // Skip LDSR, see reason in the first comment // readded because worksonmymachine.jpg but leaving it here in case of, uh, future disaster?
-				var option = document.createElement("option");
-				option.text = upscalers[i];
-				option.value = upscalers[i];
-				upscalerSelect.add(option);
-			}
+	try {
+		const response = await fetch(extras_url, {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(purposefully_incorrect_data),
 		});
+		const data = await response.json();
+
+		console.log(
+			"[index] purposefully_incorrect_data response, ignore above error"
+		);
+		// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
+		const upscalers = data.detail
+			.split(": ")[1]
+			.split(",")
+			.map((v) => v.trim())
+			.filter((v) => v !== "None"); // converting the result to a list of upscalers
+
+		upscalerAutoComplete.options = upscalers.map((u) => {
+			return {name: u, value: u};
+		});
+
+		upscalerAutoComplete.value = upscalers[0];
+	} catch (e) {
+		console.warn("[index] Failed to fetch upscalers:");
+		console.warn(e);
+	}
 
 	/* THE NON HACKY WAY THAT I SIMPLY COULD NOT GET TO PRODUCE A LIST WITHOUT NON WORKING UPSCALERS, FEEL FREE TO TRY AND FIGURE IT OUT
 
@@ -621,18 +631,14 @@ function getUpscalers() {
 }
 
 async function getModels() {
-	var modelSelect = document.getElementById("models");
 	var url = document.getElementById("host").value + "/sdapi/v1/sd-models";
 	await fetch(url)
 		.then((response) => response.json())
 		.then((data) => {
-			//console.log(data); All models
-			for (var i = 0; i < data.length; i++) {
-				var option = document.createElement("option");
-				option.text = data[i].model_name;
-				option.value = data[i].title;
-				modelSelect.add(option);
-			}
+			modelAutoComplete.options = data.map((option) => ({
+				name: option.title,
+				value: option.title,
+			}));
 		});
 
 	// get currently loaded model
@@ -642,41 +648,34 @@ async function getModels() {
 		.then((data) => {
 			var model = data.sd_model_checkpoint;
 			console.log("Current model: " + model);
-			modelSelect.value = model;
+			console.debug((modelAutoComplete.value = model));
 		});
-}
 
-function changeModel() {
-	// change the model
-	console.log("changing model to " + document.getElementById("models").value);
-	var model_title = document.getElementById("models").value;
-	var payload = {
-		sd_model_checkpoint: model_title,
-	};
-	var url = document.getElementById("host").value + "/sdapi/v1/options/";
-	fetch(url, {
-		method: "POST",
-		mode: "cors", // no-cors, *cors, same-origin
-		cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-		credentials: "same-origin", // include, *same-origin, omit
-		redirect: "follow", // manual, *follow, error
-		referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-		headers: {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(payload),
-	})
-		.then((response) => response.json())
-		.then(() => {
-			alert("Model changed to " + model_title);
-		})
-		.catch((error) => {
+	modelAutoComplete.onchange.on(async ({value}) => {
+		console.log(`[index] Changing model to [${value}]`);
+		var payload = {
+			sd_model_checkpoint: value,
+		};
+		var url = document.getElementById("host").value + "/sdapi/v1/options/";
+		try {
+			await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(payload),
+			});
+
+			alert(`Model changed to [${value}]`);
+		} catch (e) {
+			console.warn("[index] Error changing model");
+			console.warn(e);
+
 			alert(
-				"Error changing model, please check console for additional info\n" +
-					error
+				"Error changing model, please check console for additional information"
 			);
-		});
+		}
+	});
 }
 
 async function getConfig() {
@@ -810,42 +809,40 @@ function changeStyles() {
 	stableDiffusionData.styles = selectedString;
 }
 
-function getSamplers() {
-	var samplerSelect = document.getElementById("samplerSelect");
+async function getSamplers() {
 	var url = document.getElementById("host").value + "/sdapi/v1/samplers";
-	fetch(url)
-		.then((response) => response.json())
-		.then((data) => {
-			//console.log(data); All samplers
-			for (var i = 0; i < data.length; i++) {
-				// PLMS SAMPLER DOES NOT WORK FOR ANY IMAGES BEYOND FOR THE INITIAL IMAGE (for me at least), GIVES ASGI Exception; AttributeError: 'PLMSSampler' object has no attribute 'stochastic_encode'
 
-				var option = document.createElement("option");
-				option.text = data[i].name;
-				option.value = data[i].name;
-				samplerSelect.add(option);
-			}
-			if (localStorage.getItem("sampler") != null) {
-				samplerSelect.value = localStorage.getItem("sampler");
-			} else {
-				// needed now, as hardcoded sampler cant be guaranteed to be in the list
-				samplerSelect.value = data[0].name;
-				localStorage.setItem("sampler", samplerSelect.value);
-			}
-		})
-		.catch((error) => {
-			alert(
-				"Error getting samplers, please check console for additional info\n" +
-					error
-			);
+	try {
+		const response = await fetch(url);
+		const data = await response.json();
+		samplerAutoComplete.options = data.map((sampler) => ({
+			name: sampler.name,
+			value: sampler.name,
+		}));
+
+		// Initial sampler
+		if (localStorage.getItem("sampler") != null) {
+			samplerAutoComplete.value = localStorage.getItem("sampler");
+		} else {
+			samplerAutoComplete.value = data[0].name;
+			localStorage.setItem("sampler", samplerAutoComplete.value);
+		}
+
+		samplerAutoComplete.onchange.on(({value}) => {
+			stableDiffusionData.sampler_index = value;
+			localStorage.setItem("sampler", value);
 		});
+	} catch (e) {
+		console.warn("[index] Failed to fetch samplers");
+		console.warn(e);
+	}
 }
 async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
 	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
-	var upscaler = document.getElementById("upscalers").value;
+	var upscaler = upscalerAutoComplete.value;
 	var croppedCanvas = cropCanvas(
 		uil.getVisible({
 			x: 0,
@@ -855,7 +852,6 @@ async function upscaleAndDownload() {
 		})
 	);
 	if (croppedCanvas != null) {
-		var upscaler = document.getElementById("upscalers").value;
 		var url =
 			document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
 		var imgdata = croppedCanvas.canvas.toDataURL("image/png");
@@ -903,10 +899,6 @@ function loadSettings() {
 		localStorage.getItem("neg_prompt") == null
 			? "people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry"
 			: localStorage.getItem("neg_prompt");
-	var _sampler =
-		localStorage.getItem("sampler") == null
-			? "DDIM"
-			: localStorage.getItem("sampler");
 	var _mask_blur =
 		localStorage.getItem("mask_blur") == null
 			? 0
@@ -924,7 +916,6 @@ function loadSettings() {
 	document.getElementById("prompt").title = String(_prompt);
 	document.getElementById("negPrompt").value = String(_negprompt);
 	document.getElementById("negPrompt").title = String(_negprompt);
-	document.getElementById("samplerSelect").value = String(_sampler);
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);

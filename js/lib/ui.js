@@ -192,3 +192,176 @@ function createSlider(name, wrapper, options = {}) {
 		},
 	};
 }
+
+/**
+ * A function to transform a div into a autocompletable select element
+ *
+ * @param {string} name Name of the AutoComplete Select Element
+ * @param {HTMLDivElement} wrapper The div element that will wrap the input elements
+ * @param {object} options Extra options
+ * @param {{name: string, value: string}} options.options Options to add to the selector
+ * @returns {AutoCompleteElement}
+ */
+function createAutoComplete(name, wrapper, options = {}) {
+	defaultOpt(options, {
+		options: [],
+	});
+
+	wrapper.classList.add("autocomplete");
+
+	const inputEl = document.createElement("input");
+	inputEl.type = "text";
+	inputEl.classList.add("autocomplete-text");
+
+	const autocompleteEl = document.createElement("div");
+	autocompleteEl.classList.add("autocomplete-list", "display-none");
+
+	let timeout = null;
+	let ontext = false;
+	let onlist = false;
+
+	wrapper.appendChild(inputEl);
+	wrapper.appendChild(autocompleteEl);
+
+	const acobj = {
+		name,
+		wrapper,
+		_title: null,
+		_value: null,
+		_options: [],
+
+		/** @type {Observer<{name:string, value: string}>} */
+		onchange: new Observer(),
+
+		get value() {
+			return this._value;
+		},
+		set value(val) {
+			const opt = this.options.find((option) => option.value === val);
+
+			if (!opt) return;
+
+			this._title = opt.name;
+			this._value = opt.value;
+			inputEl.value = opt.name;
+			inputEl.title = opt.name;
+
+			this.onchange.emit({name: opt.name, value: opt.value});
+		},
+
+		get options() {
+			return this._options;
+		},
+		set options(val) {
+			console.debug(val);
+			this._options = [];
+
+			while (autocompleteEl.lastChild) {
+				autocompleteEl.removeChild(autocompleteEl.lastChild);
+			}
+
+			// Add options
+			val.forEach((opt) => {
+				const {name, value} = opt;
+				const option = {name, value};
+
+				const optionEl = document.createElement("option");
+				optionEl.classList.add("autocomplete-option");
+				optionEl.title = option.name;
+				optionEl.addEventListener("click", () => select(option));
+
+				this._options.push({name, value, optionElement: optionEl});
+
+				autocompleteEl.appendChild(optionEl);
+			});
+
+			updateOptions();
+		},
+	};
+
+	function updateOptions() {
+		const text = inputEl.value.toLowerCase().trim();
+
+		acobj._options.forEach((opt) => {
+			const textLocation = opt.name.toLowerCase().indexOf(text);
+
+			while (opt.optionElement.lastChild) {
+				opt.optionElement.removeChild(opt.optionElement.lastChild);
+			}
+
+			opt.optionElement.append(
+				document.createTextNode(opt.name.substring(0, textLocation))
+			);
+			const span = document.createElement("span");
+			span.style.fontWeight = "bold";
+			span.textContent = opt.name.substring(
+				textLocation,
+				textLocation + text.length
+			);
+			opt.optionElement.appendChild(span);
+			opt.optionElement.appendChild(
+				document.createTextNode(
+					opt.name.substring(textLocation + text.length, opt.name.length)
+				)
+			);
+
+			if (textLocation !== -1) {
+				opt.optionElement.classList.remove("display-none");
+			} else opt.optionElement.classList.add("display-none");
+		});
+	}
+
+	function select(options) {
+		ontext = false;
+		onlist = false;
+
+		acobj._title = options.name;
+		inputEl.value = options.name;
+		acobj.value = options.value;
+
+		autocompleteEl.classList.add("display-none");
+	}
+
+	inputEl.addEventListener("focus", () => {
+		ontext = true;
+
+		autocompleteEl.classList.remove("display-none");
+		inputEl.select();
+	});
+	inputEl.addEventListener("blur", () => {
+		ontext = false;
+
+		if (!onlist && !ontext) {
+			inputEl.value = "";
+			updateOptions();
+			inputEl.value = acobj._title;
+
+			autocompleteEl.classList.add("display-none");
+		}
+	});
+
+	autocompleteEl.addEventListener("mouseenter", () => {
+		onlist = true;
+	});
+
+	autocompleteEl.addEventListener("mouseleave", () => {
+		onlist = false;
+
+		if (!onlist && !ontext) {
+			inputEl.value = "";
+			updateOptions();
+			inputEl.value = acobj._title;
+
+			autocompleteEl.classList.add("display-none");
+		}
+	});
+
+	// Filter
+	inputEl.addEventListener("input", () => {
+		updateOptions();
+	});
+
+	acobj.options = options.options;
+
+	return acobj;
+}

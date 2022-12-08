@@ -70,15 +70,10 @@
 					Stable Diffusion settings
 				</button>
 				<div class="content">
-					<label for="models">Model:</label>
-					<select
-						id="models"
-						class="wideSelect"
-						onchange="changeModel()"></select>
-					<br />
-					<label for="samplerSelect">Sampler:</label>
-					<select id="samplerSelect" onchange="changeSampler()"></select>
-					<br />
+					<label>Model:</label>
+					<div id="models-ac-select"></div>
+					<label>Sampler:</label>
+					<div id="sampler-ac-select"></div>
 					<label for="seed">Seed (-1 for random):</label>
 					<br />
 					<input
@@ -123,8 +118,8 @@
 				<div class="content">
 					<button onclick="downloadCanvas()">Save canvas</button>
 					<br />
-					<label for="upscalers">Choose upscaler</label>
-					<select id="upscalers" class="wideSelect"></select>
+					<label>Choose upscaler</label>
+					<div id="upscaler-ac-select"></div>
 					<button onclick="upscaleAndDownload()">
 						Upscale (might take a sec)
 					</button>
