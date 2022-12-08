@@ -642,23 +642,33 @@ async function getUpscalers() {
 
 async function getModels() {
 	var url = document.getElementById("host").value + "/sdapi/v1/sd-models";
-	await fetch(url)
-		.then((response) => response.json())
-		.then((data) => {
-			modelAutoComplete.options = data.map((option) => ({
-				name: option.title,
-				value: option.title,
-			}));
-		});
+	try {
+		const response = await fetch(url);
+		const data = await response.json();
 
-	// get currently loaded model
+		modelAutoComplete.options = data.map((option) => ({
+			name: option.title,
+			value: option.title,
+		}));
 
-	await fetch(document.getElementById("host").value + "/sdapi/v1/options")
-		.then((response) => response.json())
-		.then((data) => {
-			var model = data.sd_model_checkpoint;
+		try {
+			const optResponse = await fetch(
+				document.getElementById("host").value + "/sdapi/v1/options"
+			);
+			const optData = await optResponse.json();
+
+			const model = optData.sd_model_checkpoint;
 			console.log("Current model: " + model);
-		});
+			modelAutoComplete.value = model;
+		} catch (e) {
+			console.warn("[index] Failed to fetch current model:");
+			console.warn(e);
+		}
+	} catch (e) {
+		console.warn("[index] Failed to fetch models:");
+		console.warn(e);
+	}
+	// get currently loaded model
 
 	modelAutoComplete.onchange.on(async ({value}) => {
 		console.log(`[index] Changing model to [${value}]`);
