@@ -806,9 +806,13 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 
 const _dream_onwheel = (evn, state) => {
 	if (!evn.evn.ctrlKey) {
-		const v =
-			state.cursorSize -
-			Math.floor(state.config.cursorSizeScrollSpeed * evn.delta);
+		// Seems mouse wheel scroll is very different between different browsers.
+		// Will use scroll as just an event to go to the next cursor snap position instead.
+		//
+		// TODO: Someone that has a smooth scrolling mouse should verify if this works with them.
+
+		const v = state.cursorSize - 128 * (evn.delta / Math.abs(evn.delta));
+
 		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
 		state.mousemovecb(evn);
 	}
@@ -819,7 +823,7 @@ const _dream_onwheel = (evn, state) => {
  */
 const dreamTool = () =>
 	toolbar.registerTool(
-		"res/icons/image-plus.svg",
+		"/res/icons/image-plus.svg",
 		"Dream",
 		(state, opt) => {
 			// Draw new cursor immediately
@@ -940,7 +944,7 @@ const dreamTool = () =>
 						{
 							min: 0,
 							max: 64,
-							step: 5,
+							step: 4,
 							textStep: 1,
 						}
 					).slider;
@@ -959,7 +963,7 @@ const dreamTool = () =>
 
 const img2imgTool = () =>
 	toolbar.registerTool(
-		"res/icons/image.svg",
+		"/res/icons/image.svg",
 		"Img2Img",
 		(state, opt) => {
 			// Draw new cursor immediately

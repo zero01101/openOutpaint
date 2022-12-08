@@ -59,8 +59,14 @@ mouse.registerContext(
 	"world",
 	(evn, ctx) => {
 		// Fix because in chrome layerX and layerY simply doesnt work
-		/** @type {HTMLDivElement} */
-		const target = evn.target;
+		ctx.coords.prev.x = ctx.coords.pos.x;
+		ctx.coords.prev.y = ctx.coords.pos.y;
+
+		if (evn.layerX !== evn.clientX || evn.layerY !== evn.clientY) {
+			ctx.coords.pos.x = evn.layerX;
+			ctx.coords.pos.y = evn.layerY;
+			return;
+		}
 
 		// Get element bounding rect
 		const bb = imageCollection.element.getBoundingClientRect();
@@ -78,10 +84,8 @@ mouse.registerContext(
 		const layerY = ((y - bb.top) / bb.height) * h;
 
 		//
-		ctx.coords.prev.x = ctx.coords.pos.x;
-		ctx.coords.prev.y = ctx.coords.pos.y;
-		ctx.coords.pos.x = layerX;
-		ctx.coords.pos.y = layerY;
+		ctx.coords.pos.x = Math.round(layerX);
+		ctx.coords.pos.y = Math.round(layerY);
 	},
 	{target: imageCollection.inputElement}
 );

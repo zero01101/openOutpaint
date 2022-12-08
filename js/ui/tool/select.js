@@ -1,6 +1,6 @@
 const selectTransformTool = () =>
 	toolbar.registerTool(
-		"res/icons/box-select.svg",
+		"/res/icons/box-select.svg",
 		"Select Image",
 		(state, opt) => {
 			// Draw new cursor immediately
@@ -101,6 +101,10 @@ const selectTransformTool = () =>
 
 				// Selection bounding box object. Has some witchery to deal with handles.
 				const selectionBB = (x1, y1, x2, y2) => {
+					x1 = Math.round(x1);
+					y1 = Math.round(y1);
+					x2 = Math.round(x2);
+					y2 = Math.round(y2);
 					return {
 						original: {
 							x: Math.min(x1, x2),
@@ -213,8 +217,8 @@ const selectTransformTool = () =>
 
 					// Update position
 					if (state.moving) {
-						state.selected.x = x - state.moving.offset.x;
-						state.selected.y = y - state.moving.offset.y;
+						state.selected.x = Math.round(x - state.moving.offset.x);
+						state.selected.y = Math.round(y - state.moving.offset.y);
 						state.selected.updateOriginal();
 					}
 
@@ -350,11 +354,13 @@ const selectTransformTool = () =>
 							"Image Transform Erase",
 							state.original
 						);
-						commands.runCommand(
-							"drawImage",
-							"Image Transform Draw",
-							state.selected
-						);
+						commands.runCommand("drawImage", "Image Transform Draw", {
+							image: state.selected.image,
+							x: Math.round(state.selected.x),
+							y: Math.round(state.selected.y),
+							w: Math.round(state.selected.w),
+							h: Math.round(state.selected.h),
+						});
 						state.original = null;
 						state.selected = null;
 

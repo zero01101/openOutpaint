@@ -180,14 +180,15 @@ function getBoundingBox(cx, cy, w, h, gridSnap = null, offset = 0) {
 		offs.x = snap(cx, offset, gridSnap);
 		offs.y = snap(cy, offset, gridSnap);
 	}
-	box.x = offs.x + cx;
-	box.y = offs.y + cy;
+
+	box.x = Math.round(offs.x + cx);
+	box.y = Math.round(offs.y + cy);
 
 	return {
 		x: Math.floor(box.x - w / 2),
 		y: Math.floor(box.y - h / 2),
-		w,
-		h,
+		w: Math.round(w),
+		h: Math.round(h),
 	};
 }
 
