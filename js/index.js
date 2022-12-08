@@ -482,6 +482,16 @@ makeSlider(
 	1,
 	2
 );
+makeSlider(
+	"Upscale X",
+	document.getElementById("upscaleX"),
+	"upscale_x",
+	1.0,
+	4.0,
+	0.1,
+	2.0,
+	0.1
+);
 
 makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
 
@@ -841,7 +851,9 @@ async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
-	var upscale_factor = 2; // TODO: make this a user input 1.x - 4.0 or something
+	var upscale_factor = localStorage.getItem("upscale_x")
+		? localStorage.getItem("upscale_x")
+		: 2;
 	var upscaler = upscalerAutoComplete.value;
 	var croppedCanvas = cropCanvas(
 		uil.getVisible({
@@ -882,6 +894,8 @@ async function upscaleAndDownload() {
 						.replace(":", " ") +
 					" openOutpaint image upscaler_" +
 					upscaler +
+					"_x" +
+					upscale_factor +
 					".png";
 				link.href = "data:image/png;base64," + data["image"];
 				link.click();
