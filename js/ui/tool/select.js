@@ -217,8 +217,8 @@ const selectTransformTool = () =>
 
 					// Update position
 					if (state.moving) {
-						state.selected.x = x - state.moving.offset.x;
-						state.selected.y = y - state.moving.offset.y;
+						state.selected.x = Math.round(x - state.moving.offset.x);
+						state.selected.y = Math.round(y - state.moving.offset.y);
 						state.selected.updateOriginal();
 					}
 
