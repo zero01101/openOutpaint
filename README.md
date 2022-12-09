@@ -6,7 +6,7 @@ _silly demo example current as of [9b174d6](https://github.com/zero01101/openOut
 
 this is a completely vanilla javascript and html canvas outpainting convenience doodad built for the API optionally exposed by [AUTOMATIC1111's stable diffusion webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui), operating similarly to a few others that are probably more well-known. this simply offers an alternative for my following vain desires:
 
-- avoiding the overhead of an additional virtual python evnironment or impacting a pre-existing one
+- avoiding the overhead of an additional virtual python environment or impacting a pre-existing one
 - operates against the API exposed by A1111's webUI
 - no external dependencies, extremely boring vanilla
 - no external connectivity, self-hosted and offline
