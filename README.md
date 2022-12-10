@@ -51,7 +51,7 @@ you'll obviously need A1111's webUI installed before you can use this, thus you'
 
 ### step-by-step actually useful instructions
 
-Please see the comprehensive [wiki article](https://github.com/zero01101/openOutpaint/wiki/SBS-Guided-Example).
+please see the [quickstart wiki article](https://github.com/zero01101/openOutpaint/wiki/SBS-Guided-Example) and comprehensive [manual](https://github.com/zero01101/openOutpaint/wiki/Manual).
 
 ## pull requests/bug reports
 
