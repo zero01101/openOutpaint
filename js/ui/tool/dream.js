@@ -122,8 +122,8 @@ const _generate = async (
 
 	// Images to select through
 	let at = 0;
-	/** @type {Image[]} */
-	const images = [];
+	/** @type {Array<string|null>} */
+	const images = [null];
 	/** @type {HTMLDivElement} */
 	let imageSelectMenu = null;
 
@@ -145,6 +145,8 @@ const _generate = async (
 	};
 
 	const redraw = (url = images[at]) => {
+		if (url === null)
+			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
 		if (!url) return;
 
 		const image = new Image();
@@ -203,6 +205,7 @@ const _generate = async (
 		imageCollection.inputElement.appendChild(interruptButton);
 		images.push(...(await _dream(endpoint, requestCopy)));
 		stopDrawingStatus = true;
+		at = 1;
 	} catch (e) {
 		alert(
 			`Error generating images. Please try again or see consolde for more details`
@@ -219,7 +222,7 @@ const _generate = async (
 		at--;
 		if (at < 0) at = images.length - 1;
 
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		imageindextxt.textContent = `${at}/${images.length}`;
 		redraw();
 	};
 
@@ -227,7 +230,7 @@ const _generate = async (
 		at++;
 		if (at >= images.length) at = 0;
 
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		imageindextxt.textContent = `${at}/${images.length}`;
 		redraw();
 	};
 
@@ -253,7 +256,7 @@ const _generate = async (
 			interruptButton.disabled = false;
 			imageCollection.inputElement.appendChild(interruptButton);
 			images.push(...(await _dream(endpoint, requestCopy)));
-			imageindextxt.textContent = `${at + 1}/${images.length}`;
+			imageindextxt.textContent = `${at}/${images.length}`;
 		} catch (e) {
 			alert(
 				`Error generating images. Please try again or see consolde for more details`
@@ -327,11 +330,11 @@ const _generate = async (
 	imageSelectMenu = makeElement("div", bb.x, bb.y + bb.h);
 
 	const imageindextxt = document.createElement("button");
-	imageindextxt.textContent = `${at + 1}/${images.length}`;
+	imageindextxt.textContent = `${at}/${images.length}`;
 	imageindextxt.addEventListener("click", () => {
 		at = 0;
 
-		imageindextxt.textContent = `${at + 1}/${images.length}`;
+		imageindextxt.textContent = `${at}/${images.length}`;
 		redraw();
 	});
 
