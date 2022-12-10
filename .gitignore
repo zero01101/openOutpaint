@@ -1,1 +1,9 @@
 .vscode/*
+
+# NPM things
+package.json
+package-lock.json
+node_modules/
+
+# Yarn things
+yarn.lock
