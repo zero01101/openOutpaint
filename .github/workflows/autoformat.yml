@@ -3,8 +3,9 @@ on:
   push:
     branches:
       - "main"
+      - "testing"
   pull_request:
-    branches: [main]
+    branches: [main, testing]
     types: [opened, synchronize, closed]
 
 jobs:
