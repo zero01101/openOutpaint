@@ -7,15 +7,18 @@
 }
 
 .floating-window-title {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
 	cursor: move;
 	background-color: rgba(104, 104, 104, 0.75);
 
 	user-select: none;
 
-	padding-left: 5px;
-	padding-right: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding: 5px;
+	padding-left: 10px;
+
 	margin-bottom: auto;
 	font-size: 1.5em;
 	color: black;
@@ -40,6 +43,8 @@ div.slider-wrapper {
 	position: relative;
 	height: 20px;
 	border-radius: 5px;
+
+	overflow-y: visible;
 }
 
 div.slider-wrapper * {
@@ -93,6 +98,51 @@ div.slider-wrapper > input.text {
 	height: 100%;
 	text-align: center;
 	background-color: transparent;
+}
+
+/* Autocomplete Select */
+div.autocomplete {
+	border-radius: 5px;
+}
+
+div.autocomplete > .autocomplete-text {
+	box-sizing: border-box;
+
+	border-radius: 5px;
+
+	width: 100%;
+}
+
+div.autocomplete > .autocomplete-list {
+	position: absolute;
+
+	background-color: white;
+
+	overflow-y: auto;
+
+	margin-top: 0;
+	margin-left: 0;
+
+	max-height: 200px;
+	min-width: 100%;
+	max-width: 800px;
+
+	width: fit-content;
+	z-index: 200;
+}
+
+div.autocomplete > .autocomplete-list > .autocomplete-option {
+	cursor: pointer;
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	padding: 3px;
+}
+
+div.autocomplete > .autocomplete-list > .autocomplete-option:hover {
+	background-color: #dddf;
 }
 
 /* Select Input */

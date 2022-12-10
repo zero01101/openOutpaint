@@ -1,7 +1,14 @@
 // Layering
 const imageCollection = layers.registerCollection(
 	"image",
-	{w: 2560, h: 1536},
+	{
+		w: parseInt(
+			(localStorage && localStorage.getItem("settings.canvas-width")) || 2048
+		),
+		h: parseInt(
+			(localStorage && localStorage.getItem("settings.canvas-height")) || 2048
+		),
+	},
 	{
 		name: "Image Layers",
 	}
@@ -61,12 +68,6 @@ mouse.registerContext(
 		// Fix because in chrome layerX and layerY simply doesnt work
 		ctx.coords.prev.x = ctx.coords.pos.x;
 		ctx.coords.prev.y = ctx.coords.pos.y;
-
-		if (evn.layerX !== evn.clientX || evn.layerY !== evn.clientY) {
-			ctx.coords.pos.x = evn.layerX;
-			ctx.coords.pos.y = evn.layerY;
-			return;
-		}
 
 		// Get element bounding rect
 		const bb = imageCollection.element.getBoundingClientRect();

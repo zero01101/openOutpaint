@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="utf-8" />
+		<title>openOutpaint 🐠</title>
+		<!-- CSS Variables -->
+		<link href="/css/colors.css" rel="stylesheet" />
+		<link href="/css/icons.css" rel="stylesheet" />
+
+		<link href="/css/index.css" rel="stylesheet" />
+		<link href="/css/layers.css" rel="stylesheet" />
+
+		<link href="/css/ui/generic.css" rel="stylesheet" />
+
+		<link href="/css/ui/history.css" rel="stylesheet" />
+		<link href="/css/ui/layers.css" rel="stylesheet" />
+		<link href="/css/ui/toolbar.css" rel="stylesheet" />
+
+		<!-- Tool Specific CSS -->
+		<link href="/css/ui/tool/dream.css" rel="stylesheet" />
+		<link href="/css/ui/tool/stamp.css" rel="stylesheet" />
+		<link href="/css/ui/tool/colorbrush.css" rel="stylesheet" />
+
+		<link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+		<style>
+			body {
+				color: var(--c-text);
+
+				margin: 0;
+				padding: 15px;
+			}
+
+			label {
+				display: flex;
+			}
+
+			input.canvas-size-input {
+				-webkit-appearance: textfield;
+				-moz-appearance: textfield;
+
+				width: 50px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<label style="display: flex">
+			Canvas Size:
+			<input
+				id="canvas-width"
+				class="canvas-size-input"
+				type="number"
+				step="1" />
+			x
+			<input
+				id="canvas-height"
+				class="canvas-size-input"
+				type="number"
+				step="1" />
+		</label>
+
+		<script>
+			const canvasWidth = document.getElementById("canvas-width");
+			const canvasHeight = document.getElementById("canvas-height");
+
+			function writeToLocalStorage() {
+				localStorage.setItem("settings.canvas-width", canvasWidth.value);
+				localStorage.setItem("settings.canvas-height", canvasHeight.value);
+			}
+
+			// Loads values from local storage
+			canvasWidth.value = localStorage.getItem("settings.canvas-width") || 2048;
+			canvasHeight.value =
+				localStorage.getItem("settings.canvas-height") || 2048;
+
+			writeToLocalStorage();
+
+			canvasWidth.onchange = writeToLocalStorage;
+			canvasHeight.onchange = writeToLocalStorage;
+		</script>
+	</body>
+</html>

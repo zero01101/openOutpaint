@@ -28,12 +28,17 @@ const layers = {
 				options: {},
 			},
 
+			// Input multiplier (Size of the input element div)
+			inputSizeMultiplier: 3,
+
 			// Target
 			targetElement: document.getElementById("layer-render"),
 
 			// Resolution of the image
 			resolution: size,
 		});
+
+		if (options.inputSizeMultiplier % 2 === 0) options.inputSizeMultiplier++;
 
 		// Path used for logging purposes
 		const _logpath = "layers.collections." + key;
@@ -51,8 +56,6 @@ const layers = {
 		// Input element (overlay element for input handling)
 		const inputel = document.createElement("div");
 		inputel.id = `collection-input-${id}`;
-		inputel.style.width = `${size.w}px`;
-		inputel.style.height = `${size.h}px`;
 		inputel.addEventListener("mouseover", (evn) => {
 			document.activeElement.blur();
 		});
@@ -73,6 +76,28 @@ const layers = {
 				name: options.name,
 				element,
 				inputElement: inputel,
+				_inputOffset: null,
+				get inputOffset() {
+					return this._inputOffset;
+				},
+
+				_resizeInputDiv() {
+					// Set offset
+					this._inputOffset = {
+						x: -Math.floor(options.inputSizeMultiplier / 2) * size.w,
+						y: -Math.floor(options.inputSizeMultiplier / 2) * size.h,
+					};
+
+					// Resize the input element
+					this.inputElement.style.left = `${this.inputOffset.x}px`;
+					this.inputElement.style.top = `${this.inputOffset.y}px`;
+					this.inputElement.style.width = `${
+						size.w * options.inputSizeMultiplier
+					}px`;
+					this.inputElement.style.height = `${
+						size.h * options.inputSizeMultiplier
+					}px`;
+				},
 
 				size,
 				resolution: options.resolution,
@@ -278,8 +303,11 @@ const layers = {
 					else console.debug(`[layers] Anonymous layer '${lobj.id}' deleted`);
 				},
 			},
-			_logpath
+			_logpath,
+			["_inputOffset"]
 		);
+
+		collection._resizeInputDiv();
 
 		layers._collections.push(collection);
 		layers.collections[key] = collection;

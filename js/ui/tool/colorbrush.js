@@ -166,7 +166,7 @@ const colorBrushTool = () =>
 					const vcp = {x: evn.evn.clientX, y: evn.evn.clientY};
 
 					// draw drawing cursor
-					uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
 					uiCtx.beginPath();
 					uiCtx.arc(
