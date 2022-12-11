@@ -259,7 +259,7 @@ body {
 	color: #3f1f1f;
 }
 
-.host-field-wrapper .connection-status.cors-issue {
+.host-field-wrapper .connection-status.webui-issue {
 	background-color: #dddd49;
 	color: #3f3f1f;
 }
