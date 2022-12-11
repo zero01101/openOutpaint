@@ -447,6 +447,12 @@ const makeSlider = (
 	});
 };
 
+const styleAutoComplete = createAutoComplete(
+	"Style",
+	document.getElementById("style-ac-mselect"),
+	{multiple: true}
+);
+
 const modelAutoComplete = createAutoComplete(
 	"Model",
 	document.getElementById("models-ac-select")
@@ -797,28 +803,23 @@ async function getStyles() {
 			stored = [];
 		}
 
-		data.forEach((style) => {
-			const option = document.createElement("option");
-			option.classList.add("style-select-option");
-			option.text = style.name;
-			option.value = style.name;
-			option.title = `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`;
-			if (stored.length === 0) option.selected = style.name === "None";
-			else
-				option.selected = !!stored.find(
-					(styleName) => style.name === styleName
-				);
-
-			styleSelect.add(option);
-		});
-
-		changeStyles();
-
-		stored.forEach((styleName, index) => {
-			if (!data.findIndex((style) => style.name === styleName)) {
-				stored.splice(index, 1);
+		styleAutoComplete.options = data.map((style) => ({
+			name: style.name,
+			value: style.name,
+			title: `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`,
+		}));
+		styleAutoComplete.onchange.on(({value}) => {
+			let selected = [];
+			if (value.find((v) => v === "None")) {
+				styleAutoComplete.value = [];
+			} else {
+				selected = value;
 			}
+			stableDiffusionData.styles = selected;
+			localStorage.setItem("promptStyle", JSON.stringify(selected));
 		});
+
+		styleAutoComplete.value = stored;
 		localStorage.setItem("promptStyle", JSON.stringify(stored));
 	} catch (e) {
 		console.warn("[index] Failed to fetch prompt styles");

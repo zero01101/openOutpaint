@@ -199,11 +199,13 @@ function createSlider(name, wrapper, options = {}) {
  * @param {string} name Name of the AutoComplete Select Element
  * @param {HTMLDivElement} wrapper The div element that will wrap the input elements
  * @param {object} options Extra options
- * @param {{name: string, value: string}} options.options Options to add to the selector
+ * @param {boolean} options.multiple Whether multiple options can be selected
+ * @param {{name: string, value: string}[]} options.options Options to add to the selector
  * @returns {AutoCompleteElement}
  */
 function createAutoComplete(name, wrapper, options = {}) {
 	defaultOpt(options, {
+		multiple: false,
 		options: [],
 	});
 
@@ -226,27 +228,46 @@ function createAutoComplete(name, wrapper, options = {}) {
 	const acobj = {
 		name,
 		wrapper,
-		_title: null,
-		_value: null,
+		_selectedOptions: new Set(),
 		_options: [],
 
 		/** @type {Observer<{name:string, value: string}>} */
 		onchange: new Observer(),
 
 		get value() {
-			return this._value;
+			const v = this._selectedOptions.map((opt) => opt.value);
+			return options.multiple ? v : v[0];
 		},
-		set value(val) {
-			const opt = this.options.find((option) => option.value === val);
+		set value(values) {
+			this._selectedOptions.clear();
 
-			if (!opt) return;
+			for (const val of options.multiple ? values : [values]) {
+				const opt = this.options.find((option) => option.value === val);
 
-			this._title = opt.name;
-			this._value = opt.value;
-			inputEl.value = opt.name;
-			inputEl.title = opt.name;
+				if (!opt) continue; // Ignore invalid options
 
-			this.onchange.emit({name: opt.name, value: opt.value});
+				this._selectedOptions.add(opt);
+			}
+
+			this._sync();
+		},
+
+		_sync() {
+			const val = Array.from(this._selectedOptions).map((opt) => opt.value);
+			const name = Array.from(this._selectedOptions).map((opt) => opt.name);
+
+			for (const opt of this._options) {
+				if (acobj._selectedOptions.has(opt))
+					opt.optionElement.classList.add("selected");
+				else opt.optionElement.classList.remove("selected");
+			}
+
+			updateInputField();
+
+			this.onchange.emit({
+				name: options.multiple ? name : name[0],
+				value: options.multiple ? val : val[0],
+			});
 		},
 
 		get options() {
@@ -261,15 +282,17 @@ function createAutoComplete(name, wrapper, options = {}) {
 
 			// Add options
 			val.forEach((opt) => {
-				const {name, value} = opt;
-				const option = {name, value};
+				const {name, value, title} = opt;
 
 				const optionEl = document.createElement("option");
 				optionEl.classList.add("autocomplete-option");
-				optionEl.title = option.name;
-				optionEl.addEventListener("click", () => select(option));
+				optionEl.title = title || name;
 
-				this._options.push({name, value, optionElement: optionEl});
+				const option = {name, value, optionElement: optionEl};
+
+				this._options.push(option);
+
+				optionEl.addEventListener("click", () => select(option));
 
 				autocompleteEl.appendChild(optionEl);
 			});
@@ -277,6 +300,15 @@ function createAutoComplete(name, wrapper, options = {}) {
 			updateOptions();
 		},
 	};
+
+	function updateInputField() {
+		inputEl.value = Array.from(acobj._selectedOptions)
+			.map((o) => o.name)
+			.join(", ");
+		inputEl.title = Array.from(acobj._selectedOptions)
+			.map((o) => o.name)
+			.join(", ");
+	}
 
 	function updateOptions() {
 		const text = inputEl.value.toLowerCase().trim();
@@ -310,15 +342,26 @@ function createAutoComplete(name, wrapper, options = {}) {
 		});
 	}
 
-	function select(options) {
+	function select(opt) {
 		ontext = false;
-		onlist = false;
+		if (!options.multiple) {
+			onlist = false;
+			acobj._selectedOptions.clear();
+			autocompleteEl.classList.add("display-none");
+			for (const child of autocompleteEl.children) {
+				child.classList.remove("selected");
+			}
+		}
 
-		acobj._title = options.name;
-		inputEl.value = options.name;
-		acobj.value = options.value;
+		if (options.multiple && acobj._selectedOptions.has(opt)) {
+			acobj._selectedOptions.delete(opt);
+			opt.optionElement.classList.remove("selected");
+		} else {
+			acobj._selectedOptions.add(opt);
+			opt.optionElement.classList.add("selected");
+		}
 
-		autocompleteEl.classList.add("display-none");
+		acobj._sync();
 	}
 
 	inputEl.addEventListener("focus", () => {
@@ -331,9 +374,7 @@ function createAutoComplete(name, wrapper, options = {}) {
 		ontext = false;
 
 		if (!onlist && !ontext) {
-			inputEl.value = "";
-			updateOptions();
-			inputEl.value = acobj._title;
+			updateInputField();
 
 			autocompleteEl.classList.add("display-none");
 		}
@@ -347,9 +388,7 @@ function createAutoComplete(name, wrapper, options = {}) {
 		onlist = false;
 
 		if (!onlist && !ontext) {
-			inputEl.value = "";
-			updateOptions();
-			inputEl.value = acobj._title;
+			updateInputField();
 
 			autocompleteEl.classList.add("display-none");
 		}
