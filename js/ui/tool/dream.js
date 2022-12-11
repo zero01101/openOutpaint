@@ -208,7 +208,7 @@ const _generate = async (
 		at = 1;
 	} catch (e) {
 		alert(
-			`Error generating images. Please try again or see consolde for more details`
+			`Error generating images. Please try again or see console for more details`
 		);
 		console.warn(`[dream] Error generating images:`);
 		console.warn(e);
@@ -259,7 +259,7 @@ const _generate = async (
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
 			alert(
-				`Error generating images. Please try again or see consolde for more details`
+				`Error generating images. Please try again or see console for more details`
 			);
 			console.warn(`[dream] Error generating images:`);
 			console.warn(e);
