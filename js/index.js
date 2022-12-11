@@ -269,8 +269,7 @@ async function testHostConnection() {
 		try {
 			// Check if API is available
 			const response = await fetch(
-				document.getElementById("host").value + "/sdapi/v1/options",
-				{method: "OPTIONS"}
+				document.getElementById("host").value + "/sdapi/v1/options"
 			);
 			switch (response.status) {
 				case 200: {
@@ -295,7 +294,7 @@ async function testHostConnection() {
 				}
 				default: {
 					setConnectionStatus("offline");
-					const message = `The host is online, but the API seems to be disabled. Have you run the webui with the flag --api?`;
+					const message = `The connection with the host returned an error: ${response.status} - ${response.statusText}`;
 					console.error(message);
 					if (notify) alert(message);
 				}
