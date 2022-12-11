@@ -236,3 +236,112 @@ select > option:checked::after {
 	mask-repeat: no-repeat;
 	background-color: var(--c-text);
 }
+
+/**
+ * Generic list
+ */
+
+.list {
+	height: 200px;
+
+	overflow-y: auto;
+
+	background-color: var(--c-primary);
+
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+.list > *:first-child {
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+.list .list-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	height: 25px;
+	padding-left: 5px;
+	padding-right: 5px;
+
+	cursor: pointer;
+
+	color: var(--c-text);
+
+	transition-duration: 50ms;
+}
+
+.list .list-item.active {
+	background-color: var(--c-active);
+}
+.list .list-item.active:hover,
+.list .list-item:hover {
+	background-color: var(--c-hover);
+}
+.list .list-item.active:active,
+.list .list-item:active {
+	background-color: var(--c-hover);
+	filter: brightness(120%);
+}
+
+.list .list-item > .title {
+	flex: 1;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+
+	background-color: transparent;
+
+	border: 0;
+	color: var(--c-text);
+}
+
+.list .list-item > .actions {
+	display: flex;
+	align-self: stretch;
+}
+
+.list .actions > button {
+	display: flex;
+	align-items: stretch;
+
+	padding: 0;
+
+	width: 25px;
+	aspect-ratio: 1;
+
+	background-color: transparent;
+	border: 0;
+	cursor: pointer;
+}
+
+.list .list-item > .actions > *:hover > * {
+	margin: 2px;
+}
+
+.list .actions > button > *:first-child {
+	flex: 1;
+	margin: 3px;
+
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	background-color: var(--c-text);
+}
+
+/* Generic buttons */
+.list .actions > .delete-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/trash.svg");
+	mask-image: url("/res/icons/trash.svg");
+}
+
+.list .actions > .rename-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/edit.svg");
+	mask-image: url("/res/icons/edit.svg");
+}
+
+.list .actions > .download-btn > *:first-child {
+	-webkit-mask-image: url("/res/icons/download.svg");
+	mask-image: url("/res/icons/download.svg");
+}
