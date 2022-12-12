@@ -235,6 +235,8 @@ const _generate = async (
 	};
 
 	const applyImg = async () => {
+		if (!images[at]) return;
+
 		const img = new Image();
 		// load the image data after defining the closure
 		img.src = "data:image/png;base64," + images[at];
@@ -271,6 +273,25 @@ const _generate = async (
 
 	const discardImg = async () => {
 		clean();
+	};
+
+	const saveImg = async () => {
+		if (!images[at]) return;
+
+		const img = new Image();
+		// load the image data after defining the closure
+		img.src = "data:image/png;base64," + images[at];
+		img.addEventListener("load", () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = img.width;
+			canvas.height = img.height;
+			canvas.getContext("2d").drawImage(img, 0, 0);
+
+			downloadCanvas({
+				canvas,
+				filename: `openOutpaint - dream - ${request.prompt} - ${at}.png`,
+			});
+		});
 	};
 
 	// Listen for keyboard arrows
@@ -385,6 +406,14 @@ const _generate = async (
 		});
 	});
 	imageSelectMenu.appendChild(resourcebtn);
+
+	const savebtn = document.createElement("button");
+	savebtn.textContent = "S";
+	savebtn.title = "Download image to computer";
+	savebtn.addEventListener("click", async () => {
+		saveImg();
+	});
+	imageSelectMenu.appendChild(savebtn);
 };
 
 /**
