@@ -57,6 +57,9 @@
 	pointer-events: none;
 
 	z-index: 15;
+
+	background-color: red;
+	opacity: 0.5;
 }
 
 #layer-render.pixelated canvas {
