@@ -176,7 +176,7 @@ async function testHostConnection() {
 			online: () => {
 				connectionIndicator.classList.add("online");
 				connectionIndicator.classList.remove(
-					"cors-issue",
+					"webui-issue",
 					"offline",
 					"before",
 					"server-error"
@@ -191,7 +191,7 @@ async function testHostConnection() {
 					"online",
 					"offline",
 					"before",
-					"cors-issue"
+					"webui-issue"
 				);
 				connectionIndicatorText.textContent = "Error";
 				connectionIndicator.title =
@@ -199,7 +199,7 @@ async function testHostConnection() {
 				connectionStatus = false;
 			},
 			corsissue: () => {
-				connectionIndicator.classList.add("cors-issue");
+				connectionIndicator.classList.add("webui-issue");
 				connectionIndicator.classList.remove(
 					"online",
 					"offline",
@@ -211,10 +211,23 @@ async function testHostConnection() {
 					"Server is online, but CORS is blocking our requests";
 				connectionStatus = false;
 			},
+			apiissue: () => {
+				connectionIndicator.classList.add("webui-issue");
+				connectionIndicator.classList.remove(
+					"online",
+					"offline",
+					"before",
+					"server-error"
+				);
+				connectionIndicatorText.textContent = "API";
+				connectionIndicator.title =
+					"Server is online, but the API seems to be disabled";
+				connectionStatus = false;
+			},
 			offline: () => {
 				connectionIndicator.classList.add("offline");
 				connectionIndicator.classList.remove(
-					"cors-issue",
+					"webui-issue",
 					"online",
 					"before",
 					"server-error"
@@ -227,7 +240,7 @@ async function testHostConnection() {
 			before: () => {
 				connectionIndicator.classList.add("before");
 				connectionIndicator.classList.remove(
-					"cors-issue",
+					"webui-issue",
 					"online",
 					"offline",
 					"server-error"
@@ -254,27 +267,37 @@ async function testHostConnection() {
 		var url = document.getElementById("host").value + "/startup-events";
 		// Attempt normal request
 		try {
-			/** @type {Response} */
-			const response = await fetch(url, {
-				signal: AbortSignal.timeout(5000),
-			});
-
-			if (response.status === 200) {
-				setConnectionStatus("online");
-				// Load data as soon as connection is first stablished
-				if (firstTimeOnline) {
-					getConfig();
-					getStyles();
-					getSamplers();
-					getUpscalers();
-					getModels();
-					firstTimeOnline = false;
+			// Check if API is available
+			const response = await fetch(
+				document.getElementById("host").value + "/sdapi/v1/options"
+			);
+			switch (response.status) {
+				case 200: {
+					setConnectionStatus("online");
+					// Load data as soon as connection is first stablished
+					if (firstTimeOnline) {
+						getConfig();
+						getStyles();
+						getSamplers();
+						getUpscalers();
+						getModels();
+						firstTimeOnline = false;
+					}
+					break;
 				}
-			} else {
-				setConnectionStatus("error");
-				const message = `Server responded with ${response.status} - ${response.statusText}. Try running the webui with the flag '--api'`;
-				console.error(message);
-				if (notify) alert(message);
+				case 404: {
+					setConnectionStatus("apiissue");
+					const message = `The host is online, but the API seems to be disabled. Have you run the webui with the flag --api?`;
+					console.error(message);
+					if (notify) alert(message);
+					break;
+				}
+				default: {
+					setConnectionStatus("offline");
+					const message = `The connection with the host returned an error: ${response.status} - ${response.statusText}`;
+					console.error(message);
+					if (notify) alert(message);
+				}
 			}
 		} catch (e) {
 			try {
@@ -423,6 +446,12 @@ const makeSlider = (
 		textStep,
 	});
 };
+
+const styleAutoComplete = createAutoComplete(
+	"Style",
+	document.getElementById("style-ac-mselect"),
+	{multiple: true}
+);
 
 const modelAutoComplete = createAutoComplete(
 	"Model",
@@ -774,28 +803,23 @@ async function getStyles() {
 			stored = [];
 		}
 
-		data.forEach((style) => {
-			const option = document.createElement("option");
-			option.classList.add("style-select-option");
-			option.text = style.name;
-			option.value = style.name;
-			option.title = `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`;
-			if (stored.length === 0) option.selected = style.name === "None";
-			else
-				option.selected = !!stored.find(
-					(styleName) => style.name === styleName
-				);
-
-			styleSelect.add(option);
-		});
-
-		changeStyles();
-
-		stored.forEach((styleName, index) => {
-			if (!data.findIndex((style) => style.name === styleName)) {
-				stored.splice(index, 1);
+		styleAutoComplete.options = data.map((style) => ({
+			name: style.name,
+			value: style.name,
+			title: `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`,
+		}));
+		styleAutoComplete.onchange.on(({value}) => {
+			let selected = [];
+			if (value.find((v) => v === "None")) {
+				styleAutoComplete.value = [];
+			} else {
+				selected = value;
 			}
+			stableDiffusionData.styles = selected;
+			localStorage.setItem("promptStyle", JSON.stringify(selected));
 		});
+
+		styleAutoComplete.value = stored;
 		localStorage.setItem("promptStyle", JSON.stringify(stored));
 	} catch (e) {
 		console.warn("[index] Failed to fetch prompt styles");

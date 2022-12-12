@@ -44,7 +44,7 @@ const stampTool = () =>
 			// Deselect
 			state.selected = null;
 			Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
-				child.classList.remove("selected");
+				child.classList.remove("active");
 			});
 
 			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
@@ -71,20 +71,20 @@ const stampTool = () =>
 					const resourceWrapper = resource && resource.dom.wrapper;
 
 					const wasSelected =
-						resourceWrapper && resourceWrapper.classList.contains("selected");
+						resourceWrapper && resourceWrapper.classList.contains("active");
 
 					Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
-						child.classList.remove("selected");
+						child.classList.remove("active");
 					});
 
 					// Select
 					if (!wasSelected) {
-						resourceWrapper && resourceWrapper.classList.add("selected");
+						resourceWrapper && resourceWrapper.classList.add("active");
 						state.selected = resource;
 					}
 					// If already selected, clear selection
 					else {
-						resourceWrapper.classList.remove("selected");
+						resourceWrapper.classList.remove("active");
 						state.selected = null;
 					}
 
@@ -136,15 +136,34 @@ const stampTool = () =>
 							);
 							const resourceWrapper = document.createElement("div");
 							resourceWrapper.id = `resource-${resource.id}`;
-							resourceWrapper.classList.add("resource");
-							const resourceTitle = document.createElement("span");
-							resourceTitle.textContent = resource.name;
-							resourceTitle.classList.add("resource-title");
+							resourceWrapper.classList.add("resource", "list-item");
+							const resourceTitle = document.createElement("input");
+							resourceTitle.value = resource.name;
+							resourceTitle.title = resource.name;
+							resourceTitle.style.pointerEvents = "none";
+							resourceTitle.addEventListener("change", () => {
+								resource.name = resourceTitle.value;
+								resourceTitle.title = resourceTitle.value;
+
+								syncResources();
+							});
+
+							resourceTitle.addEventListener("blur", () => {
+								resourceTitle.style.pointerEvents = "none";
+							});
+							resourceTitle.classList.add("resource-title", "title");
+
 							resourceWrapper.appendChild(resourceTitle);
 
 							resourceWrapper.addEventListener("click", () =>
 								state.selectResource(resource)
 							);
+
+							resourceWrapper.addEventListener("dblclick", () => {
+								resourceTitle.style.pointerEvents = "auto";
+								resourceTitle.focus();
+								resourceTitle.select();
+							});
 
 							resourceWrapper.addEventListener("mouseover", () => {
 								state.ctxmenu.previewPane.style.display = "block";
@@ -158,24 +177,25 @@ const stampTool = () =>
 							const actionArray = document.createElement("div");
 							actionArray.classList.add("actions");
 
-							const renameButton = document.createElement("button");
-							renameButton.addEventListener(
+							const saveButton = document.createElement("button");
+							saveButton.addEventListener(
 								"click",
 								(evn) => {
-									evn.stopPropagation();
-									const name = prompt("Rename your resource:", resource.name);
-									if (name) {
-										resource.name = name;
-										resourceTitle.textContent = name;
+									const canvas = document.createElement("canvas");
+									canvas.width = resource.image.width;
+									canvas.height = resource.image.height;
+									canvas.getContext("2d").drawImage(resource.image, 0, 0);
 
-										syncResources();
-									}
+									downloadCanvas({
+										canvas,
+										filename: `openOutpaint - resource '${resource.name}'.png`,
+									});
 								},
 								{passive: false}
 							);
-							renameButton.title = "Rename Resource";
-							renameButton.appendChild(document.createElement("div"));
-							renameButton.classList.add("rename-btn");
+							saveButton.title = "Download Resource";
+							saveButton.appendChild(document.createElement("div"));
+							saveButton.classList.add("download-btn");
 
 							const trashButton = document.createElement("button");
 							trashButton.addEventListener(
@@ -191,7 +211,7 @@ const stampTool = () =>
 							trashButton.appendChild(document.createElement("div"));
 							trashButton.classList.add("delete-btn");
 
-							actionArray.appendChild(renameButton);
+							actionArray.appendChild(saveButton);
 							actionArray.appendChild(trashButton);
 							resourceWrapper.appendChild(actionArray);
 							state.ctxmenu.resourceList.appendChild(resourceWrapper);
@@ -340,7 +360,7 @@ const stampTool = () =>
 					const resourceManager = document.createElement("div");
 					resourceManager.classList.add("resource-manager");
 					const resourceList = document.createElement("div");
-					resourceList.classList.add("resource-list");
+					resourceList.classList.add("list");
 
 					const previewPane = document.createElement("div");
 					previewPane.classList.add("preview-pane");

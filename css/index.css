@@ -33,10 +33,37 @@ body {
 	border: none;
 	text-align: center;
 	outline: none;
-	font-size: 15px;
-	padding: 5px;
+	padding: 0px;
+}
+
+.collapsible {
+	background-color: var(--c-primary);
+
+	margin-bottom: 2px;
 	margin-top: 5px;
-	margin-bottom: 5px;
+
+	transition-duration: 50ms;
+}
+
+.collapsible::before {
+	content: "";
+	display: block;
+
+	position: absolute;
+
+	width: 21px;
+	height: 21px;
+
+	background-color: var(--c-text);
+	mask-image: url("/res/icons/chevron-up.svg");
+	-webkit-mask-image: url("/res/icons/chevron-up.svg");
+	mask-size: contain;
+	-webkit-mask-size: contain;
+	rotate: 90deg;
+}
+
+.collapsible.active::before {
+	rotate: 180deg;
 }
 
 .display-none {
@@ -44,7 +71,11 @@ body {
 }
 
 .collapsible:hover {
-	background-color: #777;
+	background-color: var(--c-hover);
+}
+
+.collapsible:active {
+	filter: brightness(110%);
 }
 
 .content {
@@ -259,7 +290,7 @@ body {
 	color: #3f1f1f;
 }
 
-.host-field-wrapper .connection-status.cors-issue {
+.host-field-wrapper .connection-status.webui-issue {
 	background-color: #dddd49;
 	color: #3f3f1f;
 }

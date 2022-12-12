@@ -208,7 +208,7 @@ const _generate = async (
 		at = 1;
 	} catch (e) {
 		alert(
-			`Error generating images. Please try again or see consolde for more details`
+			`Error generating images. Please try again or see console for more details`
 		);
 		console.warn(`[dream] Error generating images:`);
 		console.warn(e);
@@ -235,6 +235,8 @@ const _generate = async (
 	};
 
 	const applyImg = async () => {
+		if (!images[at]) return;
+
 		const img = new Image();
 		// load the image data after defining the closure
 		img.src = "data:image/png;base64," + images[at];
@@ -259,7 +261,7 @@ const _generate = async (
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
 			alert(
-				`Error generating images. Please try again or see consolde for more details`
+				`Error generating images. Please try again or see console for more details`
 			);
 			console.warn(`[dream] Error generating images:`);
 			console.warn(e);
@@ -271,6 +273,25 @@ const _generate = async (
 
 	const discardImg = async () => {
 		clean();
+	};
+
+	const saveImg = async () => {
+		if (!images[at]) return;
+
+		const img = new Image();
+		// load the image data after defining the closure
+		img.src = "data:image/png;base64," + images[at];
+		img.addEventListener("load", () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = img.width;
+			canvas.height = img.height;
+			canvas.getContext("2d").drawImage(img, 0, 0);
+
+			downloadCanvas({
+				canvas,
+				filename: `openOutpaint - dream - ${request.prompt} - ${at}.png`,
+			});
+		});
 	};
 
 	// Listen for keyboard arrows
@@ -385,6 +406,14 @@ const _generate = async (
 		});
 	});
 	imageSelectMenu.appendChild(resourcebtn);
+
+	const savebtn = document.createElement("button");
+	savebtn.textContent = "S";
+	savebtn.title = "Download image to computer";
+	savebtn.addEventListener("click", async () => {
+		saveImg();
+	});
+	imageSelectMenu.appendChild(savebtn);
 };
 
 /**
