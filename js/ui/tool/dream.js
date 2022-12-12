@@ -120,6 +120,8 @@ const _generate = async (
 	bb,
 	drawEvery = 0.2 / request.n_iter
 ) => {
+	events.tool.dream.emit({event: "generate", request});
+
 	const requestCopy = JSON.parse(JSON.stringify(request));
 
 	// Block requests to identical areas

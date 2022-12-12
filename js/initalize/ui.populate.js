@@ -48,7 +48,7 @@ for (var i = 0; i < coll.length; i++) {
 			if (active) content.style.maxHeight = content.scrollHeight + "px";
 		});
 
-		Array.from(content.children).forEach((child) => {
+		Array.from(content.querySelectorAll("*")).forEach((child) => {
 			observer.observe(child);
 		});
 
@@ -61,6 +61,20 @@ for (var i = 0; i < coll.length; i++) {
 		}
 	});
 }
+
+/**
+ * Prompt history setup
+ */
+const _promptHistoryEl = document.getElementById("prompt-history");
+const _promptHistoryBtn = document.getElementById("prompt-history-btn");
+
+_promptHistoryEl.addEventListener("mouseleave", () => {
+	_promptHistoryEl.classList.remove("expanded");
+});
+
+_promptHistoryBtn.addEventListener("click", () =>
+	_promptHistoryEl.classList.toggle("expanded")
+);
 
 /**
  * Settings overlay setup
