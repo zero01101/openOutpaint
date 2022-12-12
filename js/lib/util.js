@@ -232,8 +232,8 @@ function cropCanvas(sourceCanvas, options = {}) {
 
 	bb.x = minx - options.border;
 	bb.y = miny - options.border;
-	bb.w = maxx - minx + 2 * options.border;
-	bb.h = maxy - miny + 2 * options.border;
+	bb.w = maxx - minx + 1 + 2 * options.border;
+	bb.h = maxy - miny + 1 + 2 * options.border;
 
 	if (maxx < 0) throw new NoContentError("Canvas has no content to crop");
 
