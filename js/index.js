@@ -468,12 +468,12 @@ const upscalerAutoComplete = createAutoComplete(
 	document.getElementById("upscaler-ac-select")
 );
 
-makeSlider(
+const resSlider = makeSlider(
 	"Resolution",
 	document.getElementById("resolution"),
 	"resolution",
 	64,
-	1024,
+	2048,
 	64,
 	512,
 	2,
@@ -971,6 +971,7 @@ imageCollection.element.addEventListener(
 	"wheel",
 	(evn) => {
 		evn.preventDefault();
+		_resolution_onwheel(evn);
 	},
 	{passive: false}
 );
@@ -988,3 +989,10 @@ function resetToDefaults() {
 		localStorage.clear();
 	}
 }
+
+const _resolution_onwheel = (evn) => {
+	if (toolbar._current_tool.state.matchResolution) {
+		resSlider.value =
+			stableDiffusionData.width - (64 * evn.deltaY) / Math.abs(evn.deltaY);
+	}
+};

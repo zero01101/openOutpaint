@@ -884,9 +884,9 @@ const _dream_onwheel = (evn, state) => {
 		//
 		// TODO: Someone that has a smooth scrolling mouse should verify if this works with them.
 
-		const v = state.cursorSize - 128 * (evn.delta / Math.abs(evn.delta));
+		const v = state.cursorSize - 64 * (evn.delta / Math.abs(evn.delta));
 
-		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
+		state.cursorSize = state.setCursorSize(v + snap(v, 0, 64));
 		state.mousemovecb(evn);
 	}
 };
@@ -914,6 +914,11 @@ const dreamTool = () =>
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
+
+			// update cursor size if matching is enabled
+			if (state.matchResolution) {
+				state.setCursorSize(stableDiffusionData.width);
+			}
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -934,7 +939,7 @@ const dreamTool = () =>
 				};
 
 				state.cursorSize = 512;
-
+				state.matchResolution = true;
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
@@ -982,15 +987,27 @@ const dreamTool = () =>
 						"cursorSize",
 						"Cursor Size",
 						{
-							min: 0,
+							min: 64,
 							max: 2048,
-							step: 128,
+							step: 64,
 							textStep: 2,
 						}
 					);
 
 					state.setCursorSize = cursorSizeSlider.setValue;
 					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
+
+					// Match Resolution Checkbox
+					state.ctxmenu.matchResolutionLabel = _toolbar_input.checkbox(
+						state,
+						"matchResolution",
+						"Match Resolution",
+						() => {
+							if (state.matchResolution) {
+								resSlider.value = state.cursorSize;
+							}
+						}
+					).label;
 
 					// Snap to Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
@@ -1024,6 +1041,8 @@ const dreamTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
+				menu.appendChild(state.ctxmenu.matchResolutionLabel);
+				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
@@ -1053,6 +1072,11 @@ const img2imgTool = () =>
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
+
+			// update cursor size if matching is enabled
+			if (state.matchResolution) {
+				state.setCursorSize(stableDiffusionData.width);
+			}
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -1072,6 +1096,7 @@ const img2imgTool = () =>
 				};
 
 				state.cursorSize = 512;
+				state.matchResolution = true;
 				state.snapToGrid = true;
 				state.invertMask = true;
 				state.fullResolution = false;
@@ -1223,15 +1248,27 @@ const img2imgTool = () =>
 						"cursorSize",
 						"Cursor Size",
 						{
-							min: 0,
+							min: 64,
 							max: 2048,
-							step: 128,
+							step: 64,
 							textStep: 2,
 						}
 					);
 
 					state.setCursorSize = cursorSizeSlider.setValue;
 					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
+
+					// Match Resolution Checkbox
+					state.ctxmenu.matchResolutionLabel = _toolbar_input.checkbox(
+						state,
+						"matchResolution",
+						"Match Resolution",
+						() => {
+							if (state.matchResolution) {
+								resSlider.value = state.cursorSize;
+							}
+						}
+					).label;
 
 					// Snap To Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
@@ -1292,6 +1329,8 @@ const img2imgTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
+				menu.appendChild(state.ctxmenu.matchResolutionLabel);
+				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
