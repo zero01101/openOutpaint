@@ -1,4 +1,6 @@
 let blockNewImages = false;
+let generationQueue = [];
+let generationAreas = new Set();
 let generating = false;
 
 /**
@@ -118,7 +120,50 @@ const _generate = async (
 	bb,
 	drawEvery = 0.2 / request.n_iter
 ) => {
-	const requestCopy = {...request};
+	const requestCopy = JSON.parse(JSON.stringify(request));
+
+	// Block requests to identical areas
+	const areaid = `${bb.x}-${bb.y}-${bb.w}-${bb.h}`;
+	if (generationAreas.has(areaid)) return;
+	generationAreas.add(areaid);
+
+	// Await for queue
+	const waitQueue = async () => {
+		const stopQueueMarchingAnts = march(bb, {style: "#AAF"});
+
+		let qPromise = null;
+		let qResolve = null;
+		await new Promise((finish) => {
+			// Will be this request's (kind of) semaphore
+			qPromise = new Promise((r) => (qResolve = r));
+			generationQueue.push(qPromise);
+
+			// Wait for last generation to end
+			if (generationQueue.length > 1) {
+				(async () => {
+					await generationQueue[generationQueue.length - 2];
+					finish();
+				})();
+			} else {
+				// If this is the first, just continue
+				finish();
+			}
+		});
+
+		stopQueueMarchingAnts();
+
+		return {promise: qPromise, resolve: qResolve};
+	};
+
+	const nextQueue = (queueEntry) => {
+		const generationIndex = generationQueue.findIndex(
+			(v) => v === queueEntry.promise
+		);
+		generationQueue.splice(generationIndex, 1);
+		queueEntry.resolve();
+	};
+
+	const initialQ = await waitQueue();
 
 	// Images to select through
 	let at = 0;
@@ -253,6 +298,7 @@ const _generate = async (
 	};
 
 	const makeMore = async () => {
+		const moreQ = await waitQueue();
 		try {
 			stopProgress = _monitorProgress(bb);
 			interruptButton.disabled = false;
@@ -269,6 +315,8 @@ const _generate = async (
 			stopProgress();
 			imageCollection.inputElement.removeChild(interruptButton);
 		}
+
+		nextQueue(moreQ);
 	};
 
 	const discardImg = async () => {
@@ -342,8 +390,9 @@ const _generate = async (
 		stopMarchingAnts();
 		imageCollection.inputElement.removeChild(imageSelectMenu);
 		imageCollection.deleteLayer(layer);
-		blockNewImages = false;
 		keyboard.listen.onkeyclick.clear(onarrow);
+		// Remove area from no-generate list
+		generationAreas.delete(areaid);
 	};
 
 	redraw();
@@ -414,6 +463,8 @@ const _generate = async (
 		saveImg();
 	});
 	imageSelectMenu.appendChild(savebtn);
+
+	nextQueue(initialQ);
 };
 
 /**
@@ -423,46 +474,75 @@ const _generate = async (
  * @param {*} state
  */
 const dream_generate_callback = async (evn, state) => {
-	if (!blockNewImages) {
-		const bb = getBoundingBox(
-			evn.x,
-			evn.y,
-			state.cursorSize,
-			state.cursorSize,
-			state.snapToGrid && basePixelCount
+	const bb = getBoundingBox(
+		evn.x,
+		evn.y,
+		state.cursorSize,
+		state.cursorSize,
+		state.snapToGrid && basePixelCount
+	);
+
+	// Build request to the API
+	const request = {};
+	Object.assign(request, stableDiffusionData);
+
+	// Load prompt (maybe we should add some events so we don't have to do this)
+	request.prompt = document.getElementById("prompt").value;
+	request.negative_prompt = document.getElementById("negPrompt").value;
+
+	// Get visible pixels
+	const visibleCanvas = uil.getVisible(bb);
+
+	// Use txt2img if canvas is blank
+	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
+		// Dream
+		_generate("txt2img", request, bb);
+	} else {
+		// Use img2img if not
+
+		// Temporary canvas for init image and mask generation
+		const auxCanvas = document.createElement("canvas");
+		auxCanvas.width = request.width;
+		auxCanvas.height = request.height;
+		const auxCtx = auxCanvas.getContext("2d");
+
+		auxCtx.fillStyle = "#000F";
+
+		// Get init image
+		auxCtx.fillRect(0, 0, request.width, request.height);
+		auxCtx.drawImage(
+			visibleCanvas,
+			0,
+			0,
+			bb.w,
+			bb.h,
+			0,
+			0,
+			request.width,
+			request.height
 		);
+		request.init_images = [auxCanvas.toDataURL()];
 
-		// Build request to the API
-		const request = {};
-		Object.assign(request, stableDiffusionData);
+		// Get mask image
+		auxCtx.fillStyle = "#000F";
+		auxCtx.fillRect(0, 0, request.width, request.height);
+		if (state.invertMask) {
+			// overmasking by definition is entirely pointless with an inverted mask outpaint
+			// since it should explicitly avoid brushed masks too, we just won't even bother
+			auxCtx.globalCompositeOperation = "destination-in";
+			auxCtx.drawImage(
+				maskPaintCanvas,
+				bb.x,
+				bb.y,
+				bb.w,
+				bb.h,
+				0,
+				0,
+				request.width,
+				request.height
+			);
 
-		// Load prompt (maybe we should add some events so we don't have to do this)
-		request.prompt = document.getElementById("prompt").value;
-		request.negative_prompt = document.getElementById("negPrompt").value;
-
-		// Don't allow another image until is finished
-		blockNewImages = true;
-
-		// Get visible pixels
-		const visibleCanvas = uil.getVisible(bb);
-
-		// Use txt2img if canvas is blank
-		if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
-			// Dream
-			_generate("txt2img", request, bb);
-		} else {
-			// Use img2img if not
-
-			// Temporary canvas for init image and mask generation
-			const auxCanvas = document.createElement("canvas");
-			auxCanvas.width = request.width;
-			auxCanvas.height = request.height;
-			const auxCtx = auxCanvas.getContext("2d");
-
-			auxCtx.fillStyle = "#000F";
-
-			// Get init image
-			auxCtx.fillRect(0, 0, request.width, request.height);
+			auxCtx.globalCompositeOperation = "destination-in";
 			auxCtx.drawImage(
 				visibleCanvas,
 				0,
@@ -474,82 +554,48 @@ const dream_generate_callback = async (evn, state) => {
 				request.width,
 				request.height
 			);
-			request.init_images = [auxCanvas.toDataURL()];
-
-			// Get mask image
-			auxCtx.fillStyle = "#000F";
-			auxCtx.fillRect(0, 0, request.width, request.height);
-			if (state.invertMask) {
-				// overmasking by definition is entirely pointless with an inverted mask outpaint
-				// since it should explicitly avoid brushed masks too, we just won't even bother
-				auxCtx.globalCompositeOperation = "destination-in";
-				auxCtx.drawImage(
-					maskPaintCanvas,
-					bb.x,
-					bb.y,
-					bb.w,
-					bb.h,
-					0,
-					0,
-					request.width,
-					request.height
-				);
-
-				auxCtx.globalCompositeOperation = "destination-in";
-				auxCtx.drawImage(
-					visibleCanvas,
-					0,
-					0,
-					bb.w,
-					bb.h,
-					0,
-					0,
-					request.width,
-					request.height
-				);
-			} else {
-				auxCtx.globalCompositeOperation = "destination-in";
-				auxCtx.drawImage(
-					visibleCanvas,
-					0,
-					0,
-					bb.w,
-					bb.h,
-					0,
-					0,
-					request.width,
-					request.height
-				);
-				// here's where to overmask to avoid including the brushed mask
-				// 99% of my issues were from failing to set source-over for the overmask blotches
-				if (state.overMaskPx > 0) {
-					// transparent to white first
-					auxCtx.globalCompositeOperation = "destination-atop";
-					auxCtx.fillStyle = "#FFFF";
-					auxCtx.fillRect(0, 0, request.width, request.height);
-					applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
-				}
-
-				auxCtx.globalCompositeOperation = "destination-out"; // ???
-				auxCtx.drawImage(
-					maskPaintCanvas,
-					bb.x,
-					bb.y,
-					bb.w,
-					bb.h,
-					0,
-					0,
-					request.width,
-					request.height
-				);
+		} else {
+			auxCtx.globalCompositeOperation = "destination-in";
+			auxCtx.drawImage(
+				visibleCanvas,
+				0,
+				0,
+				bb.w,
+				bb.h,
+				0,
+				0,
+				request.width,
+				request.height
+			);
+			// here's where to overmask to avoid including the brushed mask
+			// 99% of my issues were from failing to set source-over for the overmask blotches
+			if (state.overMaskPx > 0) {
+				// transparent to white first
+				auxCtx.globalCompositeOperation = "destination-atop";
+				auxCtx.fillStyle = "#FFFF";
+				auxCtx.fillRect(0, 0, request.width, request.height);
+				applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
 			}
-			auxCtx.globalCompositeOperation = "destination-atop";
-			auxCtx.fillStyle = "#FFFF";
-			auxCtx.fillRect(0, 0, request.width, request.height);
-			request.mask = auxCanvas.toDataURL();
-			// Dream
-			_generate("img2img", request, bb);
+
+			auxCtx.globalCompositeOperation = "destination-out"; // ???
+			auxCtx.drawImage(
+				maskPaintCanvas,
+				bb.x,
+				bb.y,
+				bb.w,
+				bb.h,
+				0,
+				0,
+				request.width,
+				request.height
+			);
 		}
+		auxCtx.globalCompositeOperation = "destination-atop";
+		auxCtx.fillStyle = "#FFFF";
+		auxCtx.fillRect(0, 0, request.width, request.height);
+		request.mask = auxCanvas.toDataURL();
+		// Dream
+		_generate("img2img", request, bb);
 	}
 };
 const dream_erase_callback = (evn, state) => {
@@ -606,140 +652,135 @@ function applyOvermask(canvas, ctx, px) {
  * Image to Image
  */
 const dream_img2img_callback = (evn, state) => {
-	if (!blockNewImages) {
-		const bb = getBoundingBox(
-			evn.x,
-			evn.y,
-			state.cursorSize,
-			state.cursorSize,
-			state.snapToGrid && basePixelCount
-		);
+	const bb = getBoundingBox(
+		evn.x,
+		evn.y,
+		state.cursorSize,
+		state.cursorSize,
+		state.snapToGrid && basePixelCount
+	);
 
-		// Get visible pixels
-		const visibleCanvas = uil.getVisible(bb);
+	// Get visible pixels
+	const visibleCanvas = uil.getVisible(bb);
 
-		// Do nothing if no image exists
-		if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) return;
+	// Do nothing if no image exists
+	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) return;
 
-		// Build request to the API
-		const request = {};
-		Object.assign(request, stableDiffusionData);
+	// Build request to the API
+	const request = {};
+	Object.assign(request, stableDiffusionData);
 
-		request.denoising_strength = state.denoisingStrength;
-		request.inpainting_fill = 1; // For img2img use original
+	request.denoising_strength = state.denoisingStrength;
+	request.inpainting_fill = 1; // For img2img use original
 
-		// Load prompt (maybe we should add some events so we don't have to do this)
-		request.prompt = document.getElementById("prompt").value;
-		request.negative_prompt = document.getElementById("negPrompt").value;
+	// Load prompt (maybe we should add some events so we don't have to do this)
+	request.prompt = document.getElementById("prompt").value;
+	request.negative_prompt = document.getElementById("negPrompt").value;
 
-		// Don't allow another image until is finished
-		blockNewImages = true;
+	// Use img2img
 
-		// Use img2img
+	// Temporary canvas for init image and mask generation
+	const auxCanvas = document.createElement("canvas");
+	auxCanvas.width = request.width;
+	auxCanvas.height = request.height;
+	const auxCtx = auxCanvas.getContext("2d");
 
-		// Temporary canvas for init image and mask generation
-		const auxCanvas = document.createElement("canvas");
-		auxCanvas.width = request.width;
-		auxCanvas.height = request.height;
-		const auxCtx = auxCanvas.getContext("2d");
+	auxCtx.fillStyle = "#000F";
 
+	// Get init image
+	auxCtx.fillRect(0, 0, request.width, request.height);
+	auxCtx.drawImage(
+		visibleCanvas,
+		0,
+		0,
+		bb.w,
+		bb.h,
+		0,
+		0,
+		request.width,
+		request.height
+	);
+	request.init_images = [auxCanvas.toDataURL()];
+
+	// Get mask image
+	auxCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
+	auxCtx.fillRect(0, 0, request.width, request.height);
+	auxCtx.globalCompositeOperation = "destination-out";
+	auxCtx.drawImage(
+		maskPaintCanvas,
+		bb.x,
+		bb.y,
+		bb.w,
+		bb.h,
+		0,
+		0,
+		request.width,
+		request.height
+	);
+
+	auxCtx.globalCompositeOperation = "destination-atop";
+	auxCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
+	auxCtx.fillRect(0, 0, request.width, request.height);
+
+	// Border Mask
+	if (state.keepBorderSize > 0) {
+		auxCtx.globalCompositeOperation = "source-over";
 		auxCtx.fillStyle = "#000F";
-
-		// Get init image
-		auxCtx.fillRect(0, 0, request.width, request.height);
-		auxCtx.drawImage(
-			visibleCanvas,
-			0,
-			0,
-			bb.w,
-			bb.h,
-			0,
-			0,
-			request.width,
-			request.height
-		);
-		request.init_images = [auxCanvas.toDataURL()];
-
-		// Get mask image
-		auxCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
-		auxCtx.fillRect(0, 0, request.width, request.height);
-		auxCtx.globalCompositeOperation = "destination-out";
-		auxCtx.drawImage(
-			maskPaintCanvas,
-			bb.x,
-			bb.y,
-			bb.w,
-			bb.h,
-			0,
-			0,
-			request.width,
-			request.height
-		);
-
-		auxCtx.globalCompositeOperation = "destination-atop";
-		auxCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
-		auxCtx.fillRect(0, 0, request.width, request.height);
-
-		// Border Mask
-		if (state.keepBorderSize > 0) {
-			auxCtx.globalCompositeOperation = "source-over";
-			auxCtx.fillStyle = "#000F";
-			if (state.gradient) {
-				const lg = auxCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
-				lg.addColorStop(0, "#000F");
-				lg.addColorStop(1, "#0000");
-				auxCtx.fillStyle = lg;
-			}
-			auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
-			if (state.gradient) {
-				const tg = auxCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
-				tg.addColorStop(0, "#000F");
-				tg.addColorStop(1, "#0000");
-				auxCtx.fillStyle = tg;
-			}
-			auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
-			if (state.gradient) {
-				const rg = auxCtx.createLinearGradient(
-					request.width,
-					0,
-					request.width - state.keepBorderSize,
-					0
-				);
-				rg.addColorStop(0, "#000F");
-				rg.addColorStop(1, "#0000");
-				auxCtx.fillStyle = rg;
-			}
-			auxCtx.fillRect(
-				request.width - state.keepBorderSize,
-				0,
-				state.keepBorderSize,
-				request.height
-			);
-			if (state.gradient) {
-				const bg = auxCtx.createLinearGradient(
-					0,
-					request.height,
-					0,
-					request.height - state.keepBorderSize
-				);
-				bg.addColorStop(0, "#000F");
-				bg.addColorStop(1, "#0000");
-				auxCtx.fillStyle = bg;
-			}
-			auxCtx.fillRect(
-				0,
-				request.height - state.keepBorderSize,
-				request.width,
-				state.keepBorderSize
-			);
+		if (state.gradient) {
+			const lg = auxCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
+			lg.addColorStop(0, "#000F");
+			lg.addColorStop(1, "#0000");
+			auxCtx.fillStyle = lg;
 		}
-
-		request.mask = auxCanvas.toDataURL();
-		request.inpaint_full_res = state.fullResolution;
-
-		// Dream
-		_generate("img2img", request, bb);
+		auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+		if (state.gradient) {
+			const tg = auxCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
+			tg.addColorStop(0, "#000F");
+			tg.addColorStop(1, "#0000");
+			auxCtx.fillStyle = tg;
+		}
+		auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+		if (state.gradient) {
+			const rg = auxCtx.createLinearGradient(
+				request.width,
+				0,
+				request.width - state.keepBorderSize,
+				0
+			);
+			rg.addColorStop(0, "#000F");
+			rg.addColorStop(1, "#0000");
+			auxCtx.fillStyle = rg;
+		}
+		auxCtx.fillRect(
+			request.width - state.keepBorderSize,
+			0,
+			state.keepBorderSize,
+			request.height
+		);
+		if (state.gradient) {
+			const bg = auxCtx.createLinearGradient(
+				0,
+				request.height,
+				0,
+				request.height - state.keepBorderSize
+			);
+			bg.addColorStop(0, "#000F");
+			bg.addColorStop(1, "#0000");
+			auxCtx.fillStyle = bg;
+		}
+		auxCtx.fillRect(
+			0,
+			request.height - state.keepBorderSize,
+			request.width,
+			state.keepBorderSize
+		);
 	}
+
+	request.mask = auxCanvas.toDataURL();
+	request.inpaint_full_res = state.fullResolution;
+
+	// Dream
+	_generate("img2img", request, bb);
 };
 
 /**

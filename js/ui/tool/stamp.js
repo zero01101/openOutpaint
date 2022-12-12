@@ -181,6 +181,7 @@ const stampTool = () =>
 							saveButton.addEventListener(
 								"click",
 								(evn) => {
+									evn.stopPropagation();
 									const canvas = document.createElement("canvas");
 									canvas.width = resource.image.width;
 									canvas.height = resource.image.height;
