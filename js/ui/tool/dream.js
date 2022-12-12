@@ -884,9 +884,9 @@ const _dream_onwheel = (evn, state) => {
 		//
 		// TODO: Someone that has a smooth scrolling mouse should verify if this works with them.
 
-		const v = state.cursorSize - 64 * (evn.delta / Math.abs(evn.delta));
+		const v = state.cursorSize - 128 * (evn.delta / Math.abs(evn.delta));
 
-		state.cursorSize = state.setCursorSize(v + snap(v, 0, 64));
+		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
 		state.mousemovecb(evn);
 	}
 };
@@ -987,9 +987,9 @@ const dreamTool = () =>
 						"cursorSize",
 						"Cursor Size",
 						{
-							min: 64,
+							min: 128,
 							max: 2048,
-							step: 64,
+							step: 128,
 							textStep: 2,
 						}
 					);
@@ -1248,9 +1248,9 @@ const img2imgTool = () =>
 						"cursorSize",
 						"Cursor Size",
 						{
-							min: 64,
+							min: 128,
 							max: 2048,
-							step: 64,
+							step: 128,
 							textStep: 2,
 						}
 					);

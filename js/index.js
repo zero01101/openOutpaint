@@ -472,15 +472,16 @@ const resSlider = makeSlider(
 	"Resolution",
 	document.getElementById("resolution"),
 	"resolution",
-	64,
+	128,
 	2048,
-	64,
+	128,
 	512,
 	2,
 	(v) => {
 		stableDiffusionData.width = stableDiffusionData.height = v;
 		stableDiffusionData.firstphase_width =
 			stableDiffusionData.firstphase_height = v / 2;
+		informSliders();
 	}
 );
 makeSlider(
@@ -990,9 +991,19 @@ function resetToDefaults() {
 	}
 }
 
+function informSliders() {
+	if (toolbar._current_tool && toolbar._current_tool.state.matchResolution) {
+		if (!toolbar._current_tool.state.ignorePrevious) {
+			toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
+		}
+		toolbar._current_tool.state.ignorePrevious = false;
+	}
+}
+
 const _resolution_onwheel = (evn) => {
-	if (toolbar._current_tool.state.matchResolution) {
+	if (toolbar._current_tool && toolbar._current_tool.state.matchResolution) {
+		toolbar._current_tool.state.ignorePrevious = true; //so hacky
 		resSlider.value =
-			stableDiffusionData.width - (64 * evn.deltaY) / Math.abs(evn.deltaY);
+			stableDiffusionData.width - (128 * evn.deltaY) / Math.abs(evn.deltaY);
 	}
 };
