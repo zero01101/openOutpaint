@@ -910,11 +910,7 @@ function loadSettings() {
 			: localStorage.getItem("enable_hr")
 	);
 	var _sync_cursor_size = Boolean(
-<<<<<<< HEAD
 		localStorage.getItem("sync_cursor_size") == (null || "true")
-=======
-		localStorage.getItem("sync_cursor_size") == (null || "false")
->>>>>>> zero/main
 			? false
 			: localStorage.getItem("sync_cursor_size")
 	);
