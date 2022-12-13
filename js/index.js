@@ -482,7 +482,7 @@ const resSlider = makeSlider(
 		stableDiffusionData.width = stableDiffusionData.height = v;
 		stableDiffusionData.firstphase_width =
 			stableDiffusionData.firstphase_height = v / 2;
-		informSliders();
+		informCursorSizeSlider();
 	}
 );
 makeSlider(
@@ -553,6 +553,9 @@ function changeSyncCursorSize() {
 		"sync_cursor_size",
 		stableDiffusionData.sync_cursor_size
 	);
+	if (stableDiffusionData.sync_cursor_size) {
+		resSlider.value = stableDiffusionData.width;
+	}
 }
 
 function changeSmoothRendering() {
@@ -991,7 +994,9 @@ imageCollection.element.addEventListener(
 	"wheel",
 	(evn) => {
 		evn.preventDefault();
-		_resolution_onwheel(evn);
+		if (!evn.ctrlKey) {
+			_resolution_onwheel(evn);
+		}
 	},
 	{passive: false}
 );
@@ -1010,7 +1015,7 @@ function resetToDefaults() {
 	}
 }
 
-function informSliders() {
+function informCursorSizeSlider() {
 	if (stableDiffusionData.sync_cursor_size) {
 		if (!toolbar._current_tool.state.ignorePrevious) {
 			toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
