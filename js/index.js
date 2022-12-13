@@ -115,6 +115,7 @@ function startup() {
 	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
+	changeSyncCursorSize();
 }
 
 /**
@@ -543,6 +544,17 @@ function changeHiResFix() {
 	);
 	localStorage.setItem("enable_hr", stableDiffusionData.enable_hr);
 }
+
+function changeSyncCursorSize() {
+	stableDiffusionData.sync_cursor_size = Boolean(
+		document.getElementById("cbxSyncCursorSize").checked
+	); //is this horribly hacky, putting it in SD data instead of making a gross global var?
+	localStorage.setItem(
+		"sync_cursor_size",
+		stableDiffusionData.sync_cursor_size
+	);
+}
+
 function changeSmoothRendering() {
 	const layers = document.getElementById("layer-render");
 	if (document.getElementById("cbxSmooth").checked) {
@@ -957,6 +969,11 @@ function loadSettings() {
 			? false
 			: localStorage.getItem("enable_hr")
 	);
+	var _sync_cursor_size = Boolean(
+		localStorage.getItem("sync_cursor_size") == (null || "false")
+			? false
+			: localStorage.getItem("sync_cursor_size")
+	);
 
 	// set the values into the UI
 	document.getElementById("prompt").value = String(_prompt);
@@ -966,6 +983,8 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
+	document.getElementById("cbxSyncCursorSize").checked =
+		Boolean(_sync_cursor_size);
 }
 
 imageCollection.element.addEventListener(
@@ -992,7 +1011,7 @@ function resetToDefaults() {
 }
 
 function informSliders() {
-	if (toolbar._current_tool && toolbar._current_tool.state.matchResolution) {
+	if (stableDiffusionData.sync_cursor_size) {
 		if (!toolbar._current_tool.state.ignorePrevious) {
 			toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
 		}
@@ -1001,7 +1020,7 @@ function informSliders() {
 }
 
 const _resolution_onwheel = (evn) => {
-	if (toolbar._current_tool && toolbar._current_tool.state.matchResolution) {
+	if (stableDiffusionData.sync_cursor_size) {
 		toolbar._current_tool.state.ignorePrevious = true; //so hacky
 		resSlider.value =
 			stableDiffusionData.width - (128 * evn.deltaY) / Math.abs(evn.deltaY);

@@ -916,7 +916,7 @@ const dreamTool = () =>
 			setMask(state.invertMask ? "hold" : "clear");
 
 			// update cursor size if matching is enabled
-			if (state.matchResolution) {
+			if (stableDiffusionData.sync_cursor_size) {
 				state.setCursorSize(stableDiffusionData.width);
 			}
 		},
@@ -939,7 +939,6 @@ const dreamTool = () =>
 				};
 
 				state.cursorSize = 512;
-				state.matchResolution = true;
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
@@ -997,18 +996,6 @@ const dreamTool = () =>
 					state.setCursorSize = cursorSizeSlider.setValue;
 					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
 
-					// Match Resolution Checkbox
-					state.ctxmenu.matchResolutionLabel = _toolbar_input.checkbox(
-						state,
-						"matchResolution",
-						"Match Resolution",
-						() => {
-							if (state.matchResolution) {
-								resSlider.value = state.cursorSize;
-							}
-						}
-					).label;
-
 					// Snap to Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
@@ -1041,8 +1028,6 @@ const dreamTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
-				menu.appendChild(state.ctxmenu.matchResolutionLabel);
-				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
@@ -1074,7 +1059,7 @@ const img2imgTool = () =>
 			setMask(state.invertMask ? "hold" : "clear");
 
 			// update cursor size if matching is enabled
-			if (state.matchResolution) {
+			if (stableDiffusionData.sync_cursor_size) {
 				state.setCursorSize(stableDiffusionData.width);
 			}
 		},
@@ -1096,7 +1081,6 @@ const img2imgTool = () =>
 				};
 
 				state.cursorSize = 512;
-				state.matchResolution = true;
 				state.snapToGrid = true;
 				state.invertMask = true;
 				state.fullResolution = false;
@@ -1258,18 +1242,6 @@ const img2imgTool = () =>
 					state.setCursorSize = cursorSizeSlider.setValue;
 					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
 
-					// Match Resolution Checkbox
-					state.ctxmenu.matchResolutionLabel = _toolbar_input.checkbox(
-						state,
-						"matchResolution",
-						"Match Resolution",
-						() => {
-							if (state.matchResolution) {
-								resSlider.value = state.cursorSize;
-							}
-						}
-					).label;
-
 					// Snap To Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
@@ -1329,8 +1301,6 @@ const img2imgTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
-				menu.appendChild(state.ctxmenu.matchResolutionLabel);
-				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
