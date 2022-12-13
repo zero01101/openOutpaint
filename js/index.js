@@ -915,11 +915,6 @@ function loadSettings() {
 			? true
 			: localStorage.getItem("sync_cursor_size") === "true";
 
-	console.debug(
-		localStorage.getItem("sync_cursor_size"),
-		Boolean(localStorage.getItem("sync_cursor_size"))
-	);
-
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
