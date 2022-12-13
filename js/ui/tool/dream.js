@@ -958,6 +958,11 @@ const dreamTool = () =>
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
+
+			// update cursor size if matching is enabled
+			if (stableDiffusionData.sync_cursor_size) {
+				state.setCursorSize(stableDiffusionData.width);
+			}
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -978,7 +983,6 @@ const dreamTool = () =>
 				};
 
 				state.cursorSize = 512;
-
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
@@ -1026,10 +1030,16 @@ const dreamTool = () =>
 						"cursorSize",
 						"Cursor Size",
 						{
-							min: 0,
+							min: 128,
 							max: 2048,
 							step: 128,
 							textStep: 2,
+							cb: () => {
+								if (stableDiffusionData.sync_cursor_size) {
+									state.ignorePrevious = true;
+									resSlider.value = state.cursorSize;
+								}
+							},
 						}
 					);
 
@@ -1097,6 +1107,11 @@ const img2imgTool = () =>
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
+
+			// update cursor size if matching is enabled
+			if (stableDiffusionData.sync_cursor_size) {
+				state.setCursorSize(stableDiffusionData.width);
+			}
 		},
 		(state, opt) => {
 			// Clear Listeners
@@ -1267,10 +1282,16 @@ const img2imgTool = () =>
 						"cursorSize",
 						"Cursor Size",
 						{
-							min: 0,
+							min: 128,
 							max: 2048,
 							step: 128,
 							textStep: 2,
+							cb: () => {
+								if (stableDiffusionData.sync_cursor_size) {
+									state.ignorePrevious = true;
+									resSlider.value = state.cursorSize;
+								}
+							},
 						}
 					);
 

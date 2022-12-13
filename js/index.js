@@ -101,6 +101,7 @@ function startup() {
 	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
+	changeSyncCursorSize();
 }
 
 /**
@@ -448,19 +449,20 @@ const upscalerAutoComplete = createAutoComplete(
 	document.getElementById("upscaler-ac-select")
 );
 
-makeSlider(
+const resSlider = makeSlider(
 	"Resolution",
 	document.getElementById("resolution"),
 	"resolution",
-	64,
-	1024,
-	64,
+	128,
+	2048,
+	128,
 	512,
 	2,
 	(v) => {
 		stableDiffusionData.width = stableDiffusionData.height = v;
 		stableDiffusionData.firstphase_width =
 			stableDiffusionData.firstphase_height = v / 2;
+		informCursorSizeSlider();
 	}
 );
 makeSlider(
@@ -522,6 +524,20 @@ function changeHiResFix() {
 	);
 	localStorage.setItem("enable_hr", stableDiffusionData.enable_hr);
 }
+
+function changeSyncCursorSize() {
+	stableDiffusionData.sync_cursor_size = Boolean(
+		document.getElementById("cbxSyncCursorSize").checked
+	); //is this horribly hacky, putting it in SD data instead of making a gross global var?
+	localStorage.setItem(
+		"sync_cursor_size",
+		stableDiffusionData.sync_cursor_size
+	);
+	if (stableDiffusionData.sync_cursor_size) {
+		resSlider.value = stableDiffusionData.width;
+	}
+}
+
 function changeSmoothRendering() {
 	const layers = document.getElementById("layer-render");
 	if (document.getElementById("cbxSmooth").checked) {
@@ -894,7 +910,11 @@ function loadSettings() {
 			: localStorage.getItem("enable_hr")
 	);
 	var _sync_cursor_size = Boolean(
+<<<<<<< HEAD
 		localStorage.getItem("sync_cursor_size") == (null || "true")
+=======
+		localStorage.getItem("sync_cursor_size") == (null || "false")
+>>>>>>> zero/main
 			? false
 			: localStorage.getItem("sync_cursor_size")
 	);
@@ -903,12 +923,17 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
+	document.getElementById("cbxSyncCursorSize").checked =
+		Boolean(_sync_cursor_size);
 }
 
 imageCollection.element.addEventListener(
 	"wheel",
 	(evn) => {
 		evn.preventDefault();
+		if (!evn.ctrlKey) {
+			_resolution_onwheel(evn);
+		}
 	},
 	{passive: false}
 );
@@ -926,3 +951,22 @@ function resetToDefaults() {
 		localStorage.clear();
 	}
 }
+
+function informCursorSizeSlider() {
+	if (stableDiffusionData.sync_cursor_size) {
+		if (toolbar._current_tool) {
+			if (!toolbar._current_tool.state.ignorePrevious) {
+				toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
+			}
+			toolbar._current_tool.state.ignorePrevious = false;
+		}
+	}
+}
+
+const _resolution_onwheel = (evn) => {
+	if (stableDiffusionData.sync_cursor_size) {
+		toolbar._current_tool.state.ignorePrevious = true; //so hacky
+		resSlider.value =
+			stableDiffusionData.width - (128 * evn.deltaY) / Math.abs(evn.deltaY);
+	}
+};
