@@ -911,7 +911,7 @@ function loadSettings() {
 	);
 	var _sync_cursor_size = Boolean(
 		localStorage.getItem("sync_cursor_size") == (null || "true")
-			? false
+			? true
 			: localStorage.getItem("sync_cursor_size")
 	);
 
