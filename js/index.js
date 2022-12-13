@@ -893,6 +893,11 @@ function loadSettings() {
 			? false
 			: localStorage.getItem("enable_hr")
 	);
+	var _sync_cursor_size = Boolean(
+		localStorage.getItem("sync_cursor_size") == (null || "true")
+			? false
+			: localStorage.getItem("sync_cursor_size")
+	);
 
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
