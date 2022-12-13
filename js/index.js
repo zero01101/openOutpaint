@@ -890,14 +890,6 @@ async function upscaleAndDownload() {
 
 function loadSettings() {
 	// set default values if not set
-	var _prompt =
-		localStorage.getItem("prompt") == null
-			? "ocean floor scientific expedition, underwater wildlife"
-			: localStorage.getItem("prompt");
-	var _negprompt =
-		localStorage.getItem("neg_prompt") == null
-			? "people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry"
-			: localStorage.getItem("neg_prompt");
 	var _mask_blur =
 		localStorage.getItem("mask_blur") == null
 			? 0

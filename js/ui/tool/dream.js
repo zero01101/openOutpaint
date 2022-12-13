@@ -1024,10 +1024,29 @@ const dreamTool = () =>
 
 						state.selected.bb = bb;
 
-						state.erasePrevReticle = _reticle_draw(bb, state, "Dream", {
-							w: bb.w,
-							h: bb.h,
-						});
+						const style =
+							state.cursorSize > stableDiffusionData.width
+								? "#FBB5"
+								: state.cursorSize < stableDiffusionData.width
+								? "#BFB5"
+								: "#FFF5";
+
+						state.erasePrevReticle = _reticle_draw(
+							bb,
+							state,
+							"Dream",
+							{
+								w: Math.round(
+									bb.w * (stableDiffusionData.width / state.cursorSize)
+								),
+								h: Math.round(
+									bb.h * (stableDiffusionData.height / state.cursorSize)
+								),
+							},
+							{
+								sizeTextStyle: style,
+							}
+						);
 						return;
 					}
 
@@ -1315,10 +1334,22 @@ const img2imgTool = () =>
 
 						request = {width: bb.w, height: bb.h};
 
-						state.erasePrevReticle = _reticle_draw(bb, state, "Img2Img", {
-							w: bb.w,
-							h: bb.h,
-						});
+						state.erasePrevReticle = _reticle_draw(
+							bb,
+							state,
+							"Img2Img",
+							{
+								w: Math.round(
+									bb.w * (stableDiffusionData.width / state.cursorSize)
+								),
+								h: Math.round(
+									bb.h * (stableDiffusionData.height / state.cursorSize)
+								),
+							},
+							{
+								sizeTextStyle: style,
+							}
+						);
 					} else {
 						bb = getBoundingBox(
 							evn.x,
