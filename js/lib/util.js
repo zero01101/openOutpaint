@@ -311,3 +311,31 @@ function downloadCanvas(options = {}) {
 		link.click();
 	}
 }
+
+/**
+ * Makes an element in a location
+ * @param {string} type Element Tag
+ * @param {number} x X coordinate of the element
+ * @param {number} y Y coordinate of the element
+ * @param {{x: number y: offset}} offset Offset to apply to the element
+ * @returns
+ */
+const makeElement = (
+	type,
+	x,
+	y,
+	offset = {
+		x: -imageCollection.inputOffset.x,
+		y: -imageCollection.inputOffset.y,
+	}
+) => {
+	const el = document.createElement(type);
+	el.style.position = "absolute";
+	el.style.left = `${x + offset.x}px`;
+	el.style.top = `${y + offset.y}px`;
+
+	// We can use the input element to add interactible html elements in the world
+	imageCollection.inputElement.appendChild(el);
+
+	return el;
+};

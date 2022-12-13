@@ -129,19 +129,6 @@ const _generate = async (
 	if (generationAreas.has(areaid)) return;
 	generationAreas.add(areaid);
 
-	// Makes an element in a location
-	const makeElement = (type, x, y) => {
-		const el = document.createElement(type);
-		el.style.position = "absolute";
-		el.style.left = `${x - imageCollection.inputOffset.x}px`;
-		el.style.top = `${y - imageCollection.inputOffset.y}px`;
-
-		// We can use the input element to add interactible html elements in the world
-		imageCollection.inputElement.appendChild(el);
-
-		return el;
-	};
-
 	// Await for queue
 	let cancelled = false;
 	const waitQueue = async () => {
@@ -494,18 +481,13 @@ const _generate = async (
  * @param {*} evn
  * @param {*} state
  */
-const dream_generate_callback = async (evn, state) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
-
+const dream_generate_callback = async (bb, state) => {
 	// Build request to the API
 	const request = {};
 	Object.assign(request, stableDiffusionData);
+
+	request.width = bb.w;
+	request.height = bb.h;
 
 	// Load prompt (maybe we should add some events so we don't have to do this)
 	request.prompt = document.getElementById("prompt").value;
@@ -619,14 +601,7 @@ const dream_generate_callback = async (evn, state) => {
 		_generate("img2img", request, bb);
 	}
 };
-const dream_erase_callback = (evn, state) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
+const dream_erase_callback = (bb) => {
 	commands.runCommand("eraseImage", "Erase Area", bb);
 };
 
@@ -672,15 +647,7 @@ function applyOvermask(canvas, ctx, px) {
 /**
  * Image to Image
  */
-const dream_img2img_callback = (evn, state) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
-
+const dream_img2img_callback = (bb, state) => {
 	// Get visible pixels
 	const visibleCanvas = uil.getVisible(bb);
 
@@ -690,6 +657,9 @@ const dream_img2img_callback = (evn, state) => {
 	// Build request to the API
 	const request = {};
 	Object.assign(request, stableDiffusionData);
+
+	request.width = bb.w;
+	request.height = bb.h;
 
 	request.denoising_strength = state.denoisingStrength;
 	request.inpainting_fill = 1; // For img2img use original
@@ -807,21 +777,15 @@ const dream_img2img_callback = (evn, state) => {
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (evn, state, tool, style = {}) => {
+const _reticle_draw = (bb, state, tool, resolution, style = {}) => {
 	defaultOpt(style, {
 		sizeTextStyle: "#FFF5",
+		genSizeTextStyle: "#FFF5",
 		toolTextStyle: "#FFF5",
 		reticleWidth: 1,
 		reticleStyle: "#FFF",
 	});
 
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
 	const bbvp = {
 		...viewport.canvasToView(bb.x, bb.y),
 		w: viewport.zoom * bb.w,
@@ -838,19 +802,14 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 	uiCtx.font = `bold 20px Open Sans`;
 
 	// Draw Tool Name
-	{
+	if (bb.h > 40) {
 		const xshrink = Math.min(1, (bbvp.w - 20) / uiCtx.measureText(tool).width);
 
 		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
 
 		uiCtx.textAlign = "left";
 		uiCtx.fillStyle = style.toolTextStyle;
-		uiCtx.fillText(
-			tool,
-			bbvp.x + 10,
-			bbvp.y + 10 + 20 * xshrink,
-			state.cursorSize
-		);
+		uiCtx.fillText(tool, bbvp.x + 10, bbvp.y + 10 + 20 * xshrink, bb.w);
 	}
 
 	// Draw width and height
@@ -861,49 +820,32 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 		uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
 		const xshrink = Math.min(
 			1,
-			(bbvp.w - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
+			(bbvp.w - 30) / uiCtx.measureText(`${bb.w}px`).width
 		);
 		const yshrink = Math.min(
 			1,
-			(bbvp.h - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
+			(bbvp.h - 30) / uiCtx.measureText(`${bb.h}px`).width
 		);
 		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
-		uiCtx.fillText(
-			`${state.cursorSize}px`,
-			0,
-			bbvp.h / 2 - 10 * xshrink,
-			state.cursorSize
-		);
+		uiCtx.fillText(`${bb.w}px`, 0, bbvp.h / 2 - 10 * xshrink, bb.w);
 
 		// Render Generation Width
+		uiCtx.fillStyle = style.genSizeTextStyle;
 		uiCtx.font = `bold ${10 * xshrink}px Open Sans`;
-		if (state.cursorSize !== stableDiffusionData.width)
-			uiCtx.fillText(
-				`${stableDiffusionData.width}px`,
-				0,
-				bbvp.h / 2 - 30 * xshrink,
-				state.cursorSize
-			);
+		if (bb.w !== resolution.w)
+			uiCtx.fillText(`${resolution.w}px`, 0, bbvp.h / 2 - 30 * xshrink, bb.h);
 
 		// Render Cursor Height
 		uiCtx.rotate(-Math.PI / 2);
+		uiCtx.fillStyle = style.sizeTextStyle;
 		uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
-		uiCtx.fillText(
-			`${state.cursorSize}px`,
-			0,
-			bbvp.w / 2 - 10 * yshrink,
-			state.cursorSize
-		);
+		uiCtx.fillText(`${bb.h}px`, 0, bbvp.w / 2 - 10 * yshrink, bb.h);
 
-		// Render Generation Width
+		// Render Generation Height
+		uiCtx.fillStyle = style.genSizeTextStyle;
 		uiCtx.font = `bold ${10 * yshrink}px Open Sans`;
-		if (state.cursorSize !== stableDiffusionData.height)
-			uiCtx.fillText(
-				`${stableDiffusionData.height}px`,
-				0,
-				bbvp.w / 2 - 30 * xshrink,
-				state.cursorSize
-			);
+		if (bb.h !== resolution.h)
+			uiCtx.fillText(`${resolution.h}px`, 0, bbvp.w / 2 - 30 * xshrink, bb.h);
 
 		uiCtx.restore();
 	}
@@ -911,7 +853,7 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 	return () => {
 		uiCtx.save();
 
-		uiCtx.clearRect(bbvp.x - 10, bbvp.y - 10, bbvp.w + 20, bbvp.h + 20);
+		uiCtx.clearRect(bbvp.x - 64, bbvp.y - 64, bbvp.w + 128, bbvp.h + 128);
 
 		uiCtx.restore();
 	};
@@ -953,8 +895,16 @@ const dreamTool = () =>
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
+
+			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
+
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+
+			// Clear Selection
+			state.selected = null;
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -968,8 +918,16 @@ const dreamTool = () =>
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
+
+			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
+
 			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+
+			// Clear Selection
+			state.selected = null;
 
 			// Hide Mask
 			setMask("none");
@@ -987,6 +945,8 @@ const dreamTool = () =>
 				state.invertMask = false;
 				state.overMaskPx = 0;
 
+				state.erasePrevCursor = () =>
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
@@ -994,18 +954,107 @@ const dreamTool = () =>
 					...mouse.coords.world.pos,
 				};
 
+				state.dragstartcb = (evn) => {
+					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
+					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
+					state.selected = {start: {x, y}, now: {x, y}};
+				};
+				state.dragcb = (evn) => {
+					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
+					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
+
+					state.selected.now = {x, y};
+				};
+				state.dragendcb = (evn) => {
+					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
+					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
+
+					state.selected.now = {x, y};
+
+					if (
+						state.selected.start.x === state.selected.now.x ||
+						state.selected.start.y === state.selected.now.y
+					) {
+						state.selected = null;
+						state.redraw();
+					}
+				};
+
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
+
+					state.erasePrevCursor();
 					state.erasePrevReticle();
+
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
+					}
+
+					const vpc = viewport.canvasToView(x, y);
+
+					// Draw current cursor location
+					uiCtx.lineWidth = 3;
+					uiCtx.strokeStyle = "#FFF5";
+
+					uiCtx.beginPath();
+					uiCtx.moveTo(vpc.x, vpc.y + 10);
+					uiCtx.lineTo(vpc.x, vpc.y - 10);
+					uiCtx.moveTo(vpc.x + 10, vpc.y);
+					uiCtx.lineTo(vpc.x - 10, vpc.y);
+					uiCtx.stroke();
+					state.eraseCursor = () => {
+						uiCtx.clearRect(vpc.x - 15, vpc.y - 15, vpc.x + 30, vpc.y + 30);
+					};
+
+					if (state.selected) {
+						const bb = {x: 0, y: 0, w: 0, h: 0};
+
+						const minx = Math.min(state.selected.now.x, state.selected.start.x);
+						const miny = Math.min(state.selected.now.y, state.selected.start.y);
+						const maxx = Math.max(state.selected.now.x, state.selected.start.x);
+						const maxy = Math.max(state.selected.now.y, state.selected.start.y);
+
+						bb.x = minx;
+						bb.y = miny;
+						bb.w = maxx - minx;
+						bb.h = maxy - miny;
+
+						state.selected.bb = bb;
+
+						state.erasePrevReticle = _reticle_draw(bb, state, "Dream", {
+							w: bb.w,
+							h: bb.h,
+						});
+						return;
+					}
+
 					const style =
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
 							? "#BFB5"
 							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(evn, state, "Dream", {
-						sizeTextStyle: style,
-					});
+					state.erasePrevReticle = _reticle_draw(
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						),
+						state,
+						"Dream",
+						{
+							w: stableDiffusionData.width,
+							h: stableDiffusionData.height,
+						},
+						{
+							sizeTextStyle: style,
+						}
+					);
 				};
 
 				state.redraw = () => {
@@ -1016,9 +1065,33 @@ const dreamTool = () =>
 					_dream_onwheel(evn, state);
 				};
 				state.dreamcb = (evn) => {
-					dream_generate_callback(evn, state);
+					const bb =
+						(state.selected && state.selected.bb) ||
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						);
+					dream_generate_callback(bb, state);
+					state.selected = null;
 				};
-				state.erasecb = (evn) => dream_erase_callback(evn, state);
+				state.erasecb = (evn) => {
+					if (state.selected) {
+						state.selected = null;
+						state.redraw();
+						return;
+					}
+					const bb = getBoundingBox(
+						evn.x,
+						evn.y,
+						state.cursorSize,
+						state.cursorSize,
+						state.snapToGrid && basePixelCount
+					);
+					dream_erase_callback(bb, state);
+				};
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
@@ -1102,8 +1175,16 @@ const img2imgTool = () =>
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
+
+			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
+
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+
+			// Clear Selection
+			state.selected = null;
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -1117,8 +1198,16 @@ const img2imgTool = () =>
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
+
+			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
+
 			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+
+			// Clear Selection
+			state.selected = null;
 
 			// Hide mask
 			setMask("none");
@@ -1140,39 +1229,134 @@ const img2imgTool = () =>
 				state.keepBorderSize = 64;
 				state.gradient = true;
 
+				state.erasePrevCursor = () =>
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
 				state.lastMouseMove = {
 					...mouse.coords.world.pos,
 				};
+
+				state.dragstartcb = (evn) => {
+					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
+					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
+					state.selected = {start: {x, y}, now: {x, y}};
+				};
+				state.dragcb = (evn) => {
+					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
+					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
+
+					state.selected.now = {x, y};
+				};
+
+				state.dragendcb = (evn) => {
+					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
+					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
+
+					state.selected.now = {x, y};
+
+					if (
+						state.selected.start.x === state.selected.now.x ||
+						state.selected.start.y === state.selected.now.y
+					) {
+						state.selected = null;
+						state.redraw();
+					}
+				};
+
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
+
+					state.erasePrevCursor();
 					state.erasePrevReticle();
 
-					const style =
-						state.cursorSize > stableDiffusionData.width
-							? "#FBB5"
-							: state.cursorSize < stableDiffusionData.width
-							? "#BFB5"
-							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(evn, state, "Img2Img", {
-						sizeTextStyle: style,
-					});
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
+					}
 
-					const bb = getBoundingBox(
-						evn.x,
-						evn.y,
-						state.cursorSize,
-						state.cursorSize,
-						state.snapToGrid && basePixelCount
-					);
+					const vpc = viewport.canvasToView(x, y);
+
+					// Draw current cursor location
+					uiCtx.lineWidth = 3;
+					uiCtx.strokeStyle = "#FFF5";
+
+					uiCtx.beginPath();
+					uiCtx.moveTo(vpc.x, vpc.y + 10);
+					uiCtx.lineTo(vpc.x, vpc.y - 10);
+					uiCtx.moveTo(vpc.x + 10, vpc.y);
+					uiCtx.lineTo(vpc.x - 10, vpc.y);
+					uiCtx.stroke();
+					state.eraseCursor = () => {
+						uiCtx.clearRect(vpc.x - 15, vpc.y - 15, vpc.x + 30, vpc.y + 30);
+					};
 
 					// Resolution
-					const request = {
-						width: stableDiffusionData.width,
-						height: stableDiffusionData.height,
-					};
+					let bb = null;
+					let request = null;
+
+					if (state.selected) {
+						bb = {x: 0, y: 0, w: 0, h: 0};
+
+						const minx = Math.min(state.selected.now.x, state.selected.start.x);
+						const miny = Math.min(state.selected.now.y, state.selected.start.y);
+						const maxx = Math.max(state.selected.now.x, state.selected.start.x);
+						const maxy = Math.max(state.selected.now.y, state.selected.start.y);
+
+						bb.x = minx;
+						bb.y = miny;
+						bb.w = maxx - minx;
+						bb.h = maxy - miny;
+
+						state.selected.bb = bb;
+
+						request = {width: bb.w, height: bb.h};
+
+						state.erasePrevReticle = _reticle_draw(bb, state, "Img2Img", {
+							w: bb.w,
+							h: bb.h,
+						});
+					} else {
+						bb = getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						);
+
+						request = {
+							width: stableDiffusionData.width,
+							height: stableDiffusionData.height,
+						};
+
+						const style =
+							state.cursorSize > stableDiffusionData.width
+								? "#FBB5"
+								: state.cursorSize < stableDiffusionData.width
+								? "#BFB5"
+								: "#FFF5";
+						state.erasePrevReticle = _reticle_draw(
+							bb,
+							state,
+							"Img2Img",
+							{w: request.width, h: request.height},
+							{
+								sizeTextStyle: style,
+							}
+						);
+					}
+
+					if (
+						state.selected &&
+						(state.selected.now.x === state.selected.start.x ||
+							state.selected.now.y === state.selected.start.y)
+					) {
+						return;
+					}
 
 					const bbvp = {
 						...viewport.canvasToView(bb.x, bb.y),
@@ -1268,9 +1452,34 @@ const img2imgTool = () =>
 					_dream_onwheel(evn, state);
 				};
 				state.dreamcb = (evn) => {
-					dream_img2img_callback(evn, state);
+					const bb =
+						(state.selected && state.selected.bb) ||
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						);
+					dream_img2img_callback(bb, state);
+					state.selected = null;
+					state.redraw();
 				};
-				state.erasecb = (evn) => dream_erase_callback(evn, state);
+				state.erasecb = (evn) => {
+					if (state.selected) {
+						state.selected = null;
+						state.redraw();
+						return;
+					}
+					const bb = getBoundingBox(
+						evn.x,
+						evn.y,
+						state.cursorSize,
+						state.cursorSize,
+						state.snapToGrid && basePixelCount
+					);
+					dream_erase_callback(bb, state);
+				};
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
