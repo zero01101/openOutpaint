@@ -481,13 +481,13 @@ const _generate = async (
  * @param {*} evn
  * @param {*} state
  */
-const dream_generate_callback = async (bb, state) => {
+const dream_generate_callback = async (bb, resolution, state) => {
 	// Build request to the API
 	const request = {};
 	Object.assign(request, stableDiffusionData);
 
-	request.width = bb.w;
-	request.height = bb.h;
+	request.width = resolution.w;
+	request.height = resolution.h;
 
 	// Load prompt (maybe we should add some events so we don't have to do this)
 	request.prompt = document.getElementById("prompt").value;
@@ -647,7 +647,7 @@ function applyOvermask(canvas, ctx, px) {
 /**
  * Image to Image
  */
-const dream_img2img_callback = (bb, state) => {
+const dream_img2img_callback = (bb, resolution, state) => {
 	// Get visible pixels
 	const visibleCanvas = uil.getVisible(bb);
 
@@ -658,8 +658,8 @@ const dream_img2img_callback = (bb, state) => {
 	const request = {};
 	Object.assign(request, stableDiffusionData);
 
-	request.width = bb.w;
-	request.height = bb.h;
+	request.width = resolution.w;
+	request.height = resolution.h;
 
 	request.denoising_strength = state.denoisingStrength;
 	request.inpainting_fill = 1; // For img2img use original
@@ -1093,7 +1093,11 @@ const dreamTool = () =>
 							state.cursorSize,
 							state.snapToGrid && basePixelCount
 						);
-					dream_generate_callback(bb, state);
+					const resolution = (state.selected && state.selected.bb) || {
+						w: stableDiffusionData.width,
+						h: stableDiffusionData.height,
+					};
+					dream_generate_callback(bb, resolution, state);
 					state.selected = null;
 				};
 				state.erasecb = (evn) => {
@@ -1492,7 +1496,11 @@ const img2imgTool = () =>
 							state.cursorSize,
 							state.snapToGrid && basePixelCount
 						);
-					dream_img2img_callback(bb, state);
+					const resolution = (state.selected && state.selected.bb) || {
+						w: stableDiffusionData.width,
+						h: stableDiffusionData.height,
+					};
+					dream_img2img_callback(bb, resolution, state);
 					state.selected = null;
 					state.redraw();
 				};
