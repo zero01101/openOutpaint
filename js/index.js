@@ -904,15 +904,20 @@ function loadSettings() {
 			: localStorage.getItem("mask_blur");
 	var _seed =
 		localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
-	var _enable_hr = Boolean(
-		localStorage.getItem("enable_hr") == (null || "false")
+
+	let _enable_hr =
+		localStorage.getItem("enable_hr") === null
 			? false
-			: localStorage.getItem("enable_hr")
-	);
-	var _sync_cursor_size = Boolean(
-		localStorage.getItem("sync_cursor_size") == (null || "true")
+			: localStorage.getItem("enable_hr") === "true";
+
+	let _sync_cursor_size =
+		localStorage.getItem("sync_cursor_size") === null
 			? true
-			: localStorage.getItem("sync_cursor_size")
+			: localStorage.getItem("sync_cursor_size") === "true";
+
+	console.debug(
+		localStorage.getItem("sync_cursor_size"),
+		Boolean(localStorage.getItem("sync_cursor_size"))
 	);
 
 	// set the values into the UI
