@@ -96,20 +96,6 @@ function startup() {
 		};
 	});
 
-	const promptEl = document.getElementById("prompt");
-	promptEl.oninput = () => {
-		stableDiffusionData.prompt = promptEl.value;
-		promptEl.title = promptEl.value;
-		localStorage.setItem("prompt", stableDiffusionData.prompt);
-	};
-
-	const negPromptEl = document.getElementById("negPrompt");
-	negPromptEl.oninput = () => {
-		stableDiffusionData.negative_prompt = negPromptEl.value;
-		negPromptEl.title = negPromptEl.value;
-		localStorage.setItem("neg_prompt", stableDiffusionData.negative_prompt);
-	};
-
 	drawBackground();
 	changeMaskBlur();
 	changeSmoothRendering();
@@ -447,12 +433,6 @@ const makeSlider = (
 		textStep,
 	});
 };
-
-const styleAutoComplete = createAutoComplete(
-	"Style",
-	document.getElementById("style-ac-mselect"),
-	{multiple: true}
-);
 
 const modelAutoComplete = createAutoComplete(
 	"Model",
@@ -800,49 +780,6 @@ async function getConfig() {
 	}
 }
 
-async function getStyles() {
-	/** @type {HTMLSelectElement} */
-	var styleSelect = document.getElementById("styleSelect");
-	var url = document.getElementById("host").value + "/sdapi/v1/prompt-styles";
-	try {
-		const response = await fetch(url);
-		/** @type {{name: string, prompt: string, negative_prompt: string}[]} */
-		const data = await response.json();
-
-		/** @type {string[]} */
-		let stored = null;
-		try {
-			stored = JSON.parse(localStorage.getItem("promptStyle"));
-			// doesn't seem to throw a syntaxerror if the localstorage item simply doesn't exist?
-			if (stored == null) stored = [];
-		} catch (e) {
-			stored = [];
-		}
-
-		styleAutoComplete.options = data.map((style) => ({
-			name: style.name,
-			value: style.name,
-			title: `prompt: ${style.prompt}\nnegative: ${style.negative_prompt}`,
-		}));
-		styleAutoComplete.onchange.on(({value}) => {
-			let selected = [];
-			if (value.find((v) => v === "None")) {
-				styleAutoComplete.value = [];
-			} else {
-				selected = value;
-			}
-			stableDiffusionData.styles = selected;
-			localStorage.setItem("promptStyle", JSON.stringify(selected));
-		});
-
-		styleAutoComplete.value = stored;
-		localStorage.setItem("promptStyle", JSON.stringify(stored));
-	} catch (e) {
-		console.warn("[index] Failed to fetch prompt styles");
-		console.warn(e);
-	}
-}
-
 function changeStyles() {
 	/** @type {HTMLSelectElement} */
 	const styleSelectEl = document.getElementById("styleSelect");
@@ -979,10 +916,6 @@ function loadSettings() {
 	);
 
 	// set the values into the UI
-	document.getElementById("prompt").value = String(_prompt);
-	document.getElementById("prompt").title = String(_prompt);
-	document.getElementById("negPrompt").value = String(_negprompt);
-	document.getElementById("negPrompt").title = String(_negprompt);
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);

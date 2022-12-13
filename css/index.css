@@ -331,19 +331,246 @@ input#host {
 
 /* Prompt Fields */
 
+.content.prompt {
+	display: flex;
+	align-items: stretch;
+}
+
+.content.prompt > .inputs {
+	width: 200px;
+}
+
 div.prompt-wrapper {
+	display: flex;
+
+	width: calc(100%);
+
 	overflow: visible;
 }
 
-div.prompt-wrapper > textarea {
+div.prompt-wrapper > * {
+	flex-shrink: 0;
+}
+
+div.prompt-wrapper textarea {
 	margin: 0;
-	padding: 0;
+
+	border-radius: 0;
+
+	border: none;
+
+	z-index: 1;
+}
+
+div.prompt-wrapper:not(:first-child) textarea {
+	border-top: 1px solid black;
+}
+
+div.prompt-wrapper > textarea {
+	box-sizing: border-box;
+	width: calc(100% - 20px);
+
+	padding: 2px;
+
+	transition-duration: 200ms;
 
 	resize: vertical;
 }
 
 div.prompt-wrapper > textarea:focus {
 	width: 700px;
+}
+
+div.prompt-wrapper > .prompt-indicator {
+	display: flex;
+
+	cursor: help;
+
+	width: 20px;
+}
+
+div.prompt-wrapper:first-child > .prompt-indicator {
+	border-top-left-radius: 5px;
+}
+
+div.prompt-wrapper:last-child > .prompt-indicator {
+	border-bottom-left-radius: 5px;
+}
+
+div.prompt-wrapper > .prompt-indicator.positive {
+	background-color: #484;
+}
+
+div.prompt-wrapper > .prompt-indicator.negative {
+	background-color: #844;
+}
+div.prompt-wrapper > .prompt-indicator.styles {
+	background-color: #448;
+}
+
+div.prompt-wrapper > .prompt-indicator::after {
+	content: "";
+	display: block;
+	margin: auto;
+
+	width: 16px;
+	height: 16px;
+
+	background-color: var(--c-text);
+
+	mask-size: contain;
+	-webkit-mask-size: contain;
+}
+
+div.prompt-wrapper > .prompt-indicator.positive::after {
+	mask-image: url("/res/icons/plus-square.svg");
+	-webkit-mask-image: url("/res/icons/plus-square.svg");
+}
+
+div.prompt-wrapper > .prompt-indicator.negative::after {
+	mask-image: url("/res/icons/minus-square.svg");
+	-webkit-mask-image: url("/res/icons/minus-square.svg");
+}
+
+div.prompt-wrapper > .prompt-indicator.styles::after {
+	mask-image: url("/res/icons/library.svg");
+	-webkit-mask-image: url("/res/icons/library.svg");
+}
+
+.prompt-history-wrapper {
+	position: relative;
+
+	flex-shrink: 0;
+
+	width: 20px;
+}
+
+.prompt-history-container {
+	display: flex;
+
+	position: absolute;
+
+	top: 0;
+	left: 0;
+
+	height: 100%;
+}
+
+#prompt-history {
+	width: 0px;
+	height: 100%;
+
+	transition-duration: 200ms;
+
+	background-color: #1e1e50;
+}
+
+#prompt-history.expanded {
+	width: 300px;
+}
+
+#prompt-history .entry {
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+
+	border: 1px #fff3;
+
+	height: 25px;
+}
+
+#prompt-history.expanded .entry > button {
+	padding: 2px;
+	padding-left: 5px;
+}
+
+#prompt-history .entry > button {
+	flex: 1;
+
+	cursor: pointer;
+
+	margin: 0;
+	border: 0;
+	padding: 0;
+
+	color: var(--c-text);
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	transition-duration: 100ms;
+}
+
+#prompt-history .entry:hover > button:not(:hover) {
+	flex-grow: 0;
+	flex-shrink: 1;
+	flex-basis: 20%;
+	width: 20%;
+}
+
+#prompt-history .entry > button.prompt {
+	background-color: #484;
+}
+
+#prompt-history .entry > button.negative {
+	background-color: #844;
+}
+
+#prompt-history .entry > button.styles {
+	background-color: #448;
+}
+
+#prompt-history .entry > button:hover {
+	filter: brightness(115%);
+	backdrop-filter: brightness(115%);
+}
+
+#prompt-history .entry > button:active {
+	filter: brightness(150%);
+	backdrop-filter: brightness(150%);
+}
+
+button.prompt-history-btn {
+	cursor: pointer;
+
+	border-radius: 0;
+
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+
+	background-color: #1e1e50;
+
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+	width: 20px;
+}
+
+button.prompt-history-btn::after {
+	content: "";
+	display: block;
+	margin: auto;
+
+	width: 16px;
+	height: 16px;
+
+	background-color: var(--c-text);
+
+	mask-size: contain;
+	-webkit-mask-size: contain;
+
+	mask-image: url("/res/icons/history.svg");
+	-webkit-mask-image: url("/res/icons/history.svg");
+}
+
+button.prompt-history-btn:hover {
+	filter: brightness(115%);
+}
+
+button.prompt-history-btn:active {
+	filter: brightness(150%);
 }
 
 /* Style Field */

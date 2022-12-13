@@ -120,6 +120,8 @@ const _generate = async (
 	bb,
 	drawEvery = 0.2 / request.n_iter
 ) => {
+	events.tool.dream.emit({event: "generate", request});
+
 	const requestCopy = JSON.parse(JSON.stringify(request));
 
 	// Block requests to identical areas
@@ -127,9 +129,34 @@ const _generate = async (
 	if (generationAreas.has(areaid)) return;
 	generationAreas.add(areaid);
 
+	// Makes an element in a location
+	const makeElement = (type, x, y) => {
+		const el = document.createElement(type);
+		el.style.position = "absolute";
+		el.style.left = `${x - imageCollection.inputOffset.x}px`;
+		el.style.top = `${y - imageCollection.inputOffset.y}px`;
+
+		// We can use the input element to add interactible html elements in the world
+		imageCollection.inputElement.appendChild(el);
+
+		return el;
+	};
+
 	// Await for queue
+	let cancelled = false;
 	const waitQueue = async () => {
 		const stopQueueMarchingAnts = march(bb, {style: "#AAF"});
+
+		// Add cancel Button
+		const cancelButton = makeElement("button", bb.x + bb.w - 100, bb.y + bb.h);
+		cancelButton.classList.add("dream-stop-btn");
+		cancelButton.textContent = "Cancel";
+		cancelButton.addEventListener("click", () => {
+			cancelled = true;
+			imageCollection.inputElement.removeChild(cancelButton);
+			stopQueueMarchingAnts();
+		});
+		imageCollection.inputElement.appendChild(cancelButton);
 
 		let qPromise = null;
 		let qResolve = null;
@@ -149,8 +176,10 @@ const _generate = async (
 				finish();
 			}
 		});
-
-		stopQueueMarchingAnts();
+		if (!cancelled) {
+			imageCollection.inputElement.removeChild(cancelButton);
+			stopQueueMarchingAnts();
+		}
 
 		return {promise: qPromise, resolve: qResolve};
 	};
@@ -165,29 +194,21 @@ const _generate = async (
 
 	const initialQ = await waitQueue();
 
+	if (cancelled) {
+		nextQueue(initialQ);
+		return;
+	}
+
 	// Images to select through
 	let at = 0;
 	/** @type {Array<string|null>} */
 	const images = [null];
 	/** @type {HTMLDivElement} */
 	let imageSelectMenu = null;
-
 	// Layer for the images
 	const layer = imageCollection.registerLayer(null, {
 		after: maskPaintLayer,
 	});
-
-	const makeElement = (type, x, y) => {
-		const el = document.createElement(type);
-		el.style.position = "absolute";
-		el.style.left = `${x - imageCollection.inputOffset.x}px`;
-		el.style.top = `${y - imageCollection.inputOffset.y}px`;
-
-		// We can use the input element to add interactible html elements in the world
-		imageCollection.inputElement.appendChild(el);
-
-		return el;
-	};
 
 	const redraw = (url = images[at]) => {
 		if (url === null)
@@ -214,7 +235,7 @@ const _generate = async (
 
 	// Add Interrupt Button
 	const interruptButton = makeElement("button", bb.x + bb.w - 100, bb.y + bb.h);
-	interruptButton.classList.add("dream-interrupt-btn");
+	interruptButton.classList.add("dream-stop-btn");
 	interruptButton.textContent = "Interrupt";
 	interruptButton.addEventListener("click", () => {
 		fetch(`${host}${url}interrupt`, {method: "POST"});
