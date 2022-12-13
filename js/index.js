@@ -1017,10 +1017,12 @@ function resetToDefaults() {
 
 function informCursorSizeSlider() {
 	if (stableDiffusionData.sync_cursor_size) {
-		if (!toolbar._current_tool.state.ignorePrevious) {
-			toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
+		if (toolbar._current_tool) {
+			if (!toolbar._current_tool.state.ignorePrevious) {
+				toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
+			}
+			toolbar._current_tool.state.ignorePrevious = false;
 		}
-		toolbar._current_tool.state.ignorePrevious = false;
 	}
 }
 
