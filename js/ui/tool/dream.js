@@ -1011,12 +1011,12 @@ const dreamTool = () =>
 							max: 2048,
 							step: 128,
 							textStep: 2,
-							// cb: () => {
-							// 	if (stableDiffusionData.sync_cursor_size) {
-							// 		state.ignorePrevious = true;
-							// 		resSlider.value = state.cursorSize;
-							// 	}
-							// },
+							cb: () => {
+								if (stableDiffusionData.sync_cursor_size) {
+									state.ignorePrevious = true;
+									resSlider.value = state.cursorSize;
+								}
+							},
 						}
 					);
 
