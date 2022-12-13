@@ -855,6 +855,7 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 
 	// Draw width and height
 	{
+		// Render Cursor Width
 		uiCtx.textAlign = "center";
 		uiCtx.fillStyle = style.sizeTextStyle;
 		uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
@@ -873,14 +874,36 @@ const _reticle_draw = (evn, state, tool, style = {}) => {
 			bbvp.h / 2 - 10 * xshrink,
 			state.cursorSize
 		);
+
+		// Render Generation Width
+		uiCtx.font = `bold ${10 * xshrink}px Open Sans`;
+		if (state.cursorSize !== stableDiffusionData.width)
+			uiCtx.fillText(
+				`${stableDiffusionData.width}px`,
+				0,
+				bbvp.h / 2 - 30 * xshrink,
+				state.cursorSize
+			);
+
+		// Render Cursor Height
 		uiCtx.rotate(-Math.PI / 2);
 		uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
 		uiCtx.fillText(
 			`${state.cursorSize}px`,
 			0,
-			bbvp.h / 2 - 10 * yshrink,
+			bbvp.w / 2 - 10 * yshrink,
 			state.cursorSize
 		);
+
+		// Render Generation Width
+		uiCtx.font = `bold ${10 * yshrink}px Open Sans`;
+		if (state.cursorSize !== stableDiffusionData.height)
+			uiCtx.fillText(
+				`${stableDiffusionData.height}px`,
+				0,
+				bbvp.w / 2 - 30 * xshrink,
+				state.cursorSize
+			);
 
 		uiCtx.restore();
 	}
