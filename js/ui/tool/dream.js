@@ -319,7 +319,9 @@ const _generate = async (
 			interruptButton.disabled = false;
 			imageCollection.inputElement.appendChild(interruptButton);
 			if (requestCopy.seed != -1) {
-				requestCopy.seed = parseInt(requestCopy.seed) + images.length - 1;
+				requestCopy.seed =
+					parseInt(requestCopy.seed) +
+					requestCopy.batch_size * requestCopy.n_iter;
 			}
 			images.push(...(await _dream(endpoint, requestCopy)));
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
