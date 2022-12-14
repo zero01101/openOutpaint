@@ -517,7 +517,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	);
 	const onwheelhandler = mouse.listen.world.onwheel.on(
 		(evn, state) => {
-			console.debug(evn, state);
+			if (evn.evn.ctrlKey) return;
 			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
 				if (evn.delta < 0) nextImg();
 				else prevImg();
