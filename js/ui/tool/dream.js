@@ -318,6 +318,9 @@ const _generate = async (
 			stopProgress = _monitorProgress(bb);
 			interruptButton.disabled = false;
 			imageCollection.inputElement.appendChild(interruptButton);
+			if (requestCopy.seed != -1) {
+				requestCopy.seed = parseInt(requestCopy.seed) + images.length - 1;
+			}
 			images.push(...(await _dream(endpoint, requestCopy)));
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
@@ -1643,6 +1646,6 @@ window.onbeforeunload = async () => {
 };
 
 function sendSeed(seedIndex) {
-	document.getElementById("seed").value =
+	stableDiffusionData.seed = document.getElementById("seed").value =
 		stableDiffusionData.lastSeeds[seedIndex - 1];
 }
