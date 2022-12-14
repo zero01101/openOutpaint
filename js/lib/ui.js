@@ -235,7 +235,7 @@ function createAutoComplete(name, wrapper, options = {}) {
 		onchange: new Observer(),
 
 		get value() {
-			const v = this._selectedOptions.map((opt) => opt.value);
+			const v = Array.from(this._selectedOptions).map((opt) => opt.value);
 			return options.multiple ? v : v[0];
 		},
 		set value(values) {

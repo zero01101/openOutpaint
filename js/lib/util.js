@@ -307,8 +307,10 @@ function downloadCanvas(options = {}) {
 		? cropCanvas(options.canvas).canvas
 		: options.canvas;
 	if (croppedCanvas != null) {
-		link.href = croppedCanvas.toDataURL("image/png");
-		link.click();
+		croppedCanvas.toBlob((blob) => {
+			link.href = URL.createObjectURL(blob);
+			link.click();
+		});
 	}
 }
 
