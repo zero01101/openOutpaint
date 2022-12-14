@@ -113,15 +113,17 @@ const _dream = async (endpoint, request) => {
  * @param {"txt2img" | "img2img"} endpoint Endpoint to send the request to
  * @param {StableDiffusionRequest} request Stable diffusion request
  * @param {BoundingBox} bb Generated image placement location
- * @param {number} [drawEvery=0.2 / request.n_iter] Percentage delta to draw progress at (by default 20% of each iteration)
+ * @param {object} options Options
+ * @param {number} [options.drawEvery=0.2 / request.n_iter] Percentage delta to draw progress at (by default 20% of each iteration)
+ * @param {HTMLCanvasElement} [options.keepMask=null] Whether to force keep image under fully opaque mask
  * @returns {Promise<HTMLImageElement | null>}
  */
-const _generate = async (
-	endpoint,
-	request,
-	bb,
-	drawEvery = 0.2 / request.n_iter
-) => {
+const _generate = async (endpoint, request, bb, options = {}) => {
+	defaultOpt(options, {
+		drawEvery: 0.2 / request.n_iter,
+		keepMask: null,
+	});
+
 	events.tool.dream.emit({event: "generate", request});
 
 	const requestCopy = JSON.parse(JSON.stringify(request));
@@ -188,6 +190,64 @@ const _generate = async (
 		return;
 	}
 
+	// Save masked content
+	let keepMaskCanvas = null;
+	let keepMaskCtx = null;
+
+	if (options.keepMask) {
+		const visibleCanvas = uil.getVisible(bb);
+
+		const ctx = options.keepMask.getContext("2d", {willReadFrequently: true});
+
+		keepMaskCanvas = document.createElement("canvas");
+		keepMaskCanvas.width = options.keepMask.width;
+		keepMaskCanvas.height = options.keepMask.height;
+
+		keepMaskCtx = keepMaskCanvas.getContext("2d", {willReadFrequently: true});
+		keepMaskCtx.drawImage(visibleCanvas, 0, 0);
+
+		if (
+			visibleCanvas.width !== keepMaskCanvas.width ||
+			visibleCanvas.height !== keepMaskCanvas.height
+		) {
+			throw new Error(
+				"[dream] Provided mask is not the same size as the bounding box"
+			);
+		}
+		const imageData = keepMaskCtx.getImageData(
+			0,
+			0,
+			keepMaskCanvas.width,
+			keepMaskCanvas.height
+		);
+
+		const image = imageData.data;
+
+		const maskData = ctx.getImageData(
+			0,
+			0,
+			options.keepMask.width,
+			options.keepMask.height
+		);
+
+		const mask = maskData.data;
+
+		for (let i = 0; i < mask.length; i += 4) {
+			if (mask[i] !== 0 || mask[i + 1] !== 0 || mask[i + 2] !== 0) {
+				// If pixel is not fully black
+				// Set pixel as fully transparent
+				image[i] = 0;
+				image[i + 1] = 0;
+				image[i + 2] = 0;
+				image[i + 3] = 0;
+			}
+		}
+
+		keepMaskCtx.clearRect(0, 0, keepMaskCanvas.width, keepMaskCanvas.height);
+
+		keepMaskCtx.putImageData(imageData, 0, 0);
+	}
+
 	// Images to select through
 	let at = 0;
 	/** @type {Array<string|null>} */
@@ -219,6 +279,7 @@ const _generate = async (
 				bb.w,
 				bb.h
 			);
+			if (keepMaskCanvas) layer.ctx.drawImage(keepMaskCanvas, bb.x, bb.y);
 		});
 	};
 
@@ -240,12 +301,12 @@ const _generate = async (
 	try {
 		let stopDrawingStatus = false;
 		let lastProgress = 0;
-		let nextCP = drawEvery;
+		let nextCP = options.drawEvery;
 		stopProgress = _monitorProgress(bb, (data) => {
 			if (stopDrawingStatus) return;
 
 			if (lastProgress < nextCP && data.progress >= nextCP) {
-				nextCP += drawEvery;
+				nextCP += options.drawEvery;
 				fetch(`${host}${url}progress?skip_current_image=false`).then(
 					async (response) => {
 						if (stopDrawingStatus) return;
@@ -301,12 +362,20 @@ const _generate = async (
 		// load the image data after defining the closure
 		img.src = "data:image/png;base64," + images[at];
 		img.addEventListener("load", () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = bb.w;
+			canvas.height = bb.h;
+			const ctx = canvas.getContext("2d");
+			ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, bb.w, bb.h);
+
+			if (keepMaskCanvas) ctx.drawImage(keepMaskCanvas, 0, 0);
+
 			commands.runCommand("drawImage", "Image Dream", {
 				x: bb.x,
 				y: bb.y,
 				w: bb.w,
 				h: bb.h,
-				image: img,
+				image: canvas,
 			});
 			clean(true);
 		});
@@ -527,16 +596,21 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		// Use img2img if not
 
 		// Temporary canvas for init image and mask generation
-		const auxCanvas = document.createElement("canvas");
-		auxCanvas.width = request.width;
-		auxCanvas.height = request.height;
-		const auxCtx = auxCanvas.getContext("2d");
+		const bbCanvas = document.createElement("canvas");
+		bbCanvas.width = bb.w;
+		bbCanvas.height = bb.h;
+		const bbCtx = bbCanvas.getContext("2d");
 
-		auxCtx.fillStyle = "#000F";
+		const reqCanvas = document.createElement("canvas");
+		reqCanvas.width = request.width;
+		reqCanvas.height = request.height;
+		const reqCtx = reqCanvas.getContext("2d");
+
+		bbCtx.fillStyle = "#000F";
 
 		// Get init image
-		auxCtx.fillRect(0, 0, request.width, request.height);
-		auxCtx.drawImage(
+		reqCtx.fillRect(0, 0, request.width, request.height);
+		reqCtx.drawImage(
 			visibleCanvas,
 			0,
 			0,
@@ -547,16 +621,16 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			request.width,
 			request.height
 		);
-		request.init_images = [auxCanvas.toDataURL()];
+		request.init_images = [reqCanvas.toDataURL()];
 
 		// Get mask image
-		auxCtx.fillStyle = "#000F";
-		auxCtx.fillRect(0, 0, request.width, request.height);
+		bbCtx.fillStyle = "#000F";
+		bbCtx.fillRect(0, 0, bb.w, bb.h);
 		if (state.invertMask) {
 			// overmasking by definition is entirely pointless with an inverted mask outpaint
 			// since it should explicitly avoid brushed masks too, we just won't even bother
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(
+			bbCtx.globalCompositeOperation = "destination-in";
+			bbCtx.drawImage(
 				maskPaintCanvas,
 				bb.x,
 				bb.y,
@@ -564,47 +638,27 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				bb.h,
 				0,
 				0,
-				request.width,
-				request.height
+				bb.w,
+				bb.h
 			);
 
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(
-				visibleCanvas,
-				0,
-				0,
-				bb.w,
-				bb.h,
-				0,
-				0,
-				request.width,
-				request.height
-			);
+			bbCtx.globalCompositeOperation = "destination-in";
+			bbCtx.drawImage(visibleCanvas, 0, 0);
 		} else {
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(
-				visibleCanvas,
-				0,
-				0,
-				bb.w,
-				bb.h,
-				0,
-				0,
-				request.width,
-				request.height
-			);
+			bbCtx.globalCompositeOperation = "destination-in";
+			bbCtx.drawImage(visibleCanvas, 0, 0);
 			// here's where to overmask to avoid including the brushed mask
 			// 99% of my issues were from failing to set source-over for the overmask blotches
 			if (state.overMaskPx > 0) {
 				// transparent to white first
-				auxCtx.globalCompositeOperation = "destination-atop";
-				auxCtx.fillStyle = "#FFFF";
-				auxCtx.fillRect(0, 0, request.width, request.height);
-				applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
+				bbCtx.globalCompositeOperation = "destination-atop";
+				bbCtx.fillStyle = "#FFFF";
+				bbCtx.fillRect(0, 0, bb.w, bb.h);
+				applyOvermask(bbCanvas, bbCtx, state.overMaskPx);
 			}
 
-			auxCtx.globalCompositeOperation = "destination-out"; // ???
-			auxCtx.drawImage(
+			bbCtx.globalCompositeOperation = "destination-out"; // ???
+			bbCtx.drawImage(
 				maskPaintCanvas,
 				bb.x,
 				bb.y,
@@ -612,16 +666,33 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				bb.h,
 				0,
 				0,
-				request.width,
-				request.height
+				bb.w,
+				bb.h
 			);
 		}
-		auxCtx.globalCompositeOperation = "destination-atop";
-		auxCtx.fillStyle = "#FFFF";
-		auxCtx.fillRect(0, 0, request.width, request.height);
-		request.mask = auxCanvas.toDataURL();
+
+		bbCtx.globalCompositeOperation = "destination-atop";
+		bbCtx.fillStyle = "#FFFF";
+		bbCtx.fillRect(0, 0, bb.w, bb.h);
+
+		reqCtx.clearRect(0, 0, reqCanvas.width, reqCanvas.height);
+		reqCtx.drawImage(
+			bbCanvas,
+			0,
+			0,
+			bb.w,
+			bb.h,
+			0,
+			0,
+			request.width,
+			request.height
+		);
+		request.mask = reqCanvas.toDataURL();
+
 		// Dream
-		_generate("img2img", request, bb);
+		_generate("img2img", request, bb, {
+			keepMask: state.keepMasked ? bbCanvas : null,
+		});
 	}
 };
 const dream_erase_callback = (bb) => {
@@ -694,33 +765,23 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	// Use img2img
 
 	// Temporary canvas for init image and mask generation
-	const auxCanvas = document.createElement("canvas");
-	auxCanvas.width = request.width;
-	auxCanvas.height = request.height;
-	const auxCtx = auxCanvas.getContext("2d");
+	const bbCanvas = document.createElement("canvas");
+	bbCanvas.width = bb.w;
+	bbCanvas.height = bb.h;
+	const bbCtx = bbCanvas.getContext("2d");
 
-	auxCtx.fillStyle = "#000F";
+	bbCtx.fillStyle = "#000F";
 
 	// Get init image
-	auxCtx.fillRect(0, 0, request.width, request.height);
-	auxCtx.drawImage(
-		visibleCanvas,
-		0,
-		0,
-		bb.w,
-		bb.h,
-		0,
-		0,
-		request.width,
-		request.height
-	);
-	request.init_images = [auxCanvas.toDataURL()];
+	bbCtx.fillRect(0, 0, bb.w, bb.h);
+	bbCtx.drawImage(visibleCanvas, 0, 0);
+	request.init_images = [bbCanvas.toDataURL()];
 
 	// Get mask image
-	auxCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
-	auxCtx.fillRect(0, 0, request.width, request.height);
-	auxCtx.globalCompositeOperation = "destination-out";
-	auxCtx.drawImage(
+	bbCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
+	bbCtx.fillRect(0, 0, bb.w, bb.h);
+	bbCtx.globalCompositeOperation = "destination-out";
+	bbCtx.drawImage(
 		maskPaintCanvas,
 		bb.x,
 		bb.y,
@@ -732,30 +793,30 @@ const dream_img2img_callback = (bb, resolution, state) => {
 		request.height
 	);
 
-	auxCtx.globalCompositeOperation = "destination-atop";
-	auxCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
-	auxCtx.fillRect(0, 0, request.width, request.height);
+	bbCtx.globalCompositeOperation = "destination-atop";
+	bbCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
+	bbCtx.fillRect(0, 0, request.width, request.height);
 
 	// Border Mask
 	if (state.keepBorderSize > 0) {
-		auxCtx.globalCompositeOperation = "source-over";
-		auxCtx.fillStyle = "#000F";
+		bbCtx.globalCompositeOperation = "source-over";
+		bbCtx.fillStyle = "#000F";
 		if (state.gradient) {
-			const lg = auxCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
+			const lg = bbCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
 			lg.addColorStop(0, "#000F");
 			lg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = lg;
+			bbCtx.fillStyle = lg;
 		}
-		auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+		bbCtx.fillRect(0, 0, state.keepBorderSize, request.height);
 		if (state.gradient) {
-			const tg = auxCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
+			const tg = bbCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
 			tg.addColorStop(0, "#000F");
 			tg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = tg;
+			bbCtx.fillStyle = tg;
 		}
-		auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+		bbCtx.fillRect(0, 0, request.width, state.keepBorderSize);
 		if (state.gradient) {
-			const rg = auxCtx.createLinearGradient(
+			const rg = bbCtx.createLinearGradient(
 				request.width,
 				0,
 				request.width - state.keepBorderSize,
@@ -763,16 +824,16 @@ const dream_img2img_callback = (bb, resolution, state) => {
 			);
 			rg.addColorStop(0, "#000F");
 			rg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = rg;
+			bbCtx.fillStyle = rg;
 		}
-		auxCtx.fillRect(
+		bbCtx.fillRect(
 			request.width - state.keepBorderSize,
 			0,
 			state.keepBorderSize,
 			request.height
 		);
 		if (state.gradient) {
-			const bg = auxCtx.createLinearGradient(
+			const bg = bbCtx.createLinearGradient(
 				0,
 				request.height,
 				0,
@@ -780,9 +841,9 @@ const dream_img2img_callback = (bb, resolution, state) => {
 			);
 			bg.addColorStop(0, "#000F");
 			bg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = bg;
+			bbCtx.fillStyle = bg;
 		}
-		auxCtx.fillRect(
+		bbCtx.fillRect(
 			0,
 			request.height - state.keepBorderSize,
 			request.width,
@@ -790,11 +851,13 @@ const dream_img2img_callback = (bb, resolution, state) => {
 		);
 	}
 
-	request.mask = auxCanvas.toDataURL();
+	request.mask = bbCanvas.toDataURL();
 	request.inpaint_full_res = state.fullResolution;
 
 	// Dream
-	_generate("img2img", request, bb);
+	_generate("img2img", request, bb, {
+		keepMask: state.keepMasked ? bbCanvas : null,
+	});
 };
 
 /**
@@ -966,6 +1029,7 @@ const dreamTool = () =>
 				state.cursorSize = 512;
 				state.snapToGrid = true;
 				state.invertMask = false;
+				state.keepMasked = true;
 				state.overMaskPx = 0;
 
 				state.erasePrevCursor = () =>
@@ -1182,6 +1246,13 @@ const dreamTool = () =>
 						}
 					).label;
 
+					// Keep Masked Content Checkbox
+					state.ctxmenu.keepMaskedLabel = _toolbar_input.checkbox(
+						state,
+						"keepMasked",
+						"Keep Masked"
+					).label;
+
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
@@ -1200,6 +1271,8 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.keepMaskedLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 			},
@@ -1268,6 +1341,7 @@ const img2imgTool = () =>
 				state.cursorSize = 512;
 				state.snapToGrid = true;
 				state.invertMask = true;
+				state.keepMasked = true;
 				state.fullResolution = false;
 
 				state.denoisingStrength = 0.7;
@@ -1423,15 +1497,15 @@ const img2imgTool = () =>
 					};
 
 					// For displaying border mask
-					const auxCanvas = document.createElement("canvas");
-					auxCanvas.width = request.width;
-					auxCanvas.height = request.height;
-					const auxCtx = auxCanvas.getContext("2d");
+					const bbCanvas = document.createElement("canvas");
+					bbCanvas.width = request.width;
+					bbCanvas.height = request.height;
+					const bbCtx = bbCanvas.getContext("2d");
 
 					if (state.keepBorderSize > 0) {
-						auxCtx.fillStyle = "#6A6AFF30";
+						bbCtx.fillStyle = "#6A6AFF30";
 						if (state.gradient) {
-							const lg = auxCtx.createLinearGradient(
+							const lg = bbCtx.createLinearGradient(
 								0,
 								0,
 								state.keepBorderSize,
@@ -1439,11 +1513,11 @@ const img2imgTool = () =>
 							);
 							lg.addColorStop(0, "#6A6AFF30");
 							lg.addColorStop(1, "#0000");
-							auxCtx.fillStyle = lg;
+							bbCtx.fillStyle = lg;
 						}
-						auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+						bbCtx.fillRect(0, 0, state.keepBorderSize, request.height);
 						if (state.gradient) {
-							const tg = auxCtx.createLinearGradient(
+							const tg = bbCtx.createLinearGradient(
 								0,
 								0,
 								0,
@@ -1451,11 +1525,11 @@ const img2imgTool = () =>
 							);
 							tg.addColorStop(0, "#6A6AFF30");
 							tg.addColorStop(1, "#6A6AFF00");
-							auxCtx.fillStyle = tg;
+							bbCtx.fillStyle = tg;
 						}
-						auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+						bbCtx.fillRect(0, 0, request.width, state.keepBorderSize);
 						if (state.gradient) {
-							const rg = auxCtx.createLinearGradient(
+							const rg = bbCtx.createLinearGradient(
 								request.width,
 								0,
 								request.width - state.keepBorderSize,
@@ -1463,16 +1537,16 @@ const img2imgTool = () =>
 							);
 							rg.addColorStop(0, "#6A6AFF30");
 							rg.addColorStop(1, "#6A6AFF00");
-							auxCtx.fillStyle = rg;
+							bbCtx.fillStyle = rg;
 						}
-						auxCtx.fillRect(
+						bbCtx.fillRect(
 							request.width - state.keepBorderSize,
 							0,
 							state.keepBorderSize,
 							request.height
 						);
 						if (state.gradient) {
-							const bg = auxCtx.createLinearGradient(
+							const bg = bbCtx.createLinearGradient(
 								0,
 								request.height,
 								0,
@@ -1480,16 +1554,16 @@ const img2imgTool = () =>
 							);
 							bg.addColorStop(0, "#6A6AFF30");
 							bg.addColorStop(1, "#6A6AFF00");
-							auxCtx.fillStyle = bg;
+							bbCtx.fillStyle = bg;
 						}
-						auxCtx.fillRect(
+						bbCtx.fillRect(
 							0,
 							request.height - state.keepBorderSize,
 							request.width,
 							state.keepBorderSize
 						);
 						uiCtx.drawImage(
-							auxCanvas,
+							bbCanvas,
 							0,
 							0,
 							request.width,
@@ -1586,6 +1660,13 @@ const img2imgTool = () =>
 						}
 					).label;
 
+					// Keep Masked Content Checkbox
+					state.ctxmenu.keepMaskedLabel = _toolbar_input.checkbox(
+						state,
+						"keepMasked",
+						"Keep Masked"
+					).label;
+
 					// Inpaint Full Resolution Checkbox
 					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
 						state,
@@ -1631,6 +1712,8 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
+				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.keepMaskedLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
