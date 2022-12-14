@@ -291,7 +291,8 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		fetch(`${host}${url}interrupt`, {method: "POST"});
 		interruptButton.disabled = true;
 	});
-	const stopMarchingAnts = march(bb);
+	const marchingOptions = {};
+	const stopMarchingAnts = march(bb, marchingOptions);
 
 	// First Dream Run
 	console.info(`[dream] Generating images for prompt '${request.prompt}'`);
@@ -471,6 +472,62 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 	keyboard.listen.onkeyclick.on(onarrow);
 
+	// For handling mouse events for navigation
+	const onmovehandler = mouse.listen.world.onmousemove.on(
+		(evn, state) => {
+			const contains = bb.contains(evn.x, evn.y);
+
+			if (!contains && !state.dream_processed)
+				imageCollection.inputElement.style.cursor = "auto";
+			if (!contains || state.dream_processed) marchingOptions.style = "#FFF";
+
+			if (!state.dream_processed && contains) {
+				marchingOptions.style = "#F55";
+
+				imageCollection.inputElement.style.cursor = "pointer";
+
+				state.dream_processed = true;
+			}
+		},
+		0,
+		true
+	);
+
+	const onclickhandler = mouse.listen.world.btn.left.onclick.on(
+		(evn, state) => {
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				applyImg();
+				imageCollection.inputElement.style.cursor = "auto";
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+	const oncancelhandler = mouse.listen.world.btn.right.onclick.on(
+		(evn, state) => {
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				discardImg();
+				imageCollection.inputElement.style.cursor = "auto";
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+	const onwheelhandler = mouse.listen.world.onwheel.on(
+		(evn, state) => {
+			console.debug(evn, state);
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				if (evn.delta < 0) nextImg();
+				else prevImg();
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+
 	// Cleans up
 	const clean = (removeBrushMask = false) => {
 		if (removeBrushMask) {
@@ -482,6 +539,12 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		keyboard.listen.onkeyclick.clear(onarrow);
 		// Remove area from no-generate list
 		generationAreas.delete(areaid);
+
+		// Stop handling inputs
+		mouse.listen.world.onmousemove.clear(onmovehandler);
+		mouse.listen.world.onwheel.clear(onwheelhandler);
+		mouse.listen.world.btn.left.onclick.clear(onclickhandler);
+		mouse.listen.world.btn.right.onclick.clear(oncancelhandler);
 	};
 
 	redraw();
@@ -1097,7 +1160,7 @@ const dreamTool = () =>
 					};
 
 					if (state.selected) {
-						const bb = {x: 0, y: 0, w: 0, h: 0};
+						const bb = new BoundingBox();
 
 						const minx = Math.min(state.selected.now.x, state.selected.start.x);
 						const miny = Math.min(state.selected.now.y, state.selected.start.y);
@@ -1167,10 +1230,12 @@ const dreamTool = () =>
 					state.mousemovecb(state.lastMouseMove);
 				};
 
-				state.wheelcb = (evn) => {
+				state.wheelcb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					_dream_onwheel(evn, state);
 				};
-				state.dreamcb = (evn) => {
+				state.dreamcb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					const bb =
 						(state.selected && state.selected.bb) ||
 						getBoundingBox(
@@ -1187,12 +1252,13 @@ const dreamTool = () =>
 					dream_generate_callback(bb, resolution, state);
 					state.selected = null;
 				};
-				state.erasecb = (evn) => {
+				state.erasecb = (evn, estate) => {
 					if (state.selected) {
 						state.selected = null;
 						state.redraw();
 						return;
 					}
+					if (estate.dream_processed) return;
 					const bb = getBoundingBox(
 						evn.x,
 						evn.y,
@@ -1419,7 +1485,7 @@ const img2imgTool = () =>
 					let request = null;
 
 					if (state.selected) {
-						bb = {x: 0, y: 0, w: 0, h: 0};
+						bb = new BoundingBox();
 
 						const minx = Math.min(state.selected.now.x, state.selected.start.x);
 						const miny = Math.min(state.selected.now.y, state.selected.start.y);
@@ -1580,10 +1646,12 @@ const img2imgTool = () =>
 					state.mousemovecb(state.lastMouseMove);
 				};
 
-				state.wheelcb = (evn) => {
+				state.wheelcb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					_dream_onwheel(evn, state);
 				};
-				state.dreamcb = (evn) => {
+				state.dreamcb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					const bb =
 						(state.selected && state.selected.bb) ||
 						getBoundingBox(
@@ -1601,7 +1669,8 @@ const img2imgTool = () =>
 					state.selected = null;
 					state.redraw();
 				};
-				state.erasecb = (evn) => {
+				state.erasecb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					if (state.selected) {
 						state.selected = null;
 						state.redraw();

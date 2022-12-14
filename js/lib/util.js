@@ -2,15 +2,27 @@
  * Some type definitions before the actual code
  */
 /**
- * Represents a simple bounding box
- *
- * @typedef BoundingBox
- * @type {Object}
- * @property {number} x - Leftmost coordinate of the box
- * @property {number} y - Topmost coordinate of the box
- * @property {number} w - The bounding box Width
- * @property {number} h - The bounding box Height
+ * Represents a simple bouding box
  */
+class BoundingBox {
+	x = 0;
+	y = 0;
+	w = 0;
+	h = 0;
+
+	constructor({x, y, w, h} = {x: 0, y: 0, w: 0, h: 0}) {
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+	}
+
+	contains(x, y) {
+		return (
+			this.x < x && this.y < y && x < this.x + this.w && y < this.y + this.h
+		);
+	}
+}
 
 /**
  * A simple implementation of the Observer programming pattern
@@ -19,28 +31,34 @@
 class Observer {
 	/**
 	 * List of handlers
-	 * @type {Set<(msg: T) => void | Promise<void>>}
+	 * @type {Array<{handler: (msg: T) => void | Promise<void>, priority: number}>}
 	 */
-	_handlers = new Set();
+	_handlers = [];
 
 	/**
 	 * Adds a observer to the events
 	 *
-	 * @param {(msg: T) => void | Promise<void>} callback The function to run when receiving a message
-	 * @returns {(msg:T) => void | Promise<void>} The callback we received
+	 * @param {(msg: T, state?: any) => void | Promise<void>} callback The function to run when receiving a message
+	 * @param {number} priority The priority level of the observer
+	 * @param {boolean} wait If the handler must be waited for before continuing
+	 * @returns {(msg:T, state?: any) => void | Promise<void>} The callback we received
 	 */
-	on(callback) {
-		this._handlers.add(callback);
+	on(callback, priority = 0, wait = false) {
+		this._handlers.push({handler: callback, priority, wait});
+		this._handlers.sort((a, b) => b.priority - a.priority);
 		return callback;
 	}
 	/**
 	 *	Removes a observer
 	 *
-	 * @param {(msg: T) => void | Promise<void>} callback The function used to register the callback
+	 * @param {(msg: T, state?: any) => void | Promise<void>} callback The function used to register the callback
 	 * @returns {boolean} Whether the handler existed
 	 */
 	clear(callback) {
-		return this._handlers.delete(callback);
+		const index = this._handlers.findIndex((v) => v.handler === callback);
+		if (index === -1) return false;
+		this._handlers.splice(index, 1);
+		return true;
 	}
 	/**
 	 * Sends a message to all observers
@@ -48,16 +66,23 @@ class Observer {
 	 * @param {T} msg The message to send to the observers
 	 */
 	async emit(msg) {
-		return Promise.all(
-			Array.from(this._handlers).map(async (handler) => {
+		const state = {};
+		const promises = [];
+		for (const {handler, wait} of this._handlers) {
+			const run = async () => {
 				try {
-					await handler(msg);
+					await handler(msg, state);
 				} catch (e) {
 					console.warn("Observer failed to run handler");
 					console.warn(e);
 				}
-			})
-		);
+			};
+
+			if (wait) await run();
+			else promises.push(run());
+		}
+
+		return Promise.all(promises);
 	}
 }
 
@@ -211,12 +236,12 @@ function getBoundingBox(cx, cy, w, h, gridSnap = null, offset = 0) {
 	box.x = Math.round(offs.x + cx);
 	box.y = Math.round(offs.y + cy);
 
-	return {
+	return new BoundingBox({
 		x: Math.floor(box.x - w / 2),
 		y: Math.floor(box.y - h / 2),
 		w: Math.round(w),
 		h: Math.round(h),
-	};
+	});
 }
 
 class NoContentError extends Error {}
@@ -236,7 +261,7 @@ function cropCanvas(sourceCanvas, options = {}) {
 	const h = sourceCanvas.height;
 	var imageData = sourceCanvas.getContext("2d").getImageData(0, 0, w, h);
 	/** @type {BoundingBox} */
-	const bb = {x: 0, y: 0, w: 0, h: 0};
+	const bb = new BoundingBox();
 
 	let minx = w;
 	let maxx = -1;
