@@ -101,6 +101,8 @@ const _dream = async (endpoint, request) => {
 	} finally {
 		generating = false;
 	}
+	var responseSubdata = JSON.parse(data.info);
+	stableDiffusionData.lastSeeds.push(...responseSubdata.all_seeds);
 
 	return data.images;
 };
@@ -256,6 +258,7 @@ const _generate = async (
 		});
 
 		imageCollection.inputElement.appendChild(interruptButton);
+		stableDiffusionData.lastSeeds = [];
 		images.push(...(await _dream(endpoint, requestCopy)));
 		stopDrawingStatus = true;
 		at = 1;
@@ -276,6 +279,8 @@ const _generate = async (
 		if (at < 0) at = images.length - 1;
 
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		var seed = stableDiffusionData.lastSeeds[at - 1];
+		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
 
@@ -284,6 +289,8 @@ const _generate = async (
 		if (at >= images.length) at = 0;
 
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		var seed = stableDiffusionData.lastSeeds[at - 1];
+		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
 
@@ -455,7 +462,10 @@ const _generate = async (
 		// load the image data after defining the closure
 		img.src = "data:image/png;base64," + images[at];
 		img.addEventListener("load", () => {
-			const response = prompt("Enter new resource name", "Dream Resource");
+			const response = prompt(
+				"Enter new resource name",
+				"Dream Resource " + stableDiffusionData.lastSeeds[at - 1]
+			);
 			if (response) {
 				tools.stamp.state.addResource(response, img);
 				redraw(); // Redraw to avoid strange cursor behavior
@@ -471,6 +481,14 @@ const _generate = async (
 		saveImg();
 	});
 	imageSelectMenu.appendChild(savebtn);
+
+	const seedbtn = document.createElement("button");
+	seedbtn.textContent = "U";
+	seedbtn.title = "Use seed " + `${stableDiffusionData.lastSeeds[at - 1]}`;
+	seedbtn.addEventListener("click", () => {
+		sendSeed(at);
+	});
+	imageSelectMenu.appendChild(seedbtn);
 
 	nextQueue(initialQ);
 };
@@ -1623,3 +1641,8 @@ window.onbeforeunload = async () => {
 	// Stop current generation on page close
 	if (generating) await fetch(`${host}${url}interrupt`, {method: "POST"});
 };
+
+function sendSeed(seedIndex) {
+	document.getElementById("seed").value =
+		stableDiffusionData.lastSeeds[seedIndex - 1];
+}
