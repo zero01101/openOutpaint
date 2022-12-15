@@ -102,9 +102,11 @@ const _dream = async (endpoint, request) => {
 		generating = false;
 	}
 	var responseSubdata = JSON.parse(data.info);
-	stableDiffusionData.lastSeeds.push(...responseSubdata.all_seeds);
-
-	return data.images;
+	var returnData = {
+		images: data.images,
+		seeds: responseSubdata.all_seeds,
+	};
+	return returnData;
 };
 
 /**
@@ -280,6 +282,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	let at = 0;
 	/** @type {Array<string|null>} */
 	const images = [null];
+	const seeds = [-1];
 	/** @type {HTMLDivElement} */
 	let imageSelectMenu = null;
 	// Layer for the images
@@ -363,8 +366,9 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		});
 
 		imageCollection.inputElement.appendChild(interruptButton);
-		stableDiffusionData.lastSeeds = [];
-		images.push(...(await _dream(endpoint, requestCopy)));
+		var dreamData = await _dream(endpoint, requestCopy);
+		images.push(...dreamData.images);
+		seeds.push(...dreamData.seeds);
 		stopDrawingStatus = true;
 		at = 1;
 	} catch (e) {
@@ -384,7 +388,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		if (at < 0) at = images.length - 1;
 
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
-		var seed = stableDiffusionData.lastSeeds[at - 1];
+		var seed = seeds[at];
 		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
@@ -394,7 +398,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		if (at >= images.length) at = 0;
 
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
-		var seed = stableDiffusionData.lastSeeds[at - 1];
+		var seed = seeds[at];
 		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
@@ -438,7 +442,9 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 					parseInt(requestCopy.seed) +
 					requestCopy.batch_size * requestCopy.n_iter;
 			}
-			images.push(...(await _dream(endpoint, requestCopy)));
+			dreamData = await _dream(endpoint, requestCopy);
+			images.push(...dreamData.images);
+			seeds.push(...dreamData.seeds);
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
 			alert(
@@ -661,7 +667,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		img.addEventListener("load", () => {
 			const response = prompt(
 				"Enter new resource name",
-				"Dream Resource " + stableDiffusionData.lastSeeds[at - 1]
+				"Dream Resource " + seeds[at]
 			);
 			if (response) {
 				tools.stamp.state.addResource(response, img);
@@ -681,7 +687,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 	const seedbtn = document.createElement("button");
 	seedbtn.textContent = "U";
-	seedbtn.title = "Use seed " + `${stableDiffusionData.lastSeeds[at - 1]}`;
+	seedbtn.title = "Use seed " + `${seeds[at]}`;
 	seedbtn.addEventListener("click", () => {
 		sendSeed(at);
 	});
@@ -1879,5 +1885,5 @@ window.onbeforeunload = async () => {
 
 function sendSeed(seedIndex) {
 	stableDiffusionData.seed = document.getElementById("seed").value =
-		stableDiffusionData.lastSeeds[seedIndex - 1];
+		seeds[seedIndex - 1];
 }
