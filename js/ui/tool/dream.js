@@ -116,12 +116,14 @@ const _dream = async (endpoint, request) => {
  * @param {object} options Options
  * @param {number} [options.drawEvery=0.2 / request.n_iter] Percentage delta to draw progress at (by default 20% of each iteration)
  * @param {HTMLCanvasElement} [options.keepMask=null] Whether to force keep image under fully opaque mask
+ * @param {number} [options.keepMaskBlur=0] Blur when applying full resolution back to the image
  * @returns {Promise<HTMLImageElement | null>}
  */
 const _generate = async (endpoint, request, bb, options = {}) => {
 	defaultOpt(options, {
 		drawEvery: 0.2 / request.n_iter,
 		keepMask: null,
+		keepMaskBlur: 0,
 	});
 
 	events.tool.dream.emit({event: "generate", request});
@@ -195,33 +197,47 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	let keepMaskCtx = null;
 
 	if (options.keepMask) {
-		const visibleCanvas = uil.getVisible(bb);
+		const visibleCanvas = uil.getVisible({
+			x: bb.x - options.keepMaskBlur,
+			y: bb.y - options.keepMaskBlur,
+			w: bb.w + 2 * options.keepMaskBlur,
+			h: bb.h + 2 * options.keepMaskBlur,
+		});
+		const visibleCtx = visibleCanvas.getContext("2d");
 
 		const ctx = options.keepMask.getContext("2d", {willReadFrequently: true});
 
+		// Save current image
 		keepMaskCanvas = document.createElement("canvas");
 		keepMaskCanvas.width = options.keepMask.width;
 		keepMaskCanvas.height = options.keepMask.height;
 
 		keepMaskCtx = keepMaskCanvas.getContext("2d", {willReadFrequently: true});
-		keepMaskCtx.drawImage(visibleCanvas, 0, 0);
 
 		if (
-			visibleCanvas.width !== keepMaskCanvas.width ||
-			visibleCanvas.height !== keepMaskCanvas.height
+			visibleCanvas.width !== keepMaskCanvas.width + 2 * options.keepMaskBlur ||
+			visibleCanvas.height !== keepMaskCanvas.height + 2 * options.keepMaskBlur
 		) {
 			throw new Error(
 				"[dream] Provided mask is not the same size as the bounding box"
 			);
 		}
-		const imageData = keepMaskCtx.getImageData(
-			0,
-			0,
+
+		// Cut out changing elements
+		const blurMaskCanvas = document.createElement("canvas");
+		// A bit bigger to handle literal corner cases
+		blurMaskCanvas.width = bb.w + options.keepMaskBlur * 2;
+		blurMaskCanvas.height = bb.h + options.keepMaskBlur * 2;
+		const blurMaskCtx = blurMaskCanvas.getContext("2d");
+
+		const blurMaskData = blurMaskCtx.getImageData(
+			options.keepMaskBlur,
+			options.keepMaskBlur,
 			keepMaskCanvas.width,
 			keepMaskCanvas.height
 		);
 
-		const image = imageData.data;
+		const image = blurMaskData.data;
 
 		const maskData = ctx.getImageData(
 			0,
@@ -234,18 +250,30 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 		for (let i = 0; i < mask.length; i += 4) {
 			if (mask[i] !== 0 || mask[i + 1] !== 0 || mask[i + 2] !== 0) {
-				// If pixel is not fully black
-				// Set pixel as fully transparent
+				// If pixel is fully black
+				// Set pixel as fully black here as well
 				image[i] = 0;
 				image[i + 1] = 0;
 				image[i + 2] = 0;
-				image[i + 3] = 0;
+				image[i + 3] = 255;
 			}
 		}
 
-		keepMaskCtx.clearRect(0, 0, keepMaskCanvas.width, keepMaskCanvas.height);
+		blurMaskCtx.putImageData(
+			blurMaskData,
+			options.keepMaskBlur,
+			options.keepMaskBlur
+		);
 
-		keepMaskCtx.putImageData(imageData, 0, 0);
+		visibleCtx.filter = `blur(${options.keepMaskBlur}px)`;
+		visibleCtx.globalCompositeOperation = "destination-out";
+		visibleCtx.drawImage(blurMaskCanvas, 0, 0);
+
+		keepMaskCtx.drawImage(
+			visibleCanvas,
+			-options.keepMaskBlur,
+			-options.keepMaskBlur
+		);
 	}
 
 	// Images to select through
@@ -264,22 +292,37 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
 		if (!url) return;
 
-		const image = new Image();
-		image.src = "data:image/png;base64," + url;
-		image.addEventListener("load", () => {
+		const img = new Image();
+		img.src = "data:image/png;base64," + url;
+		img.addEventListener("load", () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = bb.w;
+			canvas.height = bb.h;
+
+			// Creates new canvas for blurred mask
+			const blurMaskCanvas = document.createElement("canvas");
+			blurMaskCanvas.width = bb.w + options.keepMaskBlur * 2;
+			blurMaskCanvas.height = bb.h + options.keepMaskBlur * 2;
+
+			const ctx = canvas.getContext("2d");
+			ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, bb.w, bb.h);
+
+			if (keepMaskCanvas) {
+				ctx.drawImage(keepMaskCanvas, 0, 0);
+			}
+
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
 			layer.ctx.drawImage(
-				image,
+				canvas,
 				0,
 				0,
-				image.width,
-				image.height,
+				canvas.width,
+				canvas.height,
 				bb.x,
 				bb.y,
 				bb.w,
 				bb.h
 			);
-			if (keepMaskCanvas) layer.ctx.drawImage(keepMaskCanvas, bb.x, bb.y);
 		});
 	};
 
@@ -369,7 +412,9 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			const ctx = canvas.getContext("2d");
 			ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, bb.w, bb.h);
 
-			if (keepMaskCanvas) ctx.drawImage(keepMaskCanvas, 0, 0);
+			if (keepMaskCanvas) {
+				ctx.drawImage(keepMaskCanvas, 0, 0);
+			}
 
 			commands.runCommand("drawImage", "Image Dream", {
 				x: bb.x,
@@ -766,6 +811,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		// Dream
 		_generate("img2img", request, bb, {
 			keepMask: state.keepMasked ? bbCanvas : null,
+			keepMaskBlur: state.keepMaskedBlur,
 		});
 	}
 };
@@ -931,6 +977,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	// Dream
 	_generate("img2img", request, bb, {
 		keepMask: state.keepMasked ? bbCanvas : null,
+		keepMaskBlur: state.keepMaskedBlur,
 	});
 };
 
@@ -1039,6 +1086,7 @@ const dreamTool = () =>
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.keepMasked = true;
+				state.keepMaskedBlur = 8;
 				state.overMaskPx = 0;
 
 				state.erasePrevCursor = () =>
@@ -1263,8 +1311,30 @@ const dreamTool = () =>
 					state.ctxmenu.keepMaskedLabel = _toolbar_input.checkbox(
 						state,
 						"keepMasked",
-						"Keep Masked"
+						"Keep Masked",
+						() => {
+							if (state.keepMasked) {
+								state.ctxmenu.keepMaskedBlurSlider.classList.remove(
+									"invisible"
+								);
+							} else {
+								state.ctxmenu.keepMaskedBlurSlider.classList.add("invisible");
+							}
+						}
 					).label;
+
+					// Keep Masked Content Blur Slider
+					state.ctxmenu.keepMaskedBlurSlider = _toolbar_input.slider(
+						state,
+						"keepMaskedBlur",
+						"Keep Masked Blur",
+						{
+							min: 0,
+							max: 64,
+							step: 4,
+							textStep: 1,
+						}
+					).slider;
 
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
@@ -1286,7 +1356,7 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepMaskedLabel);
-				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.keepMaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 			},
 			shortcut: "D",
@@ -1369,6 +1439,7 @@ const img2imgTool = () =>
 				state.snapToGrid = true;
 				state.invertMask = true;
 				state.keepMasked = true;
+				state.keepMaskedBlur = 8;
 				state.fullResolution = false;
 
 				state.denoisingStrength = 0.7;
@@ -1701,8 +1772,42 @@ const img2imgTool = () =>
 					state.ctxmenu.keepMaskedLabel = _toolbar_input.checkbox(
 						state,
 						"keepMasked",
-						"Keep Masked"
+						"Keep Masked",
+						() => {
+							if (state.keepMasked) {
+								state.ctxmenu.keepMaskedBlurSlider.classList.remove(
+									"invisible"
+								);
+								state.ctxmenu.keepMaskedBlurSliderLinebreak.classList.add(
+									"invisible"
+								);
+							} else {
+								state.ctxmenu.keepMaskedBlurSlider.classList.add("invisible");
+								state.ctxmenu.keepMaskedBlurSliderLinebreak.classList.remove(
+									"invisible"
+								);
+							}
+						}
 					).label;
+
+					// Keep Masked Content Blur Slider
+					state.ctxmenu.keepMaskedBlurSlider = _toolbar_input.slider(
+						state,
+						"keepMaskedBlur",
+						"Keep Masked Blur",
+						{
+							min: 0,
+							max: 64,
+							step: 4,
+							textStep: 1,
+						}
+					).slider;
+
+					state.ctxmenu.keepMaskedBlurSliderLinebreak =
+						document.createElement("br");
+					state.ctxmenu.keepMaskedBlurSliderLinebreak.classList.add(
+						"invisible"
+					);
 
 					// Inpaint Full Resolution Checkbox
 					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
@@ -1751,7 +1856,8 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepMaskedLabel);
-				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.keepMaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.keepMaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
