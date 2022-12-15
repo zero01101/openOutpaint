@@ -1,6 +1,15 @@
 /**
  * Some type definitions before the actual code
  */
+
+/**
+ * Simple Point Coordinate
+ *
+ * @typedef Point
+ * @property {number} x - x coordinate
+ * @property {number} y - y coordinate
+ */
+
 /**
  * Represents a simple bouding box
  */
@@ -21,6 +30,26 @@ class BoundingBox {
 		return (
 			this.x < x && this.y < y && x < this.x + this.w && y < this.y + this.h
 		);
+	}
+
+	/**
+	 *	Gets bounding box from two points
+	 *
+	 * @param {Point} start Coordinate
+	 * @param {Point} end
+	 */
+	static fromStartEnd(start, end) {
+		const minx = Math.min(start.x, end.x);
+		const miny = Math.min(start.y, end.y);
+		const maxx = Math.max(start.x, end.x);
+		const maxy = Math.max(start.y, end.y);
+
+		return new BoundingBox({
+			x: minx,
+			y: miny,
+			w: maxx - minx,
+			h: maxy - miny,
+		});
 	}
 }
 

@@ -86,8 +86,8 @@
  *
  * @typedef MouseCoordContext
  * @property {{[key: string]: MouseCoordContextDragInfo}} dragging Information about mouse button drags
- * @property {{x: number, y: number}} prev Previous mouse position
- * @property {{x: number, y: number}} pos Current mouse position
+ * @property {Point} prev Previous mouse position
+ * @property {Point} pos Current mouse position
  */
 
 /* Here are keyboard-related types */

@@ -515,6 +515,16 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		1,
 		true
 	);
+	const onmorehandler = mouse.listen.world.btn.middle.onclick.on(
+		(evn, state) => {
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				makeMore();
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
 	const onwheelhandler = mouse.listen.world.onwheel.on(
 		(evn, state) => {
 			if (evn.evn.ctrlKey) return;
@@ -542,9 +552,10 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 		// Stop handling inputs
 		mouse.listen.world.onmousemove.clear(onmovehandler);
-		mouse.listen.world.onwheel.clear(onwheelhandler);
 		mouse.listen.world.btn.left.onclick.clear(onclickhandler);
 		mouse.listen.world.btn.right.onclick.clear(oncancelhandler);
+		mouse.listen.world.btn.middle.onclick.clear(onmorehandler);
+		mouse.listen.world.onwheel.clear(onwheelhandler);
 	};
 
 	redraw();
@@ -926,87 +937,6 @@ const dream_img2img_callback = (bb, resolution, state) => {
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (bb, state, tool, resolution, style = {}) => {
-	defaultOpt(style, {
-		sizeTextStyle: "#FFF5",
-		genSizeTextStyle: "#FFF5",
-		toolTextStyle: "#FFF5",
-		reticleWidth: 1,
-		reticleStyle: "#FFF",
-	});
-
-	const bbvp = {
-		...viewport.canvasToView(bb.x, bb.y),
-		w: viewport.zoom * bb.w,
-		h: viewport.zoom * bb.h,
-	};
-
-	uiCtx.save();
-
-	// draw targeting square reticle thingy cursor
-	uiCtx.lineWidth = style.reticleWidth;
-	uiCtx.strokeStyle = style.reticleStyle;
-	uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
-
-	uiCtx.font = `bold 20px Open Sans`;
-
-	// Draw Tool Name
-	if (bb.h > 40) {
-		const xshrink = Math.min(1, (bbvp.w - 20) / uiCtx.measureText(tool).width);
-
-		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
-
-		uiCtx.textAlign = "left";
-		uiCtx.fillStyle = style.toolTextStyle;
-		uiCtx.fillText(tool, bbvp.x + 10, bbvp.y + 10 + 20 * xshrink, bb.w);
-	}
-
-	// Draw width and height
-	{
-		// Render Cursor Width
-		uiCtx.textAlign = "center";
-		uiCtx.fillStyle = style.sizeTextStyle;
-		uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
-		const xshrink = Math.min(
-			1,
-			(bbvp.w - 30) / uiCtx.measureText(`${bb.w}px`).width
-		);
-		const yshrink = Math.min(
-			1,
-			(bbvp.h - 30) / uiCtx.measureText(`${bb.h}px`).width
-		);
-		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
-		uiCtx.fillText(`${bb.w}px`, 0, bbvp.h / 2 - 10 * xshrink, bb.w);
-
-		// Render Generation Width
-		uiCtx.fillStyle = style.genSizeTextStyle;
-		uiCtx.font = `bold ${10 * xshrink}px Open Sans`;
-		if (bb.w !== resolution.w)
-			uiCtx.fillText(`${resolution.w}px`, 0, bbvp.h / 2 - 30 * xshrink, bb.h);
-
-		// Render Cursor Height
-		uiCtx.rotate(-Math.PI / 2);
-		uiCtx.fillStyle = style.sizeTextStyle;
-		uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
-		uiCtx.fillText(`${bb.h}px`, 0, bbvp.w / 2 - 10 * yshrink, bb.h);
-
-		// Render Generation Height
-		uiCtx.fillStyle = style.genSizeTextStyle;
-		uiCtx.font = `bold ${10 * yshrink}px Open Sans`;
-		if (bb.h !== resolution.h)
-			uiCtx.fillText(`${resolution.h}px`, 0, bbvp.w / 2 - 30 * xshrink, bb.h);
-
-		uiCtx.restore();
-	}
-
-	return () => {
-		uiCtx.save();
-
-		uiCtx.clearRect(bbvp.x - 64, bbvp.y - 64, bbvp.w + 128, bbvp.h + 128);
-
-		uiCtx.restore();
-	};
-};
 
 /**
  * Generic wheel handler
@@ -1045,15 +975,24 @@ const dreamTool = () =>
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
 
+			mouse.listen.world.onmousemove.on(state.mousemovecb);
+			mouse.listen.world.onwheel.on(state.wheelcb);
+			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+
+			// Select Region listeners
 			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
 			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 
-			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
-			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+			mouse.listen.world.onmousemove.on(state.smousemovecb, 2, true);
+			mouse.listen.world.onwheel.on(state.swheelcb, 2, true);
+			mouse.listen.world.btn.left.onclick.on(state.sdreamcb, 2, true);
+			mouse.listen.world.btn.right.onclick.on(state.serasecb, 2, true);
+			mouse.listen.world.btn.middle.onclick.on(state.smiddlecb, 2, true);
 
 			// Clear Selection
-			state.selected = null;
+			state.selection.deselect();
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -1068,15 +1007,22 @@ const dreamTool = () =>
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
 
+			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+
+			// Clear Select Region listeners
 			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
 			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
-			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
-			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+			mouse.listen.world.onmousemove.clear(state.smousemovecb);
+			mouse.listen.world.onwheel.clear(state.swheelcb);
+			mouse.listen.world.btn.left.onclick.clear(state.sdreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.serasecb);
+			mouse.listen.world.btn.middle.onclick.clear(state.smiddlecb);
 
 			// Clear Selection
-			state.selected = null;
+			state.selection.deselect();
 
 			// Hide Mask
 			setMask("none");
@@ -1104,32 +1050,60 @@ const dreamTool = () =>
 					...mouse.coords.world.pos,
 				};
 
-				state.dragstartcb = (evn) => {
-					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
-					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
-					state.selected = {start: {x, y}, now: {x, y}};
+				/**
+				 * Selection handlers
+				 */
+				const selection = _tool._draggable_selection(state);
+				state.dragstartcb = (evn) => selection.dragstartcb(evn);
+				state.dragcb = (evn) => selection.dragcb(evn);
+				state.dragendcb = (evn) => selection.dragendcb(evn);
+				state.smousemovecb = (evn, estate) => {
+					selection.smousemovecb(evn);
+					if (selection.inside) {
+						imageCollection.inputElement.style.cursor = "pointer";
+
+						estate.dream_processed = true;
+					} else {
+						imageCollection.inputElement.style.cursor = "auto";
+					}
 				};
-				state.dragcb = (evn) => {
-					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
-					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
-
-					state.selected.now = {x, y};
-				};
-				state.dragendcb = (evn) => {
-					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
-					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
-
-					state.selected.now = {x, y};
-
-					if (
-						state.selected.start.x === state.selected.now.x ||
-						state.selected.start.y === state.selected.now.y
-					) {
-						state.selected = null;
-						state.redraw();
+				state.swheelcb = (evn, estate) => {
+					if (selection.inside) {
+						state.wheelcb(evn, {});
+						estate.dream_processed = true;
 					}
 				};
 
+				state.sdreamcb = (evn, estate) => {
+					if (selection.exists && !selection.inside) {
+						selection.deselect();
+						state.redraw();
+						estate.selection_processed = true;
+					}
+					if (selection.inside) {
+						state.dreamcb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.serasecb = (evn, estate) => {
+					if (selection.inside) {
+						selection.deselect();
+						state.redraw();
+						estate.dream_processed = true;
+					}
+				};
+				state.smiddlecb = (evn, estate) => {
+					if (selection.inside) {
+						estate.dream_processed = true;
+					}
+				};
+
+				state.selection = selection;
+
+				/**
+				 * Dream Handlers
+				 */
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
 
@@ -1143,36 +1117,10 @@ const dreamTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					const vpc = viewport.canvasToView(x, y);
+					state.erasePrevReticle = _tool._cursor_draw(x, y);
 
-					// Draw current cursor location
-					uiCtx.lineWidth = 3;
-					uiCtx.strokeStyle = "#FFF5";
-
-					uiCtx.beginPath();
-					uiCtx.moveTo(vpc.x, vpc.y + 10);
-					uiCtx.lineTo(vpc.x, vpc.y - 10);
-					uiCtx.moveTo(vpc.x + 10, vpc.y);
-					uiCtx.lineTo(vpc.x - 10, vpc.y);
-					uiCtx.stroke();
-					state.eraseCursor = () => {
-						uiCtx.clearRect(vpc.x - 15, vpc.y - 15, vpc.x + 30, vpc.y + 30);
-					};
-
-					if (state.selected) {
-						const bb = new BoundingBox();
-
-						const minx = Math.min(state.selected.now.x, state.selected.start.x);
-						const miny = Math.min(state.selected.now.y, state.selected.start.y);
-						const maxx = Math.max(state.selected.now.x, state.selected.start.x);
-						const maxy = Math.max(state.selected.now.y, state.selected.start.y);
-
-						bb.x = minx;
-						bb.y = miny;
-						bb.w = maxx - minx;
-						bb.h = maxy - miny;
-
-						state.selected.bb = bb;
+					if (state.selection.exists) {
+						const bb = state.selection.bb;
 
 						const style =
 							state.cursorSize > stableDiffusionData.width
@@ -1181,9 +1129,8 @@ const dreamTool = () =>
 								? "#BFB5"
 								: "#FFF5";
 
-						state.erasePrevReticle = _reticle_draw(
+						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
-							state,
 							"Dream",
 							{
 								w: Math.round(
@@ -1194,6 +1141,7 @@ const dreamTool = () =>
 								),
 							},
 							{
+								reticleStyle: state.selection.inside ? "#F55" : "#FFF",
 								sizeTextStyle: style,
 							}
 						);
@@ -1206,7 +1154,7 @@ const dreamTool = () =>
 							: state.cursorSize < stableDiffusionData.width
 							? "#BFB5"
 							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(
+					state.erasePrevReticle = _tool._reticle_draw(
 						getBoundingBox(
 							evn.x,
 							evn.y,
@@ -1214,7 +1162,6 @@ const dreamTool = () =>
 							state.cursorSize,
 							state.snapToGrid && basePixelCount
 						),
-						state,
 						"Dream",
 						{
 							w: stableDiffusionData.width,
@@ -1235,9 +1182,9 @@ const dreamTool = () =>
 					_dream_onwheel(evn, state);
 				};
 				state.dreamcb = (evn, estate) => {
-					if (estate.dream_processed) return;
+					if (estate.dream_processed || estate.selection_processed) return;
 					const bb =
-						(state.selected && state.selected.bb) ||
+						state.selection.bb ||
 						getBoundingBox(
 							evn.x,
 							evn.y,
@@ -1245,16 +1192,16 @@ const dreamTool = () =>
 							state.cursorSize,
 							state.snapToGrid && basePixelCount
 						);
-					const resolution = (state.selected && state.selected.bb) || {
+					const resolution = state.selection.bb || {
 						w: stableDiffusionData.width,
 						h: stableDiffusionData.height,
 					};
 					dream_generate_callback(bb, resolution, state);
-					state.selected = null;
+					state.selection.deselect();
 				};
 				state.erasecb = (evn, estate) => {
-					if (state.selected) {
-						state.selected = null;
+					if (state.selection.exists) {
+						state.selection.deselect();
 						state.redraw();
 						return;
 					}
@@ -1361,15 +1308,22 @@ const img2imgTool = () =>
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
 
+			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+
+			// Select Region listeners
 			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
 			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 
-			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
-			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+			mouse.listen.world.onmousemove.on(state.smousemovecb, 2, true);
+			mouse.listen.world.onwheel.on(state.swheelcb, 2, true);
+			mouse.listen.world.btn.left.onclick.on(state.sdreamcb, 2, true);
+			mouse.listen.world.btn.right.onclick.on(state.serasecb, 2, true);
+			mouse.listen.world.btn.middle.onclick.on(state.smiddlecb, 2, true);
 
 			// Clear Selection
-			state.selected = null;
+			state.selection.deselect();
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -1384,15 +1338,22 @@ const img2imgTool = () =>
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
 
+			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+
+			// Clear Select Region listeners
 			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
 			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
-			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
-			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+			mouse.listen.world.onmousemove.clear(state.smousemovecb);
+			mouse.listen.world.onwheel.clear(state.swheelcb);
+			mouse.listen.world.btn.left.onclick.clear(state.sdreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.serasecb);
+			mouse.listen.world.btn.middle.onclick.clear(state.smiddlecb);
 
 			// Clear Selection
-			state.selected = null;
+			state.selection.deselect();
 
 			// Hide mask
 			setMask("none");
@@ -1424,33 +1385,59 @@ const img2imgTool = () =>
 					...mouse.coords.world.pos,
 				};
 
-				state.dragstartcb = (evn) => {
-					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
-					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
-					state.selected = {start: {x, y}, now: {x, y}};
+				/**
+				 * Selection handlers
+				 */
+				const selection = _tool._draggable_selection(state);
+				state.dragstartcb = (evn) => selection.dragstartcb(evn);
+				state.dragcb = (evn) => selection.dragcb(evn);
+				state.dragendcb = (evn) => selection.dragendcb(evn);
+				state.smousemovecb = (evn, estate) => {
+					selection.smousemovecb(evn);
+					if (selection.inside) {
+						imageCollection.inputElement.style.cursor = "pointer";
+
+						estate.dream_processed = true;
+					} else {
+						imageCollection.inputElement.style.cursor = "auto";
+					}
 				};
-				state.dragcb = (evn) => {
-					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
-					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
-
-					state.selected.now = {x, y};
-				};
-
-				state.dragendcb = (evn) => {
-					const x = state.snapToGrid ? evn.x + snap(evn.x, 0, 64) : evn.x;
-					const y = state.snapToGrid ? evn.y + snap(evn.y, 0, 64) : evn.y;
-
-					state.selected.now = {x, y};
-
-					if (
-						state.selected.start.x === state.selected.now.x ||
-						state.selected.start.y === state.selected.now.y
-					) {
-						state.selected = null;
-						state.redraw();
+				state.swheelcb = (evn, estate) => {
+					if (selection.inside) {
+						state.wheelcb(evn, {});
+						estate.dream_processed = true;
 					}
 				};
 
+				state.sdreamcb = (evn, estate) => {
+					if (selection.exists && !selection.inside) {
+						selection.deselect();
+						estate.selection_processed = true;
+					}
+					if (selection.inside) {
+						state.dreamcb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.serasecb = (evn, estate) => {
+					if (selection.inside) {
+						state.erasecb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.smiddlecb = (evn, estate) => {
+					if (selection.inside) {
+						estate.dream_processed = true;
+					}
+				};
+
+				state.selection = selection;
+
+				/**
+				 * Dream handlers
+				 */
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
 
@@ -1464,46 +1451,25 @@ const img2imgTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					const vpc = viewport.canvasToView(x, y);
-
-					// Draw current cursor location
-					uiCtx.lineWidth = 3;
-					uiCtx.strokeStyle = "#FFF5";
-
-					uiCtx.beginPath();
-					uiCtx.moveTo(vpc.x, vpc.y + 10);
-					uiCtx.lineTo(vpc.x, vpc.y - 10);
-					uiCtx.moveTo(vpc.x + 10, vpc.y);
-					uiCtx.lineTo(vpc.x - 10, vpc.y);
-					uiCtx.stroke();
-					state.eraseCursor = () => {
-						uiCtx.clearRect(vpc.x - 15, vpc.y - 15, vpc.x + 30, vpc.y + 30);
-					};
+					state.erasePrevReticle = _tool._cursor_draw(x, y);
 
 					// Resolution
 					let bb = null;
 					let request = null;
 
-					if (state.selected) {
-						bb = new BoundingBox();
-
-						const minx = Math.min(state.selected.now.x, state.selected.start.x);
-						const miny = Math.min(state.selected.now.y, state.selected.start.y);
-						const maxx = Math.max(state.selected.now.x, state.selected.start.x);
-						const maxy = Math.max(state.selected.now.y, state.selected.start.y);
-
-						bb.x = minx;
-						bb.y = miny;
-						bb.w = maxx - minx;
-						bb.h = maxy - miny;
-
-						state.selected.bb = bb;
+					if (state.selection.exists) {
+						bb = state.selection.bb;
 
 						request = {width: bb.w, height: bb.h};
 
-						state.erasePrevReticle = _reticle_draw(
+						const style =
+							state.cursorSize > stableDiffusionData.width
+								? "#FBB5"
+								: state.cursorSize < stableDiffusionData.width
+								? "#BFB5"
+								: "#FFF5";
+						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
-							state,
 							"Img2Img",
 							{
 								w: Math.round(
@@ -1514,6 +1480,7 @@ const img2imgTool = () =>
 								),
 							},
 							{
+								reticleStyle: state.selection.inside ? "#F55" : "#FFF",
 								sizeTextStyle: style,
 							}
 						);
@@ -1537,9 +1504,8 @@ const img2imgTool = () =>
 								: state.cursorSize < stableDiffusionData.width
 								? "#BFB5"
 								: "#FFF5";
-						state.erasePrevReticle = _reticle_draw(
+						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
-							state,
 							"Img2Img",
 							{w: request.width, h: request.height},
 							{
@@ -1549,9 +1515,11 @@ const img2imgTool = () =>
 					}
 
 					if (
-						state.selected &&
-						(state.selected.now.x === state.selected.start.x ||
-							state.selected.now.y === state.selected.start.y)
+						state.selection.exists &&
+						(state.selection.selected.now.x ===
+							state.selection.selected.start.x ||
+							state.selection.selected.now.y ===
+								state.selection.selected.start.y)
 					) {
 						return;
 					}
@@ -1651,9 +1619,9 @@ const img2imgTool = () =>
 					_dream_onwheel(evn, state);
 				};
 				state.dreamcb = (evn, estate) => {
-					if (estate.dream_processed) return;
+					if (estate.dream_processed || estate.selection_processed) return;
 					const bb =
-						(state.selected && state.selected.bb) ||
+						state.selection.bb ||
 						getBoundingBox(
 							evn.x,
 							evn.y,
@@ -1661,18 +1629,18 @@ const img2imgTool = () =>
 							state.cursorSize,
 							state.snapToGrid && basePixelCount
 						);
-					const resolution = (state.selected && state.selected.bb) || {
+					const resolution = state.selection.bb || {
 						w: stableDiffusionData.width,
 						h: stableDiffusionData.height,
 					};
 					dream_img2img_callback(bb, resolution, state);
-					state.selected = null;
+					state.selection.deselect();
 					state.redraw();
 				};
 				state.erasecb = (evn, estate) => {
 					if (estate.dream_processed) return;
-					if (state.selected) {
-						state.selected = null;
+					if (state.selection.exists) {
+						state.selection.deselect();
 						state.redraw();
 						return;
 					}
