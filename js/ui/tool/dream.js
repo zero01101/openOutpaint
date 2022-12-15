@@ -689,7 +689,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	seedbtn.textContent = "U";
 	seedbtn.title = "Use seed " + `${seeds[at]}`;
 	seedbtn.addEventListener("click", () => {
-		sendSeed(at);
+		sendSeed(seeds[at]);
 	});
 	imageSelectMenu.appendChild(seedbtn);
 
@@ -1883,7 +1883,6 @@ window.onbeforeunload = async () => {
 	if (generating) await fetch(`${host}${url}interrupt`, {method: "POST"});
 };
 
-function sendSeed(seedIndex) {
-	stableDiffusionData.seed = document.getElementById("seed").value =
-		seeds[seedIndex - 1];
-}
+const sendSeed = (seed) => {
+	stableDiffusionData.seed = document.getElementById("seed").value = seed;
+};
