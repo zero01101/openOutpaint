@@ -562,7 +562,11 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	);
 	const onmorehandler = mouse.listen.world.btn.middle.onclick.on(
 		(evn, state) => {
-			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+			if (
+				!state.dream_processed &&
+				bb.contains(evn.x, evn.y) &&
+				!evn.evn.ctrlKey
+			) {
 				makeMore();
 				state.dream_processed = true;
 			}

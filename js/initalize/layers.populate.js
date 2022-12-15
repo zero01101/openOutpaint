@@ -188,7 +188,7 @@ mouse.listen.window.onwheel.on((evn) => {
 });
 
 mouse.listen.window.btn.middle.onpaintstart.on((evn) => {
-	worldInit = {x: viewport.cx, y: viewport.cy};
+	if (evn.evn.ctrlKey) worldInit = {x: viewport.cx, y: viewport.cy};
 });
 
 mouse.listen.window.btn.middle.onpaint.on((evn) => {
