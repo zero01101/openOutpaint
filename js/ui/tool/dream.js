@@ -911,10 +911,102 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	bbCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
 	bbCtx.fillRect(0, 0, bb.w, bb.h);
 	bbCtx.globalCompositeOperation = "destination-out";
-	bbCtx.drawImage(
-		maskPaintCanvas,
-		bb.x,
-		bb.y,
+	bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+
+	bbCtx.globalCompositeOperation = "destination-atop";
+	bbCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
+	bbCtx.fillRect(0, 0, bb.w, bb.h);
+
+	// Border Mask
+	if (state.keepBorderSize > 0) {
+		const keepBorderCanvas = document.createElement("canvas");
+		keepBorderCanvas.width = request.width;
+		keepBorderCanvas.height = request.height;
+		const keepBorderCtx = keepBorderCanvas.getContext("2d");
+		keepBorderCtx.fillStyle = "#000F";
+
+		if (state.gradient) {
+			const lg = keepBorderCtx.createLinearGradient(
+				0,
+				0,
+				state.keepBorderSize,
+				0
+			);
+			lg.addColorStop(0, "#000F");
+			lg.addColorStop(1, "#0000");
+			keepBorderCtx.fillStyle = lg;
+		}
+		keepBorderCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+		if (state.gradient) {
+			const tg = keepBorderCtx.createLinearGradient(
+				0,
+				0,
+				0,
+				state.keepBorderSize
+			);
+			tg.addColorStop(0, "#000F");
+			tg.addColorStop(1, "#0000");
+			keepBorderCtx.fillStyle = tg;
+		}
+		keepBorderCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+		if (state.gradient) {
+			const rg = keepBorderCtx.createLinearGradient(
+				request.width,
+				0,
+				request.width - state.keepBorderSize,
+				0
+			);
+			rg.addColorStop(0, "#000F");
+			rg.addColorStop(1, "#0000");
+			keepBorderCtx.fillStyle = rg;
+		}
+		keepBorderCtx.fillRect(
+			request.width - state.keepBorderSize,
+			0,
+			state.keepBorderSize,
+			request.height
+		);
+		if (state.gradient) {
+			const bg = keepBorderCtx.createLinearGradient(
+				0,
+				request.height,
+				0,
+				request.height - state.keepBorderSize
+			);
+			bg.addColorStop(0, "#000F");
+			bg.addColorStop(1, "#0000");
+			keepBorderCtx.fillStyle = bg;
+		}
+		keepBorderCtx.fillRect(
+			0,
+			request.height - state.keepBorderSize,
+			request.width,
+			state.keepBorderSize
+		);
+
+		bbCtx.globalCompositeOperation = "source-over";
+		bbCtx.drawImage(
+			keepBorderCanvas,
+			0,
+			0,
+			request.width,
+			request.height,
+			0,
+			0,
+			bb.w,
+			bb.h
+		);
+	}
+
+	const reqCanvas = document.createElement("canvas");
+	reqCanvas.width = request.width;
+	reqCanvas.height = request.height;
+	const reqCtx = reqCanvas.getContext("2d");
+
+	reqCtx.drawImage(
+		bbCanvas,
+		0,
+		0,
 		bb.w,
 		bb.h,
 		0,
@@ -923,65 +1015,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 		request.height
 	);
 
-	bbCtx.globalCompositeOperation = "destination-atop";
-	bbCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
-	bbCtx.fillRect(0, 0, request.width, request.height);
-
-	// Border Mask
-	if (state.keepBorderSize > 0) {
-		bbCtx.globalCompositeOperation = "source-over";
-		bbCtx.fillStyle = "#000F";
-		if (state.gradient) {
-			const lg = bbCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
-			lg.addColorStop(0, "#000F");
-			lg.addColorStop(1, "#0000");
-			bbCtx.fillStyle = lg;
-		}
-		bbCtx.fillRect(0, 0, state.keepBorderSize, request.height);
-		if (state.gradient) {
-			const tg = bbCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
-			tg.addColorStop(0, "#000F");
-			tg.addColorStop(1, "#0000");
-			bbCtx.fillStyle = tg;
-		}
-		bbCtx.fillRect(0, 0, request.width, state.keepBorderSize);
-		if (state.gradient) {
-			const rg = bbCtx.createLinearGradient(
-				request.width,
-				0,
-				request.width - state.keepBorderSize,
-				0
-			);
-			rg.addColorStop(0, "#000F");
-			rg.addColorStop(1, "#0000");
-			bbCtx.fillStyle = rg;
-		}
-		bbCtx.fillRect(
-			request.width - state.keepBorderSize,
-			0,
-			state.keepBorderSize,
-			request.height
-		);
-		if (state.gradient) {
-			const bg = bbCtx.createLinearGradient(
-				0,
-				request.height,
-				0,
-				request.height - state.keepBorderSize
-			);
-			bg.addColorStop(0, "#000F");
-			bg.addColorStop(1, "#0000");
-			bbCtx.fillStyle = bg;
-		}
-		bbCtx.fillRect(
-			0,
-			request.height - state.keepBorderSize,
-			request.width,
-			state.keepBorderSize
-		);
-	}
-
-	request.mask = bbCanvas.toDataURL();
+	request.mask = reqCanvas.toDataURL();
 	request.inpaint_full_res = state.fullResolution;
 
 	// Dream
