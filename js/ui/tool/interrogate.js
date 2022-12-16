@@ -42,11 +42,23 @@ const interrogateTool = () =>
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();
-					state.erasePrevReticle = _reticle_draw(evn, state, "Interrogate", {
-						toolTextStyle: "#AFA5",
-						sizeTextStyle: "#AFA5",
-						reticleStyle: "#AFAF",
-					});
+					state.erasePrevReticle = _tool._reticle_draw(
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						),
+						"Interrogate",
+						{
+							w: stableDiffusionData.width,
+							h: stableDiffusionData.height,
+						},
+						{
+							sizeTextStyle: "#AFA5",
+						}
+					);
 				};
 
 				state.redraw = () => {
