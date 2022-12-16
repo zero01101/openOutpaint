@@ -76,9 +76,12 @@ async function getStyles() {
 	};
 
 	// Load from local storage if set
-	const promptDefaultValue = localStorage.getItem("prompt") || defaultPrompt;
+	const storedPrompt = localStorage.getItem("prompt");
+	const storedNeg = localStorage.getItem("neg_prompt");
+	const promptDefaultValue =
+		storedPrompt === null ? defaultPrompt : storedPrompt;
 	const negativePromptDefaultValue =
-		localStorage.getItem("neg_prompt") || defaultNegativePrompt;
+		storedNeg === null ? defaultNegativePrompt : storedNeg;
 
 	promptEl.value = promptEl.title = promptDefaultValue;
 	negativePromptEl.value = negativePromptEl.title = negativePromptDefaultValue;

@@ -126,7 +126,10 @@ const viewport = {
 		return (window.innerHeight * 1) / this.zoom;
 	},
 	viewToCanvas(x, y) {
-		return {x, y};
+		return {
+			x: this.cx + this.w * (x / window.innerWidth - 0.5),
+			y: this.cy + this.h * (y / window.innerHeight - 0.5),
+		};
 	},
 	canvasToView(x, y) {
 		return {
@@ -185,7 +188,7 @@ mouse.listen.window.onwheel.on((evn) => {
 });
 
 mouse.listen.window.btn.middle.onpaintstart.on((evn) => {
-	worldInit = {x: viewport.cx, y: viewport.cy};
+	if (evn.evn.ctrlKey) worldInit = {x: viewport.cx, y: viewport.cy};
 });
 
 mouse.listen.window.btn.middle.onpaint.on((evn) => {

@@ -101,8 +101,12 @@ const _dream = async (endpoint, request) => {
 	} finally {
 		generating = false;
 	}
-
-	return data.images;
+	var responseSubdata = JSON.parse(data.info);
+	var returnData = {
+		images: data.images,
+		seeds: responseSubdata.all_seeds,
+	};
+	return returnData;
 };
 
 /**
@@ -111,15 +115,19 @@ const _dream = async (endpoint, request) => {
  * @param {"txt2img" | "img2img"} endpoint Endpoint to send the request to
  * @param {StableDiffusionRequest} request Stable diffusion request
  * @param {BoundingBox} bb Generated image placement location
- * @param {number} [drawEvery=0.2 / request.n_iter] Percentage delta to draw progress at (by default 20% of each iteration)
+ * @param {object} options Options
+ * @param {number} [options.drawEvery=0.2 / request.n_iter] Percentage delta to draw progress at (by default 20% of each iteration)
+ * @param {HTMLCanvasElement} [options.keepMask=null] Whether to force keep image under fully opaque mask
+ * @param {number} [options.keepMaskBlur=0] Blur when applying full resolution back to the image
  * @returns {Promise<HTMLImageElement | null>}
  */
-const _generate = async (
-	endpoint,
-	request,
-	bb,
-	drawEvery = 0.2 / request.n_iter
-) => {
+const _generate = async (endpoint, request, bb, options = {}) => {
+	defaultOpt(options, {
+		drawEvery: 0.2 / request.n_iter,
+		keepMask: null,
+		keepMaskBlur: 0,
+	});
+
 	events.tool.dream.emit({event: "generate", request});
 
 	const requestCopy = JSON.parse(JSON.stringify(request));
@@ -128,19 +136,6 @@ const _generate = async (
 	const areaid = `${bb.x}-${bb.y}-${bb.w}-${bb.h}`;
 	if (generationAreas.has(areaid)) return;
 	generationAreas.add(areaid);
-
-	// Makes an element in a location
-	const makeElement = (type, x, y) => {
-		const el = document.createElement(type);
-		el.style.position = "absolute";
-		el.style.left = `${x - imageCollection.inputOffset.x}px`;
-		el.style.top = `${y - imageCollection.inputOffset.y}px`;
-
-		// We can use the input element to add interactible html elements in the world
-		imageCollection.inputElement.appendChild(el);
-
-		return el;
-	};
 
 	// Await for queue
 	let cancelled = false;
@@ -199,10 +194,95 @@ const _generate = async (
 		return;
 	}
 
+	// Save masked content
+	let keepMaskCanvas = null;
+	let keepMaskCtx = null;
+
+	if (options.keepMask) {
+		const visibleCanvas = uil.getVisible({
+			x: bb.x - options.keepMaskBlur,
+			y: bb.y - options.keepMaskBlur,
+			w: bb.w + 2 * options.keepMaskBlur,
+			h: bb.h + 2 * options.keepMaskBlur,
+		});
+		const visibleCtx = visibleCanvas.getContext("2d");
+
+		const ctx = options.keepMask.getContext("2d", {willReadFrequently: true});
+
+		// Save current image
+		keepMaskCanvas = document.createElement("canvas");
+		keepMaskCanvas.width = options.keepMask.width;
+		keepMaskCanvas.height = options.keepMask.height;
+
+		keepMaskCtx = keepMaskCanvas.getContext("2d", {willReadFrequently: true});
+
+		if (
+			visibleCanvas.width !== keepMaskCanvas.width + 2 * options.keepMaskBlur ||
+			visibleCanvas.height !== keepMaskCanvas.height + 2 * options.keepMaskBlur
+		) {
+			throw new Error(
+				"[dream] Provided mask is not the same size as the bounding box"
+			);
+		}
+
+		// Cut out changing elements
+		const blurMaskCanvas = document.createElement("canvas");
+		// A bit bigger to handle literal corner cases
+		blurMaskCanvas.width = bb.w + options.keepMaskBlur * 2;
+		blurMaskCanvas.height = bb.h + options.keepMaskBlur * 2;
+		const blurMaskCtx = blurMaskCanvas.getContext("2d");
+
+		const blurMaskData = blurMaskCtx.getImageData(
+			options.keepMaskBlur,
+			options.keepMaskBlur,
+			keepMaskCanvas.width,
+			keepMaskCanvas.height
+		);
+
+		const image = blurMaskData.data;
+
+		const maskData = ctx.getImageData(
+			0,
+			0,
+			options.keepMask.width,
+			options.keepMask.height
+		);
+
+		const mask = maskData.data;
+
+		for (let i = 0; i < mask.length; i += 4) {
+			if (mask[i] !== 0 || mask[i + 1] !== 0 || mask[i + 2] !== 0) {
+				// If pixel is fully black
+				// Set pixel as fully black here as well
+				image[i] = 0;
+				image[i + 1] = 0;
+				image[i + 2] = 0;
+				image[i + 3] = 255;
+			}
+		}
+
+		blurMaskCtx.putImageData(
+			blurMaskData,
+			options.keepMaskBlur,
+			options.keepMaskBlur
+		);
+
+		visibleCtx.filter = `blur(${options.keepMaskBlur}px)`;
+		visibleCtx.globalCompositeOperation = "destination-out";
+		visibleCtx.drawImage(blurMaskCanvas, 0, 0);
+
+		keepMaskCtx.drawImage(
+			visibleCanvas,
+			-options.keepMaskBlur,
+			-options.keepMaskBlur
+		);
+	}
+
 	// Images to select through
 	let at = 0;
 	/** @type {Array<string|null>} */
 	const images = [null];
+	const seeds = [-1];
 	/** @type {HTMLDivElement} */
 	let imageSelectMenu = null;
 	// Layer for the images
@@ -215,16 +295,32 @@ const _generate = async (
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
 		if (!url) return;
 
-		const image = new Image();
-		image.src = "data:image/png;base64," + url;
-		image.addEventListener("load", () => {
+		const img = new Image();
+		img.src = "data:image/png;base64," + url;
+		img.addEventListener("load", () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = bb.w;
+			canvas.height = bb.h;
+
+			// Creates new canvas for blurred mask
+			const blurMaskCanvas = document.createElement("canvas");
+			blurMaskCanvas.width = bb.w + options.keepMaskBlur * 2;
+			blurMaskCanvas.height = bb.h + options.keepMaskBlur * 2;
+
+			const ctx = canvas.getContext("2d");
+			ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, bb.w, bb.h);
+
+			if (keepMaskCanvas) {
+				ctx.drawImage(keepMaskCanvas, 0, 0);
+			}
+
 			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
 			layer.ctx.drawImage(
-				image,
+				canvas,
 				0,
 				0,
-				image.width,
-				image.height,
+				canvas.width,
+				canvas.height,
 				bb.x,
 				bb.y,
 				bb.w,
@@ -241,7 +337,8 @@ const _generate = async (
 		fetch(`${host}${url}interrupt`, {method: "POST"});
 		interruptButton.disabled = true;
 	});
-	const stopMarchingAnts = march(bb);
+	const marchingOptions = {};
+	const stopMarchingAnts = march(bb, marchingOptions);
 
 	// First Dream Run
 	console.info(`[dream] Generating images for prompt '${request.prompt}'`);
@@ -251,12 +348,12 @@ const _generate = async (
 	try {
 		let stopDrawingStatus = false;
 		let lastProgress = 0;
-		let nextCP = drawEvery;
+		let nextCP = options.drawEvery;
 		stopProgress = _monitorProgress(bb, (data) => {
 			if (stopDrawingStatus) return;
 
 			if (lastProgress < nextCP && data.progress >= nextCP) {
-				nextCP += drawEvery;
+				nextCP += options.drawEvery;
 				fetch(`${host}${url}progress?skip_current_image=false`).then(
 					async (response) => {
 						if (stopDrawingStatus) return;
@@ -269,7 +366,9 @@ const _generate = async (
 		});
 
 		imageCollection.inputElement.appendChild(interruptButton);
-		images.push(...(await _dream(endpoint, requestCopy)));
+		var dreamData = await _dream(endpoint, requestCopy);
+		images.push(...dreamData.images);
+		seeds.push(...dreamData.seeds);
 		stopDrawingStatus = true;
 		at = 1;
 	} catch (e) {
@@ -289,6 +388,8 @@ const _generate = async (
 		if (at < 0) at = images.length - 1;
 
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		var seed = seeds[at];
+		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
 
@@ -297,6 +398,8 @@ const _generate = async (
 		if (at >= images.length) at = 0;
 
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		var seed = seeds[at];
+		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
 
@@ -307,12 +410,22 @@ const _generate = async (
 		// load the image data after defining the closure
 		img.src = "data:image/png;base64," + images[at];
 		img.addEventListener("load", () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = bb.w;
+			canvas.height = bb.h;
+			const ctx = canvas.getContext("2d");
+			ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, bb.w, bb.h);
+
+			if (keepMaskCanvas) {
+				ctx.drawImage(keepMaskCanvas, 0, 0);
+			}
+
 			commands.runCommand("drawImage", "Image Dream", {
 				x: bb.x,
 				y: bb.y,
 				w: bb.w,
 				h: bb.h,
-				image: img,
+				image: canvas,
 			});
 			clean(true);
 		});
@@ -324,7 +437,14 @@ const _generate = async (
 			stopProgress = _monitorProgress(bb);
 			interruptButton.disabled = false;
 			imageCollection.inputElement.appendChild(interruptButton);
-			images.push(...(await _dream(endpoint, requestCopy)));
+			if (requestCopy.seed != -1) {
+				requestCopy.seed =
+					parseInt(requestCopy.seed) +
+					requestCopy.batch_size * requestCopy.n_iter;
+			}
+			dreamData = await _dream(endpoint, requestCopy);
+			images.push(...dreamData.images);
+			seeds.push(...dreamData.seeds);
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
 			alert(
@@ -403,6 +523,76 @@ const _generate = async (
 
 	keyboard.listen.onkeyclick.on(onarrow);
 
+	// For handling mouse events for navigation
+	const onmovehandler = mouse.listen.world.onmousemove.on(
+		(evn, state) => {
+			const contains = bb.contains(evn.x, evn.y);
+
+			if (!contains && !state.dream_processed)
+				imageCollection.inputElement.style.cursor = "auto";
+			if (!contains || state.dream_processed) marchingOptions.style = "#FFF";
+
+			if (!state.dream_processed && contains) {
+				marchingOptions.style = "#F55";
+
+				imageCollection.inputElement.style.cursor = "pointer";
+
+				state.dream_processed = true;
+			}
+		},
+		0,
+		true
+	);
+
+	const onclickhandler = mouse.listen.world.btn.left.onclick.on(
+		(evn, state) => {
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				applyImg();
+				imageCollection.inputElement.style.cursor = "auto";
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+	const oncancelhandler = mouse.listen.world.btn.right.onclick.on(
+		(evn, state) => {
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				discardImg();
+				imageCollection.inputElement.style.cursor = "auto";
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+	const onmorehandler = mouse.listen.world.btn.middle.onclick.on(
+		(evn, state) => {
+			if (
+				!state.dream_processed &&
+				bb.contains(evn.x, evn.y) &&
+				!evn.evn.ctrlKey
+			) {
+				makeMore();
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+	const onwheelhandler = mouse.listen.world.onwheel.on(
+		(evn, state) => {
+			if (evn.evn.ctrlKey) return;
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
+				if (evn.delta < 0) nextImg();
+				else prevImg();
+				state.dream_processed = true;
+			}
+		},
+		1,
+		true
+	);
+
 	// Cleans up
 	const clean = (removeBrushMask = false) => {
 		if (removeBrushMask) {
@@ -414,6 +604,13 @@ const _generate = async (
 		keyboard.listen.onkeyclick.clear(onarrow);
 		// Remove area from no-generate list
 		generationAreas.delete(areaid);
+
+		// Stop handling inputs
+		mouse.listen.world.onmousemove.clear(onmovehandler);
+		mouse.listen.world.btn.left.onclick.clear(onclickhandler);
+		mouse.listen.world.btn.right.onclick.clear(oncancelhandler);
+		mouse.listen.world.btn.middle.onclick.clear(onmorehandler);
+		mouse.listen.world.onwheel.clear(onwheelhandler);
 	};
 
 	redraw();
@@ -468,7 +665,10 @@ const _generate = async (
 		// load the image data after defining the closure
 		img.src = "data:image/png;base64," + images[at];
 		img.addEventListener("load", () => {
-			const response = prompt("Enter new resource name", "Dream Resource");
+			const response = prompt(
+				"Enter new resource name",
+				"Dream Resource " + seeds[at]
+			);
 			if (response) {
 				tools.stamp.state.addResource(response, img);
 				redraw(); // Redraw to avoid strange cursor behavior
@@ -485,6 +685,14 @@ const _generate = async (
 	});
 	imageSelectMenu.appendChild(savebtn);
 
+	const seedbtn = document.createElement("button");
+	seedbtn.textContent = "U";
+	seedbtn.title = "Use seed " + `${seeds[at]}`;
+	seedbtn.addEventListener("click", () => {
+		sendSeed(seeds[at]);
+	});
+	imageSelectMenu.appendChild(seedbtn);
+
 	nextQueue(initialQ);
 };
 
@@ -494,18 +702,13 @@ const _generate = async (
  * @param {*} evn
  * @param {*} state
  */
-const dream_generate_callback = async (evn, state) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
-
+const dream_generate_callback = async (bb, resolution, state) => {
 	// Build request to the API
 	const request = {};
 	Object.assign(request, stableDiffusionData);
+
+	request.width = resolution.w;
+	request.height = resolution.h;
 
 	// Load prompt (maybe we should add some events so we don't have to do this)
 	request.prompt = document.getElementById("prompt").value;
@@ -522,16 +725,21 @@ const dream_generate_callback = async (evn, state) => {
 		// Use img2img if not
 
 		// Temporary canvas for init image and mask generation
-		const auxCanvas = document.createElement("canvas");
-		auxCanvas.width = request.width;
-		auxCanvas.height = request.height;
-		const auxCtx = auxCanvas.getContext("2d");
+		const bbCanvas = document.createElement("canvas");
+		bbCanvas.width = bb.w;
+		bbCanvas.height = bb.h;
+		const bbCtx = bbCanvas.getContext("2d");
 
-		auxCtx.fillStyle = "#000F";
+		const reqCanvas = document.createElement("canvas");
+		reqCanvas.width = request.width;
+		reqCanvas.height = request.height;
+		const reqCtx = reqCanvas.getContext("2d");
+
+		bbCtx.fillStyle = "#000F";
 
 		// Get init image
-		auxCtx.fillRect(0, 0, request.width, request.height);
-		auxCtx.drawImage(
+		reqCtx.fillRect(0, 0, request.width, request.height);
+		reqCtx.drawImage(
 			visibleCanvas,
 			0,
 			0,
@@ -542,16 +750,16 @@ const dream_generate_callback = async (evn, state) => {
 			request.width,
 			request.height
 		);
-		request.init_images = [auxCanvas.toDataURL()];
+		request.init_images = [reqCanvas.toDataURL()];
 
 		// Get mask image
-		auxCtx.fillStyle = "#000F";
-		auxCtx.fillRect(0, 0, request.width, request.height);
+		bbCtx.fillStyle = "#000F";
+		bbCtx.fillRect(0, 0, bb.w, bb.h);
 		if (state.invertMask) {
 			// overmasking by definition is entirely pointless with an inverted mask outpaint
 			// since it should explicitly avoid brushed masks too, we just won't even bother
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(
+			bbCtx.globalCompositeOperation = "destination-in";
+			bbCtx.drawImage(
 				maskPaintCanvas,
 				bb.x,
 				bb.y,
@@ -559,47 +767,27 @@ const dream_generate_callback = async (evn, state) => {
 				bb.h,
 				0,
 				0,
-				request.width,
-				request.height
+				bb.w,
+				bb.h
 			);
 
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(
-				visibleCanvas,
-				0,
-				0,
-				bb.w,
-				bb.h,
-				0,
-				0,
-				request.width,
-				request.height
-			);
+			bbCtx.globalCompositeOperation = "destination-in";
+			bbCtx.drawImage(visibleCanvas, 0, 0);
 		} else {
-			auxCtx.globalCompositeOperation = "destination-in";
-			auxCtx.drawImage(
-				visibleCanvas,
-				0,
-				0,
-				bb.w,
-				bb.h,
-				0,
-				0,
-				request.width,
-				request.height
-			);
+			bbCtx.globalCompositeOperation = "destination-in";
+			bbCtx.drawImage(visibleCanvas, 0, 0);
 			// here's where to overmask to avoid including the brushed mask
 			// 99% of my issues were from failing to set source-over for the overmask blotches
 			if (state.overMaskPx > 0) {
 				// transparent to white first
-				auxCtx.globalCompositeOperation = "destination-atop";
-				auxCtx.fillStyle = "#FFFF";
-				auxCtx.fillRect(0, 0, request.width, request.height);
-				applyOvermask(auxCanvas, auxCtx, state.overMaskPx);
+				bbCtx.globalCompositeOperation = "destination-atop";
+				bbCtx.fillStyle = "#FFFF";
+				bbCtx.fillRect(0, 0, bb.w, bb.h);
+				applyOvermask(bbCanvas, bbCtx, state.overMaskPx);
 			}
 
-			auxCtx.globalCompositeOperation = "destination-out"; // ???
-			auxCtx.drawImage(
+			bbCtx.globalCompositeOperation = "destination-out"; // ???
+			bbCtx.drawImage(
 				maskPaintCanvas,
 				bb.x,
 				bb.y,
@@ -607,26 +795,37 @@ const dream_generate_callback = async (evn, state) => {
 				bb.h,
 				0,
 				0,
-				request.width,
-				request.height
+				bb.w,
+				bb.h
 			);
 		}
-		auxCtx.globalCompositeOperation = "destination-atop";
-		auxCtx.fillStyle = "#FFFF";
-		auxCtx.fillRect(0, 0, request.width, request.height);
-		request.mask = auxCanvas.toDataURL();
+
+		bbCtx.globalCompositeOperation = "destination-atop";
+		bbCtx.fillStyle = "#FFFF";
+		bbCtx.fillRect(0, 0, bb.w, bb.h);
+
+		reqCtx.clearRect(0, 0, reqCanvas.width, reqCanvas.height);
+		reqCtx.drawImage(
+			bbCanvas,
+			0,
+			0,
+			bb.w,
+			bb.h,
+			0,
+			0,
+			request.width,
+			request.height
+		);
+		request.mask = reqCanvas.toDataURL();
+
 		// Dream
-		_generate("img2img", request, bb);
+		_generate("img2img", request, bb, {
+			keepMask: state.keepMasked ? bbCanvas : null,
+			keepMaskBlur: state.keepMaskedBlur,
+		});
 	}
 };
-const dream_erase_callback = (evn, state) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
+const dream_erase_callback = (bb) => {
 	commands.runCommand("eraseImage", "Erase Area", bb);
 };
 
@@ -672,15 +871,7 @@ function applyOvermask(canvas, ctx, px) {
 /**
  * Image to Image
  */
-const dream_img2img_callback = (evn, state) => {
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
-
+const dream_img2img_callback = (bb, resolution, state) => {
 	// Get visible pixels
 	const visibleCanvas = uil.getVisible(bb);
 
@@ -690,6 +881,9 @@ const dream_img2img_callback = (evn, state) => {
 	// Build request to the API
 	const request = {};
 	Object.assign(request, stableDiffusionData);
+
+	request.width = resolution.w;
+	request.height = resolution.h;
 
 	request.denoising_strength = state.denoisingStrength;
 	request.inpainting_fill = 1; // For img2img use original
@@ -701,33 +895,23 @@ const dream_img2img_callback = (evn, state) => {
 	// Use img2img
 
 	// Temporary canvas for init image and mask generation
-	const auxCanvas = document.createElement("canvas");
-	auxCanvas.width = request.width;
-	auxCanvas.height = request.height;
-	const auxCtx = auxCanvas.getContext("2d");
+	const bbCanvas = document.createElement("canvas");
+	bbCanvas.width = bb.w;
+	bbCanvas.height = bb.h;
+	const bbCtx = bbCanvas.getContext("2d");
 
-	auxCtx.fillStyle = "#000F";
+	bbCtx.fillStyle = "#000F";
 
 	// Get init image
-	auxCtx.fillRect(0, 0, request.width, request.height);
-	auxCtx.drawImage(
-		visibleCanvas,
-		0,
-		0,
-		bb.w,
-		bb.h,
-		0,
-		0,
-		request.width,
-		request.height
-	);
-	request.init_images = [auxCanvas.toDataURL()];
+	bbCtx.fillRect(0, 0, bb.w, bb.h);
+	bbCtx.drawImage(visibleCanvas, 0, 0);
+	request.init_images = [bbCanvas.toDataURL()];
 
 	// Get mask image
-	auxCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
-	auxCtx.fillRect(0, 0, request.width, request.height);
-	auxCtx.globalCompositeOperation = "destination-out";
-	auxCtx.drawImage(
+	bbCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
+	bbCtx.fillRect(0, 0, bb.w, bb.h);
+	bbCtx.globalCompositeOperation = "destination-out";
+	bbCtx.drawImage(
 		maskPaintCanvas,
 		bb.x,
 		bb.y,
@@ -739,30 +923,30 @@ const dream_img2img_callback = (evn, state) => {
 		request.height
 	);
 
-	auxCtx.globalCompositeOperation = "destination-atop";
-	auxCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
-	auxCtx.fillRect(0, 0, request.width, request.height);
+	bbCtx.globalCompositeOperation = "destination-atop";
+	bbCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
+	bbCtx.fillRect(0, 0, request.width, request.height);
 
 	// Border Mask
 	if (state.keepBorderSize > 0) {
-		auxCtx.globalCompositeOperation = "source-over";
-		auxCtx.fillStyle = "#000F";
+		bbCtx.globalCompositeOperation = "source-over";
+		bbCtx.fillStyle = "#000F";
 		if (state.gradient) {
-			const lg = auxCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
+			const lg = bbCtx.createLinearGradient(0, 0, state.keepBorderSize, 0);
 			lg.addColorStop(0, "#000F");
 			lg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = lg;
+			bbCtx.fillStyle = lg;
 		}
-		auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+		bbCtx.fillRect(0, 0, state.keepBorderSize, request.height);
 		if (state.gradient) {
-			const tg = auxCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
+			const tg = bbCtx.createLinearGradient(0, 0, 0, state.keepBorderSize);
 			tg.addColorStop(0, "#000F");
 			tg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = tg;
+			bbCtx.fillStyle = tg;
 		}
-		auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+		bbCtx.fillRect(0, 0, request.width, state.keepBorderSize);
 		if (state.gradient) {
-			const rg = auxCtx.createLinearGradient(
+			const rg = bbCtx.createLinearGradient(
 				request.width,
 				0,
 				request.width - state.keepBorderSize,
@@ -770,16 +954,16 @@ const dream_img2img_callback = (evn, state) => {
 			);
 			rg.addColorStop(0, "#000F");
 			rg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = rg;
+			bbCtx.fillStyle = rg;
 		}
-		auxCtx.fillRect(
+		bbCtx.fillRect(
 			request.width - state.keepBorderSize,
 			0,
 			state.keepBorderSize,
 			request.height
 		);
 		if (state.gradient) {
-			const bg = auxCtx.createLinearGradient(
+			const bg = bbCtx.createLinearGradient(
 				0,
 				request.height,
 				0,
@@ -787,9 +971,9 @@ const dream_img2img_callback = (evn, state) => {
 			);
 			bg.addColorStop(0, "#000F");
 			bg.addColorStop(1, "#0000");
-			auxCtx.fillStyle = bg;
+			bbCtx.fillStyle = bg;
 		}
-		auxCtx.fillRect(
+		bbCtx.fillRect(
 			0,
 			request.height - state.keepBorderSize,
 			request.width,
@@ -797,102 +981,19 @@ const dream_img2img_callback = (evn, state) => {
 		);
 	}
 
-	request.mask = auxCanvas.toDataURL();
+	request.mask = bbCanvas.toDataURL();
 	request.inpaint_full_res = state.fullResolution;
 
 	// Dream
-	_generate("img2img", request, bb);
+	_generate("img2img", request, bb, {
+		keepMask: state.keepMasked ? bbCanvas : null,
+		keepMaskBlur: state.keepMaskedBlur,
+	});
 };
 
 /**
  * Dream and img2img tools
  */
-const _reticle_draw = (evn, state, tool, style = {}) => {
-	defaultOpt(style, {
-		sizeTextStyle: "#FFF5",
-		toolTextStyle: "#FFF5",
-		reticleWidth: 1,
-		reticleStyle: "#FFF",
-	});
-
-	const bb = getBoundingBox(
-		evn.x,
-		evn.y,
-		state.cursorSize,
-		state.cursorSize,
-		state.snapToGrid && basePixelCount
-	);
-	const bbvp = {
-		...viewport.canvasToView(bb.x, bb.y),
-		w: viewport.zoom * bb.w,
-		h: viewport.zoom * bb.h,
-	};
-
-	uiCtx.save();
-
-	// draw targeting square reticle thingy cursor
-	uiCtx.lineWidth = style.reticleWidth;
-	uiCtx.strokeStyle = style.reticleStyle;
-	uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
-
-	uiCtx.font = `bold 20px Open Sans`;
-
-	// Draw Tool Name
-	{
-		const xshrink = Math.min(1, (bbvp.w - 20) / uiCtx.measureText(tool).width);
-
-		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
-
-		uiCtx.textAlign = "left";
-		uiCtx.fillStyle = style.toolTextStyle;
-		uiCtx.fillText(
-			tool,
-			bbvp.x + 10,
-			bbvp.y + 10 + 20 * xshrink,
-			state.cursorSize
-		);
-	}
-
-	// Draw width and height
-	{
-		uiCtx.textAlign = "center";
-		uiCtx.fillStyle = style.sizeTextStyle;
-		uiCtx.translate(bbvp.x + bbvp.w / 2, bbvp.y + bbvp.h / 2);
-		const xshrink = Math.min(
-			1,
-			(bbvp.w - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
-		);
-		const yshrink = Math.min(
-			1,
-			(bbvp.h - 30) / uiCtx.measureText(`${state.cursorSize}px`).width
-		);
-		uiCtx.font = `bold ${20 * xshrink}px Open Sans`;
-		uiCtx.fillText(
-			`${state.cursorSize}px`,
-			0,
-			bbvp.h / 2 - 10 * xshrink,
-			state.cursorSize
-		);
-		uiCtx.rotate(-Math.PI / 2);
-		uiCtx.font = `bold ${20 * yshrink}px Open Sans`;
-		uiCtx.fillText(
-			`${state.cursorSize}px`,
-			0,
-			bbvp.h / 2 - 10 * yshrink,
-			state.cursorSize
-		);
-
-		uiCtx.restore();
-	}
-
-	return () => {
-		uiCtx.save();
-
-		uiCtx.clearRect(bbvp.x - 10, bbvp.y - 10, bbvp.w + 20, bbvp.h + 20);
-
-		uiCtx.restore();
-	};
-};
 
 /**
  * Generic wheel handler
@@ -930,8 +1031,23 @@ const dreamTool = () =>
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
+
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+
+			// Select Region listeners
+			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
+
+			mouse.listen.world.onmousemove.on(state.smousemovecb, 2, true);
+			mouse.listen.world.onwheel.on(state.swheelcb, 2, true);
+			mouse.listen.world.btn.left.onclick.on(state.sdreamcb, 2, true);
+			mouse.listen.world.btn.right.onclick.on(state.serasecb, 2, true);
+			mouse.listen.world.btn.middle.onclick.on(state.smiddlecb, 2, true);
+
+			// Clear Selection
+			state.selection.deselect();
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -945,8 +1061,23 @@ const dreamTool = () =>
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
+
 			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+
+			// Clear Select Region listeners
+			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
+
+			mouse.listen.world.onmousemove.clear(state.smousemovecb);
+			mouse.listen.world.onwheel.clear(state.swheelcb);
+			mouse.listen.world.btn.left.onclick.clear(state.sdreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.serasecb);
+			mouse.listen.world.btn.middle.onclick.clear(state.smiddlecb);
+
+			// Clear Selection
+			state.selection.deselect();
 
 			// Hide Mask
 			setMask("none");
@@ -962,8 +1093,12 @@ const dreamTool = () =>
 				state.cursorSize = 512;
 				state.snapToGrid = true;
 				state.invertMask = false;
+				state.keepMasked = true;
+				state.keepMaskedBlur = 8;
 				state.overMaskPx = 0;
 
+				state.erasePrevCursor = () =>
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
@@ -971,31 +1106,171 @@ const dreamTool = () =>
 					...mouse.coords.world.pos,
 				};
 
+				/**
+				 * Selection handlers
+				 */
+				const selection = _tool._draggable_selection(state);
+				state.dragstartcb = (evn) => selection.dragstartcb(evn);
+				state.dragcb = (evn) => selection.dragcb(evn);
+				state.dragendcb = (evn) => selection.dragendcb(evn);
+				state.smousemovecb = (evn, estate) => {
+					selection.smousemovecb(evn);
+					if (selection.inside) {
+						imageCollection.inputElement.style.cursor = "pointer";
+
+						estate.dream_processed = true;
+					} else {
+						imageCollection.inputElement.style.cursor = "auto";
+					}
+				};
+				state.swheelcb = (evn, estate) => {
+					if (selection.inside) {
+						state.wheelcb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.sdreamcb = (evn, estate) => {
+					if (selection.exists && !selection.inside) {
+						selection.deselect();
+						state.redraw();
+						estate.selection_processed = true;
+					}
+					if (selection.inside) {
+						state.dreamcb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.serasecb = (evn, estate) => {
+					if (selection.inside) {
+						selection.deselect();
+						state.redraw();
+						estate.dream_processed = true;
+					}
+				};
+				state.smiddlecb = (evn, estate) => {
+					if (selection.inside) {
+						estate.dream_processed = true;
+					}
+				};
+
+				state.selection = selection;
+
+				/**
+				 * Dream Handlers
+				 */
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
+
+					state.erasePrevCursor();
 					state.erasePrevReticle();
+
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
+					}
+
+					state.erasePrevReticle = _tool._cursor_draw(x, y);
+
+					if (state.selection.exists) {
+						const bb = state.selection.bb;
+
+						const style =
+							state.cursorSize > stableDiffusionData.width
+								? "#FBB5"
+								: state.cursorSize < stableDiffusionData.width
+								? "#BFB5"
+								: "#FFF5";
+
+						state.erasePrevReticle = _tool._reticle_draw(
+							bb,
+							"Dream",
+							{
+								w: Math.round(
+									bb.w * (stableDiffusionData.width / state.cursorSize)
+								),
+								h: Math.round(
+									bb.h * (stableDiffusionData.height / state.cursorSize)
+								),
+							},
+							{
+								reticleStyle: state.selection.inside ? "#F55" : "#FFF",
+								sizeTextStyle: style,
+							}
+						);
+						return;
+					}
+
 					const style =
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
 							? "#BFB5"
 							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(evn, state, "Dream", {
-						sizeTextStyle: style,
-					});
+					state.erasePrevReticle = _tool._reticle_draw(
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						),
+						"Dream",
+						{
+							w: stableDiffusionData.width,
+							h: stableDiffusionData.height,
+						},
+						{
+							sizeTextStyle: style,
+						}
+					);
 				};
 
 				state.redraw = () => {
 					state.mousemovecb(state.lastMouseMove);
 				};
 
-				state.wheelcb = (evn) => {
+				state.wheelcb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					_dream_onwheel(evn, state);
 				};
-				state.dreamcb = (evn) => {
-					dream_generate_callback(evn, state);
+				state.dreamcb = (evn, estate) => {
+					if (estate.dream_processed || estate.selection_processed) return;
+					const bb =
+						state.selection.bb ||
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						);
+					const resolution = state.selection.bb || {
+						w: stableDiffusionData.width,
+						h: stableDiffusionData.height,
+					};
+					dream_generate_callback(bb, resolution, state);
+					state.selection.deselect();
 				};
-				state.erasecb = (evn) => dream_erase_callback(evn, state);
+				state.erasecb = (evn, estate) => {
+					if (state.selection.exists) {
+						state.selection.deselect();
+						state.redraw();
+						return;
+					}
+					if (estate.dream_processed) return;
+					const bb = getBoundingBox(
+						evn.x,
+						evn.y,
+						state.cursorSize,
+						state.cursorSize,
+						state.snapToGrid && basePixelCount
+					);
+					dream_erase_callback(bb, state);
+				};
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
@@ -1040,6 +1315,35 @@ const dreamTool = () =>
 						}
 					).label;
 
+					// Keep Masked Content Checkbox
+					state.ctxmenu.keepMaskedLabel = _toolbar_input.checkbox(
+						state,
+						"keepMasked",
+						"Keep Masked",
+						() => {
+							if (state.keepMasked) {
+								state.ctxmenu.keepMaskedBlurSlider.classList.remove(
+									"invisible"
+								);
+							} else {
+								state.ctxmenu.keepMaskedBlurSlider.classList.add("invisible");
+							}
+						}
+					).label;
+
+					// Keep Masked Content Blur Slider
+					state.ctxmenu.keepMaskedBlurSlider = _toolbar_input.slider(
+						state,
+						"keepMaskedBlur",
+						"Keep Masked Blur",
+						{
+							min: 0,
+							max: 64,
+							step: 4,
+							textStep: 1,
+						}
+					).slider;
+
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
@@ -1059,6 +1363,8 @@ const dreamTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
 				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.keepMaskedLabel);
+				menu.appendChild(state.ctxmenu.keepMaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 			},
 			shortcut: "D",
@@ -1079,8 +1385,23 @@ const img2imgTool = () =>
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
+
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
+
+			// Select Region listeners
+			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
+
+			mouse.listen.world.onmousemove.on(state.smousemovecb, 2, true);
+			mouse.listen.world.onwheel.on(state.swheelcb, 2, true);
+			mouse.listen.world.btn.left.onclick.on(state.sdreamcb, 2, true);
+			mouse.listen.world.btn.right.onclick.on(state.serasecb, 2, true);
+			mouse.listen.world.btn.middle.onclick.on(state.smiddlecb, 2, true);
+
+			// Clear Selection
+			state.selection.deselect();
 
 			// Display Mask
 			setMask(state.invertMask ? "hold" : "clear");
@@ -1094,8 +1415,23 @@ const img2imgTool = () =>
 			// Clear Listeners
 			mouse.listen.world.onmousemove.clear(state.mousemovecb);
 			mouse.listen.world.onwheel.clear(state.wheelcb);
+
 			mouse.listen.world.btn.left.onclick.clear(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.clear(state.erasecb);
+
+			// Clear Select Region listeners
+			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
+
+			mouse.listen.world.onmousemove.clear(state.smousemovecb);
+			mouse.listen.world.onwheel.clear(state.swheelcb);
+			mouse.listen.world.btn.left.onclick.clear(state.sdreamcb);
+			mouse.listen.world.btn.right.onclick.clear(state.serasecb);
+			mouse.listen.world.btn.middle.onclick.clear(state.smiddlecb);
+
+			// Clear Selection
+			state.selection.deselect();
 
 			// Hide mask
 			setMask("none");
@@ -1110,6 +1446,8 @@ const img2imgTool = () =>
 				state.cursorSize = 512;
 				state.snapToGrid = true;
 				state.invertMask = true;
+				state.keepMasked = true;
+				state.keepMaskedBlur = 8;
 				state.fullResolution = false;
 
 				state.denoisingStrength = 0.7;
@@ -1117,39 +1455,154 @@ const img2imgTool = () =>
 				state.keepBorderSize = 64;
 				state.gradient = true;
 
+				state.erasePrevCursor = () =>
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 				state.erasePrevReticle = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
 				state.lastMouseMove = {
 					...mouse.coords.world.pos,
 				};
+
+				/**
+				 * Selection handlers
+				 */
+				const selection = _tool._draggable_selection(state);
+				state.dragstartcb = (evn) => selection.dragstartcb(evn);
+				state.dragcb = (evn) => selection.dragcb(evn);
+				state.dragendcb = (evn) => selection.dragendcb(evn);
+				state.smousemovecb = (evn, estate) => {
+					selection.smousemovecb(evn);
+					if (selection.inside) {
+						imageCollection.inputElement.style.cursor = "pointer";
+
+						estate.dream_processed = true;
+					} else {
+						imageCollection.inputElement.style.cursor = "auto";
+					}
+				};
+				state.swheelcb = (evn, estate) => {
+					if (selection.inside) {
+						state.wheelcb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.sdreamcb = (evn, estate) => {
+					if (selection.exists && !selection.inside) {
+						selection.deselect();
+						state.redraw();
+						estate.selection_processed = true;
+					}
+					if (selection.inside) {
+						state.dreamcb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.serasecb = (evn, estate) => {
+					if (selection.inside) {
+						state.erasecb(evn, {});
+						estate.dream_processed = true;
+					}
+				};
+
+				state.smiddlecb = (evn, estate) => {
+					if (selection.inside) {
+						estate.dream_processed = true;
+					}
+				};
+
+				state.selection = selection;
+
+				/**
+				 * Dream handlers
+				 */
 				state.mousemovecb = (evn) => {
 					state.lastMouseMove = evn;
+
+					state.erasePrevCursor();
 					state.erasePrevReticle();
 
-					const style =
-						state.cursorSize > stableDiffusionData.width
-							? "#FBB5"
-							: state.cursorSize < stableDiffusionData.width
-							? "#BFB5"
-							: "#FFF5";
-					state.erasePrevReticle = _reticle_draw(evn, state, "Img2Img", {
-						sizeTextStyle: style,
-					});
+					let x = evn.x;
+					let y = evn.y;
+					if (state.snapToGrid) {
+						x += snap(evn.x, 0, 64);
+						y += snap(evn.y, 0, 64);
+					}
 
-					const bb = getBoundingBox(
-						evn.x,
-						evn.y,
-						state.cursorSize,
-						state.cursorSize,
-						state.snapToGrid && basePixelCount
-					);
+					state.erasePrevReticle = _tool._cursor_draw(x, y);
 
 					// Resolution
-					const request = {
-						width: stableDiffusionData.width,
-						height: stableDiffusionData.height,
-					};
+					let bb = null;
+					let request = null;
+
+					if (state.selection.exists) {
+						bb = state.selection.bb;
+
+						request = {width: bb.w, height: bb.h};
+
+						const style =
+							state.cursorSize > stableDiffusionData.width
+								? "#FBB5"
+								: state.cursorSize < stableDiffusionData.width
+								? "#BFB5"
+								: "#FFF5";
+						state.erasePrevReticle = _tool._reticle_draw(
+							bb,
+							"Img2Img",
+							{
+								w: Math.round(
+									bb.w * (stableDiffusionData.width / state.cursorSize)
+								),
+								h: Math.round(
+									bb.h * (stableDiffusionData.height / state.cursorSize)
+								),
+							},
+							{
+								reticleStyle: state.selection.inside ? "#F55" : "#FFF",
+								sizeTextStyle: style,
+							}
+						);
+					} else {
+						bb = getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						);
+
+						request = {
+							width: stableDiffusionData.width,
+							height: stableDiffusionData.height,
+						};
+
+						const style =
+							state.cursorSize > stableDiffusionData.width
+								? "#FBB5"
+								: state.cursorSize < stableDiffusionData.width
+								? "#BFB5"
+								: "#FFF5";
+						state.erasePrevReticle = _tool._reticle_draw(
+							bb,
+							"Img2Img",
+							{w: request.width, h: request.height},
+							{
+								sizeTextStyle: style,
+							}
+						);
+					}
+
+					if (
+						state.selection.exists &&
+						(state.selection.selected.now.x ===
+							state.selection.selected.start.x ||
+							state.selection.selected.now.y ===
+								state.selection.selected.start.y)
+					) {
+						return;
+					}
 
 					const bbvp = {
 						...viewport.canvasToView(bb.x, bb.y),
@@ -1158,15 +1611,15 @@ const img2imgTool = () =>
 					};
 
 					// For displaying border mask
-					const auxCanvas = document.createElement("canvas");
-					auxCanvas.width = request.width;
-					auxCanvas.height = request.height;
-					const auxCtx = auxCanvas.getContext("2d");
+					const bbCanvas = document.createElement("canvas");
+					bbCanvas.width = request.width;
+					bbCanvas.height = request.height;
+					const bbCtx = bbCanvas.getContext("2d");
 
 					if (state.keepBorderSize > 0) {
-						auxCtx.fillStyle = "#6A6AFF30";
+						bbCtx.fillStyle = "#6A6AFF30";
 						if (state.gradient) {
-							const lg = auxCtx.createLinearGradient(
+							const lg = bbCtx.createLinearGradient(
 								0,
 								0,
 								state.keepBorderSize,
@@ -1174,11 +1627,11 @@ const img2imgTool = () =>
 							);
 							lg.addColorStop(0, "#6A6AFF30");
 							lg.addColorStop(1, "#0000");
-							auxCtx.fillStyle = lg;
+							bbCtx.fillStyle = lg;
 						}
-						auxCtx.fillRect(0, 0, state.keepBorderSize, request.height);
+						bbCtx.fillRect(0, 0, state.keepBorderSize, request.height);
 						if (state.gradient) {
-							const tg = auxCtx.createLinearGradient(
+							const tg = bbCtx.createLinearGradient(
 								0,
 								0,
 								0,
@@ -1186,11 +1639,11 @@ const img2imgTool = () =>
 							);
 							tg.addColorStop(0, "#6A6AFF30");
 							tg.addColorStop(1, "#6A6AFF00");
-							auxCtx.fillStyle = tg;
+							bbCtx.fillStyle = tg;
 						}
-						auxCtx.fillRect(0, 0, request.width, state.keepBorderSize);
+						bbCtx.fillRect(0, 0, request.width, state.keepBorderSize);
 						if (state.gradient) {
-							const rg = auxCtx.createLinearGradient(
+							const rg = bbCtx.createLinearGradient(
 								request.width,
 								0,
 								request.width - state.keepBorderSize,
@@ -1198,16 +1651,16 @@ const img2imgTool = () =>
 							);
 							rg.addColorStop(0, "#6A6AFF30");
 							rg.addColorStop(1, "#6A6AFF00");
-							auxCtx.fillStyle = rg;
+							bbCtx.fillStyle = rg;
 						}
-						auxCtx.fillRect(
+						bbCtx.fillRect(
 							request.width - state.keepBorderSize,
 							0,
 							state.keepBorderSize,
 							request.height
 						);
 						if (state.gradient) {
-							const bg = auxCtx.createLinearGradient(
+							const bg = bbCtx.createLinearGradient(
 								0,
 								request.height,
 								0,
@@ -1215,16 +1668,16 @@ const img2imgTool = () =>
 							);
 							bg.addColorStop(0, "#6A6AFF30");
 							bg.addColorStop(1, "#6A6AFF00");
-							auxCtx.fillStyle = bg;
+							bbCtx.fillStyle = bg;
 						}
-						auxCtx.fillRect(
+						bbCtx.fillRect(
 							0,
 							request.height - state.keepBorderSize,
 							request.width,
 							state.keepBorderSize
 						);
 						uiCtx.drawImage(
-							auxCanvas,
+							bbCanvas,
 							0,
 							0,
 							request.width,
@@ -1241,13 +1694,45 @@ const img2imgTool = () =>
 					state.mousemovecb(state.lastMouseMove);
 				};
 
-				state.wheelcb = (evn) => {
+				state.wheelcb = (evn, estate) => {
+					if (estate.dream_processed) return;
 					_dream_onwheel(evn, state);
 				};
-				state.dreamcb = (evn) => {
-					dream_img2img_callback(evn, state);
+				state.dreamcb = (evn, estate) => {
+					if (estate.dream_processed || estate.selection_processed) return;
+					const bb =
+						state.selection.bb ||
+						getBoundingBox(
+							evn.x,
+							evn.y,
+							state.cursorSize,
+							state.cursorSize,
+							state.snapToGrid && basePixelCount
+						);
+					const resolution = state.selection.bb || {
+						w: stableDiffusionData.width,
+						h: stableDiffusionData.height,
+					};
+					dream_img2img_callback(bb, resolution, state);
+					state.selection.deselect();
+					state.redraw();
 				};
-				state.erasecb = (evn) => dream_erase_callback(evn, state);
+				state.erasecb = (evn, estate) => {
+					if (estate.dream_processed) return;
+					if (state.selection.exists) {
+						state.selection.deselect();
+						state.redraw();
+						return;
+					}
+					const bb = getBoundingBox(
+						evn.x,
+						evn.y,
+						state.cursorSize,
+						state.cursorSize,
+						state.snapToGrid && basePixelCount
+					);
+					dream_erase_callback(bb, state);
+				};
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
@@ -1291,6 +1776,47 @@ const img2imgTool = () =>
 							setMask(state.invertMask ? "hold" : "clear");
 						}
 					).label;
+
+					// Keep Masked Content Checkbox
+					state.ctxmenu.keepMaskedLabel = _toolbar_input.checkbox(
+						state,
+						"keepMasked",
+						"Keep Masked",
+						() => {
+							if (state.keepMasked) {
+								state.ctxmenu.keepMaskedBlurSlider.classList.remove(
+									"invisible"
+								);
+								state.ctxmenu.keepMaskedBlurSliderLinebreak.classList.add(
+									"invisible"
+								);
+							} else {
+								state.ctxmenu.keepMaskedBlurSlider.classList.add("invisible");
+								state.ctxmenu.keepMaskedBlurSliderLinebreak.classList.remove(
+									"invisible"
+								);
+							}
+						}
+					).label;
+
+					// Keep Masked Content Blur Slider
+					state.ctxmenu.keepMaskedBlurSlider = _toolbar_input.slider(
+						state,
+						"keepMaskedBlur",
+						"Keep Masked Blur",
+						{
+							min: 0,
+							max: 64,
+							step: 4,
+							textStep: 1,
+						}
+					).slider;
+
+					state.ctxmenu.keepMaskedBlurSliderLinebreak =
+						document.createElement("br");
+					state.ctxmenu.keepMaskedBlurSliderLinebreak.classList.add(
+						"invisible"
+					);
 
 					// Inpaint Full Resolution Checkbox
 					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
@@ -1338,6 +1864,9 @@ const img2imgTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.invertMaskLabel);
 				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.keepMaskedLabel);
+				menu.appendChild(state.ctxmenu.keepMaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.keepMaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
@@ -1351,4 +1880,8 @@ const img2imgTool = () =>
 window.onbeforeunload = async () => {
 	// Stop current generation on page close
 	if (generating) await fetch(`${host}${url}interrupt`, {method: "POST"});
+};
+
+const sendSeed = (seed) => {
+	stableDiffusionData.seed = document.getElementById("seed").value = seed;
 };

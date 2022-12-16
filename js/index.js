@@ -890,30 +890,22 @@ async function upscaleAndDownload() {
 
 function loadSettings() {
 	// set default values if not set
-	var _prompt =
-		localStorage.getItem("prompt") == null
-			? "ocean floor scientific expedition, underwater wildlife"
-			: localStorage.getItem("prompt");
-	var _negprompt =
-		localStorage.getItem("neg_prompt") == null
-			? "people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry"
-			: localStorage.getItem("neg_prompt");
 	var _mask_blur =
 		localStorage.getItem("mask_blur") == null
 			? 0
 			: localStorage.getItem("mask_blur");
 	var _seed =
 		localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
-	var _enable_hr = Boolean(
-		localStorage.getItem("enable_hr") == (null || "false")
+
+	let _enable_hr =
+		localStorage.getItem("enable_hr") === null
 			? false
-			: localStorage.getItem("enable_hr")
-	);
-	var _sync_cursor_size = Boolean(
-		localStorage.getItem("sync_cursor_size") == (null || "false")
-			? false
-			: localStorage.getItem("sync_cursor_size")
-	);
+			: localStorage.getItem("enable_hr") === "true";
+
+	let _sync_cursor_size =
+		localStorage.getItem("sync_cursor_size") === null
+			? true
+			: localStorage.getItem("sync_cursor_size") === "true";
 
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);

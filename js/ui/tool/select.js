@@ -131,20 +131,10 @@ const selectTransformTool = () =>
 							);
 						},
 						handles() {
-							const _createHandle = (x, y, originOffset = null, size = 10) => {
+							const _createHandle = (x, y, originOffset = null) => {
 								return {
-									x: x - size / 2,
-									y: y - size / 2,
-									w: size,
-									h: size,
-									contains(x, y) {
-										return (
-											this.x <= x &&
-											x <= this.x + this.w &&
-											this.y <= y &&
-											y <= this.y + this.h
-										);
-									},
+									x,
+									y,
 									scaleTo: (tx, ty, keepAspectRatio = true) => {
 										const origin = {
 											x: this.original.x + this.original.w / 2,
@@ -182,11 +172,13 @@ const selectTransformTool = () =>
 									},
 								};
 							};
+
+							const size = viewport.zoom * 10;
 							return [
-								_createHandle(this.x, this.y),
-								_createHandle(this.x + this.w, this.y),
-								_createHandle(this.x, this.y + this.h),
-								_createHandle(this.x + this.w, this.y + this.h),
+								_createHandle(this.x, this.y, size),
+								_createHandle(this.x + this.w, this.y, size),
+								_createHandle(this.x, this.y + this.h, size),
+								_createHandle(this.x + this.w, this.y + this.h, size),
 							];
 						},
 					};
@@ -295,10 +287,20 @@ const selectTransformTool = () =>
 						state.selected.handles().forEach((handle) => {
 							const bbvph = {
 								...viewport.canvasToView(handle.x, handle.y),
-								w: viewport.zoom * handle.w,
-								h: viewport.zoom * handle.h,
+								w: 10,
+								h: 10,
 							};
-							if (handle.contains(evn.x, evn.y)) {
+
+							bbvph.x -= 5;
+							bbvph.y -= 5;
+
+							const inhandle =
+								evn.evn.clientX > bbvph.x &&
+								evn.evn.clientX < bbvph.x + bbvph.w &&
+								evn.evn.clientY > bbvph.y &&
+								evn.evn.clientY < bbvph.y + bbvph.h;
+
+							if (inhandle) {
 								cursorInHandle = true;
 								uiCtx.strokeRect(
 									bbvph.x - 1,
@@ -333,10 +335,11 @@ const selectTransformTool = () =>
 				// Handles left mouse clicks
 				state.clickcb = (evn) => {
 					if (
-						state.original.x === state.selected.x &&
-						state.original.y === state.selected.y &&
-						state.original.w === state.selected.w &&
-						state.original.h === state.selected.h
+						!state.original ||
+						(state.original.x === state.selected.x &&
+							state.original.y === state.selected.y &&
+							state.original.w === state.selected.w &&
+							state.original.h === state.selected.h)
 					) {
 						state.reset();
 						return;
@@ -381,9 +384,24 @@ const selectTransformTool = () =>
 					if (state.selected) {
 						const handles = state.selected.handles();
 
-						const activeHandle = handles.find((v) =>
-							v.contains(evn.ix, evn.iy)
-						);
+						const activeHandle = handles.find((v) => {
+							const vpc = viewport.canvasToView(v.x, v.y);
+							const tlc = viewport.viewToCanvas(vpc.x - 5, vpc.y - 5);
+							const brc = viewport.viewToCanvas(vpc.x + 5, vpc.y + 5);
+							const bb = {
+								x: tlc.x,
+								y: tlc.y,
+								w: brc.x - tlc.x,
+								h: brc.y - tlc.y,
+							};
+
+							return (
+								evn.ix > bb.x &&
+								evn.ix < bb.x + bb.w &&
+								evn.iy > bb.y &&
+								evn.iy < bb.y + bb.h
+							);
+						});
 						if (activeHandle) {
 							state.scaling = activeHandle;
 							return;
