@@ -1032,8 +1032,6 @@ const dreamTool = () =>
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
 			mouse.listen.world.onwheel.on(state.wheelcb);
 
-			mouse.listen.world.onmousemove.on(state.mousemovecb);
-			mouse.listen.world.onwheel.on(state.wheelcb);
 			mouse.listen.world.btn.left.onclick.on(state.dreamcb);
 			mouse.listen.world.btn.right.onclick.on(state.erasecb);
 
@@ -1493,6 +1491,7 @@ const img2imgTool = () =>
 				state.sdreamcb = (evn, estate) => {
 					if (selection.exists && !selection.inside) {
 						selection.deselect();
+						state.redraw();
 						estate.selection_processed = true;
 					}
 					if (selection.inside) {
