@@ -532,16 +532,21 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		(evn, state) => {
 			const contains = bb.contains(evn.x, evn.y);
 
-			if (!contains && !state.dream_processed)
+			if (!contains && !state.dream_processed) {
 				imageCollection.inputElement.style.cursor = "auto";
-			if (!contains || state.dream_processed) marchingOptions.style = "#FFF";
-
+				toolbar._current_tool.state.block_res_change = false;
+			}
+			if (!contains || state.dream_processed) {
+				marchingOptions.style = "#FFF";
+				toolbar._current_tool.state.block_res_change = false;
+			}
 			if (!state.dream_processed && contains) {
 				marchingOptions.style = "#F55";
 
 				imageCollection.inputElement.style.cursor = "pointer";
 
 				state.dream_processed = true;
+				toolbar._current_tool.state.block_res_change = true;
 			}
 		},
 		0,
