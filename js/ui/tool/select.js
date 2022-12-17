@@ -4,7 +4,7 @@ const selectTransformTool = () =>
 		"Select Image",
 		(state, opt) => {
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			ovLayer.clear();
 			state.movecb(mouse.coords.world.pos);
 
 			// Canvas left mouse handlers
@@ -46,7 +46,7 @@ const selectTransformTool = () =>
 			state.reset();
 
 			// Resets cursor
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			ovLayer.clear();
 
 			// Clears overlay
 			imageCollection.inputElement.style.cursor = "auto";
@@ -80,7 +80,7 @@ const selectTransformTool = () =>
 				state.lastMouseMove = null;
 
 				state.redraw = () => {
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					ovLayer.clear();
 					state.movecb(state.lastMouseMove);
 				};
 
@@ -186,7 +186,7 @@ const selectTransformTool = () =>
 
 				// Mouse move handler. As always, also renders cursor
 				state.movecb = (evn) => {
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					ovLayer.clear();
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 					imageCollection.inputElement.style.cursor = "auto";
 					state.lastMouseTarget = evn.target;

@@ -44,7 +44,7 @@ const _monitorProgress = (bb, oncheck = null) => {
 			layer.ctx.fillRect(1, 1, bb.w * data.progress, 10);
 
 			// Draw Progress Text
-			layer.ctx.clearRect(0, 11, expanded.w, 40);
+			layer.clear();
 			layer.ctx.fillStyle = "#FFF";
 
 			layer.ctx.fillRect(0, 15, 60, 25);
@@ -295,8 +295,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	});
 
 	const redraw = (url = images[at]) => {
-		if (url === null)
-			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+		if (url === null) layer.clear();
 		if (!url) return;
 
 		const img = new Image();

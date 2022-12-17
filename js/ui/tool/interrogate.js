@@ -4,10 +4,8 @@ const interrogateTool = () =>
 		"Interrogate",
 		(state, opt) => {
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
-			state.mousemovecb({
-				...mouse.coords.world.pos,
-			});
+			ovLayer.clear();
+			state.redraw();
 
 			// Start Listeners
 			mouse.listen.world.onmousemove.on(state.mousemovecb);
@@ -37,8 +35,7 @@ const interrogateTool = () =>
 				state.invertMask = false;
 				state.overMaskPx = 0;
 
-				state.erasePrevReticle = () =>
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+				state.erasePrevReticle = () => ovLayer.clear();
 
 				state.mousemovecb = (evn) => {
 					state.erasePrevReticle();

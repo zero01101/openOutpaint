@@ -298,23 +298,13 @@ const uil = {
 		canvas.width = bb.w;
 		canvas.height = bb.h;
 		if (options.includeBg)
-			ctx.drawImage(
-				bgLayer.canvas,
-				bb.x + bgLayer.origin.x,
-				bb.y + bgLayer.origin.y,
-				bb.w,
-				bb.h,
-				0,
-				0,
-				bb.w,
-				bb.h
-			);
+			ctx.drawImage(bgLayer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 		this.layers.forEach((layer) => {
 			if (!layer.hidden)
 				ctx.drawImage(
 					layer.layer.canvas,
-					bb.x + layer.layer.origin.x,
-					bb.y + layer.layer.origin.y,
+					bb.x,
+					bb.y,
 					bb.w,
 					bb.h,
 					0,
