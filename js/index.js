@@ -952,7 +952,10 @@ function informCursorSizeSlider() {
 }
 
 const _resolution_onwheel = (evn) => {
-	if (stableDiffusionData.sync_cursor_size) {
+	if (
+		stableDiffusionData.sync_cursor_size &&
+		!toolbar._current_tool.state.block_res_change
+	) {
 		toolbar._current_tool.state.ignorePrevious = true; //so hacky
 		resSlider.value =
 			stableDiffusionData.width - (128 * evn.deltaY) / Math.abs(evn.deltaY);
