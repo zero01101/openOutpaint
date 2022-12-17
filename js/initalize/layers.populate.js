@@ -53,44 +53,99 @@ uiCanvas.width = uiCanvas.clientWidth;
 uiCanvas.height = uiCanvas.clientHeight;
 const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 
+/**
+ * Here we setup canvas dynamic scaling
+ */
+(() => {
+	let expandSize = localStorage.getItem("expand-size") || 1024;
+	expandSize = parseInt(expandSize, 10);
+
+	const askSize = () => {
+		const by = prompt("How much do you want to expand by?", expandSize);
+
+		if (!by) return null;
+		else {
+			const len = parseInt(by, 10);
+			localStorage.setItem("expand-size", len);
+			expandSize = len;
+			return len;
+		}
+	};
+
+	const leftButton = makeElement("button", -64, 0);
+	leftButton.classList.add("expand-button", "left");
+	leftButton.style.width = "64px";
+	leftButton.style.height = `${imageCollection.size.h}px`;
+	leftButton.addEventListener("click", () => {
+		let size = null;
+		if ((size = askSize())) {
+			imageCollection.expand(size, 0, 0, 0);
+			drawBackground();
+			const newLeft = -imageCollection.inputOffset.x - imageCollection.origin.x;
+			leftButton.style.left = newLeft - 64 + "px";
+			topButton.style.left = newLeft + "px";
+			bottomButton.style.left = newLeft + "px";
+			topButton.style.width = imageCollection.size.w + "px";
+			bottomButton.style.width = imageCollection.size.w + "px";
+		}
+	});
+
+	const rightButton = makeElement("button", imageCollection.size.w, 0);
+	rightButton.classList.add("expand-button", "right");
+	rightButton.style.width = "64px";
+	rightButton.style.height = `${imageCollection.size.h}px`;
+	rightButton.addEventListener("click", () => {
+		let size = null;
+		if ((size = askSize())) {
+			imageCollection.expand(0, 0, size, 0);
+			drawBackground();
+			rightButton.style.left =
+				parseInt(rightButton.style.left, 10) + size + "px";
+			topButton.style.width = imageCollection.size.w + "px";
+			bottomButton.style.width = imageCollection.size.w + "px";
+		}
+	});
+
+	const topButton = makeElement("button", 0, -64);
+	topButton.classList.add("expand-button", "top");
+	topButton.style.height = "64px";
+	topButton.style.width = `${imageCollection.size.w}px`;
+	topButton.addEventListener("click", () => {
+		let size = null;
+		if ((size = askSize())) {
+			imageCollection.expand(0, size, 0, 0);
+			drawBackground();
+			const newTop = -imageCollection.inputOffset.y - imageCollection.origin.y;
+			topButton.style.top = newTop - 64 + "px";
+			leftButton.style.top = newTop + "px";
+			rightButton.style.top = newTop + "px";
+			leftButton.style.height = imageCollection.size.h + "px";
+			rightButton.style.height = imageCollection.size.h + "px";
+		}
+	});
+
+	const bottomButton = makeElement("button", 0, imageCollection.size.h);
+	bottomButton.classList.add("expand-button", "bottom");
+	bottomButton.style.height = "64px";
+	bottomButton.style.width = `${imageCollection.size.w}px`;
+	bottomButton.addEventListener("click", () => {
+		let size = null;
+		if ((size = askSize())) {
+			imageCollection.expand(0, 0, 0, size);
+			drawBackground();
+			bottomButton.style.top =
+				parseInt(bottomButton.style.top, 10) + size + "px";
+			leftButton.style.height = imageCollection.size.h + "px";
+			rightButton.style.height = imageCollection.size.h + "px";
+		}
+	});
+})();
+
 debugLayer.hide(); // Hidden by default
 
 layers.registerCollection("mask", {name: "Mask Layers", requiresActive: true});
 
 // Where CSS and javascript magic happens to make the canvas viewport work
-/**
- * Ended up using a CSS transforms approach due to more flexibility on transformations
- * and capability to automagically translate input coordinates to layer space.
- */
-mouse.registerContext(
-	"world",
-	(evn, ctx) => {
-		// Fix because in chrome layerX and layerY simply doesnt work
-		ctx.coords.prev.x = ctx.coords.pos.x;
-		ctx.coords.prev.y = ctx.coords.pos.y;
-
-		// Get element bounding rect
-		const bb = imageCollection.element.getBoundingClientRect();
-
-		// Get element width/height (css, cause I don't trust client sizes in chrome anymore)
-		const w = imageCollection.size.w;
-		const h = imageCollection.size.h;
-
-		// Get cursor position
-		const x = evn.clientX;
-		const y = evn.clientY;
-
-		// Map to layer space
-		const layerX = ((x - bb.left) / bb.width) * w;
-		const layerY = ((y - bb.top) / bb.height) * h;
-
-		//
-		ctx.coords.pos.x = Math.round(layerX);
-		ctx.coords.pos.y = Math.round(layerY);
-	},
-	{target: imageCollection.inputElement}
-);
-
 /**
  * The global viewport object (may be modularized in the future). All
  * coordinates given are of the center of the viewport
@@ -158,6 +213,31 @@ let worldInit = null;
 
 viewport.transform(imageCollection.element);
 
+/**
+ * Ended up using a CSS transforms approach due to more flexibility on transformations
+ * and capability to automagically translate input coordinates to layer space.
+ */
+mouse.registerContext(
+	"world",
+	(evn, ctx) => {
+		// Fix because in chrome layerX and layerY simply doesnt work
+		ctx.coords.prev.x = ctx.coords.pos.x;
+		ctx.coords.prev.y = ctx.coords.pos.y;
+
+		// Get cursor position
+		const x = evn.clientX;
+		const y = evn.clientY;
+
+		// Map to layer space
+		const layerCoords = viewport.viewToCanvas(x, y);
+
+		// Set coords
+		ctx.coords.pos.x = Math.round(layerCoords.x);
+		ctx.coords.pos.y = Math.round(layerCoords.y);
+	},
+	{target: imageCollection.inputElement}
+);
+
 mouse.listen.window.onwheel.on((evn) => {
 	if (evn.evn.ctrlKey) {
 		evn.evn.preventDefault();
@@ -176,14 +256,6 @@ mouse.listen.window.onwheel.on((evn) => {
 		viewport.transform(imageCollection.element);
 
 		toolbar.currentTool.redraw();
-
-		if (debug) {
-			debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-			debugCtx.fillStyle = "#F0F";
-			debugCtx.beginPath();
-			debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
-			debugCtx.fill();
-		}
 	}
 });
 

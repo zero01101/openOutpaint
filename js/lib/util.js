@@ -11,6 +11,19 @@
  */
 
 /**
+ * Represents a size
+ */
+class Size {
+	w = 0;
+	h = 0;
+
+	constructor({w, h} = {w: 0, h: 0}) {
+		this.w = w;
+		this.h = h;
+	}
+}
+
+/**
  * Represents a simple bouding box
  */
 class BoundingBox {
@@ -288,14 +301,19 @@ function cropCanvas(sourceCanvas, options = {}) {
 
 	const w = sourceCanvas.width;
 	const h = sourceCanvas.height;
-	var imageData = sourceCanvas.getContext("2d").getImageData(0, 0, w, h);
+	const srcCtx = sourceCanvas.getContext("2d");
+	const offset = {
+		x: (srcCtx.origin && -srcCtx.origin.x) || 0,
+		y: (srcCtx.origin && -srcCtx.origin.y) || 0,
+	};
+	var imageData = srcCtx.getImageData(offset.x, offset.y, w, h);
 	/** @type {BoundingBox} */
 	const bb = new BoundingBox();
 
-	let minx = w;
-	let maxx = -1;
-	let miny = h;
-	let maxy = -1;
+	let minx = Infinity;
+	let maxx = -Infinity;
+	let miny = Infinity;
+	let maxy = -Infinity;
 
 	for (let y = 0; y < h; y++) {
 		for (let x = 0; x < w; x++) {
@@ -303,10 +321,10 @@ function cropCanvas(sourceCanvas, options = {}) {
 			const index = (y * w + x) * 4; // OHHH OK this is setting the imagedata.data uint8clampeddataarray index for the specified x/y coords
 			//this part i get, this is checking that 4th RGBA byte for opacity
 			if (imageData.data[index + 3] > 0) {
-				minx = Math.min(minx, x);
-				maxx = Math.max(maxx, x);
-				miny = Math.min(miny, y);
-				maxy = Math.max(maxy, y);
+				minx = Math.min(minx, x + offset.x);
+				maxx = Math.max(maxx, x + offset.x);
+				miny = Math.min(miny, y + offset.y);
+				maxy = Math.max(maxy, y + offset.y);
 			}
 		}
 	}

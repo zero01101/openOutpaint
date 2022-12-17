@@ -6,7 +6,7 @@ const stampTool = () =>
 			state.loaded = true;
 
 			// Draw new cursor immediately
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			ovLayer.clear();
 			state.movecb({...mouse.coords.world.pos});
 
 			// Start Listeners
@@ -47,7 +47,7 @@ const stampTool = () =>
 				child.classList.remove("active");
 			});
 
-			ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			ovLayer.clear();
 		},
 		{
 			init: (state) => {
@@ -88,7 +88,7 @@ const stampTool = () =>
 						state.selected = null;
 					}
 
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					ovLayer.clear();
 					if (state.loaded) state.movecb(state.lastMouseMove);
 				};
 
@@ -300,7 +300,7 @@ const stampTool = () =>
 
 					state.lastMouseMove = evn;
 
-					ovCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+					ovLayer.clear();
 
 					// Draw selected image
 					if (state.selected) {

@@ -3,6 +3,150 @@
  *
  * It manages canvases and their locations and sizes according to current viewport views
  */
+/**
+ * Here is where the old magic is created.
+ *
+ * This is probably not recommended, but it works and
+ * is probably the most reliable way to not break everything.
+ */
+(() => {
+	const original = {
+		drawImage: CanvasRenderingContext2D.prototype.drawImage,
+		getImageData: CanvasRenderingContext2D.prototype.getImageData,
+		putImageData: CanvasRenderingContext2D.prototype.putImageData,
+
+		// Drawing methods
+		moveTo: CanvasRenderingContext2D.prototype.moveTo,
+		lineTo: CanvasRenderingContext2D.prototype.lineTo,
+
+		arc: CanvasRenderingContext2D.prototype.arc,
+		fillRect: CanvasRenderingContext2D.prototype.fillRect,
+		clearRect: CanvasRenderingContext2D.prototype.clearRect,
+	};
+
+	// Backing up original functions to <key>Root
+	Object.keys(original).forEach((key) => {
+		CanvasRenderingContext2D.prototype[key + "Root"] = function (...args) {
+			return original[key].call(this, ...args);
+		};
+	});
+
+	// Modifying drawImage
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "drawImage", {
+		value: function (...args) {
+			switch (args.length) {
+				case 3:
+				case 5:
+					if (this.origin !== undefined) {
+						args[1] += this.origin.x;
+						args[2] += this.origin.y;
+					}
+					break;
+				case 9:
+					// Check for origin on source
+					const sctx = args[0].getContext && args[0].getContext("2d");
+					if (sctx && sctx.origin !== undefined) {
+						args[1] += sctx.origin.x;
+						args[2] += sctx.origin.y;
+					}
+
+					// Check for origin on destination
+					if (this.origin !== undefined) {
+						args[5] += this.origin.x;
+						args[6] += this.origin.y;
+					}
+					break;
+			}
+			// Pass arguments through
+			return original.drawImage.call(this, ...args);
+		},
+	});
+
+	// Modifying getImageData method
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "getImageData", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.getImageData.call(this, ...args);
+		},
+	});
+
+	// Modifying putImageData method
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "putImageData", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.putImageData.call(this, ...args);
+		},
+	});
+
+	// Modifying moveTo method
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "moveTo", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.moveTo.call(this, ...args);
+		},
+	});
+
+	// Modifying lineTo method
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "lineTo", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.lineTo.call(this, ...args);
+		},
+	});
+
+	// Modifying arc
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "arc", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.arc.call(this, ...args);
+		},
+	});
+
+	// Modifying fillRect
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "fillRect", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.fillRect.call(this, ...args);
+		},
+	});
+	// Modifying clearRect
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "clearRect", {
+		value: function (...args) {
+			if (this.origin) {
+				args[0] += this.origin.x;
+				args[1] += this.origin.y;
+			}
+			// Pass arguments through
+			return original.clearRect.call(this, ...args);
+		},
+	});
+})();
+// End of black magic
+
 const layers = {
 	_collections: [],
 	collections: makeWriteOnce({}, "layers.collections"),
@@ -29,7 +173,7 @@ const layers = {
 			},
 
 			// Input multiplier (Size of the input element div)
-			inputSizeMultiplier: 3,
+			inputSizeMultiplier: 9,
 
 			// Target
 			targetElement: document.getElementById("layer-render"),
@@ -81,11 +225,21 @@ const layers = {
 					return this._inputOffset;
 				},
 
+				_origin: {x: 0, y: 0},
+				get origin() {
+					return {...this._origin};
+				},
+
 				_resizeInputDiv() {
 					// Set offset
+					const oldOffset = {...this._inputOffset};
 					this._inputOffset = {
-						x: -Math.floor(options.inputSizeMultiplier / 2) * size.w,
-						y: -Math.floor(options.inputSizeMultiplier / 2) * size.h,
+						x:
+							-Math.floor(options.inputSizeMultiplier / 2) * size.w -
+							this._origin.x,
+						y:
+							-Math.floor(options.inputSizeMultiplier / 2) * size.h -
+							this._origin.y,
 					};
 
 					// Resize the input element
@@ -97,6 +251,40 @@ const layers = {
 					this.inputElement.style.height = `${
 						size.h * options.inputSizeMultiplier
 					}px`;
+
+					// Move elements inside to new offset
+					for (const child of this.inputElement.children) {
+						if (child.style.position === "absolute") {
+							child.style.left = `${
+								parseInt(child.style.left, 10) +
+								oldOffset.x -
+								this._inputOffset.x
+							}px`;
+							child.style.top = `${
+								parseInt(child.style.top, 10) +
+								oldOffset.y -
+								this._inputOffset.y
+							}px`;
+						}
+					}
+				},
+
+				expand(left, top, right, bottom) {
+					this._layers.forEach((layer) => {
+						if (layer.full) layer._expand(left, top, right, bottom);
+					});
+
+					this._origin.x += left;
+					this._origin.y += top;
+
+					this.size.w += left + right;
+					this.size.h += top + bottom;
+
+					this._resizeInputDiv();
+
+					for (const layer of this._layers) {
+						layer.moveTo(layer.x, layer.y);
+					}
 				},
 
 				size,
@@ -115,7 +303,7 @@ const layers = {
 				 * @param {object} options.ctxOptions
 				 * @returns
 				 */
-				registerLayer: (key = null, options = {}) => {
+				registerLayer(key = null, options = {}) {
 					// Make ID
 					const id = guid();
 
@@ -124,7 +312,12 @@ const layers = {
 						name: key || `Temporary ${id}`,
 
 						// Bounding box for layer
-						bb: {x: 0, y: 0, w: collection.size.w, h: collection.size.h},
+						bb: {
+							x: -collection.origin.x,
+							y: -collection.origin.y,
+							w: collection.size.w,
+							h: collection.size.h,
+						},
 
 						// Resolution for layer
 						resolution: null,
@@ -139,11 +332,25 @@ const layers = {
 						ctxOptions: {},
 					});
 
-					// Calculate resolution
+					// Check if the layer is full
+					let full = false;
+					if (
+						options.bb.x === -collection.origin.x &&
+						options.bb.y === -collection.origin.y &&
+						options.bb.w === collection.size.w &&
+						options.bb.h === collection.size.h
+					)
+						full = true;
+
 					if (!options.resolution)
+						// Calculate resolution
 						options.resolution = {
-							w: (collection.resolution.w / collection.size.w) * options.bb.w,
-							h: (collection.resolution.h / collection.size.h) * options.bb.h,
+							w: Math.round(
+								(collection.resolution.w / collection.size.w) * options.bb.w
+							),
+							h: Math.round(
+								(collection.resolution.h / collection.size.h) * options.bb.h
+							),
 						};
 
 					// This layer's canvas
@@ -166,7 +373,21 @@ const layers = {
 						options.after.canvas.after(canvas);
 					}
 
+					/**
+					 * Here we set the context origin for using the black magic.
+					 */
 					const ctx = canvas.getContext("2d", options.ctxOptions);
+					if (full) {
+						// Modify context to add origin information
+						ctx.origin = {
+							get x() {
+								return collection.origin.x;
+							},
+							get y() {
+								return collection.origin.y;
+							},
+						};
+					}
 
 					// Path used for logging purposes
 					const _layerlogpath = key
@@ -177,9 +398,12 @@ const layers = {
 							_logpath: _layerlogpath,
 							_collection: collection,
 
+							bb: new BoundingBox(options.bb),
+							resolution: new Size(options.resolution),
 							id,
 							key,
 							name: options.name,
+							full,
 
 							state: new Proxy(
 								{visible: true},
@@ -195,9 +419,70 @@ const layers = {
 								}
 							),
 
+							get x() {
+								return this.bb.x;
+							},
+
+							get y() {
+								return this.bb.y;
+							},
+
+							get width() {
+								return this.bb.w;
+							},
+
+							get height() {
+								return this.bb.h;
+							},
+
+							get w() {
+								return this.bb.w;
+							},
+
+							get h() {
+								return this.bb.h;
+							},
+
+							get origin() {
+								return this._collection.origin;
+							},
+
 							/** Our canvas */
 							canvas,
 							ctx,
+
+							_expand(left, top, right, bottom) {
+								const tmpCanvas = document.createElement("canvas");
+								tmpCanvas.width = this.w;
+								tmpCanvas.height = this.h;
+								tmpCanvas.getContext("2d").drawImage(this.canvas, 0, 0);
+
+								this.resize(this.w + left + right, this.h + top + bottom);
+								this.clear();
+								this.ctx.drawImageRoot(tmpCanvas, left, top);
+
+								this.moveTo(this.x - left, this.y - top);
+							},
+
+							/**
+							 * Clears the layer contents
+							 */
+							clear() {
+								this.ctx.clearRectRoot(
+									0,
+									0,
+									this.canvas.width,
+									this.canvas.height
+								);
+							},
+
+							/**
+							 * Recalculates DOM positioning
+							 */
+							syncDOM() {
+								this.moveTo(this.x, this.y);
+								this.resize(this.w, this.h);
+							},
 
 							/**
 							 * Moves this layer to another level (after given layer)
@@ -224,8 +509,10 @@ const layers = {
 							 * @param {number} y Y coordinate of the top left of the canvas
 							 */
 							moveTo(x, y) {
-								canvas.style.left = `${x}px`;
-								canvas.style.top = `${y}px`;
+								this.bb.x = x;
+								this.bb.y = y;
+								this.canvas.style.left = `${x}px`;
+								this.canvas.style.top = `${y}px`;
 							},
 
 							/**
@@ -241,6 +528,8 @@ const layers = {
 								canvas.height = Math.round(
 									options.resolution.h * (h / options.bb.h)
 								);
+								this.bb.w = w;
+								this.bb.h = h;
 								canvas.style.width = `${w}px`;
 								canvas.style.height = `${h}px`;
 							},

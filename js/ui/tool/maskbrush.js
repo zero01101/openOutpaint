@@ -240,12 +240,7 @@ const maskBrushTool = () =>
 					clearMaskButton.textContent = "Clear";
 					clearMaskButton.title = "Clears Painted Mask";
 					clearMaskButton.onclick = () => {
-						maskPaintCtx.clearRect(
-							0,
-							0,
-							maskPaintCanvas.width,
-							maskPaintCanvas.height
-						);
+						maskPaintLayer.clear();
 					};
 
 					const previewMaskButton = document.createElement("button");

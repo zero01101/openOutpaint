@@ -17,6 +17,19 @@ mouse.listen.world.onmousemove.on((evn) => {
 	canvasYInfo.textContent = evn.y;
 	snapXInfo.textContent = evn.x + snap(evn.x);
 	snapYInfo.textContent = evn.y + snap(evn.y);
+
+	if (debug) {
+		debugLayer.clear();
+		debugCtx.fillStyle = "#F0F";
+		debugCtx.beginPath();
+		debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
+		debugCtx.fill();
+
+		debugCtx.fillStyle = "#0FF";
+		debugCtx.beginPath();
+		debugCtx.arc(evn.x, evn.y, 5, 0, Math.PI * 2);
+		debugCtx.fill();
+	}
 });
 
 /**

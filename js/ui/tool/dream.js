@@ -318,7 +318,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				ctx.drawImage(keepUnmaskCanvas, 0, 0);
 			}
 
-			layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+			layer.clear();
 			layer.ctx.drawImage(
 				canvas,
 				0,
@@ -765,8 +765,8 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			bbCtx.globalCompositeOperation = "destination-in";
 			bbCtx.drawImage(
 				maskPaintCanvas,
-				bb.x,
-				bb.y,
+				bb.x + maskPaintLayer.origin.x,
+				bb.y + maskPaintLayer.origin.y,
 				bb.w,
 				bb.h,
 				0,
@@ -793,8 +793,8 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			bbCtx.globalCompositeOperation = "destination-out"; // ???
 			bbCtx.drawImage(
 				maskPaintCanvas,
-				bb.x,
-				bb.y,
+				bb.x + maskPaintLayer.origin.x,
+				bb.y + maskPaintLayer.origin.y,
 				bb.w,
 				bb.h,
 				0,
@@ -915,7 +915,17 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	bbCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
 	bbCtx.fillRect(0, 0, bb.w, bb.h);
 	bbCtx.globalCompositeOperation = "destination-out";
-	bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	bbCtx.drawImage(
+		maskPaintCanvas,
+		bb.x + maskPaintLayer.origin.x,
+		bb.y + maskPaintLayer.origin.y,
+		bb.w,
+		bb.h,
+		0,
+		0,
+		bb.w,
+		bb.h
+	);
 
 	bbCtx.globalCompositeOperation = "destination-atop";
 	bbCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";

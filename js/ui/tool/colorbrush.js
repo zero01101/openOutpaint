@@ -41,7 +41,7 @@ const colorBrushTool = () =>
 		"Color Brush",
 		(state, opt) => {
 			// Draw new cursor immediately
-			uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 			state.movecb({
 				...mouse.coords.world.pos,
 				evn: {
@@ -64,11 +64,11 @@ const colorBrushTool = () =>
 				after: imgLayer,
 				ctxOptions: {willReadFrequently: true},
 			});
+			state.drawLayer.canvas.style.filter = "opacity(70%)";
 			state.eraseLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
 				ctxOptions: {willReadFrequently: true},
 			});
-			state.eraseLayer.canvas.style.display = "none";
 			state.eraseLayer.hide();
 			state.eraseBackup = imageCollection.registerLayer(null, {
 				after: imgLayer,
@@ -209,7 +209,7 @@ const colorBrushTool = () =>
 							state.brushSize -
 								Math.floor(state.config.brushScrollSpeed * evn.delta)
 						);
-						uiCtx.clearRect(0, 0, ovCanvas.width, ovCanvas.height);
+						uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 						state.movecb(evn);
 					}
 				};
@@ -231,12 +231,8 @@ const colorBrushTool = () =>
 				state.keyupcb = (evn) => {
 					switch (evn.code) {
 						case "ShiftLeft":
-							if (!keyboard.isPressed("ShiftRight")) {
-								state.disableDropper();
-							}
-							break;
 						case "ShiftRight":
-							if (!keyboard.isPressed("ShiftLeft")) {
+							if (!keyboard.isPressed(evn.code)) {
 								state.disableDropper();
 							}
 							break;
@@ -286,8 +282,9 @@ const colorBrushTool = () =>
 					const canvas = state.drawLayer.canvas;
 					const ctx = state.drawLayer.ctx;
 
-					const cropped = cropCanvas(canvas, {border: 10});
+					const cropped = cropCanvas(canvas, {border: 10, origin: uil.origin});
 					const bb = cropped.bb;
+
 					commands.runCommand("drawImage", "Color Brush Draw", {
 						image: cropped.canvas,
 						...bb,
@@ -302,10 +299,9 @@ const colorBrushTool = () =>
 					if (state.affectMask) _mask_brush_erase_callback(evn, state);
 
 					// Make a backup of the current image to apply erase later
-					const bkpcanvas = state.eraseBackup.canvas;
 					const bkpctx = state.eraseBackup.ctx;
-					bkpctx.clearRect(0, 0, bkpcanvas.width, bkpcanvas.height);
-					bkpctx.drawImage(uil.canvas, 0, 0);
+					state.eraseBackup.clear();
+					bkpctx.drawImageRoot(uil.canvas, 0, 0);
 
 					uil.ctx.globalCompositeOperation = "destination-out";
 					_color_brush_erase_callback(evn, state, uil.ctx);
@@ -335,8 +331,8 @@ const colorBrushTool = () =>
 					const bb = cropped.bb;
 
 					uil.ctx.filter = null;
-					uil.ctx.clearRect(0, 0, uil.canvas.width, uil.canvas.height);
-					uil.ctx.drawImage(bkpcanvas, 0, 0);
+					uil.layer.clear();
+					uil.ctx.drawImageRoot(bkpcanvas, 0, 0);
 
 					commands.runCommand("eraseImage", "Color Brush Erase", {
 						mask: cropped.canvas,

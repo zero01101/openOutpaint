@@ -132,3 +132,72 @@
 	flex: 1;
 	height: 25px;
 }
+
+/* Resizing buttons */
+.expand-button {
+	display: flex;
+
+	align-items: center;
+	justify-content: center;
+
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+	background-color: transparent;
+
+	cursor: pointer;
+
+	transition-duration: 300ms;
+
+	border: 2px solid #293d3d30;
+}
+
+.expand-button::after {
+	content: "";
+
+	background-color: #293d3d77;
+
+	mask-image: url("/res/icons/chevron-up.svg");
+	mask-size: contain;
+
+	width: 60px;
+	height: 60px;
+}
+
+.expand-button:hover::after {
+	background-color: #466;
+}
+
+.expand-button.right::after {
+	transform: rotate(90deg);
+}
+
+.expand-button.bottom::after {
+	transform: rotate(180deg);
+}
+
+.expand-button.left::after {
+	transform: rotate(270deg);
+}
+
+.expand-button.left {
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+}
+.expand-button.top {
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+}
+.expand-button.right {
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+}
+.expand-button.bottom {
+	border-bottom-right-radius: 10px;
+	border-bottom-left-radius: 10px;
+}
+
+.expand-button:hover {
+	backdrop-filter: brightness(60%);
+}
