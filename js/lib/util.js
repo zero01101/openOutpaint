@@ -306,7 +306,7 @@ function cropCanvas(sourceCanvas, options = {}) {
 		x: (srcCtx.origin && -srcCtx.origin.x) || 0,
 		y: (srcCtx.origin && -srcCtx.origin.y) || 0,
 	};
-	var imageData = srcCtx.getImageData(offset.x, offset.y, w, h);
+	var imageData = srcCtx.getImageDataRoot(0, 0, w, h);
 	/** @type {BoundingBox} */
 	const bb = new BoundingBox();
 
@@ -334,7 +334,8 @@ function cropCanvas(sourceCanvas, options = {}) {
 	bb.w = maxx - minx + 1 + 2 * options.border;
 	bb.h = maxy - miny + 1 + 2 * options.border;
 
-	if (maxx < 0) throw new NoContentError("Canvas has no content to crop");
+	if (!Number.isFinite(maxx))
+		throw new NoContentError("Canvas has no content to crop");
 
 	var cutCanvas = document.createElement("canvas");
 	cutCanvas.width = bb.w;
