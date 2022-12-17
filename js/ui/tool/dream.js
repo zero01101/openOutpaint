@@ -39,12 +39,13 @@ const _monitorProgress = (bb, oncheck = null) => {
 
 			oncheck && oncheck(data);
 
+			layer.clear();
+
 			// Draw Progress Bar
 			layer.ctx.fillStyle = "#5F5";
 			layer.ctx.fillRect(1, 1, bb.w * data.progress, 10);
 
 			// Draw Progress Text
-			layer.clear();
 			layer.ctx.fillStyle = "#FFF";
 
 			layer.ctx.fillRect(0, 15, 60, 25);
