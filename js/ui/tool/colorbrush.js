@@ -282,7 +282,7 @@ const colorBrushTool = () =>
 					const canvas = state.drawLayer.canvas;
 					const ctx = state.drawLayer.ctx;
 
-					const cropped = cropCanvas(canvas, {border: 10, origin: uil.origin});
+					const cropped = cropCanvas(canvas, {border: 10});
 					const bb = cropped.bb;
 
 					commands.runCommand("drawImage", "Color Brush Draw", {
