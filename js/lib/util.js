@@ -364,8 +364,8 @@ function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
 		canvas: uil.getVisible({
-			x: 0,
-			y: 0,
+			x: -imageCollection.origin.x,
+			y: -imageCollection.origin.y,
 			w: imageCollection.size.w,
 			h: imageCollection.size.h,
 		}),
@@ -384,6 +384,7 @@ function downloadCanvas(options = {}) {
 	var croppedCanvas = options.cropToContent
 		? cropCanvas(options.canvas).canvas
 		: options.canvas;
+
 	if (croppedCanvas != null) {
 		croppedCanvas.toBlob((blob) => {
 			link.href = URL.createObjectURL(blob);
