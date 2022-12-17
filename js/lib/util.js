@@ -244,7 +244,12 @@ function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
  * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
 function snap(i, offset = 0, gridSize = 64) {
-	const modulus = (i - offset) % gridSize;
+	let diff = i - offset;
+	if (diff < 0) {
+		diff += gridSize * Math.ceil(Math.abs(diff / gridSize));
+	}
+
+	const modulus = diff % gridSize;
 	var snapOffset = modulus;
 
 	if (modulus > gridSize / 2) snapOffset = modulus - gridSize;
