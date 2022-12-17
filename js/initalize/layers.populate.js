@@ -269,8 +269,14 @@ mouse.listen.window.btn.middle.onpaint.on((evn) => {
 		viewport.cy = worldInit.y + (evn.iy - evn.y) / viewport.zoom;
 
 		// Limits
-		viewport.cx = Math.max(Math.min(viewport.cx, imageCollection.size.w), 0);
-		viewport.cy = Math.max(Math.min(viewport.cy, imageCollection.size.h), 0);
+		viewport.cx = Math.max(
+			Math.min(viewport.cx, imageCollection.size.w - imageCollection.origin.x),
+			-imageCollection.origin.x
+		);
+		viewport.cy = Math.max(
+			Math.min(viewport.cy, imageCollection.size.h - imageCollection.origin.y),
+			-imageCollection.origin.y
+		);
 
 		// Draw Viewport location
 	}
