@@ -99,22 +99,22 @@
 }
 
 #layer-list .actions > .rename-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/edit.svg");
-	mask-image: url("/res/icons/edit.svg");
+	-webkit-mask-image: url("../../res/icons/edit.svg");
+	mask-image: url("../../res/icons/edit.svg");
 }
 
 #layer-list .actions > .delete-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/trash.svg");
-	mask-image: url("/res/icons/trash.svg");
+	-webkit-mask-image: url("../../res/icons/trash.svg");
+	mask-image: url("../../res/icons/trash.svg");
 }
 
 #layer-list .actions > .hide-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/eye.svg");
-	mask-image: url("/res/icons/eye.svg");
+	-webkit-mask-image: url("../../res/icons/eye.svg");
+	mask-image: url("../../res/icons/eye.svg");
 }
 #layer-list .hidden .actions > .hide-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/eye-off.svg");
-	mask-image: url("/res/icons/eye-off.svg");
+	-webkit-mask-image: url("../../res/icons/eye-off.svg");
+	mask-image: url("../../res/icons/eye-off.svg");
 }
 
 .layer-manager > .separator {
@@ -158,7 +158,7 @@
 
 	background-color: #293d3d77;
 
-	mask-image: url("/res/icons/chevron-up.svg");
+	mask-image: url("../../res/icons/chevron-up.svg");
 	mask-size: contain;
 
 	width: 60px;

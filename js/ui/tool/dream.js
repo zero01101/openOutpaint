@@ -1071,7 +1071,7 @@ const _dream_onwheel = (evn, state) => {
  */
 const dreamTool = () =>
 	toolbar.registerTool(
-		"/res/icons/image-plus.svg",
+		"./res/icons/image-plus.svg",
 		"Dream",
 		(state, opt) => {
 			// Draw new cursor immediately
@@ -1426,7 +1426,7 @@ const dreamTool = () =>
 
 const img2imgTool = () =>
 	toolbar.registerTool(
-		"/res/icons/image.svg",
+		"./res/icons/image.svg",
 		"Img2Img",
 		(state, opt) => {
 			// Draw new cursor immediately

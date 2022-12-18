@@ -35,7 +35,7 @@
 
 	border: 0;
 
-	background-image: url("/res/icons/pipette.svg");
+	background-image: url("./res/icons/pipette.svg");
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: contain;
