@@ -157,9 +157,9 @@ div.autocomplete > .autocomplete-list > .autocomplete-option.selected::after {
 
 	background-color: darkgreen;
 
-	-webkit-mask-image: url("/res/icons/check.svg");
+	-webkit-mask-image: url("../../res/icons/check.svg");
 	-webkit-mask-size: contain;
-	mask-image: url("/res/icons/check.svg");
+	mask-image: url("../../res/icons/check.svg");
 	mask-size: contain;
 }
 
@@ -176,9 +176,9 @@ select > option:checked::after {
 
 	background-color: darkgreen;
 
-	-webkit-mask-image: url("/res/icons/check.svg");
+	-webkit-mask-image: url("../../res/icons/check.svg");
 	-webkit-mask-size: contain;
-	mask-image: url("/res/icons/check.svg");
+	mask-image: url("../../res/icons/check.svg");
 	mask-size: contain;
 }
 /*************/
@@ -332,16 +332,16 @@ select > option:checked::after {
 
 /* Generic buttons */
 .list .actions > .delete-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/trash.svg");
-	mask-image: url("/res/icons/trash.svg");
+	-webkit-mask-image: url("../../res/icons/trash.svg");
+	mask-image: url("../../res/icons/trash.svg");
 }
 
 .list .actions > .rename-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/edit.svg");
-	mask-image: url("/res/icons/edit.svg");
+	-webkit-mask-image: url("../../res/icons/edit.svg");
+	mask-image: url("../../res/icons/edit.svg");
 }
 
 .list .actions > .download-btn > *:first-child {
-	-webkit-mask-image: url("/res/icons/download.svg");
-	mask-image: url("/res/icons/download.svg");
+	-webkit-mask-image: url("../../res/icons/download.svg");
+	mask-image: url("../../res/icons/download.svg");
 }

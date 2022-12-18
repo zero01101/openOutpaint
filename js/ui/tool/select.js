@@ -1,6 +1,6 @@
 const selectTransformTool = () =>
 	toolbar.registerTool(
-		"/res/icons/box-select.svg",
+		"./res/icons/box-select.svg",
 		"Select Image",
 		(state, opt) => {
 			// Draw new cursor immediately

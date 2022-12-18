@@ -51,9 +51,9 @@
 
 	background-color: red;
 
-	-webkit-mask-image: url("/res/icons/lock.svg");
+	-webkit-mask-image: url("../../res/icons/lock.svg");
 	-webkit-mask-size: contain;
-	mask-image: url("/res/icons/lock.svg");
+	mask-image: url("../../res/icons/lock.svg");
 	mask-size: contain;
 }
 
