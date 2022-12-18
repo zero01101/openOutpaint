@@ -11,6 +11,19 @@
  */
 
 /**
+ * Represents a size
+ */
+class Size {
+	w = 0;
+	h = 0;
+
+	constructor({w, h} = {w: 0, h: 0}) {
+		this.w = w;
+		this.h = h;
+	}
+}
+
+/**
  * Represents a simple bouding box
  */
 class BoundingBox {
@@ -231,7 +244,12 @@ function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
  * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
 function snap(i, offset = 0, gridSize = 64) {
-	const modulus = (i - offset) % gridSize;
+	let diff = i - offset;
+	if (diff < 0) {
+		diff += gridSize * Math.ceil(Math.abs(diff / gridSize));
+	}
+
+	const modulus = diff % gridSize;
 	var snapOffset = modulus;
 
 	if (modulus > gridSize / 2) snapOffset = modulus - gridSize;
@@ -288,14 +306,19 @@ function cropCanvas(sourceCanvas, options = {}) {
 
 	const w = sourceCanvas.width;
 	const h = sourceCanvas.height;
-	var imageData = sourceCanvas.getContext("2d").getImageData(0, 0, w, h);
+	const srcCtx = sourceCanvas.getContext("2d");
+	const offset = {
+		x: (srcCtx.origin && -srcCtx.origin.x) || 0,
+		y: (srcCtx.origin && -srcCtx.origin.y) || 0,
+	};
+	var imageData = srcCtx.getImageDataRoot(0, 0, w, h);
 	/** @type {BoundingBox} */
 	const bb = new BoundingBox();
 
-	let minx = w;
-	let maxx = -1;
-	let miny = h;
-	let maxy = -1;
+	let minx = Infinity;
+	let maxx = -Infinity;
+	let miny = Infinity;
+	let maxy = -Infinity;
 
 	for (let y = 0; y < h; y++) {
 		for (let x = 0; x < w; x++) {
@@ -303,10 +326,10 @@ function cropCanvas(sourceCanvas, options = {}) {
 			const index = (y * w + x) * 4; // OHHH OK this is setting the imagedata.data uint8clampeddataarray index for the specified x/y coords
 			//this part i get, this is checking that 4th RGBA byte for opacity
 			if (imageData.data[index + 3] > 0) {
-				minx = Math.min(minx, x);
-				maxx = Math.max(maxx, x);
-				miny = Math.min(miny, y);
-				maxy = Math.max(maxy, y);
+				minx = Math.min(minx, x + offset.x);
+				maxx = Math.max(maxx, x + offset.x);
+				miny = Math.min(miny, y + offset.y);
+				maxy = Math.max(maxy, y + offset.y);
 			}
 		}
 	}
@@ -316,7 +339,8 @@ function cropCanvas(sourceCanvas, options = {}) {
 	bb.w = maxx - minx + 1 + 2 * options.border;
 	bb.h = maxy - miny + 1 + 2 * options.border;
 
-	if (maxx < 0) throw new NoContentError("Canvas has no content to crop");
+	if (!Number.isFinite(maxx))
+		throw new NoContentError("Canvas has no content to crop");
 
 	var cutCanvas = document.createElement("canvas");
 	cutCanvas.width = bb.w;
@@ -339,12 +363,7 @@ function cropCanvas(sourceCanvas, options = {}) {
 function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
-		canvas: uil.getVisible({
-			x: 0,
-			y: 0,
-			w: imageCollection.size.w,
-			h: imageCollection.size.h,
-		}),
+		canvas: uil.getVisible(imageCollection.bb),
 		filename:
 			new Date()
 				.toISOString()
@@ -360,6 +379,7 @@ function downloadCanvas(options = {}) {
 	var croppedCanvas = options.cropToContent
 		? cropCanvas(options.canvas).canvas
 		: options.canvas;
+
 	if (croppedCanvas != null) {
 		croppedCanvas.toBlob((blob) => {
 			link.href = URL.createObjectURL(blob);

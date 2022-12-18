@@ -343,17 +343,14 @@ function newImage(evt) {
 	clearPaintedMask();
 	uil.layers.forEach(({layer}) => {
 		commands.runCommand("eraseImage", "Clear Canvas", {
-			x: 0,
-			y: 0,
-			w: layer.canvas.width,
-			h: layer.canvas.height,
+			...layer.bb,
 			ctx: layer.ctx,
 		});
 	});
 }
 
 function clearPaintedMask() {
-	maskPaintCtx.clearRect(0, 0, maskPaintCanvas.width, maskPaintCanvas.height);
+	maskPaintLayer.clear();
 }
 
 function march(bb, options = {}) {
@@ -558,8 +555,16 @@ function drawBackground() {
 	// Checkerboard
 	let darkTileColor = "#333";
 	let lightTileColor = "#555";
-	for (var x = 0; x < bgLayer.canvas.width; x += 64) {
-		for (var y = 0; y < bgLayer.canvas.height; y += 64) {
+	for (
+		var x = -bgLayer.origin.x - 64;
+		x < bgLayer.canvas.width - bgLayer.origin.x;
+		x += 64
+	) {
+		for (
+			var y = -bgLayer.origin.y - 64;
+			y < bgLayer.canvas.height - bgLayer.origin.y;
+			y += 64
+		) {
 			bgLayer.ctx.fillStyle =
 				(x + y) % 128 === 0 ? lightTileColor : darkTileColor;
 			bgLayer.ctx.fillRect(x, y, 64, 64);
