@@ -199,5 +199,5 @@
 }
 
 .expand-button:hover {
-	backdrop-filter: brightness(60%);
+	background-color: #293d3d77;
 }

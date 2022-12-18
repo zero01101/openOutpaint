@@ -363,12 +363,7 @@ function cropCanvas(sourceCanvas, options = {}) {
 function downloadCanvas(options = {}) {
 	defaultOpt(options, {
 		cropToContent: true,
-		canvas: uil.getVisible({
-			x: -imageCollection.origin.x,
-			y: -imageCollection.origin.y,
-			w: imageCollection.size.w,
-			h: imageCollection.size.h,
-		}),
+		canvas: uil.getVisible(imageCollection.bb),
 		filename:
 			new Date()
 				.toISOString()

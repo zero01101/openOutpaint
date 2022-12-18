@@ -343,10 +343,7 @@ function newImage(evt) {
 	clearPaintedMask();
 	uil.layers.forEach(({layer}) => {
 		commands.runCommand("eraseImage", "Clear Canvas", {
-			x: -layer.origin.x,
-			y: -layer.origin.y,
-			w: layer.canvas.width,
-			h: layer.canvas.height,
+			...layer.bb,
 			ctx: layer.ctx,
 		});
 	});

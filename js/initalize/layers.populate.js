@@ -143,8 +143,6 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 
 debugLayer.hide(); // Hidden by default
 
-layers.registerCollection("mask", {name: "Mask Layers", requiresActive: true});
-
 // Where CSS and javascript magic happens to make the canvas viewport work
 /**
  * The global viewport object (may be modularized in the future). All

@@ -31,6 +31,18 @@
 		};
 	});
 
+	// Add basic get bounding box support (canvas coordinates)
+	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "bb", {
+		get: function () {
+			return new BoundingBox({
+				x: -this.origin.x,
+				y: -this.origin.y,
+				w: this.canvas.width,
+				h: this.canvas.height,
+			});
+		},
+	});
+
 	// Modifying drawImage
 	Reflect.defineProperty(CanvasRenderingContext2D.prototype, "drawImage", {
 		value: function (...args) {
@@ -161,6 +173,18 @@ const layers = {
 
 	// Registers a new collection
 	// Layer collections are a group of layers (canvases) that are rendered in tandem. (same width, height, position, transform, etc)
+	/**
+	 *
+	 * @param {string} key A key used to identify the collection
+	 * @param {Size} size The initial size of the collection in pixels (CSS size)
+	 * @param {object} options Extra options for the collection
+	 * @param {string} [options.name=key] The display name of the collection
+	 * @param {{key: string, options: object}} [options.initLayer] The configuration for the initial layer to be created
+	 * @param {number} [options.inputSizeMultiplier=9] Size of the input area element, in pixels
+	 * @param {HTMLElement} [options.targetElement] Element the collection will be inserted into
+	 * @param {Size} [options.resolution=size] The resolution of the collection (canvas size). Not sure it works.
+	 * @returns {LayerCollection} The newly created layer collection
+	 */
 	registerCollection: (key, size, options = {}) => {
 		defaultOpt(options, {
 			// Display name for the collection
@@ -208,6 +232,7 @@ const layers = {
 
 		options.targetElement.appendChild(element);
 
+		/** @type {LayerCollection} */
 		const collection = makeWriteOnce(
 			{
 				id,
@@ -217,6 +242,7 @@ const layers = {
 				_layers: [],
 				layers: {},
 
+				key,
 				name: options.name,
 				element,
 				inputElement: inputel,
@@ -228,6 +254,15 @@ const layers = {
 				_origin: {x: 0, y: 0},
 				get origin() {
 					return {...this._origin};
+				},
+
+				get bb() {
+					return new BoundingBox({
+						x: -this.origin.x,
+						y: -this.origin.y,
+						w: this.size.w,
+						h: this.size.h,
+					});
 				},
 
 				_resizeInputDiv() {
@@ -269,6 +304,14 @@ const layers = {
 					}
 				},
 
+				/**
+				 * Expands the collection and its full layers by the specified amounts
+				 *
+				 * @param {number} left Pixels to expand left
+				 * @param {number} top Pixels to expand top
+				 * @param {number} right Pixels to expand right
+				 * @param {number} bottom Pixels to expand bottom
+				 */
 				expand(left, top, right, bottom) {
 					this._layers.forEach((layer) => {
 						if (layer.full) layer._expand(left, top, right, bottom);
@@ -301,7 +344,7 @@ const layers = {
 				 * @param {?string} options.group
 				 * @param {object} options.after
 				 * @param {object} options.ctxOptions
-				 * @returns
+				 * @returns {Layer} The newly created layer
 				 */
 				registerLayer(key = null, options = {}) {
 					// Make ID
@@ -398,7 +441,11 @@ const layers = {
 							_logpath: _layerlogpath,
 							_collection: collection,
 
-							bb: new BoundingBox(options.bb),
+							_bb: new BoundingBox(options.bb),
+							get bb() {
+								return new BoundingBox(this._bb);
+							},
+
 							resolution: new Size(options.resolution),
 							id,
 							key,
@@ -420,27 +467,27 @@ const layers = {
 							),
 
 							get x() {
-								return this.bb.x;
+								return this._bb.x;
 							},
 
 							get y() {
-								return this.bb.y;
+								return this._bb.y;
 							},
 
 							get width() {
-								return this.bb.w;
+								return this._bb.w;
 							},
 
 							get height() {
-								return this.bb.h;
+								return this._bb.h;
 							},
 
 							get w() {
-								return this.bb.w;
+								return this._bb.w;
 							},
 
 							get h() {
-								return this.bb.h;
+								return this._bb.h;
 							},
 
 							get origin() {
@@ -451,6 +498,16 @@ const layers = {
 							canvas,
 							ctx,
 
+							/**
+							 * This is called by the collection when the layer must be expanded.
+							 *
+							 * Should NOT be called directly
+							 *
+							 * @param {number} left Pixels to expand left
+							 * @param {number} top Pixels to expand top
+							 * @param {number} right Pixels to expand right
+							 * @param {number} bottom Pixels to expand bottom
+							 */
 							_expand(left, top, right, bottom) {
 								const tmpCanvas = document.createElement("canvas");
 								tmpCanvas.width = this.w;
@@ -509,8 +566,8 @@ const layers = {
 							 * @param {number} y Y coordinate of the top left of the canvas
 							 */
 							moveTo(x, y) {
-								this.bb.x = x;
-								this.bb.y = y;
+								this._bb.x = x;
+								this._bb.y = y;
 								this.canvas.style.left = `${x}px`;
 								this.canvas.style.top = `${y}px`;
 							},
@@ -528,8 +585,8 @@ const layers = {
 								canvas.height = Math.round(
 									options.resolution.h * (h / options.bb.h)
 								);
-								this.bb.w = w;
-								this.bb.h = h;
+								this._bb.w = w;
+								this._bb.h = h;
 								canvas.style.width = `${w}px`;
 								canvas.style.height = `${h}px`;
 							},
@@ -571,7 +628,11 @@ const layers = {
 					return layer;
 				},
 
-				// Deletes a layer
+				/**
+				 *	Deletes a layer from the collection
+				 *
+				 * @param {Layer} layer Layer to delete
+				 */
 				deleteLayer: (layer) => {
 					const lobj = collection._layers.splice(
 						collection._layers.findIndex(
