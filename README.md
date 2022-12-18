@@ -19,7 +19,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - intuitive, convenient outpainting - that's like the whole point right
 - queueable, cancelable dreams - just start a'clickin' all over the place
 - arbitrary dream reticle size - draw the rectangle of your dreams
-- a giant, resizable, scalable canvas for you to paint all over _(infinite canvas area planned, in //todo already)_
+- an [effectively infinite](https://github.com/zero01101/openOutpaint/pull/108), resizable, scalable canvas for you to paint all over
   - **_NOTE: v0.0.10 introduces a new "camera control" modifier key - hold [`CTRL`] ([`CMD`] on mac) and use the scrollwheel to zoom (scroll the wheel) and pan (hold the wheel button) around the canvas_**
 - a very nicely functional and familiar layer system
 - inpainting/touchup mask brush
