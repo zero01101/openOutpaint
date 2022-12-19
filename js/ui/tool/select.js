@@ -57,6 +57,7 @@ const selectTransformTool = () =>
 
 				state.snapToGrid = true;
 				state.keepAspectRatio = true;
+				state.block_res_change = true;
 				state.useClipboard = !!(
 					navigator.clipboard && navigator.clipboard.write
 				); // Use it by default if supported

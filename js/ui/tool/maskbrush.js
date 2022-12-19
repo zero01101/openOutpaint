@@ -109,6 +109,7 @@ const maskBrushTool = () =>
 				state.brushSize = 64;
 				state.brushBlur = 0;
 				state.brushOpacity = 1;
+				state.block_res_change = true;
 				state.setBrushSize = (size) => {
 					state.brushSize = size;
 					state.ctxmenu.brushSizeRange.value = size;

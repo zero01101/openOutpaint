@@ -58,6 +58,7 @@ const stampTool = () =>
 				state.back = null;
 
 				state.lastMouseMove = {x: 0, y: 0};
+				state.block_res_change = true;
 
 				state.selectResource = (resource, nolock = true) => {
 					if (nolock && state.ctxmenu.uploadButton.disabled) return;

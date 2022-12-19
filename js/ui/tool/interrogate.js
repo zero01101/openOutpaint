@@ -34,6 +34,7 @@ const interrogateTool = () =>
 				state.snapToGrid = true;
 				state.invertMask = false;
 				state.overMaskPx = 0;
+				state.block_res_change = true;
 
 				state.erasePrevReticle = () => ovLayer.clear();
 

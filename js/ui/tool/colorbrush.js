@@ -138,6 +138,7 @@ const colorBrushTool = () =>
 				state.brushBlur = 0;
 				state.brushOpacity = 1;
 				state.affectMask = true;
+				state.block_res_change = true;
 				state.setBrushSize = (size) => {
 					state.brushSize = size;
 					state.ctxmenu.brushSizeRange.value = size;
