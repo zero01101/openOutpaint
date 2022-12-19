@@ -50,7 +50,7 @@
 	if (data) {
 		let parentWindow = null;
 
-		if (!data.trusted) console.debug(`[webui] Loaded key '${key}'`);
+		if (!data.trusted) console.debug(`[webui] Loaded key`);
 
 		window.addEventListener("message", ({data, origin, source}) => {
 			if (!data.trusted && data.key !== key) {
@@ -61,17 +61,24 @@
 				return;
 			}
 
+			if (!parentWindow && !data.type === "init") {
+				console.warn(`[webui] Communication has not been initialized`);
+			}
+
 			try {
 				switch (data.type) {
-					case "init":
+					case "openoutpaint/init":
 						parentWindow = source;
+						console.debug(
+							`[webui] Communication with '${origin}' has been initialized`
+						);
 						break;
-					case "add-resource":
+					case "openoutpaint/add-resource":
 						{
 							const image = document.createElement("img");
 							image.src = data.image.dataURL;
-							image.onload = () => {
-								tools.stamp.state.addResource(
+							image.onload = async () => {
+								await tools.stamp.state.addResource(
 									data.image.resourceName || "External Resource",
 									image
 								);
@@ -83,6 +90,13 @@
 						console.warn(`[webui] Unsupported message type: ${data.type}`);
 						break;
 				}
+
+				// Send acknowledgement
+				parentWindow &&
+					parentWindow.postMessage({
+						type: "ack",
+						message: data,
+					});
 			} catch (e) {
 				console.warn(
 					`[webui] Message of type '${data.type}' has invalid format`
