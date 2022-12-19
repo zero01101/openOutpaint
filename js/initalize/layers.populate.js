@@ -3,10 +3,14 @@ const imageCollection = layers.registerCollection(
 	"image",
 	{
 		w: parseInt(
-			(localStorage && localStorage.getItem("settings.canvas-width")) || 2048
+			(localStorage &&
+				localStorage.getItem("openoutpaint/settings.canvas-width")) ||
+				2048
 		),
 		h: parseInt(
-			(localStorage && localStorage.getItem("settings.canvas-height")) || 2048
+			(localStorage &&
+				localStorage.getItem("openoutpaint/settings.canvas-height")) ||
+				2048
 		),
 	},
 	{
@@ -57,7 +61,7 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
  * Here we setup canvas dynamic scaling
  */
 (() => {
-	let expandSize = localStorage.getItem("expand-size") || 1024;
+	let expandSize = localStorage.getItem("openoutpaint/expand-size") || 1024;
 	expandSize = parseInt(expandSize, 10);
 
 	const askSize = () => {
@@ -66,7 +70,7 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 		if (!by) return null;
 		else {
 			const len = parseInt(by, 10);
-			localStorage.setItem("expand-size", len);
+			localStorage.setItem("openoutpaint/expand-size", len);
 			expandSize = len;
 			return len;
 		}

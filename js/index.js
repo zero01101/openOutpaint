@@ -171,7 +171,7 @@ function startup() {
 				? hostEl.value.substring(0, hostEl.value.length - 1)
 				: hostEl.value;
 			hostEl.value = host;
-			localStorage.setItem("host", host);
+			localStorage.setItem("openoutpaint/host", host);
 			checkConnection();
 		};
 	});
@@ -192,7 +192,7 @@ function testHostConfiguration() {
 	 * Check host configuration
 	 */
 	const hostEl = document.getElementById("host");
-	hostEl.value = localStorage.getItem("host");
+	hostEl.value = localStorage.getItem("openoutpaint/host");
 
 	const requestHost = (prompt, def = "http://127.0.0.1:7860") => {
 		let value = window.prompt(prompt, def);
@@ -201,12 +201,12 @@ function testHostConfiguration() {
 		value = value.endsWith("/") ? value.substring(0, value.length - 1) : value;
 		host = value;
 		hostEl.value = host;
-		localStorage.setItem("host", host);
+		localStorage.setItem("openoutpaint/host", host);
 
 		testHostConfiguration();
 	};
 
-	const current = localStorage.getItem("host");
+	const current = localStorage.getItem("openoutpaint/host");
 	if (current) {
 		if (!current.match(/^https?:\/\/[a-z0-9][a-z0-9.]+[a-z0-9](:[0-9]+)?$/i))
 			requestHost(
@@ -587,19 +587,19 @@ function changeMaskBlur() {
 	stableDiffusionData.mask_blur = parseInt(
 		document.getElementById("maskBlur").value
 	);
-	localStorage.setItem("mask_blur", stableDiffusionData.mask_blur);
+	localStorage.setItem("openoutpaint/mask_blur", stableDiffusionData.mask_blur);
 }
 
 function changeSeed() {
 	stableDiffusionData.seed = document.getElementById("seed").value;
-	localStorage.setItem("seed", stableDiffusionData.seed);
+	localStorage.setItem("openoutpaint/seed", stableDiffusionData.seed);
 }
 
 function changeHiResFix() {
 	stableDiffusionData.enable_hr = Boolean(
 		document.getElementById("cbxHRFix").checked
 	);
-	localStorage.setItem("enable_hr", stableDiffusionData.enable_hr);
+	localStorage.setItem("openoutpaint/enable_hr", stableDiffusionData.enable_hr);
 }
 
 function changeSyncCursorSize() {
@@ -880,7 +880,10 @@ function changeStyles() {
 		});
 	}
 
-	localStorage.setItem("promptStyle", JSON.stringify(selectedString));
+	localStorage.setItem(
+		"openoutpaint/promptStyle",
+		JSON.stringify(selectedString)
+	);
 
 	// change the model
 	if (selectedString.length > 0)
@@ -901,16 +904,16 @@ async function getSamplers() {
 		}));
 
 		// Initial sampler
-		if (localStorage.getItem("sampler") != null) {
-			samplerAutoComplete.value = localStorage.getItem("sampler");
+		if (localStorage.getItem("openoutpaint/sampler") != null) {
+			samplerAutoComplete.value = localStorage.getItem("openoutpaint/sampler");
 		} else {
 			samplerAutoComplete.value = data[0].name;
-			localStorage.setItem("sampler", samplerAutoComplete.value);
+			localStorage.setItem("openoutpaint/sampler", samplerAutoComplete.value);
 		}
 
 		samplerAutoComplete.onchange.on(({value}) => {
 			stableDiffusionData.sampler_index = value;
-			localStorage.setItem("sampler", value);
+			localStorage.setItem("openoutpaint/sampler", value);
 		});
 	} catch (e) {
 		console.warn("[index] Failed to fetch samplers");
@@ -921,8 +924,8 @@ async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
-	var upscale_factor = localStorage.getItem("upscale_x")
-		? localStorage.getItem("upscale_x")
+	var upscale_factor = localStorage.getItem("openoutpaint/upscale_x")
+		? localStorage.getItem("openoutpaint/upscale_x")
 		: 2;
 	var upscaler = upscalerAutoComplete.value;
 	var croppedCanvas = cropCanvas(
@@ -976,21 +979,23 @@ async function upscaleAndDownload() {
 function loadSettings() {
 	// set default values if not set
 	var _mask_blur =
-		localStorage.getItem("mask_blur") == null
+		localStorage.getItem("openoutpaint/mask_blur") == null
 			? 0
-			: localStorage.getItem("mask_blur");
+			: localStorage.getItem("openoutpaint/mask_blur");
 	var _seed =
-		localStorage.getItem("seed") == null ? -1 : localStorage.getItem("seed");
+		localStorage.getItem("openoutpaint/seed") == null
+			? -1
+			: localStorage.getItem("openoutpaint/seed");
 
 	let _enable_hr =
-		localStorage.getItem("enable_hr") === null
+		localStorage.getItem("openoutpaint/enable_hr") === null
 			? false
-			: localStorage.getItem("enable_hr") === "true";
+			: localStorage.getItem("openoutpaint/enable_hr") === "true";
 
 	let _sync_cursor_size =
-		localStorage.getItem("sync_cursor_size") === null
+		localStorage.getItem("openoutpaint/sync_cursor_size") === null
 			? true
-			: localStorage.getItem("sync_cursor_size") === "true";
+			: localStorage.getItem("openoutpaint/sync_cursor_size") === "true";
 
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);

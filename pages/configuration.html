@@ -65,14 +65,21 @@
 			const canvasHeight = document.getElementById("canvas-height");
 
 			function writeToLocalStorage() {
-				localStorage.setItem("settings.canvas-width", canvasWidth.value);
-				localStorage.setItem("settings.canvas-height", canvasHeight.value);
+				localStorage.setItem(
+					"openoutpaint/settings.canvas-width",
+					canvasWidth.value
+				);
+				localStorage.setItem(
+					"openoutpaint/settings.canvas-height",
+					canvasHeight.value
+				);
 			}
 
 			// Loads values from local storage
-			canvasWidth.value = localStorage.getItem("settings.canvas-width") || 2048;
+			canvasWidth.value =
+				localStorage.getItem("openoutpaint/settings.canvas-width") || 2048;
 			canvasHeight.value =
-				localStorage.getItem("settings.canvas-height") || 2048;
+				localStorage.getItem("openoutpaint/settings.canvas-height") || 2048;
 
 			writeToLocalStorage();
 
