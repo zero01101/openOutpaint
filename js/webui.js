@@ -61,7 +61,7 @@
 				return;
 			}
 
-			if (!parentWindow && !data.type === "init") {
+			if (!parentWindow && !data.type === "openoutpaint/init") {
 				console.warn(`[webui] Communication has not been initialized`);
 			}
 
@@ -94,7 +94,7 @@
 				// Send acknowledgement
 				parentWindow &&
 					parentWindow.postMessage({
-						type: "ack",
+						type: "openoutpaint/ack",
 						message: data,
 					});
 			} catch (e) {
