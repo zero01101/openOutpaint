@@ -1,6 +1,88 @@
 //TODO FIND OUT WHY I HAVE TO RESIZE A TEXTBOX AND THEN START USING IT TO AVOID THE 1px WHITE LINE ON LEFT EDGES DURING IMG2IMG
 //...lmao did setting min width 200 on info div fix that accidentally?  once the canvas is infinite and the menu bar is hideable it'll probably be a problem again
 
+/**
+ * Workaround for Firefox bug #733698
+ * 
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=733698
+ * 
+ * Workaround by https://github.com/subzey on https://gist.github.com/subzey/2030480
+ * 
+ * Replaces and handles NS_ERROR_FAILURE errors triggered by 733698.
+ */
+(function(){
+	var FakeTextMetrics,
+		proto,
+		fontSetterNative,
+		measureTextNative,
+		fillTextNative,
+		strokeTextNative;
+
+	if (
+		!window.CanvasRenderingContext2D ||
+		!window.TextMetrics ||
+		!(proto = window.CanvasRenderingContext2D.prototype) ||
+		!proto.hasOwnProperty("font") ||
+		!proto.hasOwnProperty("mozTextStyle") ||
+		typeof proto.__lookupSetter__ !== "function" || 
+		!(fontSetterNative = proto.__lookupSetter__("font"))
+	){
+		return;		
+	}
+	
+	proto.__defineSetter__("font", function(value){
+		try {
+			return fontSetterNative.call(this, value);
+		} catch (e){
+			if (e.name !== 'NS_ERROR_FAILURE'){
+				throw e;				
+			}
+		}
+	});
+
+	measureTextNative = proto.measureText;
+	FakeTextMetrics = function(){
+		this.width = 0;
+		this.isFake = true;
+		this.__proto__ = window.TextMetrics.prototype;
+	};
+	proto.measureText = function($0){
+		try {
+			return measureTextNative.apply(this, arguments);
+		} catch (e) {
+			if (e.name !== 'NS_ERROR_FAILURE'){
+				throw e;				
+			} else {
+				return new FakeTextMetrics();				
+			}
+		}
+	};
+
+	fillTextNative = proto.fillText;
+	proto.fillText = function($0, $1, $2, $3){
+		try {
+			fillTextNative.apply(this, arguments);
+		} catch (e) {
+			if (e.name !== 'NS_ERROR_FAILURE'){
+				throw e;				
+			}
+		}
+	};
+
+	strokeTextNative = proto.strokeText;
+	proto.strokeText = function($0, $1, $2, $3){
+		try {
+			strokeTextNative.apply(this, arguments);
+		} catch (e) {
+			if (e.name !== 'NS_ERROR_FAILURE'){
+				throw e;			
+			}
+		}
+	};
+
+})();
+
+
 window.onload = startup;
 
 var stableDiffusionData = {
