@@ -20,8 +20,8 @@ async function getStyles() {
 		/** @type {string[]} */
 		let stored = null;
 		try {
-			stored = JSON.parse(localStorage.getItem("promptStyle"));
-			// doesn't seem to throw a syntaxerror if the localstorage item simply doesn't exist?
+			stored = JSON.parse(localStorage.getItem("openoutpaint/promptStyle"));
+			// doesn't seem to throw a syntaxerror if the localStorage item simply doesn't exist?
 			if (stored == null) stored = [];
 		} catch (e) {
 			stored = [];
@@ -40,11 +40,14 @@ async function getStyles() {
 				selected = value;
 			}
 			stableDiffusionData.styles = selected;
-			localStorage.setItem("promptStyle", JSON.stringify(selected));
+			localStorage.setItem(
+				"openoutpaint/promptStyle",
+				JSON.stringify(selected)
+			);
 		});
 
 		styleSelectElement.value = stored;
-		localStorage.setItem("promptStyle", JSON.stringify(stored));
+		localStorage.setItem("openoutpaint/promptStyle", JSON.stringify(stored));
 	} catch (e) {
 		console.warn("[index] Failed to fetch prompt styles");
 		console.warn(e);
@@ -66,18 +69,21 @@ async function getStyles() {
 	promptEl.oninput = () => {
 		stableDiffusionData.prompt = promptEl.value;
 		promptEl.title = promptEl.value;
-		localStorage.setItem("prompt", stableDiffusionData.prompt);
+		localStorage.setItem("openoutpaint/prompt", stableDiffusionData.prompt);
 	};
 
 	negativePromptEl.oninput = () => {
 		stableDiffusionData.negative_prompt = negativePromptEl.value;
 		negativePromptEl.title = negativePromptEl.value;
-		localStorage.setItem("neg_prompt", stableDiffusionData.negative_prompt);
+		localStorage.setItem(
+			"openoutpaint/neg_prompt",
+			stableDiffusionData.negative_prompt
+		);
 	};
 
 	// Load from local storage if set
-	const storedPrompt = localStorage.getItem("prompt");
-	const storedNeg = localStorage.getItem("neg_prompt");
+	const storedPrompt = localStorage.getItem("openoutpaint/prompt");
+	const storedNeg = localStorage.getItem("openoutpaint/neg_prompt");
 	const promptDefaultValue =
 		storedPrompt === null ? defaultPrompt : storedPrompt;
 	const negativePromptDefaultValue =
@@ -137,7 +143,7 @@ async function getStyles() {
 				stableDiffusionData.prompt = prompt;
 				promptEl.title = prompt;
 				promptEl.value = prompt;
-				localStorage.setItem("prompt", prompt);
+				localStorage.setItem("openoutpaint/prompt", prompt);
 			});
 			promptBtn.textContent = (samePrompt ? "= " : "") + prompt;
 
@@ -147,7 +153,7 @@ async function getStyles() {
 				stableDiffusionData.negative_prompt = negative;
 				negativePromptEl.title = negative;
 				negativePromptEl.value = negative;
-				localStorage.setItem("neg_prompt", negative);
+				localStorage.setItem("openoutpaint/neg_prompt", negative);
 			});
 			negativeBtn.textContent = (sameNegativePrompt ? "= " : "") + negative;
 

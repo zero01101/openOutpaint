@@ -1,5 +1,8 @@
 .vscode/*
 
+# Key for embedding
+key.json
+
 # NPM things
 package.json
 package-lock.json
