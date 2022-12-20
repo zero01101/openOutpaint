@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="utf-8" />
+		<title>openOutpaint embed</title>
+	</head>
+	<body>
+		<iframe
+			id="openoutpaint"
+			style="width: 100%; height: 800px"
+			src="../index.html"
+			frameborder="0"></iframe>
+		<button id="add-res">Add Resource</button>
+		<script>
+			document.addEventListener("DOMContentLoaded", async () => {
+				const frame = document.getElementById("openoutpaint");
+
+				const key = (await (await fetch("../key.json")).json()).key;
+
+				console.info("[embed] Add message listener");
+				window.addEventListener("message", ({data, origin, source}) => {
+					if (source === frame.contentWindow) {
+						console.debug(data);
+						switch (data.type) {
+							case "openoutpaint/ack":
+								if (data.message.type === "openoutpaint/init") {
+									console.info("[embed] Received init ack");
+									clearTimeout(initLoop);
+									initLoop = null;
+								}
+								break;
+						}
+					}
+				});
+
+				let initLoop = null;
+				const sendInit = () => {
+					console.info("[embed] Sending init message");
+					frame.contentWindow.postMessage({
+						type: "openoutpaint/init",
+						key,
+					});
+					initLoop = setTimeout(sendInit, 1000);
+				};
+
+				sendInit();
+
+				const canvas = document.createElement("canvas");
+
+				const image = document.createElement("img");
+				image.crossOrigin = "";
+				image.src = "https://www.w3schools.com/css/paris.jpg";
+				image.onload = () => {
+					canvas.width = image.width;
+					canvas.height = image.height;
+					canvas.getContext("2d").drawImage(image, 0, 0);
+				};
+
+				document.body.appendChild(image);
+
+				document.getElementById("add-res").addEventListener("click", () => {
+					frame.contentWindow.postMessage({
+						key,
+						type: "openoutpaint/add-resource",
+						image: {
+							dataURL: canvas.toDataURL(),
+							resourceName: "Embed Resource",
+						},
+					});
+				});
+			});
+		</script>
+	</body>
+</html>
