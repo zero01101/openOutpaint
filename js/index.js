@@ -189,6 +189,7 @@ function startup() {
 
 function setFixedHost(host, changePromptMessage) {
 	const hostInput = document.getElementById("host");
+	host = value;
 	hostInput.value = host;
 	hostInput.readOnly = true;
 	hostInput.style.cursor = "default";
