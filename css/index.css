@@ -467,6 +467,7 @@ div.prompt-wrapper > .prompt-indicator.styles::after {
 
 #prompt-history.expanded {
 	width: 300px;
+	overflow-y: auto;
 }
 
 #prompt-history .entry {
