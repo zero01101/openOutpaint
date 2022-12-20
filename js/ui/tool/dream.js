@@ -431,7 +431,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				h: bb.h,
 				image: canvas,
 			});
-			clean(true);
+			clean(!toolbar._current_tool.state.preserveMasks);
 		});
 	};
 
@@ -1149,6 +1149,7 @@ const dreamTool = () =>
 				state.keepUnmasked = true;
 				state.keepUnmaskedBlur = 8;
 				state.overMaskPx = 0;
+				state.preserveMasks = false;
 
 				state.erasePrevCursor = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
@@ -1397,6 +1398,13 @@ const dreamTool = () =>
 						}
 					).slider;
 
+					// Preserve Brushed Masks Checkbox
+					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
+						state,
+						"preserveMasks",
+						"Preserve Brushed Masks"
+					).label;
+
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
@@ -1418,6 +1426,8 @@ const dreamTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.preserveMasksLabel);
+				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 			},
 			shortcut: "D",
@@ -1502,6 +1512,7 @@ const img2imgTool = () =>
 				state.keepUnmasked = true;
 				state.keepUnmaskedBlur = 8;
 				state.fullResolution = false;
+				state.preserveMasks = false;
 
 				state.denoisingStrength = 0.7;
 
@@ -1871,6 +1882,13 @@ const img2imgTool = () =>
 						"invisible"
 					);
 
+					// Preserve Brushed Masks Checkbox
+					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
+						state,
+						"preserveMasks",
+						"Preserve Brushed Masks"
+					).label;
+
 					// Inpaint Full Resolution Checkbox
 					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
 						state,
@@ -1920,6 +1938,8 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
+				menu.appendChild(state.ctxmenu.preserveMasksLabel);
+				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
