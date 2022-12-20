@@ -72,6 +72,12 @@
 						console.debug(
 							`[webui] Communication with '${origin}' has been initialized`
 						);
+						if (data.host)
+							setFixedHost(
+								data.host,
+								`Are you sure you want to modify the host?\nThis configuration was provided by the hosting page\n - ${parentWindow.document.title} (${origin})`
+							);
+
 						break;
 					case "openoutpaint/add-resource":
 						{

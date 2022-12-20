@@ -81,6 +81,9 @@
 	};
 })();
 
+// Parse url parameters
+const urlParams = new URLSearchParams(window.location.search);
+
 window.onload = startup;
 
 var stableDiffusionData = {
@@ -184,6 +187,22 @@ function startup() {
 	changeSyncCursorSize();
 }
 
+function setFixedHost(host, changePromptMessage) {
+	const hostInput = document.getElementById("host");
+	hostInput.value = host;
+	hostInput.readOnly = true;
+	hostInput.style.cursor = "default";
+	hostInput.style.backgroundColor = "#ddd";
+	hostInput.addEventListener("dblclick", () => {
+		if (confirm(changePromptMessage)) {
+			hostInput.style.backgroundColor = null;
+			hostInput.style.cursor = null;
+			hostInput.readOnly = false;
+			hostInput.focus();
+		}
+	});
+}
+
 /**
  * Initial connection checks
  */
@@ -195,8 +214,10 @@ function testHostConfiguration() {
 	hostEl.value = localStorage.getItem("openoutpaint/host");
 
 	const requestHost = (prompt, def = "http://127.0.0.1:7860") => {
-		let value = window.prompt(prompt, def);
-		if (value === null) value = "http://127.0.0.1:7860";
+		let value = null;
+
+		if (!urlParams.has("noprompt")) value = window.prompt(prompt, def);
+		if (value === null) value = def;
 
 		value = value.endsWith("/") ? value.substring(0, value.length - 1) : value;
 		host = value;
@@ -489,16 +510,16 @@ const makeSlider = (
 	textStep = null,
 	valuecb = null
 ) => {
-	const local = lsKey && localStorage.getItem(lsKey);
+	const local = lsKey && localStorage.getItem(`openoutpaint/${lsKey}`);
 	const def = parseFloat(local === null ? defaultValue : local);
 	let cb = (v) => {
 		stableDiffusionData[lsKey] = v;
-		if (lsKey) localStorage.setItem(lsKey, v);
+		if (lsKey) localStorage.setItem(`openoutpaint/${lsKey}`, v);
 	};
 	if (valuecb) {
 		cb = (v) => {
 			valuecb(v);
-			localStorage.setItem(lsKey, v);
+			localStorage.setItem(`openoutpaint/${lsKey}`, v);
 		};
 	}
 	return createSlider(label, el, {
@@ -607,7 +628,7 @@ function changeSyncCursorSize() {
 		document.getElementById("cbxSyncCursorSize").checked
 	); //is this horribly hacky, putting it in SD data instead of making a gross global var?
 	localStorage.setItem(
-		"sync_cursor_size",
+		"openoutpaint/sync_cursor_size",
 		stableDiffusionData.sync_cursor_size
 	);
 	if (stableDiffusionData.sync_cursor_size) {
