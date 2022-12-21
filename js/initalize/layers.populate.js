@@ -20,20 +20,25 @@ const imageCollection = layers.registerCollection(
 
 const bgLayer = imageCollection.registerLayer("bg", {
 	name: "Background",
+	category: "background",
 });
 const imgLayer = imageCollection.registerLayer("image", {
 	name: "Image",
+	category: "image",
 	ctxOptions: {desynchronized: true},
 });
 const maskPaintLayer = imageCollection.registerLayer("mask", {
 	name: "Mask Paint",
+	category: "mask",
 	ctxOptions: {desynchronized: true},
 });
 const ovLayer = imageCollection.registerLayer("overlay", {
 	name: "Overlay",
+	category: "display",
 });
 const debugLayer = imageCollection.registerLayer("debug", {
 	name: "Debug Layer",
+	category: "display",
 });
 
 const imgCanvas = imgLayer.canvas; // where dreams go

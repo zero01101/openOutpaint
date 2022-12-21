@@ -340,7 +340,11 @@ async function testHostConnection() {
 			},
 		};
 
-		statuses[status] && statuses[status]();
+		statuses[status] &&
+			(() => {
+				statuses[status]();
+				global.connection = status;
+			})();
 	};
 
 	setConnectionStatus("before");
@@ -411,7 +415,7 @@ async function testHostConnection() {
 		return status;
 	};
 
-	await checkConnection(true);
+	await checkConnection(!urlParams.has("noprompt"));
 
 	// On click, attempt to refresh
 	connectionIndicator.onclick = async () => {
@@ -457,6 +461,8 @@ function clearPaintedMask() {
 
 function march(bb, options = {}) {
 	defaultOpt(options, {
+		title: null,
+		titleStyle: "#FFF5",
 		style: "#FFFF",
 		width: "2px",
 		filter: null,
@@ -471,6 +477,7 @@ function march(bb, options = {}) {
 	// Get temporary layer to draw marching ants
 	const layer = imageCollection.registerLayer(null, {
 		bb: expanded,
+		category: "display",
 	});
 	layer.canvas.style.imageRendering = "pixelated";
 	let offset = 0;
@@ -490,6 +497,16 @@ function drawMarchingAnts(ctx, bb, offset, options) {
 	ctx.save();
 
 	ctx.clearRect(0, 0, bb.w + 2, bb.h + 2);
+
+	// Draw Tool Name
+	if (bb.h > 40 && options.title) {
+		ctx.font = `bold 20px Open Sans`;
+
+		ctx.textAlign = "left";
+		ctx.fillStyle = options.titleStyle;
+		ctx.fillText(options.title, 10, 30, bb.w);
+	}
+
 	ctx.strokeStyle = options.style;
 	ctx.strokeWidth = options.width;
 	ctx.filter = options.filter;
@@ -920,6 +937,12 @@ async function getSamplers() {
 	try {
 		const response = await fetch(url);
 		const data = await response.json();
+
+		samplerAutoComplete.onchange.on(({value}) => {
+			stableDiffusionData.sampler_index = value;
+			localStorage.setItem("openoutpaint/sampler", value);
+		});
+
 		samplerAutoComplete.options = data.map((sampler) => ({
 			name: sampler.name,
 			value: sampler.name,
@@ -932,11 +955,7 @@ async function getSamplers() {
 			samplerAutoComplete.value = data[0].name;
 			localStorage.setItem("openoutpaint/sampler", samplerAutoComplete.value);
 		}
-
-		samplerAutoComplete.onchange.on(({value}) => {
-			stableDiffusionData.sampler_index = value;
-			localStorage.setItem("openoutpaint/sampler", value);
-		});
+		stableDiffusionData.sampler_index = samplerAutoComplete.value;
 	} catch (e) {
 		console.warn("[index] Failed to fetch samplers");
 		console.warn(e);

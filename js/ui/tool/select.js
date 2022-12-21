@@ -20,6 +20,9 @@ const selectTransformTool = () =>
 			keyboard.listen.onkeyclick.on(state.keyclickcb);
 			keyboard.listen.onkeydown.on(state.keydowncb);
 
+			// Layer system handlers
+			uil.onactive.on(state.uilayeractivecb);
+
 			// Registers keyboard shortcuts
 			keyboard.onShortcut({ctrl: true, key: "KeyC"}, state.ctrlccb);
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
@@ -42,6 +45,8 @@ const selectTransformTool = () =>
 			keyboard.deleteShortcut(state.ctrlvcb, "KeyV");
 			keyboard.deleteShortcut(state.ctrlxcb, "KeyX");
 
+			uil.onactive.clear(state.uilayeractivecb);
+
 			// Clear any selections
 			state.reset();
 
@@ -61,6 +66,7 @@ const selectTransformTool = () =>
 				state.useClipboard = !!(
 					navigator.clipboard && navigator.clipboard.write
 				); // Use it by default if supported
+				state.selectionPeekOpacity = 40;
 
 				state.original = null;
 				state.dragging = null;
@@ -78,21 +84,32 @@ const selectTransformTool = () =>
 
 				// Some things to easy request for a redraw
 				state.lastMouseTarget = null;
-				state.lastMouseMove = null;
+				state.lastMouseMove = {x: 0, y: 0};
 
 				state.redraw = () => {
 					ovLayer.clear();
 					state.movecb(state.lastMouseMove);
 				};
 
+				state.uilayeractivecb = ({uilayer}) => {
+					if (state.originalDisplayLayer) {
+						state.originalDisplayLayer.moveAfter(uilayer.layer);
+					}
+				};
+
 				// Clears selection and make things right
-				state.reset = () => {
-					if (state.selected)
-						uil.ctx.drawImage(
+				state.reset = (erase = false) => {
+					if (state.selected && !erase)
+						state.originalLayer.ctx.drawImage(
 							state.original.image,
 							state.original.x,
 							state.original.y
 						);
+
+					if (state.originalDisplayLayer) {
+						imageCollection.deleteLayer(state.originalDisplayLayer);
+						state.originalDisplayLayer = null;
+					}
 
 					if (state.dragging) state.dragging = null;
 					else state.selected = null;
@@ -254,6 +271,8 @@ const selectTransformTool = () =>
 						};
 
 						// Draw Image
+						ovCtx.save();
+						ovCtx.filter = `opacity(${state.selectionPeekOpacity}%)`;
 						ovCtx.drawImage(
 							state.selected.image,
 							0,
@@ -265,6 +284,22 @@ const selectTransformTool = () =>
 							state.selected.w,
 							state.selected.h
 						);
+						ovCtx.restore();
+
+						state.originalDisplayLayer.clear();
+						state.originalDisplayLayer.ctx.save();
+						state.originalDisplayLayer.ctx.drawImage(
+							state.selected.image,
+							0,
+							0,
+							state.selected.image.width,
+							state.selected.image.height,
+							state.selected.x,
+							state.selected.y,
+							state.selected.w,
+							state.selected.h
+						);
+						state.originalDisplayLayer.ctx.restore();
 
 						// Draw selection box
 						uiCtx.strokeStyle = "#FFF";
@@ -337,7 +372,8 @@ const selectTransformTool = () =>
 				state.clickcb = (evn) => {
 					if (
 						!state.original ||
-						(state.original.x === state.selected.x &&
+						(state.originalLayer === uil.layer &&
+							state.original.x === state.selected.x &&
 							state.original.y === state.selected.y &&
 							state.original.w === state.selected.w &&
 							state.original.h === state.selected.h)
@@ -348,16 +384,15 @@ const selectTransformTool = () =>
 
 					// If something is selected, commit changes to the canvas
 					if (state.selected) {
-						uil.ctx.drawImage(
+						state.originalLayer.ctx.drawImage(
 							state.selected.image,
 							state.original.x,
 							state.original.y
 						);
-						commands.runCommand(
-							"eraseImage",
-							"Image Transform Erase",
-							state.original
-						);
+						commands.runCommand("eraseImage", "Image Transform Erase", {
+							...state.original,
+							ctx: state.originalLayer.ctx,
+						});
 						commands.runCommand("drawImage", "Image Transform Draw", {
 							image: state.selected.image,
 							x: Math.round(state.selected.x),
@@ -365,10 +400,7 @@ const selectTransformTool = () =>
 							w: Math.round(state.selected.w),
 							h: Math.round(state.selected.h),
 						});
-						state.original = null;
-						state.selected = null;
-
-						state.redraw();
+						state.reset(true);
 					}
 				};
 
@@ -451,6 +483,11 @@ const selectTransformTool = () =>
 							x,
 							y
 						);
+						state.originalLayer = uil.layer;
+						state.originalDisplayLayer = imageCollection.registerLayer(null, {
+							after: uil.layer,
+							category: "select-display",
+						});
 
 						// Cut out selected portion of the image for manipulation
 						const cvs = document.createElement("canvas");
@@ -622,6 +659,22 @@ const selectTransformTool = () =>
 					if (!(navigator.clipboard && navigator.clipboard.write))
 						clipboardCheckbox.checkbox.disabled = true; // Disable if not available
 
+					// Selection Peek Opacity
+					state.ctxmenu.selectionPeekOpacitySlider = _toolbar_input.slider(
+						state,
+						"selectionPeekOpacity",
+						"Peek Opacity",
+						{
+							min: 0,
+							max: 100,
+							step: 10,
+							textStep: 1,
+							cb: () => {
+								state.redraw();
+							},
+						}
+					).slider;
+
 					// Some useful actions to do with selection
 					const actionArray = document.createElement("div");
 					actionArray.classList.add("button-array");
@@ -629,7 +682,7 @@ const selectTransformTool = () =>
 					// Save button
 					const saveSelectionButton = document.createElement("button");
 					saveSelectionButton.classList.add("button", "tool");
-					saveSelectionButton.textContent = "Save";
+					saveSelectionButton.textContent = "Save Sel.";
 					saveSelectionButton.title = "Saves Selection";
 					saveSelectionButton.onclick = () => {
 						downloadCanvas({
@@ -655,25 +708,72 @@ const selectTransformTool = () =>
 					actionArray.appendChild(saveSelectionButton);
 					actionArray.appendChild(createResourceButton);
 
+					// Some useful actions to do with selection
+					const visibleActionArray = document.createElement("div");
+					visibleActionArray.classList.add("button-array");
+
+					// Save Visible button
+					const saveVisibleSelectionButton = document.createElement("button");
+					saveVisibleSelectionButton.classList.add("button", "tool");
+					saveVisibleSelectionButton.textContent = "Save Vis.";
+					saveVisibleSelectionButton.title = "Saves Visible Selection";
+					saveVisibleSelectionButton.onclick = () => {
+						const canvas = uil.getVisible(state.selected, {
+							categories: ["image", "user", "select-display"],
+						});
+						downloadCanvas({
+							cropToContent: false,
+							canvas,
+						});
+					};
+
+					// Save Visible as Resource Button
+					const createVisibleResourceButton = document.createElement("button");
+					createVisibleResourceButton.classList.add("button", "tool");
+					createVisibleResourceButton.textContent = "Vis. to Res.";
+					createVisibleResourceButton.title =
+						"Saves Visible Selection as a Resource";
+					createVisibleResourceButton.onclick = () => {
+						const canvas = uil.getVisible(state.selected, {
+							categories: ["image", "user", "select-display"],
+						});
+						const image = document.createElement("img");
+						image.src = canvas.toDataURL();
+						image.onload = () => {
+							tools.stamp.state.addResource("Selection Resource", image);
+							tools.stamp.enable();
+						};
+					};
+
+					visibleActionArray.appendChild(saveVisibleSelectionButton);
+					visibleActionArray.appendChild(createVisibleResourceButton);
+
 					// Disable buttons (if nothing is selected)
 					state.ctxmenu.disableButtons = () => {
 						saveSelectionButton.disabled = true;
 						createResourceButton.disabled = true;
+						saveVisibleSelectionButton.disabled = true;
+						createVisibleResourceButton.disabled = true;
 					};
 
 					// Disable buttons (if something is selected)
 					state.ctxmenu.enableButtons = () => {
 						saveSelectionButton.disabled = "";
 						createResourceButton.disabled = "";
+						saveVisibleSelectionButton.disabled = "";
+						createVisibleResourceButton.disabled = "";
 					};
 					state.ctxmenu.actionArray = actionArray;
+					state.ctxmenu.visibleActionArray = visibleActionArray;
 				}
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepAspectRatioLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.useClipboardLabel);
+				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);
 				menu.appendChild(state.ctxmenu.actionArray);
+				menu.appendChild(state.ctxmenu.visibleActionArray);
 			},
 			shortcut: "S",
 		}
