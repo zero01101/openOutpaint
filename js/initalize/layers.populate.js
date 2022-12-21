@@ -242,8 +242,27 @@ mouse.registerContext(
 		ctx.coords.pos.x = Math.round(layerCoords.x);
 		ctx.coords.pos.y = Math.round(layerCoords.y);
 	},
-	{target: imageCollection.inputElement}
+	{
+		target: imageCollection.inputElement,
+		validate: (evn) => {
+			if (!global.hasActiveInput || evn.type === "mousemove") return true;
+			return false;
+		},
+	}
 );
+
+// Redraw on active input state change
+(() => {
+	mouse.listen.window.onany.on((evn) => {
+		const activeInput = DOM.hasActiveInput();
+		if (global.hasActiveInput !== activeInput) {
+			global.hasActiveInput = activeInput;
+			toolbar.currentTool &&
+				toolbar.currentTool.state.redraw &&
+				toolbar.currentTool.state.redraw();
+		}
+	});
+})();
 
 mouse.listen.window.onwheel.on((evn) => {
 	if (evn.evn.ctrlKey) {

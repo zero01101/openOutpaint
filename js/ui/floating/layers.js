@@ -313,11 +313,9 @@ const uil = {
 		const layers = imageCollection._layers;
 
 		layers.reduceRight((_, layer) => {
-			console.debug(layer.name, layer.category, layer.hidden);
 			if (categories.has(layer.category) && !layer.hidden)
 				ctx.drawImage(layer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 		});
-		console.debug("END");
 
 		return canvas;
 	},

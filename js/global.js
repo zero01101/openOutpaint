@@ -16,4 +16,7 @@ const global = {
 	get connection() {
 		return this._connection;
 	},
+
+	// If there is a selected input
+	hasActiveInput: false,
 };

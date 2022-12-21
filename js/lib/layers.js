@@ -224,9 +224,6 @@ const layers = {
 		// Input element (overlay element for input handling)
 		const inputel = document.createElement("div");
 		inputel.id = `collection-input-${id}`;
-		inputel.addEventListener("mouseover", (evn) => {
-			document.activeElement.blur();
-		});
 		inputel.classList.add("collection-input-overlay");
 		element.appendChild(inputel);
 

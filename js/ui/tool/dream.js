@@ -1228,7 +1228,7 @@ const dreamTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					state.erasePrevReticle = _tool._cursor_draw(x, y);
+					state.erasePrevCursor = _tool._cursor_draw(x, y);
 
 					if (state.selection.exists) {
 						const bb = state.selection.bb;
@@ -1600,7 +1600,7 @@ const img2imgTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					state.erasePrevReticle = _tool._cursor_draw(x, y);
+					state.erasePrevCursor = _tool._cursor_draw(x, y);
 
 					// Resolution
 					let bb = null;

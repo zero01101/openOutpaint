@@ -106,9 +106,9 @@ class Observer {
 	 * Sends a message to all observers
 	 *
 	 * @param {T} msg The message to send to the observers
+	 * @param {any} state The initial state
 	 */
-	async emit(msg) {
-		const state = {};
+	async emit(msg, state = {}) {
 		const promises = [];
 		for (const {handler, wait} of this._handlers) {
 			const run = async () => {
@@ -125,6 +125,25 @@ class Observer {
 		}
 
 		return Promise.all(promises);
+	}
+}
+
+/**
+ * Static DOM utility functions
+ */
+class DOM {
+	static inputTags = new Set(["input", "textarea"]);
+
+	/**
+	 * Checks if there is an active input
+	 *
+	 * @returns Whether there is currently an active input
+	 */
+	static hasActiveInput() {
+		return (
+			document.activeElement &&
+			this.inputTags.has(document.activeElement.tagName.toLowerCase())
+		);
 	}
 }
 

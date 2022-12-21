@@ -206,6 +206,7 @@ const selectTransformTool = () =>
 				state.movecb = (evn) => {
 					ovLayer.clear();
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+					state.erasePrevCursor && state.erasePrevCursor();
 					imageCollection.inputElement.style.cursor = "auto";
 					state.lastMouseTarget = evn.target;
 					state.lastMouseMove = evn;
@@ -355,15 +356,7 @@ const selectTransformTool = () =>
 					}
 
 					// Draw current cursor location
-					uiCtx.lineWidth = 3;
-					uiCtx.strokeStyle = "#FFF";
-
-					uiCtx.beginPath();
-					uiCtx.moveTo(vpc.x, vpc.y + 10);
-					uiCtx.lineTo(vpc.x, vpc.y - 10);
-					uiCtx.moveTo(vpc.x + 10, vpc.y);
-					uiCtx.lineTo(vpc.x - 10, vpc.y);
-					uiCtx.stroke();
+					state.erasePrevCursor = _tool._cursor_draw(x, y);
 
 					uiCtx.restore();
 				};

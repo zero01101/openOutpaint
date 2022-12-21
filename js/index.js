@@ -188,6 +188,7 @@ function startup() {
 }
 
 function setFixedHost(h, changePromptMessage) {
+	console.info(`[index] Fixed host to '${h}'`);
 	const hostInput = document.getElementById("host");
 	host = h;
 	hostInput.value = h;
