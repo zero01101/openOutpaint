@@ -327,6 +327,10 @@ const stampTool = () =>
 					uiCtx.restore();
 				};
 
+				state.redraw = () => {
+					state.movecb(state.lastMouseMove);
+				};
+
 				state.drawcb = (evn) => {
 					let x = evn.x;
 					let y = evn.y;
