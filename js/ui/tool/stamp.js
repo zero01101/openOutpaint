@@ -151,17 +151,22 @@ const stampTool = () =>
 							);
 							const resourceWrapper = document.createElement("div");
 							resourceWrapper.id = `resource-${resource.id}`;
+							resourceWrapper.title = resource.name;
 							resourceWrapper.classList.add("resource", "list-item");
 							const resourceTitle = document.createElement("input");
 							resourceTitle.value = resource.name;
-							resourceTitle.title = resource.name;
 							resourceTitle.style.pointerEvents = "none";
 							resourceTitle.addEventListener("change", () => {
 								resource.name = resourceTitle.value;
 								resource.dirty = true;
-								resourceTitle.title = resourceTitle.value;
+								resourceWrapper.title = resourceTitle.value;
 
 								syncResources();
+							});
+							resourceTitle.addEventListener("keyup", function (event) {
+								if (event.key === "Enter") {
+									resourceTitle.blur();
+								}
 							});
 
 							resourceTitle.addEventListener("blur", () => {
@@ -301,6 +306,7 @@ const stampTool = () =>
 
 					const vpc = viewport.canvasToView(x, y);
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+					state.erasePrevCursor && state.erasePrevCursor();
 
 					uiCtx.save();
 
@@ -314,16 +320,7 @@ const stampTool = () =>
 					}
 
 					// Draw current cursor location
-					uiCtx.lineWidth = 3;
-					uiCtx.strokeStyle = "#FFF";
-
-					uiCtx.beginPath();
-					uiCtx.moveTo(vpc.x, vpc.y + 10);
-					uiCtx.lineTo(vpc.x, vpc.y - 10);
-					uiCtx.moveTo(vpc.x + 10, vpc.y);
-					uiCtx.lineTo(vpc.x - 10, vpc.y);
-					uiCtx.stroke();
-
+					state.erasePrevCursor = _tool._cursor_draw(x, y);
 					uiCtx.restore();
 				};
 

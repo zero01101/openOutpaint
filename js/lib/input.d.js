@@ -42,6 +42,7 @@
  * An object for mouse event listeners
  *
  * @typedef MouseListenerContext
+ * @property {Observer} onany A listener for any mouse events
  * @property {Observer} onmousemove A mouse move handler
  * @property {Observer} onwheel A mouse wheel handler
  * @property {Record<string, MouseListenerBtnContext>} btn Button handlers
@@ -67,6 +68,7 @@
  * @property {ContextMoveTransformer} onmove The coordinate transform callback
  * @property {(evn) => void} onany A function to be run on any event
  * @property {?HTMLElement} target The target
+ * @property {(evn) => boolean} validate A function to be check if we will process an event
  * @property {MouseCoordContext} coords Coordinates object
  * @property {MouseListenerContext} listen Listeners object
  */
