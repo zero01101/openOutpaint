@@ -20,20 +20,25 @@ const imageCollection = layers.registerCollection(
 
 const bgLayer = imageCollection.registerLayer("bg", {
 	name: "Background",
+	category: "background",
 });
 const imgLayer = imageCollection.registerLayer("image", {
 	name: "Image",
+	category: "image",
 	ctxOptions: {desynchronized: true},
 });
 const maskPaintLayer = imageCollection.registerLayer("mask", {
 	name: "Mask Paint",
+	category: "mask",
 	ctxOptions: {desynchronized: true},
 });
 const ovLayer = imageCollection.registerLayer("overlay", {
 	name: "Overlay",
+	category: "display",
 });
 const debugLayer = imageCollection.registerLayer("debug", {
 	name: "Debug Layer",
+	category: "display",
 });
 
 const imgCanvas = imgLayer.canvas; // where dreams go
@@ -237,8 +242,27 @@ mouse.registerContext(
 		ctx.coords.pos.x = Math.round(layerCoords.x);
 		ctx.coords.pos.y = Math.round(layerCoords.y);
 	},
-	{target: imageCollection.inputElement}
+	{
+		target: imageCollection.inputElement,
+		validate: (evn) => {
+			if (!global.hasActiveInput || evn.type === "mousemove") return true;
+			return false;
+		},
+	}
 );
+
+// Redraw on active input state change
+(() => {
+	mouse.listen.window.onany.on((evn) => {
+		const activeInput = DOM.hasActiveInput();
+		if (global.hasActiveInput !== activeInput) {
+			global.hasActiveInput = activeInput;
+			toolbar.currentTool &&
+				toolbar.currentTool.state.redraw &&
+				toolbar.currentTool.state.redraw();
+		}
+	});
+})();
 
 mouse.listen.window.onwheel.on((evn) => {
 	if (evn.evn.ctrlKey) {

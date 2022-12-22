@@ -62,16 +62,19 @@ const colorBrushTool = () =>
 
 			state.drawLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				category: "display",
 				ctxOptions: {willReadFrequently: true},
 			});
 			state.drawLayer.canvas.style.filter = "opacity(70%)";
 			state.eraseLayer = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				category: "processing",
 				ctxOptions: {willReadFrequently: true},
 			});
 			state.eraseLayer.hide();
 			state.eraseBackup = imageCollection.registerLayer(null, {
 				after: imgLayer,
+				category: "processing",
 			});
 			state.eraseBackup.hide();
 

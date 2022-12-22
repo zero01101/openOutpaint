@@ -63,16 +63,16 @@ const mouse = {
 	 * @param {ContextMoveTransformer} onmove The function to perform coordinate transform
 	 * @param {object} options Extra options
 	 * @param {HTMLElement} [options.target=null] Target filtering
+	 * @param {(evn: any) => boolean} [options.validate] Checks if we will process this event or not
 	 * @param {Record<number, string>} [options.buttons={0: "left", 1: "middle", 2: "right"}] Custom button mapping
-	 * @param {(evn) => void} [options.genericcb=null] Function that will be run for all events (useful for preventDefault)
 	 * @returns {MouseContext}
 	 */
 	registerContext: (name, onmove, options = {}) => {
 		// Options
 		defaultOpt(options, {
 			target: null,
+			validate: () => true,
 			buttons: {0: "left", 1: "middle", 2: "right"},
-			genericcb: null,
 		});
 
 		// Context information
@@ -81,8 +81,8 @@ const mouse = {
 			id: guid(),
 			name,
 			onmove,
-			onany: options.genericcb,
 			target: options.target,
+			validate: options.validate,
 			buttons: options.buttons,
 		};
 
@@ -102,11 +102,26 @@ const mouse = {
 		};
 
 		// Listeners
+		const onany = new Observer();
+
 		mouse.listen[name] = {
+			onany,
 			onwheel: new Observer(),
 			onmousemove: new Observer(),
 			btn: {},
 		};
+
+		// Always process onany events first
+		mouse.listen[name].onwheel.on(
+			async (evn, state) => await onany.emit(evn, state),
+			Infinity,
+			true
+		);
+		mouse.listen[name].onmousemove.on(
+			async (evn, state) => await onany.emit(evn, state),
+			Infinity,
+			true
+		);
 
 		// Button specific items
 		Object.keys(options.buttons).forEach((index) => {
@@ -114,6 +129,48 @@ const mouse = {
 			mouse.coords[name].dragging[button] = null;
 			mouse.listen[name].btn[button] = _mouse_observers(
 				`mouse.listen[${name}].btn[${button}]`
+			);
+
+			// Always process onany events first
+			mouse.listen[name].btn[button].onclick.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].ondclick.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].ondragstart.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].ondrag.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].ondragend.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].onpaintstart.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].onpaint.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
+			);
+			mouse.listen[name].btn[button].onpaintend.on(
+				async (evn, state) => await onany.emit(evn, state),
+				Infinity,
+				true
 			);
 		});
 
@@ -183,11 +240,13 @@ window.addEventListener(
 
 		mouse.buttons[evn.button] = time;
 
-		mouse._contexts.forEach(({target, name, buttons, onany}) => {
+		mouse._contexts.forEach(({target, name, buttons, validate}) => {
 			const key = buttons[evn.button];
-			if ((!target || target === evn.target) && key) {
-				onany && onany();
-
+			if (
+				(!target || target === evn.target) &&
+				key &&
+				(!validate || validate(evn))
+			) {
 				mouse.coords[name].dragging[key] = {};
 				mouse.coords[name].dragging[key].target = evn.target;
 				Object.assign(mouse.coords[name].dragging[key], mouse.coords[name].pos);
@@ -214,14 +273,14 @@ window.addEventListener(
 	(evn) => {
 		const time = performance.now();
 
-		mouse._contexts.forEach(({target, name, buttons, onany}) => {
+		mouse._contexts.forEach(({target, name, buttons, validate}) => {
 			const key = buttons[evn.button];
 			if (
 				(!target || target === evn.target) &&
 				key &&
-				mouse.coords[name].dragging[key]
+				mouse.coords[name].dragging[key] &&
+				(!validate || validate(evn))
 			) {
-				onany && onany();
 				const start = {
 					x: mouse.coords[name].dragging[key].x,
 					y: mouse.coords[name].dragging[key].y,
@@ -292,7 +351,10 @@ window.addEventListener(
 			const target = context.target;
 			const name = context.name;
 
-			if (!target || target === evn.target) {
+			if (
+				!target ||
+				(target === evn.target && (!context.validate || context.validate(evn)))
+			) {
 				context.onmove(evn, context);
 
 				mouse.listen[name].onmousemove.emit({
@@ -378,19 +440,21 @@ window.addEventListener(
 window.addEventListener(
 	"wheel",
 	(evn) => {
-		mouse._contexts.forEach(({name}) => {
-			mouse.listen[name].onwheel.emit({
-				target: evn.target,
-				delta: evn.deltaY,
-				deltaX: evn.deltaX,
-				deltaY: evn.deltaY,
-				deltaZ: evn.deltaZ,
-				mode: evn.deltaMode,
-				x: mouse.coords[name].pos.x,
-				y: mouse.coords[name].pos.y,
-				evn,
-				timestamp: performance.now(),
-			});
+		mouse._contexts.forEach(({name, target, validate}) => {
+			if (!target || (target === evn.target && (!validate || validate(evn)))) {
+				mouse.listen[name].onwheel.emit({
+					target: evn.target,
+					delta: evn.deltaY,
+					deltaX: evn.deltaX,
+					deltaY: evn.deltaY,
+					deltaZ: evn.deltaZ,
+					mode: evn.deltaMode,
+					x: mouse.coords[name].pos.x,
+					y: mouse.coords[name].pos.y,
+					evn,
+					timestamp: performance.now(),
+				});
+			}
 		});
 	},
 	{passive: false}

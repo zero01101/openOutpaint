@@ -224,9 +224,6 @@ const layers = {
 		// Input element (overlay element for input handling)
 		const inputel = document.createElement("div");
 		inputel.id = `collection-input-${id}`;
-		inputel.addEventListener("mouseover", (evn) => {
-			document.activeElement.blur();
-		});
 		inputel.classList.add("collection-input-overlay");
 		element.appendChild(inputel);
 
@@ -340,6 +337,7 @@ const layers = {
 				 * @param {object} options
 				 * @param {string} options.name
 				 * @param {?BoundingBox} options.bb
+				 * @param {string} [options.category]
 				 * @param {{w: number, h: number}} options.resolution
 				 * @param {?string} options.group
 				 * @param {object} options.after
@@ -361,6 +359,9 @@ const layers = {
 							w: collection.size.w,
 							h: collection.size.h,
 						},
+
+						// Category of the layer
+						category: null,
 
 						// Resolution for layer
 						resolution: null,
@@ -451,6 +452,7 @@ const layers = {
 							key,
 							name: options.name,
 							full,
+							category: options.category,
 
 							state: new Proxy(
 								{visible: true},
@@ -492,6 +494,10 @@ const layers = {
 
 							get origin() {
 								return this._collection.origin;
+							},
+
+							get hidden() {
+								return !this.state.visible;
 							},
 
 							/** Our canvas */

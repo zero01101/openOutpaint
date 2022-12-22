@@ -24,6 +24,7 @@ const _monitorProgress = (bb, oncheck = null) => {
 	// Get temporary layer to draw progress bar
 	const layer = imageCollection.registerLayer(null, {
 		bb: expanded,
+		category: "display",
 	});
 	layer.canvas.style.opacity = "70%";
 
@@ -293,6 +294,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	// Layer for the images
 	const layer = imageCollection.registerLayer(null, {
 		after: maskPaintLayer,
+		category: "display",
 	});
 
 	const redraw = (url = images[at]) => {
@@ -1227,7 +1229,7 @@ const dreamTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					state.erasePrevReticle = _tool._cursor_draw(x, y);
+					state.erasePrevCursor = _tool._cursor_draw(x, y);
 
 					if (state.selection.exists) {
 						const bb = state.selection.bb;
@@ -1251,6 +1253,8 @@ const dreamTool = () =>
 								),
 							},
 							{
+								toolTextStyle:
+									global.connection === "online" ? "#FFF5" : "#F555",
 								reticleStyle: state.selection.inside ? "#F55" : "#FFF",
 								sizeTextStyle: style,
 							}
@@ -1278,6 +1282,7 @@ const dreamTool = () =>
 							h: stableDiffusionData.height,
 						},
 						{
+							toolTextStyle: global.connection === "online" ? "#FFF5" : "#F555",
 							sizeTextStyle: style,
 						}
 					);
@@ -1306,8 +1311,19 @@ const dreamTool = () =>
 						w: stableDiffusionData.width,
 						h: stableDiffusionData.height,
 					};
-					dream_generate_callback(bb, resolution, state);
+
+					if (global.connection === "online") {
+						dream_generate_callback(bb, resolution, state);
+					} else {
+						const stop = march(bb, {
+							title: "offline",
+							titleStyle: "#F555",
+							style: "#F55",
+						});
+						setTimeout(stop, 2000);
+					}
 					state.selection.deselect();
+					state.redraw();
 				};
 				state.erasecb = (evn, estate) => {
 					if (state.selection.exists) {
@@ -1595,7 +1611,7 @@ const img2imgTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					state.erasePrevReticle = _tool._cursor_draw(x, y);
+					state.erasePrevCursor = _tool._cursor_draw(x, y);
 
 					// Resolution
 					let bb = null;
@@ -1624,6 +1640,8 @@ const img2imgTool = () =>
 								),
 							},
 							{
+								toolTextStyle:
+									global.connection === "online" ? "#FFF5" : "#F555",
 								reticleStyle: state.selection.inside ? "#F55" : "#FFF",
 								sizeTextStyle: style,
 							}
@@ -1653,6 +1671,8 @@ const img2imgTool = () =>
 							"Img2Img",
 							{w: request.width, h: request.height},
 							{
+								toolTextStyle:
+									global.connection === "online" ? "#FFF5" : "#F555",
 								sizeTextStyle: style,
 							}
 						);
@@ -1777,7 +1797,16 @@ const img2imgTool = () =>
 						w: stableDiffusionData.width,
 						h: stableDiffusionData.height,
 					};
-					dream_img2img_callback(bb, resolution, state);
+					if (global.connection === "online") {
+						dream_img2img_callback(bb, resolution, state);
+					} else {
+						const stop = march(bb, {
+							title: "offline",
+							titleStyle: "#F555",
+							style: "#F55",
+						});
+						setTimeout(stop, 2000);
+					}
 					state.selection.deselect();
 					state.redraw();
 				};

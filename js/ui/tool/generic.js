@@ -14,7 +14,7 @@ const _tool = {
 	 * @param {string} [style.genSizeTextStyle = "#FFF5"] Style of the text for diplaying generation size
 	 * @param {string} [style.toolTextStyle = "#FFF5"] Style of the text for the tool name
 	 * @param {number} [style.reticleWidth = 1] Width of the line of the reticle
-	 * @param {string} [style.reticleStyle = "#FFF"] Style of the line of the reticle
+	 * @param {string} [style.reticleStyle] Style of the line of the reticle
 	 *
 	 * @returns A function that erases this reticle drawing
 	 */
@@ -24,7 +24,7 @@ const _tool = {
 			genSizeTextStyle: "#FFF5",
 			toolTextStyle: "#FFF5",
 			reticleWidth: 1,
-			reticleStyle: "#FFF",
+			reticleStyle: global.hasActiveInput ? "#BBF" : "#FFF",
 		});
 
 		const bbvp = {
@@ -110,14 +110,14 @@ const _tool = {
 	 * @param {number} y Y world coordinate of the cursor
 	 * @param {object} style Style of the lines of the cursor
 	 * @param {string} [style.width = 3] Line width of the lines of the cursor
-	 * @param {string} [style.style = "#FFF5"] Stroke style of the lines of the cursor
+	 * @param {string} [style.style] Stroke style of the lines of the cursor
 	 *
 	 * @returns A function that erases this cursor drawing
 	 */
 	_cursor_draw(x, y, style = {}) {
 		defaultOpt(style, {
 			width: 3,
-			style: "#FFF5",
+			style: global.hasActiveInput ? "#BBF5" : "#FFF5",
 		});
 		const vpc = viewport.canvasToView(x, y);
 

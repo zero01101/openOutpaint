@@ -3,10 +3,17 @@
  */
 
 const uil = {
+	/** @type {Observer<{uilayer: UILayer}>} */
+	onactive: new Observer(),
+
 	_ui_layer_list: document.getElementById("layer-list"),
 	layers: [],
 	_active: null,
 	set active(v) {
+		this.onactive.emit({
+			uilayer: v,
+		});
+
 		Array.from(this._ui_layer_list.children).forEach((child) => {
 			child.classList.remove("active");
 		});
@@ -188,6 +195,7 @@ const uil = {
 	_addLayer(group, name) {
 		const layer = imageCollection.registerLayer(null, {
 			name,
+			category: "user",
 			after:
 				(this.layers.length > 0 && this.layers[this.layers.length - 1].layer) ||
 				bgLayer,
@@ -285,11 +293,13 @@ const uil = {
 	 * @param {BoundingBox} bb The bouding box to get visible data from
 	 * @param {object} [options] Options
 	 * @param {boolean} [options.includeBg=false] Whether to include the background
+	 * @param {string[]} [options.categories] Categories of layers to consider visible
 	 * @returns {HTMLCanvasElement}	The canvas element containing visible image data
 	 */
 	getVisible(bb, options = {}) {
 		defaultOpt(options, {
 			includeBg: false,
+			categories: ["user", "image"],
 		});
 
 		const canvas = document.createElement("canvas");
@@ -297,21 +307,14 @@ const uil = {
 
 		canvas.width = bb.w;
 		canvas.height = bb.h;
-		if (options.includeBg)
-			ctx.drawImage(bgLayer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-		this.layers.forEach((layer) => {
-			if (!layer.hidden)
-				ctx.drawImage(
-					layer.layer.canvas,
-					bb.x,
-					bb.y,
-					bb.w,
-					bb.h,
-					0,
-					0,
-					bb.w,
-					bb.h
-				);
+
+		const categories = new Set(options.categories);
+		if (options.includeBg) categories.add("background");
+		const layers = imageCollection._layers;
+
+		layers.reduceRight((_, layer) => {
+			if (categories.has(layer.category) && !layer.hidden)
+				ctx.drawImage(layer.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 		});
 
 		return canvas;
@@ -336,6 +339,7 @@ commands.createCommand(
 
 			const layer = imageCollection.registerLayer(null, {
 				name,
+				category: "user",
 				after:
 					(uil.layers.length > 0 && uil.layers[uil.layers.length - 1].layer) ||
 					bgLayer,
