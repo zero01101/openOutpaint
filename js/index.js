@@ -187,9 +187,10 @@ function startup() {
 	changeSyncCursorSize();
 }
 
-function setFixedHost(host, changePromptMessage) {
+function setFixedHost(h, changePromptMessage) {
 	const hostInput = document.getElementById("host");
-	hostInput.value = host;
+	host = h;
+	hostInput.value = h;
 	hostInput.readOnly = true;
 	hostInput.style.cursor = "default";
 	hostInput.style.backgroundColor = "#ddd";

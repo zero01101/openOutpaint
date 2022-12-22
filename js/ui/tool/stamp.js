@@ -299,6 +299,11 @@ const stampTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
+					const vpc = viewport.canvasToView(x, y);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+
+					uiCtx.save();
+
 					state.lastMouseMove = evn;
 
 					ovLayer.clear();
@@ -309,15 +314,21 @@ const stampTool = () =>
 					}
 
 					// Draw current cursor location
-					ovCtx.lineWidth = 3;
-					ovCtx.strokeStyle = "#FFF";
+					uiCtx.lineWidth = 3;
+					uiCtx.strokeStyle = "#FFF";
 
-					ovCtx.beginPath();
-					ovCtx.moveTo(x, y + 10);
-					ovCtx.lineTo(x, y - 10);
-					ovCtx.moveTo(x + 10, y);
-					ovCtx.lineTo(x - 10, y);
-					ovCtx.stroke();
+					uiCtx.beginPath();
+					uiCtx.moveTo(vpc.x, vpc.y + 10);
+					uiCtx.lineTo(vpc.x, vpc.y - 10);
+					uiCtx.moveTo(vpc.x + 10, vpc.y);
+					uiCtx.lineTo(vpc.x - 10, vpc.y);
+					uiCtx.stroke();
+
+					uiCtx.restore();
+				};
+
+				state.redraw = () => {
+					state.movecb(state.lastMouseMove);
 				};
 
 				state.drawcb = (evn) => {

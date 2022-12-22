@@ -92,6 +92,36 @@
 							};
 						}
 						break;
+					case "openoutpaint/set-prompt":
+						{
+							const promptEl = document.getElementById("prompt");
+							const negativePromptEl = document.getElementById("negPrompt");
+
+							if (data.prompt !== undefined) {
+								promptEl.value = data.prompt;
+								stableDiffusionData.prompt = promptEl.value;
+								promptEl.title = promptEl.value;
+								localStorage.setItem(
+									"openoutpaint/prompt",
+									stableDiffusionData.prompt
+								);
+							}
+
+							if (data.negPrompt !== undefined) {
+								negativePromptEl.value = data.negPrompt;
+								stableDiffusionData.negative_prompt = negativePromptEl.value;
+								negativePromptEl.title = negativePromptEl.value;
+								localStorage.setItem(
+									"openoutpaint/neg_prompt",
+									stableDiffusionData.negative_prompt
+								);
+							}
+
+							if (data.styles !== undefined) {
+								styleSelectElement.value = data.styles;
+							}
+						}
+						break;
 					default:
 						console.warn(`[webui] Unsupported message type: ${data.type}`);
 						break;
