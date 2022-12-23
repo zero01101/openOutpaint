@@ -25,9 +25,10 @@ If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
 
-- OS: [e.g. iOS]
-- Browser [e.g. chrome, safari]
-- Version [e.g. 22]
+- OS and Version: [e.g. iOS 15, win10x64 v22h2, palmOS 3]
+- GPU: [e.g. GTX1660, RTX3090, RX750, Voodoo2]
+- Browser: [e.g. chrome, safari]
+- Version: [e.g. 22]
 
 **Additional context**
 Add any other context about the problem here.
