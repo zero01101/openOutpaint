@@ -86,6 +86,46 @@ const _monitorProgress = (bb, oncheck = null) => {
 const _dream = async (endpoint, request) => {
 	const apiURL = `${host}${url}${endpoint}`;
 
+	// Debugging is enabled
+	if (global.debug) {
+		// Run in parallel
+		(async () => {
+			// Create canvas
+			const canvas = document.createElement("canvas");
+			canvas.width = request.width;
+			canvas.height = request.height * (request.init_images.length + 1);
+			const ctx = canvas.getContext("2d");
+
+			// Load images and draw to canvas
+			for (let i = 0; i < request.init_images.length; i++) {
+				try {
+					const image = document.createElement("img");
+					image.src = request.init_images[i];
+					await image.decode();
+
+					ctx.drawImage(image, 0, i * request.height);
+				} catch (e) {}
+			}
+
+			// Load mask and draw to canvas
+			if (request.mask) {
+				try {
+					const mask = document.createElement("img");
+					mask.src = request.mask;
+					await mask.decode();
+
+					ctx.drawImage(mask, 0, canvas.height - request.height);
+				} catch (e) {}
+			}
+
+			downloadCanvas({
+				canvas,
+				cropToContent: false,
+				filename: `openOutpaint_debug_${new Date()}.png`,
+			});
+		})();
+	}
+
 	/** @type {StableDiffusionResponse} */
 	let data = null;
 	try {

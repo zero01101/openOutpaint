@@ -308,7 +308,7 @@ mouse.listen.window.btn.middle.onpaint.on((evn) => {
 	}
 
 	viewport.transform(imageCollection.element);
-	if (debug) {
+	if (global.debug) {
 		debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
 		debugCtx.fillStyle = "#F0F";
 		debugCtx.beginPath();

@@ -18,7 +18,7 @@ mouse.listen.world.onmousemove.on((evn) => {
 	snapXInfo.textContent = evn.x + snap(evn.x);
 	snapYInfo.textContent = evn.y + snap(evn.y);
 
-	if (debug) {
+	if (global.debug) {
 		debugLayer.clear();
 		debugCtx.fillStyle = "#F0F";
 		debugCtx.beginPath();
@@ -31,17 +31,3 @@ mouse.listen.world.onmousemove.on((evn) => {
 		debugCtx.fill();
 	}
 });
-
-/**
- * Toggles the debug layer (Just run toggledebug() in the console)
- */
-const toggledebug = () => {
-	const hidden = debugCanvas.style.display === "none";
-	if (hidden) {
-		debugLayer.unhide();
-		debug = true;
-	} else {
-		debugLayer.hide();
-		debug = false;
-	}
-};

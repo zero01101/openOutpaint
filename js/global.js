@@ -19,4 +19,27 @@ const global = {
 
 	// If there is a selected input
 	hasActiveInput: false,
+
+	// If debugging is enabled
+	_debug: false,
+	set debug(v) {
+		if (debugLayer) {
+			if (v) {
+				debugLayer.unhide();
+			} else {
+				debugLayer.hide();
+			}
+		}
+
+		this._debug = v;
+	},
+	get debug() {
+		return this._debug;
+	},
+	/**
+	 * Toggles debugging.
+	 */
+	toggledebug() {
+		this.debug = !this.debug;
+	},
 };
