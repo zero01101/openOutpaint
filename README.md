@@ -50,6 +50,10 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 you'll obviously need A1111's webUI installed before you can use this, thus you're presumed to have an operational python install up and running to boot.
 
+A1111 webUI must be launched with the `--api` flag enabled, and the `--cors-allow-origins=` flag set with the host where openOutpaint will be running.
+
+**_NOTE: the commandline flag `--gradio-debug` disables custom API routes and completely breaks openOutpaint. please remove it from your COMMANDLINE_ARGS before running openOutpaint._**
+
 ### quickstart speedrun
 
 1. edit your `cors-allow-origins` to include https://zero01101.github.io and run webUI
