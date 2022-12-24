@@ -772,8 +772,8 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			bbCtx.globalCompositeOperation = "destination-in";
 			bbCtx.drawImage(
 				maskPaintCanvas,
-				bb.x + maskPaintLayer.origin.x,
-				bb.y + maskPaintLayer.origin.y,
+				bb.x,
+				bb.y,
 				bb.w,
 				bb.h,
 				0,
@@ -800,8 +800,8 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			bbCtx.globalCompositeOperation = "destination-out"; // ???
 			bbCtx.drawImage(
 				maskPaintCanvas,
-				bb.x + maskPaintLayer.origin.x,
-				bb.y + maskPaintLayer.origin.y,
+				bb.x,
+				bb.y,
 				bb.w,
 				bb.h,
 				0,
@@ -924,8 +924,8 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	bbCtx.globalCompositeOperation = "destination-out";
 	bbCtx.drawImage(
 		maskPaintCanvas,
-		bb.x + maskPaintLayer.origin.x,
-		bb.y + maskPaintLayer.origin.y,
+		bb.x,
+		bb.y,
 		bb.w,
 		bb.h,
 		0,
