@@ -78,7 +78,7 @@ const stampTool = () =>
 						state.selected = resource;
 					}
 					// If already selected, clear selection (if deselection is enabled)
-					else if (deselect){
+					else if (deselect) {
 						resourceWrapper.classList.remove("active");
 						state.selected = null;
 					}
