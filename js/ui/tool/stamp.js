@@ -41,12 +41,6 @@ const stampTool = () =>
 			mouse.listen.world.btn.left.onclick.clear(state.drawcb);
 			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
 
-			// Deselect
-			state.selected = null;
-			Array.from(state.ctxmenu.resourceList.children).forEach((child) => {
-				child.classList.remove("active");
-			});
-
 			ovLayer.clear();
 		},
 		{
@@ -60,7 +54,7 @@ const stampTool = () =>
 				state.lastMouseMove = {x: 0, y: 0};
 				state.block_res_change = true;
 
-				state.selectResource = (resource, nolock = true) => {
+				state.selectResource = (resource, nolock = true, deselect = true) => {
 					if (nolock && state.ctxmenu.uploadButton.disabled) return;
 
 					console.debug(
@@ -83,14 +77,14 @@ const stampTool = () =>
 						resourceWrapper && resourceWrapper.classList.add("active");
 						state.selected = resource;
 					}
-					// If already selected, clear selection
-					else {
+					// If already selected, clear selection (if deselection is enabled)
+					else if (deselect){
 						resourceWrapper.classList.remove("active");
 						state.selected = null;
 					}
 
 					ovLayer.clear();
-					if (state.loaded) state.movecb(state.lastMouseMove);
+					if (state.loaded) state.redraw();
 				};
 
 				// Open IndexedDB connection
@@ -277,7 +271,7 @@ const stampTool = () =>
 					syncResources();
 
 					// Select this resource
-					state.selectResource(resource, nolock);
+					state.selectResource(resource, nolock, false);
 
 					return resource;
 				};
