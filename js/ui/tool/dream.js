@@ -922,17 +922,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	bbCtx.fillStyle = state.invertMask ? "#FFFF" : "#000F";
 	bbCtx.fillRect(0, 0, bb.w, bb.h);
 	bbCtx.globalCompositeOperation = "destination-out";
-	bbCtx.drawImage(
-		maskPaintCanvas,
-		bb.x,
-		bb.y,
-		bb.w,
-		bb.h,
-		0,
-		0,
-		bb.w,
-		bb.h
-	);
+	bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
 
 	bbCtx.globalCompositeOperation = "destination-atop";
 	bbCtx.fillStyle = state.invertMask ? "#000F" : "#FFFF";
