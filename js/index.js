@@ -381,7 +381,7 @@ async function testHostConnection() {
 				}
 				case 404: {
 					setConnectionStatus("apiissue");
-					const message = `The host is online, but the API seems to be disabled. Have you run the webui with the flag --api?`;
+					const message = `The host is online, but the API seems to be disabled.\nHave you run the webui with the flag '--api', or is the flag '--gradio-debug' currently active?`;
 					console.error(message);
 					if (notify) alert(message);
 					break;
