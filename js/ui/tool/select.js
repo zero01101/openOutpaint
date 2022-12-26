@@ -592,11 +592,12 @@ const selectTransformTool = () =>
 								for (const item of items) {
 									for (const type of item.types) {
 										if (type.startsWith("image/")) {
-											item.getType(type).then((blob) => {
+											item.getType(type).then(async (blob) => {
 												// Converts blob to image
 												const url = window.URL || window.webkitURL;
 												const image = document.createElement("img");
-												image.src = url.createObjectURL(file);
+												image.src = url.createObjectURL(blob);
+												await image.decode();
 												tools.stamp.enable({
 													image,
 													back: tools.selecttransform.enable,
