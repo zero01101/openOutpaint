@@ -1083,18 +1083,29 @@ const dream_img2img_callback = (bb, resolution, state) => {
 /**
  * Generic wheel handler
  */
+let _dream_wheel_accum = 0;
 
 const _dream_onwheel = (evn, state) => {
 	if (!evn.evn.ctrlKey) {
-		// Seems mouse wheel scroll is very different between different browsers.
-		// Will use scroll as just an event to go to the next cursor snap position instead.
-		//
-		// TODO: Someone that has a smooth scrolling mouse should verify if this works with them.
+		if (evn.mode !== WheelEvent.DOM_DELTA_PIXEL) {
+			// We don't really handle non-pixel scrolling
+			return;
+		}
 
-		const v = state.cursorSize - 128 * (evn.delta / Math.abs(evn.delta));
+		// A simple but (I hope) effective fix for mouse wheel behavior
+		_dream_wheel_accum += evn.delta;
 
-		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
-		state.mousemovecb(evn);
+		if (Math.abs(_dream_wheel_accum) > config.wheelTickSize) {
+			// Snap to next or previous position
+			const v =
+				state.cursorSize -
+				128 * (_dream_wheel_accum / Math.abs(_dream_wheel_accum));
+
+			state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
+			state.mousemovecb(evn);
+
+			_dream_wheel_accum = 0; // Zero accumulation
+		}
 	}
 };
 
