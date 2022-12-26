@@ -440,6 +440,12 @@ window.addEventListener(
 window.addEventListener(
 	"wheel",
 	(evn) => {
+		// For firefox, we need to read a delta before deltaMode to force a PIXEL deltaMode read.
+		// If we read deltaMode before a delta read, deltaMode will be LINE.
+		// ref: https://bugzilla.mozilla.org/show_bug.cgi?id=1392460
+		let _discard = evn.deltaY;
+		_discard = evn.deltaMode;
+
 		mouse._contexts.forEach(({name, target, validate}) => {
 			if (!target || (target === evn.target && (!validate || validate(evn)))) {
 				mouse.listen[name].onwheel.emit({
