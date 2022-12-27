@@ -447,7 +447,7 @@ window.addEventListener(
 		_discard = evn.deltaMode;
 
 		mouse._contexts.forEach(({name, target, validate}) => {
-			if (!target || (target === evn.target && (!validate || validate(evn)))) {
+			if ((!target || target === evn.target) && (!validate || validate(evn))) {
 				mouse.listen[name].onwheel.emit({
 					target: evn.target,
 					delta: evn.deltaY,
