@@ -132,35 +132,9 @@ var stableDiffusionData = {
 };
 
 // stuff things use
-let debug = false;
-var returnedImages;
-var imageIndex = 0;
-var tmpImgXYWH = {};
 var host = "";
 var url = "/sdapi/v1/";
-var endpoint = "txt2img";
-var frameX = 512;
-var frameY = 512;
-var drawThis = {};
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
-var snapToGrid = true;
-var backupMaskPaintCanvas; //???
-var backupMaskPaintCtx; //...? look i am bad at this
-var backupMaskChunk = null;
-var backupMaskX = null;
-var backupMaskY = null;
-var totalImagesReturned;
-var overMaskPx = 0;
-var drawTargets = []; // is this needed?  i only draw the last one anyway...
-var dropTargets = []; // uhhh yeah similar to the above but for arbitrary dropped images
-var arbitraryImage;
-var arbitraryImageData;
-var arbitraryImageBitmap;
-var arbitraryImageBase64; // seriously js cmon work with me here
-var placingArbitraryImage = false; // for when the user has loaded an existing image from their computer
-var marchOffset = 0;
-var inProgress = false;
-var marchCoords = {};
 
 //
 function startup() {

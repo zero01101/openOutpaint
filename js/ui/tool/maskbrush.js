@@ -167,13 +167,11 @@ const maskBrushTool = () =>
 				};
 
 				state.wheelcb = (evn) => {
-					if (!evn.evn.ctrlKey) {
-						state.brushSize = state.setBrushSize(
-							state.brushSize -
-								Math.floor(state.config.brushScrollSpeed * evn.delta)
-						);
-						state.redraw();
-					}
+					state.brushSize = state.setBrushSize(
+						state.brushSize -
+							Math.floor(state.config.brushScrollSpeed * evn.delta)
+					);
+					state.redraw();
 				};
 
 				state.drawcb = (evn) =>

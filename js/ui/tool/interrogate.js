@@ -33,7 +33,6 @@ const interrogateTool = () =>
 
 				state.snapToGrid = true;
 				state.invertMask = false;
-				state.overMaskPx = 0;
 				state.block_res_change = true;
 
 				state.erasePrevReticle = () => ovLayer.clear();
@@ -163,7 +162,7 @@ const interrogate_callback = async (evn, state) => {
  * @returns {Promise<string>}
  */
 const _interrogate = async (request) => {
-	const apiURL = `${host}${url}` + "interrogate";
+	const apiURL = `${host}${config.api.path}interrogate`;
 
 	/** @type {StableDiffusionResponse} */
 	let data = null;

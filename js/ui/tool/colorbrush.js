@@ -208,14 +208,12 @@ const colorBrushTool = () =>
 				};
 
 				state.wheelcb = (evn) => {
-					if (!evn.evn.ctrlKey) {
-						state.brushSize = state.setBrushSize(
-							state.brushSize -
-								Math.floor(state.config.brushScrollSpeed * evn.delta)
-						);
-						uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
-						state.movecb(evn);
-					}
+					state.brushSize = state.setBrushSize(
+						state.brushSize -
+							Math.floor(state.config.brushScrollSpeed * evn.delta)
+					);
+					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+					state.movecb(evn);
 				};
 
 				/**

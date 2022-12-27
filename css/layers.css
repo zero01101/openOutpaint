@@ -63,3 +63,8 @@
 	image-rendering: pixelated;
 	image-rendering: crisp-edges;
 }
+
+canvas.pixelated {
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+}
