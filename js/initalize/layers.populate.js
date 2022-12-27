@@ -290,7 +290,6 @@ mouse.listen.camera.onwheel.on((evn) => {
 
 	// Get cursor world position
 	const cursorPosition = viewport.viewToCanvas(evn.x, evn.y);
-	console.debug(cursorPosition);
 
 	// Get viewport center
 	const pcx = viewport.cx;
