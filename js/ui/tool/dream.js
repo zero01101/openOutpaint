@@ -13,7 +13,7 @@ let generating = false;
 const _monitorProgress = (bb, oncheck = null) => {
 	const minDelay = 1000;
 
-	const apiURL = `${host}${url}progress?skip_current_image=true`;
+	const apiURL = `${host}${config.api.path}progress?skip_current_image=true`;
 
 	const expanded = {...bb};
 	expanded.x--;
@@ -84,7 +84,7 @@ const _monitorProgress = (bb, oncheck = null) => {
  * @returns {Promise<string[]>}
  */
 const _dream = async (endpoint, request) => {
-	const apiURL = `${host}${url}${endpoint}`;
+	const apiURL = `${host}${config.api.path}${endpoint}`;
 
 	// Debugging is enabled
 	if (global.debug) {
@@ -380,7 +380,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	interruptButton.classList.add("dream-stop-btn");
 	interruptButton.textContent = "Interrupt";
 	interruptButton.addEventListener("click", () => {
-		fetch(`${host}${url}interrupt`, {method: "POST"});
+		fetch(`${host}${config.api.path}interrupt`, {method: "POST"});
 		interruptButton.disabled = true;
 	});
 	const marchingOptions = {};
@@ -400,13 +400,13 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 			if (lastProgress < nextCP && data.progress >= nextCP) {
 				nextCP += options.drawEvery;
-				fetch(`${host}${url}progress?skip_current_image=false`).then(
-					async (response) => {
-						if (stopDrawingStatus) return;
-						const imagedata = await response.json();
-						redraw(imagedata.current_image);
-					}
-				);
+				fetch(
+					`${host}${config.api.path}progress?skip_current_image=false`
+				).then(async (response) => {
+					if (stopDrawingStatus) return;
+					const imagedata = await response.json();
+					redraw(imagedata.current_image);
+				});
 			}
 			lastProgress = data.progress;
 		});
@@ -1191,7 +1191,7 @@ const dreamTool = () =>
 				state.invertMask = false;
 				state.keepUnmasked = true;
 				state.keepUnmaskedBlur = 8;
-				state.overMaskPx = 0;
+				state.overMaskPx = 20;
 				state.preserveMasks = false;
 
 				state.erasePrevCursor = () =>
@@ -2022,7 +2022,8 @@ const img2imgTool = () =>
 
 window.onbeforeunload = async () => {
 	// Stop current generation on page close
-	if (generating) await fetch(`${host}${url}interrupt`, {method: "POST"});
+	if (generating)
+		await fetch(`${host}${config.api.path}interrupt`, {method: "POST"});
 };
 
 const sendSeed = (seed) => {

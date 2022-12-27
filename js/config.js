@@ -7,6 +7,9 @@ const config = makeReadOnly(
 	{
 		// Scroll Tick Limit (How much must scroll to reach next tick)
 		wheelTickSize: 50,
+
+		// Endpoint
+		api: makeReadOnly({path: "/sdapi/v1/"}),
 	},
 	"config"
 );
