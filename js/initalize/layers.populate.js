@@ -22,6 +22,9 @@ const bgLayer = imageCollection.registerLayer("bg", {
 	name: "Background",
 	category: "background",
 });
+
+bgLayer.canvas.classList.add("pixelated");
+
 const imgLayer = imageCollection.registerLayer("image", {
 	name: "Image",
 	category: "image",
