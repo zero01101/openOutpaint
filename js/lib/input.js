@@ -220,6 +220,7 @@ window.addEventListener(
 				const key = buttons[evn.button];
 				if (
 					(!target || target === evn.target) &&
+					mouse.coords[name].dragging[key] &&
 					!mouse.coords[name].dragging[key].drag &&
 					key
 				) {
@@ -273,13 +274,12 @@ window.addEventListener(
 	(evn) => {
 		const time = performance.now();
 
-		mouse._contexts.forEach(({target, name, buttons, validate}) => {
+		mouse._contexts.forEach(({target, name, buttons}) => {
 			const key = buttons[evn.button];
 			if (
 				(!target || target === evn.target) &&
 				key &&
-				mouse.coords[name].dragging[key] &&
-				(!validate || validate(evn))
+				mouse.coords[name].dragging[key]
 			) {
 				const start = {
 					x: mouse.coords[name].dragging[key].x,
