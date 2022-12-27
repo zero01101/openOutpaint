@@ -245,8 +245,26 @@ mouse.registerContext(
 	{
 		target: imageCollection.inputElement,
 		validate: (evn) => {
-			if (!global.hasActiveInput || evn.type === "mousemove") return true;
+			if ((!global.hasActiveInput && !evn.ctrlKey) || evn.type === "mousemove")
+				return true;
 			return false;
+		},
+	}
+);
+
+mouse.registerContext(
+	"camera",
+	(evn, ctx) => {
+		ctx.coords.prev.x = ctx.coords.pos.x;
+		ctx.coords.prev.y = ctx.coords.pos.y;
+
+		// Set coords
+		ctx.coords.pos.x = evn.x;
+		ctx.coords.pos.y = evn.y;
+	},
+	{
+		validate: (evn) => {
+			return !!evn.ctrlKey;
 		},
 	}
 );
@@ -264,32 +282,30 @@ mouse.registerContext(
 	});
 })();
 
-mouse.listen.window.onwheel.on((evn) => {
-	if (evn.evn.ctrlKey) {
-		evn.evn.preventDefault();
+mouse.listen.camera.onwheel.on((evn) => {
+	evn.evn.preventDefault();
 
-		const pcx = viewport.cx;
-		const pcy = viewport.cy;
-		if (evn.delta < 0) {
-			viewport.zoom *= 1 + Math.abs(evn.delta * 0.0002);
-		} else {
-			viewport.zoom *= 1 - Math.abs(evn.delta * 0.0002);
-		}
-
-		viewport.cx = pcx;
-		viewport.cy = pcy;
-
-		viewport.transform(imageCollection.element);
-
-		toolbar.currentTool.redraw();
+	const pcx = viewport.cx;
+	const pcy = viewport.cy;
+	if (evn.delta < 0) {
+		viewport.zoom *= 1 + Math.abs(evn.delta * 0.0002);
+	} else {
+		viewport.zoom *= 1 - Math.abs(evn.delta * 0.0002);
 	}
+
+	viewport.cx = pcx;
+	viewport.cy = pcy;
+
+	viewport.transform(imageCollection.element);
+
+	toolbar.currentTool.redraw();
 });
 
-mouse.listen.window.btn.middle.onpaintstart.on((evn) => {
-	if (evn.evn.ctrlKey) worldInit = {x: viewport.cx, y: viewport.cy};
-});
+const cameraPaintStart = (evn) => {
+	worldInit = {x: viewport.cx, y: viewport.cy};
+};
 
-mouse.listen.window.btn.middle.onpaint.on((evn) => {
+const cameraPaint = (evn) => {
 	if (worldInit) {
 		viewport.cx = worldInit.x + (evn.ix - evn.x) / viewport.zoom;
 		viewport.cy = worldInit.y + (evn.iy - evn.y) / viewport.zoom;
@@ -315,11 +331,20 @@ mouse.listen.window.btn.middle.onpaint.on((evn) => {
 		debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
 		debugCtx.fill();
 	}
-});
+};
 
-mouse.listen.window.btn.middle.onpaintend.on((evn) => {
+const cameraPaintEnd = (evn) => {
 	worldInit = null;
-});
+};
+
+mouse.listen.camera.btn.middle.onpaintstart.on(cameraPaintStart);
+mouse.listen.camera.btn.left.onpaintstart.on(cameraPaintStart);
+
+mouse.listen.camera.btn.middle.onpaint.on(cameraPaint);
+mouse.listen.camera.btn.left.onpaint.on(cameraPaint);
+
+mouse.listen.window.btn.middle.onpaintend.on(cameraPaintEnd);
+mouse.listen.window.btn.left.onpaintend.on(cameraPaintEnd);
 
 window.addEventListener("resize", () => {
 	viewport.transform(imageCollection.element);

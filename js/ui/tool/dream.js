@@ -619,11 +619,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	);
 	const onmorehandler = mouse.listen.world.btn.middle.onclick.on(
 		(evn, state) => {
-			if (
-				!state.dream_processed &&
-				bb.contains(evn.x, evn.y) &&
-				!evn.evn.ctrlKey
-			) {
+			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
 				makeMore();
 				state.dream_processed = true;
 			}
@@ -633,7 +629,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	);
 	const onwheelhandler = mouse.listen.world.onwheel.on(
 		(evn, state) => {
-			if (evn.evn.ctrlKey) return;
 			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
 				if (evn.delta < 0) nextImg();
 				else prevImg();
@@ -1086,26 +1081,24 @@ const dream_img2img_callback = (bb, resolution, state) => {
 let _dream_wheel_accum = 0;
 
 const _dream_onwheel = (evn, state) => {
-	if (!evn.evn.ctrlKey) {
-		if (evn.mode !== WheelEvent.DOM_DELTA_PIXEL) {
-			// We don't really handle non-pixel scrolling
-			return;
-		}
+	if (evn.mode !== WheelEvent.DOM_DELTA_PIXEL) {
+		// We don't really handle non-pixel scrolling
+		return;
+	}
 
-		// A simple but (I hope) effective fix for mouse wheel behavior
-		_dream_wheel_accum += evn.delta;
+	// A simple but (I hope) effective fix for mouse wheel behavior
+	_dream_wheel_accum += evn.delta;
 
-		if (Math.abs(_dream_wheel_accum) > config.wheelTickSize) {
-			// Snap to next or previous position
-			const v =
-				state.cursorSize -
-				128 * (_dream_wheel_accum / Math.abs(_dream_wheel_accum));
+	if (Math.abs(_dream_wheel_accum) > config.wheelTickSize) {
+		// Snap to next or previous position
+		const v =
+			state.cursorSize -
+			128 * (_dream_wheel_accum / Math.abs(_dream_wheel_accum));
 
-			state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
-			state.mousemovecb(evn);
+		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
+		state.mousemovecb(evn);
 
-			_dream_wheel_accum = 0; // Zero accumulation
-		}
+		_dream_wheel_accum = 0; // Zero accumulation
 	}
 };
 
