@@ -285,16 +285,27 @@ mouse.registerContext(
 mouse.listen.camera.onwheel.on((evn) => {
 	evn.evn.preventDefault();
 
+	// Get cursor world position
+	const cursorPosition = viewport.viewToCanvas(evn.x, evn.y);
+	console.debug(cursorPosition);
+
+	// Get viewport center
 	const pcx = viewport.cx;
 	const pcy = viewport.cy;
-	if (evn.delta < 0) {
-		viewport.zoom *= 1 + Math.abs(evn.delta * 0.0002);
-	} else {
-		viewport.zoom *= 1 - Math.abs(evn.delta * 0.0002);
-	}
 
+	// Apply zoom
+	viewport.zoom *= 1 - evn.delta * 0.0002;
+
+	// Apply normal zoom (center of viewport)
 	viewport.cx = pcx;
 	viewport.cy = pcy;
+
+	viewport.transform(imageCollection.element);
+
+	// Calculate new viewport center and move
+	const newCursorPosition = viewport.viewToCanvas(evn.x, evn.y);
+	viewport.cx = pcx - (newCursorPosition.x - cursorPosition.x);
+	viewport.cy = pcy - (newCursorPosition.y - cursorPosition.y);
 
 	viewport.transform(imageCollection.element);
 
