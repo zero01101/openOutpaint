@@ -21,6 +21,6 @@ jobs:
       - name: Commit
         uses: EndBug/add-and-commit@v9.1.1
         with:
-          author_name: Github Actions
-          author_email: victorseijih@gmail.com # Using my email here for now...
+          committer_name: Github Actions
+          committer_email: actions@github.com
           message: "Fixed resource hashes"
