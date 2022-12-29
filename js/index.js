@@ -105,6 +105,7 @@ var stableDiffusionData = {
 	inpaint_full_res: false,
 	inpainting_fill: 2,
 	enable_hr: false,
+	restore_faces: false,
 	firstphase_width: 0,
 	firstphase_height: 0,
 	styles: [],
@@ -158,6 +159,7 @@ function startup() {
 	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
+	changeRestoreFaces();
 	changeSyncCursorSize();
 }
 
@@ -616,6 +618,16 @@ function changeHiResFix() {
 	localStorage.setItem("openoutpaint/enable_hr", stableDiffusionData.enable_hr);
 }
 
+function changeRestoreFaces() {
+	stableDiffusionData.restore_faces = Boolean(
+		document.getElementById("cbxRestoreFaces").checked
+	);
+	localStorage.setItem(
+		"openoutpaint/restore_faces",
+		stableDiffusionData.restore_faces
+	);
+}
+
 function changeSyncCursorSize() {
 	stableDiffusionData.sync_cursor_size = Boolean(
 		document.getElementById("cbxSyncCursorSize").checked
@@ -1007,6 +1019,10 @@ function loadSettings() {
 		localStorage.getItem("openoutpaint/enable_hr") === null
 			? false
 			: localStorage.getItem("openoutpaint/enable_hr") === "true";
+	let _restore_faces =
+		localStorage.getItem("openoutpaint/restore_faces") === null
+			? false
+			: localStorage.getItem("openoutpaint/restore_faces") === "true";
 
 	let _sync_cursor_size =
 		localStorage.getItem("openoutpaint/sync_cursor_size") === null
@@ -1017,6 +1033,7 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
+	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =
 		Boolean(_sync_cursor_size);
 }
