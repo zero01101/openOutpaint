@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/bin/bash
 #
 # Updates html files with cache busting urls including file hashes.
 

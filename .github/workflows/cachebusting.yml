@@ -9,14 +9,18 @@ on:
     types: [opened, synchronize, closed]
 
 jobs:
-  prettier:
+  update_hashes:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Prettify
-        uses: creyD/prettier_action@v4.2
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Update hashes in html files
+        run: bash .devtools/updatehashes.sh
+      - name: Commit
+        uses: EndBug/add-and-commit@v9.1.1
         with:
-          prettier_options: --write **/*.{js,html,css,md}
+          author_name: Github Actions
+          author_email: victorseijih@gmail.com # Using my email here for now...
+          message: "Fixed resource hashes"
