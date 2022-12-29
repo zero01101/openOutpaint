@@ -555,7 +555,10 @@ const resSlider = makeSlider(
 		stableDiffusionData.width = stableDiffusionData.height = v;
 		stableDiffusionData.firstphase_width =
 			stableDiffusionData.firstphase_height = v / 2;
-		informCursorSizeSlider();
+
+		toolbar.currentTool &&
+			toolbar.currentTool.redraw &&
+			toolbar.currentTool.redraw();
 	}
 );
 makeSlider(
@@ -629,16 +632,10 @@ function changeRestoreFaces() {
 }
 
 function changeSyncCursorSize() {
-	stableDiffusionData.sync_cursor_size = Boolean(
+	global.syncCursorSize = Boolean(
 		document.getElementById("cbxSyncCursorSize").checked
-	); //is this horribly hacky, putting it in SD data instead of making a gross global var?
-	localStorage.setItem(
-		"openoutpaint/sync_cursor_size",
-		stableDiffusionData.sync_cursor_size
 	);
-	if (stableDiffusionData.sync_cursor_size) {
-		resSlider.value = stableDiffusionData.width;
-	}
+	localStorage.setItem("openoutpaint/sync_cursor_size", global.syncCursorSize);
 }
 
 function changeSmoothRendering() {
@@ -1042,9 +1039,6 @@ imageCollection.element.addEventListener(
 	"wheel",
 	(evn) => {
 		evn.preventDefault();
-		if (!evn.ctrlKey) {
-			_resolution_onwheel(evn);
-		}
 	},
 	{passive: false}
 );
@@ -1062,25 +1056,3 @@ function resetToDefaults() {
 		localStorage.clear();
 	}
 }
-
-function informCursorSizeSlider() {
-	if (stableDiffusionData.sync_cursor_size) {
-		if (toolbar._current_tool) {
-			if (!toolbar._current_tool.state.ignorePrevious) {
-				toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
-			}
-			toolbar._current_tool.state.ignorePrevious = false;
-		}
-	}
-}
-
-const _resolution_onwheel = (evn) => {
-	if (
-		stableDiffusionData.sync_cursor_size &&
-		!toolbar._current_tool.state.block_res_change
-	) {
-		toolbar._current_tool.state.ignorePrevious = true; //so hacky
-		resSlider.value =
-			stableDiffusionData.width - (128 * evn.deltaY) / Math.abs(evn.deltaY);
-	}
-};

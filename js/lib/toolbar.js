@@ -181,6 +181,7 @@ const _toolbar_input = {
 
 		return {
 			slider,
+			rawSlider: value,
 			setValue(v) {
 				value.value = v;
 				return value.value;

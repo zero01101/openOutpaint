@@ -20,6 +20,9 @@ const global = {
 	// If there is a selected input
 	hasActiveInput: false,
 
+	// If cursor size sync is enabled
+	syncCursorSize: false,
+
 	// If debugging is enabled
 	_debug: false,
 	set debug(v) {

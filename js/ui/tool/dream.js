@@ -1391,13 +1391,23 @@ const dreamTool = () =>
 							step: 128,
 							textStep: 2,
 							cb: () => {
-								if (stableDiffusionData.sync_cursor_size) {
-									state.ignorePrevious = true;
+								if (
+									global.syncCursorSize &&
+									resSlider.value !== state.cursorSize
+								) {
 									resSlider.value = state.cursorSize;
 								}
+
+								state.redraw();
 							},
 						}
 					);
+
+					resSlider.onchange.on(({value}) => {
+						if (global.syncCursorSize && value !== state.cursorSize) {
+							cursorSizeSlider.rawSlider.value = value;
+						}
+					});
 
 					state.setCursorSize = cursorSizeSlider.setValue;
 					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
@@ -1876,13 +1886,18 @@ const img2imgTool = () =>
 							step: 128,
 							textStep: 2,
 							cb: () => {
-								if (stableDiffusionData.sync_cursor_size) {
-									state.ignorePrevious = true;
+								if (global.syncCursorSize) {
 									resSlider.value = state.cursorSize;
 								}
 							},
 						}
 					);
+
+					resSlider.onchange.on(({value}) => {
+						if (global.syncCursorSize && value !== state.cursorSize) {
+							cursorSizeSlider.rawSlider.value = value;
+						}
+					});
 
 					state.setCursorSize = cursorSizeSlider.setValue;
 					state.ctxmenu.cursorSizeSlider = cursorSizeSlider.slider;
