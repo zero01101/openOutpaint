@@ -304,6 +304,15 @@ input#host {
 	box-sizing: border-box;
 }
 
+/* Model Select */
+#models-ac-select option {
+	background-color: #fcc;
+}
+
+#models-ac-select option.inpainting {
+	background-color: #cfc;
+}
+
 /* Settings button */
 .ui.icon.header-button {
 	padding: 0;

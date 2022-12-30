@@ -531,6 +531,16 @@ const modelAutoComplete = createAutoComplete(
 	"Model",
 	document.getElementById("models-ac-select")
 );
+modelAutoComplete.onchange.on(({value}) => {
+	if (value.toLowerCase().includes("inpainting"))
+		document.querySelector(
+			"#models-ac-select input.autocomplete-text"
+		).style.backgroundColor = "#cfc";
+	else
+		document.querySelector(
+			"#models-ac-select input.autocomplete-text"
+		).style.backgroundColor = "#fcc";
+});
 
 const samplerAutoComplete = createAutoComplete(
 	"Sampler",
@@ -782,6 +792,10 @@ async function getModels() {
 		modelAutoComplete.options = data.map((option) => ({
 			name: option.title,
 			value: option.title,
+			optionelcb: (el) => {
+				if (option.title.toLowerCase().includes("inpainting"))
+					el.classList.add("inpainting");
+			},
 		}));
 
 		try {
