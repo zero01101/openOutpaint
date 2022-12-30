@@ -94,11 +94,11 @@ do
 done
 
 # Actual file processing
-for htmlfile in $(find -type f -name \*.html)
+for htmlfile in $(find -type f -name \*.html -not -path "./node_modules/*")
 do
     echo -e "${BIBlue}[info] Processing '${htmlfile}' for cache busting...${Color_Off}"
     
-    for resourcefile in $(find -type f -regex '.*\.css\|.*\.js' | sed 's/\.\///g')
+    for resourcefile in $(find -type f -regex '.*\.css\|.*\.js' -not -path "./node_modules/*" | sed 's/\.\///g')
     do
         # Check if resource is used in html file
         resourceusage=$(grep -i "$resourcefile" "$htmlfile")
