@@ -35,10 +35,10 @@ const _tool = {
 
 		uiCtx.save();
 
-		// draw targeting square reticle thingy cursor
+		// Draw targeting square reticle thingy cursor
 		uiCtx.lineWidth = style.reticleWidth;
 		uiCtx.strokeStyle = style.reticleStyle;
-		uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); //origin is middle of the frame
+		uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h); // Origin is middle of the frame
 
 		uiCtx.font = `bold 20px Open Sans`;
 

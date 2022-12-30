@@ -6,4 +6,4 @@
 sh .devtools/updatehashes.sh
 
 # Adds file to current commit
-git add --all
+git add "**.html"
