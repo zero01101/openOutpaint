@@ -94,16 +94,18 @@ do
 done
 
 # Actual file processing
-for htmlfile in $(find -type f -name \*.html)
+for htmlfile in $(find -type f -name \*.html -not -path "./node_modules/*")
 do
     echo -e "${BIBlue}[info] Processing '${htmlfile}' for cache busting...${Color_Off}"
     
-    for resourcefile in $(find -type f -regex '.*\.css\|.*\.js' | sed 's/\.\///g')
+    for resourcefile in $(find -type f -regex '.*\.css\|.*\.js' -not -path "./node_modules/*" | sed 's/\.\///g')
     do
+        echo "inside loop 1: $resourcefile"
         # Check if resource is used in html file
         resourceusage=$(grep -i "$resourcefile" "$htmlfile")
         if [ $? -eq 0 ]
         then
+            echo "inside loop 2: $resourcefile $htmlfile"
             # This is just for cache busting...
             # If 7 first characters of SHA1 is okay for git, it should be more than enough for us
             hash="$(sha1sum $resourcefile | cut -d' ' -f1 | head -c 7)"
@@ -111,6 +113,7 @@ do
             # Check if resource hash is already correct
             if ! echo "$resourceusage" | grep -i "=$hash\"" > /dev/null
             then
+                echo "inside loop 3: $resourcefile"
                 escaped=$(echo $resourcefile | sed 's/\//\\\//g' | sed 's/\./\\./g')
                 sed -Ei "s/${escaped}(\?v=[a-z0-9]+)?/${escaped}?v=${hash}/g" "$htmlfile"
                 
