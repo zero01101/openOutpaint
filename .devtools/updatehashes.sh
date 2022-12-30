@@ -94,11 +94,18 @@ do
 done
 
 # Actual file processing
-for htmlfile in $(find -type f -name \*.html)
+for htmlfile in $(find -type f -name \*.html -not -path "./node_modules/*")
 do
     echo -e "${BIBlue}[info] Processing '${htmlfile}' for cache busting...${Color_Off}"
     
-    for resourcefile in $(find -type f -regex '.*\.css\|.*\.js' | sed 's/\.\///g')
+    LIST=$(find -type f -regex '.*\.css\|.*\.js' -not -path "./node_modules/*" | sed 's/\.\///g')
+
+    if [ "$1" = "gitadd" ]
+    then
+        LIST=$(git status -s | grep -oE "[A-Z]  .+" | cut -d" " -f3)
+    fi
+
+    for resourcefile in $LIST
     do
         # Check if resource is used in html file
         resourceusage=$(grep -i "$resourcefile" "$htmlfile")

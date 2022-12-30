@@ -140,10 +140,13 @@ class DOM {
 	 * @returns Whether there is currently an active input
 	 */
 	static hasActiveInput() {
-		return (
-			document.activeElement &&
-			this.inputTags.has(document.activeElement.tagName.toLowerCase())
-		);
+		const active = document.activeElement;
+		const tag = active.tagName.toLowerCase();
+
+		const checkTag = this.inputTags.has(tag);
+		if (!checkTag) return false;
+
+		return tag !== "input" || active.type === "text";
 	}
 }
 
