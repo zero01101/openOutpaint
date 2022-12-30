@@ -74,7 +74,7 @@ function makeDraggable(element) {
  * @param {number} option.defaultValue The default value of the slider
  * @param {number} [options.textStep=step] The step size for the slider text and setvalue \
  * (usually finer, and an integer divisor of step size)
- * @returns {{value: number}} A reference to the value of the slider
+ * @returns {{value: number, onchange: Observer<{value: number}>}} A reference to the value of the slider
  */
 function createSlider(name, wrapper, options = {}) {
 	defaultOpt(options, {
@@ -124,6 +124,10 @@ function createSlider(name, wrapper, options = {}) {
 	underEl.appendChild(bar);
 	underEl.appendChild(document.createElement("div"));
 
+	// Change observer
+	/** @type {Observer<{value: number}>} */
+	const onchange = new Observer();
+
 	// Set value
 	const setValue = (val) => {
 		phantomTextRange.value = val;
@@ -133,6 +137,7 @@ function createSlider(name, wrapper, options = {}) {
 		}%`;
 		textEl.value = `${name}: ${value}`;
 		options.valuecb && options.valuecb(value);
+		onchange.emit({value: val});
 	};
 
 	setValue(options.defaultValue);
@@ -184,6 +189,7 @@ function createSlider(name, wrapper, options = {}) {
 	});
 
 	return {
+		onchange,
 		set value(val) {
 			setValue(val);
 		},

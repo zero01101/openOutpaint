@@ -1,0 +1,26 @@
+name: Cache Busting
+on:
+  push:
+    branches:
+      - "main"
+      - "testing"
+  pull_request:
+    branches: [main, testing]
+    types: [opened, synchronize, closed]
+
+jobs:
+  update_hashes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Update hashes in html files
+        run: bash .devtools/updatehashes.sh
+      - name: Commit
+        uses: EndBug/add-and-commit@v9.1.1
+        with:
+          committer_name: Github Actions
+          committer_email: actions@github.com
+          message: "Fixed resource hashes"

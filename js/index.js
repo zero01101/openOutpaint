@@ -105,6 +105,7 @@ var stableDiffusionData = {
 	inpaint_full_res: false,
 	inpainting_fill: 2,
 	enable_hr: false,
+	restore_faces: false,
 	firstphase_width: 0,
 	firstphase_height: 0,
 	styles: [],
@@ -158,6 +159,7 @@ function startup() {
 	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
+	changeRestoreFaces();
 	changeSyncCursorSize();
 }
 
@@ -553,7 +555,10 @@ const resSlider = makeSlider(
 		stableDiffusionData.width = stableDiffusionData.height = v;
 		stableDiffusionData.firstphase_width =
 			stableDiffusionData.firstphase_height = v / 2;
-		informCursorSizeSlider();
+
+		toolbar.currentTool &&
+			toolbar.currentTool.redraw &&
+			toolbar.currentTool.redraw();
 	}
 );
 makeSlider(
@@ -616,17 +621,21 @@ function changeHiResFix() {
 	localStorage.setItem("openoutpaint/enable_hr", stableDiffusionData.enable_hr);
 }
 
-function changeSyncCursorSize() {
-	stableDiffusionData.sync_cursor_size = Boolean(
-		document.getElementById("cbxSyncCursorSize").checked
-	); //is this horribly hacky, putting it in SD data instead of making a gross global var?
-	localStorage.setItem(
-		"openoutpaint/sync_cursor_size",
-		stableDiffusionData.sync_cursor_size
+function changeRestoreFaces() {
+	stableDiffusionData.restore_faces = Boolean(
+		document.getElementById("cbxRestoreFaces").checked
 	);
-	if (stableDiffusionData.sync_cursor_size) {
-		resSlider.value = stableDiffusionData.width;
-	}
+	localStorage.setItem(
+		"openoutpaint/restore_faces",
+		stableDiffusionData.restore_faces
+	);
+}
+
+function changeSyncCursorSize() {
+	global.syncCursorSize = Boolean(
+		document.getElementById("cbxSyncCursorSize").checked
+	);
+	localStorage.setItem("openoutpaint/sync_cursor_size", global.syncCursorSize);
 }
 
 function changeSmoothRendering() {
@@ -1007,6 +1016,10 @@ function loadSettings() {
 		localStorage.getItem("openoutpaint/enable_hr") === null
 			? false
 			: localStorage.getItem("openoutpaint/enable_hr") === "true";
+	let _restore_faces =
+		localStorage.getItem("openoutpaint/restore_faces") === null
+			? false
+			: localStorage.getItem("openoutpaint/restore_faces") === "true";
 
 	let _sync_cursor_size =
 		localStorage.getItem("openoutpaint/sync_cursor_size") === null
@@ -1017,6 +1030,7 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
+	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =
 		Boolean(_sync_cursor_size);
 }
@@ -1025,9 +1039,6 @@ imageCollection.element.addEventListener(
 	"wheel",
 	(evn) => {
 		evn.preventDefault();
-		if (!evn.ctrlKey) {
-			_resolution_onwheel(evn);
-		}
 	},
 	{passive: false}
 );
@@ -1045,25 +1056,3 @@ function resetToDefaults() {
 		localStorage.clear();
 	}
 }
-
-function informCursorSizeSlider() {
-	if (stableDiffusionData.sync_cursor_size) {
-		if (toolbar._current_tool) {
-			if (!toolbar._current_tool.state.ignorePrevious) {
-				toolbar._current_tool.state.setCursorSize(stableDiffusionData.width);
-			}
-			toolbar._current_tool.state.ignorePrevious = false;
-		}
-	}
-}
-
-const _resolution_onwheel = (evn) => {
-	if (
-		stableDiffusionData.sync_cursor_size &&
-		!toolbar._current_tool.state.block_res_change
-	) {
-		toolbar._current_tool.state.ignorePrevious = true; //so hacky
-		resSlider.value =
-			stableDiffusionData.width - (128 * evn.deltaY) / Math.abs(evn.deltaY);
-	}
-};
