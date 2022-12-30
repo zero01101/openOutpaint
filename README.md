@@ -56,8 +56,11 @@ A1111 webUI must be launched with the `--api` flag enabled, and the `--cors-allo
 
 ### surprising incompatibilities
 
+If anything goes wrong with openOutpaint, try running it on another browser and disable all extensions and try again. If a new incompatible extension is found, please open an issue so we can notify other users of extension incompatibilities.
+
 - [microsoft editor extension for chrome/edge seems to disable the overmask slider](https://github.com/zero01101/openOutpaint/discussions/88#discussioncomment-4498341)
 - [duckduckgo privacy extension for firefox breaks outpainting, resulting in pure black output](https://github.com/zero01101/openOutpaint-webUI-extension/issues/3#issuecomment-1367694000) - add an exception for your openOutpaint host (likely localhost or 127.0.0.1)
+- [same for dark reader](https://github.com/zero01101/openOutpaint-webUI-extension/issues/3#issuecomment-1367838766)
 
 ### quickstart speedrun
 
