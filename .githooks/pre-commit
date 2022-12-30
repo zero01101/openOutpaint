@@ -3,7 +3,7 @@
 # Script to perform some basic operations to the code before committing.
 
 # Adds file hashes to html script imports for cache busting purposes
-sh .devtools/updatehashes.sh
+sh .devtools/updatehashes.sh gitadd
 
 # Adds file to current commit
 git add "**.html"
