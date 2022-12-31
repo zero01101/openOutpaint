@@ -1346,6 +1346,10 @@ const dreamTool = () =>
 						h: stableDiffusionData.height,
 					};
 
+					//hacky set non-square auto hrfix values
+					stableDiffusionData.firstphase_height = resolution.h / 2;
+					stableDiffusionData.firstphase_width = resolution.w / 2;
+
 					if (global.connection === "online") {
 						dream_generate_callback(bb, resolution, state);
 					} else {
