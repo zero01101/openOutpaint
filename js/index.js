@@ -612,6 +612,17 @@ makeSlider(
 
 makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
 
+makeSlider(
+	"HR Fix Lock Px.",
+	document.getElementById("hrFixLock"),
+	"hr_fix_lock_px",
+	0.0,
+	768.0,
+	256.0,
+	0.0,
+	1.0
+);
+
 function changeMaskBlur() {
 	stableDiffusionData.mask_blur = parseInt(
 		document.getElementById("maskBlur").value

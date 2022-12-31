@@ -1347,8 +1347,16 @@ const dreamTool = () =>
 					};
 
 					//hacky set non-square auto hrfix values
-					stableDiffusionData.firstphase_height = resolution.h / 2;
-					stableDiffusionData.firstphase_width = resolution.w / 2;
+					let hrLockPx =
+						localStorage.getItem("openoutpaint/hr_fix_lock_px") ?? 0;
+					stableDiffusionData.firstphase_height =
+						hrLockPx == 0 || resolution.h / 2 <= hrLockPx
+							? resolution.h / 2
+							: hrLockPx;
+					stableDiffusionData.firstphase_width =
+						hrLockPx == 0 || resolution.w / 2 <= hrLockPx
+							? resolution.w / 2
+							: hrLockPx;
 
 					if (global.connection === "online") {
 						dream_generate_callback(bb, resolution, state);
