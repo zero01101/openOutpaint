@@ -188,4 +188,30 @@ const _toolbar_input = {
 			},
 		};
 	},
+
+	selectlist: (
+		state,
+		dataKey,
+		text,
+		options = {value, text},
+		defaultOptionValue,
+		cb = null
+	) => {
+		const selectlist = document.createElement("select");
+		Object.entries(options).forEach((opt) => {
+			var option = document.createElement("option");
+			option.value = opt[0];
+			option.text = opt[1];
+			selectlist.options.add(option);
+		});
+		selectlist.selectedIndex = defaultOptionValue;
+		selectlist.onchange = () => {
+			state[dataKey] = selectlist.selectedIndex;
+			cb && cb();
+		};
+		const label = document.createElement("label");
+		label.appendChild(selectlist);
+		label.appendChild(new Text(text));
+		return {selectlist, label};
+	},
 };
