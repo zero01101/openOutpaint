@@ -198,6 +198,7 @@ const _toolbar_input = {
 		cb = null
 	) => {
 		const selectlist = document.createElement("select");
+		selectlist.classList.add("bareselector");
 		Object.entries(options).forEach((opt) => {
 			var option = document.createElement("option");
 			option.value = opt[0];
@@ -210,8 +211,8 @@ const _toolbar_input = {
 			cb && cb();
 		};
 		const label = document.createElement("label");
-		label.appendChild(selectlist);
 		label.appendChild(new Text(text));
+		label.appendChild(selectlist);
 		return {selectlist, label};
 	},
 };

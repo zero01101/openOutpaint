@@ -100,6 +100,26 @@ div.slider-wrapper > input.text {
 	background-color: transparent;
 }
 
+/* Bare Select */
+
+.bareselector {
+	border-radius: 5px;
+
+	background-color: white;
+
+	overflow-y: auto;
+
+	margin-top: 0;
+	margin-left: 0;
+
+	max-height: 200px;
+	min-width: 100%;
+	max-width: 800px;
+
+	width: fit-content;
+	z-index: 200;
+}
+
 /* Autocomplete Select */
 div.autocomplete {
 	border-radius: 5px;

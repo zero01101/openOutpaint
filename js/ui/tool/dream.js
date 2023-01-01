@@ -2049,10 +2049,10 @@ const img2imgTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
-				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 			},
 			shortcut: "I",
 		}
