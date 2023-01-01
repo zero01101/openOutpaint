@@ -613,7 +613,7 @@ makeSlider(
 makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
 
 makeSlider(
-	"HRFix Lock Px.",
+	"HRfix Lock Px.",
 	document.getElementById("hrFixLock"),
 	"hr_fix_lock_px",
 	0.0,
