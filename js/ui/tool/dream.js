@@ -375,12 +375,16 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		});
 	};
 
+	const sendInterrupt = () => {
+		fetch(`${host}${config.api.path}interrupt`, {method: "POST"});
+	};
+
 	// Add Interrupt Button
 	const interruptButton = makeElement("button", bb.x + bb.w - 100, bb.y + bb.h);
 	interruptButton.classList.add("dream-stop-btn");
 	interruptButton.textContent = "Interrupt";
 	interruptButton.addEventListener("click", () => {
-		fetch(`${host}${config.api.path}interrupt`, {method: "POST"});
+		sendInterrupt();
 		interruptButton.disabled = true;
 	});
 	const marchingOptions = {};
@@ -389,6 +393,9 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	// First Dream Run
 	console.info(`[dream] Generating images for prompt '${request.prompt}'`);
 	console.debug(request);
+
+	eagerGenerateCount = toolbar._current_tool.state.eagerGenerateCount;
+	isDreamComplete = false;
 
 	let stopProgress = null;
 	try {
@@ -428,6 +435,19 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		imageCollection.inputElement.removeChild(interruptButton);
 	}
 
+	const needMoreGenerations = () => {
+		return (
+			eagerGenerateCount > 0 &&
+			images.length - highestNavigatedImageIndex <= eagerGenerateCount
+		);
+	};
+
+	const isGenerationPending = () => {
+		return generationQueue.length > 0;
+	};
+
+	let highestNavigatedImageIndex = 0;
+
 	// Image navigation
 	const prevImg = () => {
 		at--;
@@ -443,10 +463,16 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		at++;
 		if (at >= images.length) at = 0;
 
+		highestNavigatedImageIndex = Math.max(at, highestNavigatedImageIndex);
+
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
 		var seed = seeds[at];
 		seedbtn.title = "Use seed " + seed;
 		redraw();
+
+		if (needMoreGenerations() && !isGenerationPending()) {
+			makeMore();
+		}
 	};
 
 	const applyImg = async () => {
@@ -504,6 +530,11 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		}
 
 		nextQueue(moreQ);
+
+		//Start the next batch if we're eager-generating
+		if (needMoreGenerations() && !isGenerationPending() && !isDreamComplete) {
+			makeMore();
+		}
 	};
 
 	const discardImg = async () => {
@@ -657,6 +688,10 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		mouse.listen.world.btn.right.onclick.clear(oncancelhandler);
 		mouse.listen.world.btn.middle.onclick.clear(onmorehandler);
 		mouse.listen.world.onwheel.clear(onwheelhandler);
+		isDreamComplete = true;
+		if (generating) {
+			sendInterrupt();
+		}
 	};
 
 	redraw();
@@ -740,6 +775,11 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	imageSelectMenu.appendChild(seedbtn);
 
 	nextQueue(initialQ);
+
+	//Start the next batch after the initial generation
+	if (needMoreGenerations()) {
+		makeMore();
+	}
 };
 
 /**
@@ -1186,6 +1226,7 @@ const dreamTool = () =>
 				state.keepUnmaskedBlur = 8;
 				state.overMaskPx = 20;
 				state.preserveMasks = false;
+				state.eagerGenerateCount = 0;
 
 				state.erasePrevCursor = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
@@ -1489,6 +1530,19 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
+
+					// Eager generation Slider
+					state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
+						state,
+						"eagerGenerateCount",
+						"Generate-ahead count",
+						{
+							min: 0,
+							max: 100,
+							step: 2,
+							textStep: 1,
+						}
+					).slider;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -1501,6 +1555,7 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
+				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},
 			shortcut: "D",
 		}
@@ -1585,6 +1640,7 @@ const img2imgTool = () =>
 				state.keepUnmaskedBlur = 8;
 				state.fullResolution = false;
 				state.preserveMasks = false;
+				state.eagerGenerateCount = 0;
 
 				state.denoisingStrength = 0.7;
 
@@ -2035,6 +2091,19 @@ const img2imgTool = () =>
 							stableDiffusionData.inpainting_fill = state.inpainting_fill;
 						}
 					).label;
+
+					// Eager generation Slider
+					state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
+						state,
+						"eagerGenerateCount",
+						"Generate-ahead count",
+						{
+							min: 0,
+							max: 100,
+							step: 2,
+							textStep: 1,
+						}
+					).slider;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2053,6 +2122,7 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
+				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},
 			shortcut: "I",
 		}
@@ -2060,8 +2130,7 @@ const img2imgTool = () =>
 
 window.onbeforeunload = async () => {
 	// Stop current generation on page close
-	if (generating)
-		await fetch(`${host}${config.api.path}interrupt`, {method: "POST"});
+	if (generating) await sendInterrupt();
 };
 
 const sendSeed = (seed) => {
