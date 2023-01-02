@@ -1387,18 +1387,6 @@ const dreamTool = () =>
 						h: stableDiffusionData.height,
 					};
 
-					//hacky set non-square auto hrfix values
-					let hrLockPx =
-						localStorage.getItem("openoutpaint/hr_fix_lock_px") ?? 0;
-					stableDiffusionData.firstphase_height =
-						hrLockPx == 0 || resolution.h / 2 <= hrLockPx
-							? resolution.h / 2
-							: hrLockPx;
-					stableDiffusionData.firstphase_width =
-						hrLockPx == 0 || resolution.w / 2 <= hrLockPx
-							? resolution.w / 2
-							: hrLockPx;
-
 					if (global.connection === "online") {
 						dream_generate_callback(bb, resolution, state);
 					} else {
@@ -1492,8 +1480,14 @@ const dreamTool = () =>
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.remove(
 									"invisible"
 								);
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
+									"invisible"
+								);
 							} else {
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove(
+									"invisible"
+								);
 							}
 						}
 					).label;
@@ -1510,6 +1504,12 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
+
+					state.ctxmenu.keepUnmaskedBlurSliderLinebreak =
+						document.createElement("br");
+					state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
+						"invisible"
+					);
 
 					// Preserve Brushed Masks Checkbox
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
@@ -1552,6 +1552,7 @@ const dreamTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);

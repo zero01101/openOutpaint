@@ -106,8 +106,10 @@ var stableDiffusionData = {
 	inpainting_fill: 2,
 	enable_hr: false,
 	restore_faces: false,
-	firstphase_width: 0,
-	firstphase_height: 0,
+	//firstphase_width: 0,
+	//firstphase_height: 0, //20230102 welp looks like the entire way HRfix is implemented has become bonkersly different
+	hr_scale: 2.0,
+	hr_upscaler: "None",
 	styles: [],
 	// here's some more fields that might be useful
 
@@ -552,6 +554,14 @@ const upscalerAutoComplete = createAutoComplete(
 	document.getElementById("upscaler-ac-select")
 );
 
+const hrFixUpscalerAutoComplete = createAutoComplete(
+	"HRfix Upscaler",
+	document.getElementById("hrFixUpscaler")
+);
+hrFixUpscalerAutoComplete.onchange.on(({value}) => {
+	stableDiffusionData.hr_upscaler = value;
+});
+
 const resSlider = makeSlider(
 	"Resolution",
 	document.getElementById("resolution"),
@@ -563,8 +573,6 @@ const resSlider = makeSlider(
 	2,
 	(v) => {
 		stableDiffusionData.width = stableDiffusionData.height = v;
-		stableDiffusionData.firstphase_width =
-			stableDiffusionData.firstphase_height = v / 2;
 
 		toolbar.currentTool &&
 			toolbar.currentTool.redraw &&
@@ -621,15 +629,16 @@ makeSlider(
 	1
 );
 
+// 20230102 grumble grumble
 makeSlider(
-	"HRfix Lock Px.",
-	document.getElementById("hrFixLock"),
-	"hr_fix_lock_px",
-	0.0,
-	768.0,
-	256.0,
-	0.0,
-	1.0
+	"HRfix Scale",
+	document.getElementById("hrFixScale"),
+	"hr_scale",
+	1.0,
+	4.0,
+	0.1,
+	2.0,
+	0.1
 );
 
 function changeMaskBlur() {
@@ -649,6 +658,20 @@ function changeHiResFix() {
 		document.getElementById("cbxHRFix").checked
 	);
 	localStorage.setItem("openoutpaint/enable_hr", stableDiffusionData.enable_hr);
+	var hrfSlider = document.getElementById("hrFixScale");
+	var hrfOpotions = document.getElementById("hrFixUpscaler");
+	var hrfLabel = document.getElementById("hrFixLabel");
+	if (stableDiffusionData.enable_hr) {
+		hrfSlider.classList.remove("invisible");
+		hrfOpotions.classList.remove("invisible");
+		hrfLabel.classList.remove("invisible");
+		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add("invisible");
+	} else {
+		hrfSlider.classList.add("invisible");
+		hrfOpotions.classList.add("invisible");
+		hrfLabel.classList.add("invisible");
+		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove("invisible");
+	}
 }
 
 function changeRestoreFaces() {
@@ -743,17 +766,23 @@ async function getUpscalers() {
 			"[index] purposefully_incorrect_data response, ignore above error"
 		);
 		// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
-		const upscalers = data.detail
+		const upscalersPlusNone = data.detail
 			.split(": ")[1]
 			.split(",")
-			.map((v) => v.trim())
-			.filter((v) => v !== "None"); // converting the result to a list of upscalers
+			.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
+		const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
+		upscalersPlusNone.push("Latent");
+		upscalersPlusNone.push("Latent (nearest)"); // GRUMBLE GRUMBLE
 
 		upscalerAutoComplete.options = upscalers.map((u) => {
 			return {name: u, value: u};
 		});
+		hrFixUpscalerAutoComplete.options = upscalersPlusNone.map((u) => {
+			return {name: u, value: u};
+		});
 
 		upscalerAutoComplete.value = upscalers[0];
+		hrFixUpscalerAutoComplete.value = upscalersPlusNone[0];
 	} catch (e) {
 		console.warn("[index] Failed to fetch upscalers:");
 		console.warn(e);
