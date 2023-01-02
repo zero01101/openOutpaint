@@ -641,6 +641,17 @@ makeSlider(
 	0.1
 );
 
+makeSlider(
+	"HRfix Denoising",
+	document.getElementById("hrDenoising"),
+	"denoising_strength",
+	0.0,
+	1.0,
+	0.1,
+	0.7,
+	0.01
+);
+
 function changeMaskBlur() {
 	stableDiffusionData.mask_blur = parseInt(
 		document.getElementById("maskBlur").value
@@ -661,15 +672,18 @@ function changeHiResFix() {
 	var hrfSlider = document.getElementById("hrFixScale");
 	var hrfOpotions = document.getElementById("hrFixUpscaler");
 	var hrfLabel = document.getElementById("hrFixLabel");
+	var hrfDenoiseSlider = document.getElementById("hrDenoising");
 	if (stableDiffusionData.enable_hr) {
 		hrfSlider.classList.remove("invisible");
 		hrfOpotions.classList.remove("invisible");
 		hrfLabel.classList.remove("invisible");
+		hrfDenoiseSlider.classList.remove("invisible");
 		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add("invisible");
 	} else {
 		hrfSlider.classList.add("invisible");
 		hrfOpotions.classList.add("invisible");
 		hrfLabel.classList.add("invisible");
+		hrfDenoiseSlider.classList.add("invisible");
 		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove("invisible");
 	}
 }
