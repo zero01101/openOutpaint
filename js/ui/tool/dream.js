@@ -130,6 +130,22 @@ const _dream = async (endpoint, request) => {
 	let data = null;
 	try {
 		generating = true;
+		if (
+			endpoint == "txt2img" &&
+			request.enable_hr &&
+			localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true"
+		) {
+			/**
+			 * try and make the new HRfix method useful for our purposes
+			 * since it now returns an image that's been upscaled x the hr_scale parameter,
+			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
+			 * by the scale factor so it returns something about the same size as we wanted initially
+			 */
+			var newWidth = Math.floor(request.width / request.hr_scale);
+			var newHeight = Math.floor(request.height / request.hr_scale);
+			request.width = newWidth;
+			request.height = newHeight;
+		}
 		const response = await fetch(apiURL, {
 			method: "POST",
 			headers: {
