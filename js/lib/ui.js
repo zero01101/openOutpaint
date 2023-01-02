@@ -206,7 +206,7 @@ function createSlider(name, wrapper, options = {}) {
  * @param {HTMLDivElement} wrapper The div element that will wrap the input elements
  * @param {object} options Extra options
  * @param {boolean} options.multiple Whether multiple options can be selected
- * @param {{name: string, value: string}[]} options.options Options to add to the selector
+ * @param {{name: string, value: string, optionelcb: (el: HTMLOptionElement) => void}[]} options.options Options to add to the selector
  * @returns {AutoCompleteElement}
  */
 function createAutoComplete(name, wrapper, options = {}) {
@@ -293,6 +293,7 @@ function createAutoComplete(name, wrapper, options = {}) {
 				const optionEl = document.createElement("option");
 				optionEl.classList.add("autocomplete-option");
 				optionEl.title = title || name;
+				if (opt.optionelcb) opt.optionelcb(optionEl);
 
 				const option = {name, value, optionElement: optionEl};
 

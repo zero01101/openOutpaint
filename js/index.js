@@ -531,6 +531,16 @@ const modelAutoComplete = createAutoComplete(
 	"Model",
 	document.getElementById("models-ac-select")
 );
+modelAutoComplete.onchange.on(({value}) => {
+	if (value.toLowerCase().includes("inpainting"))
+		document.querySelector(
+			"#models-ac-select input.autocomplete-text"
+		).style.backgroundColor = "#cfc";
+	else
+		document.querySelector(
+			"#models-ac-select input.autocomplete-text"
+		).style.backgroundColor = "#fcc";
+});
 
 const samplerAutoComplete = createAutoComplete(
 	"Sampler",
@@ -601,6 +611,17 @@ makeSlider(
 );
 
 makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
+
+makeSlider(
+	"HRfix Lock Px.",
+	document.getElementById("hrFixLock"),
+	"hr_fix_lock_px",
+	0.0,
+	768.0,
+	256.0,
+	0.0,
+	1.0
+);
 
 function changeMaskBlur() {
 	stableDiffusionData.mask_blur = parseInt(
@@ -782,6 +803,10 @@ async function getModels() {
 		modelAutoComplete.options = data.map((option) => ({
 			name: option.title,
 			value: option.title,
+			optionelcb: (el) => {
+				if (option.title.toLowerCase().includes("inpainting"))
+					el.classList.add("inpainting");
+			},
 		}));
 
 		try {
