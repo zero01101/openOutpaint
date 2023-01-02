@@ -575,7 +575,7 @@ makeSlider(
 	"CFG Scale",
 	document.getElementById("cfgScale"),
 	"cfg_scale",
-	localStorage.getItem("openoutpaint/settings.min-cfg") || -1,
+	localStorage.getItem("openoutpaint/settings.min-cfg") || 1,
 	localStorage.getItem("openoutpaint/settings.max-cfg") || 25,
 	0.5,
 	7.0,
