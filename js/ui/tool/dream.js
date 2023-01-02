@@ -932,7 +932,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	request.height = resolution.h;
 
 	request.denoising_strength = state.denoisingStrength;
-	request.inpainting_fill = 1; // For img2img use original
+	request.inpainting_fill = state.inpainting_fill; //let's see how this works //1; // For img2img use original
 
 	// Load prompt (maybe we should add some events so we don't have to do this)
 	request.prompt = document.getElementById("prompt").value;
@@ -1345,6 +1345,18 @@ const dreamTool = () =>
 						w: stableDiffusionData.width,
 						h: stableDiffusionData.height,
 					};
+
+					//hacky set non-square auto hrfix values
+					let hrLockPx =
+						localStorage.getItem("openoutpaint/hr_fix_lock_px") ?? 0;
+					stableDiffusionData.firstphase_height =
+						hrLockPx == 0 || resolution.h / 2 <= hrLockPx
+							? resolution.h / 2
+							: hrLockPx;
+					stableDiffusionData.firstphase_width =
+						hrLockPx == 0 || resolution.w / 2 <= hrLockPx
+							? resolution.w / 2
+							: hrLockPx;
 
 					if (global.connection === "online") {
 						dream_generate_callback(bb, resolution, state);
@@ -2006,6 +2018,23 @@ const img2imgTool = () =>
 							textStep: 1,
 						}
 					).slider;
+
+					// inpaint fill type select list
+					state.ctxmenu.inpaintTypeSelect = _toolbar_input.selectlist(
+						state,
+						"inpainting_fill",
+						"Inpaint Type",
+						{
+							0: "fill",
+							1: "original (recommended)",
+							2: "latent noise",
+							3: "latent nothing",
+						},
+						1, // USE ORIGINAL FOR IMG2IMG OR ELSE but we still give you the option because we love you
+						() => {
+							stableDiffusionData.inpainting_fill = state.inpainting_fill;
+						}
+					).label;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2020,6 +2049,7 @@ const img2imgTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
