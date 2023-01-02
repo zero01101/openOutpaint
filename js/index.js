@@ -575,8 +575,8 @@ makeSlider(
 	"CFG Scale",
 	document.getElementById("cfgScale"),
 	"cfg_scale",
-	-1,
-	25,
+	localStorage.getItem("openoutpaint/settings.min-cfg") || -1,
+	localStorage.getItem("openoutpaint/settings.max-cfg") || 25,
 	0.5,
 	7.0,
 	0.1
@@ -610,7 +610,16 @@ makeSlider(
 	0.1
 );
 
-makeSlider("Steps", document.getElementById("steps"), "steps", 1, 70, 5, 30, 1);
+makeSlider(
+	"Steps",
+	document.getElementById("steps"),
+	"steps",
+	1,
+	localStorage.getItem("openoutpaint/settings.max-steps") || 70,
+	5,
+	30,
+	1
+);
 
 makeSlider(
 	"HRfix Lock Px.",
