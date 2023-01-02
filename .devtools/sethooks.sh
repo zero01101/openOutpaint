@@ -1,3 +1,3 @@
 #!/usr/bin/sh
 
-git config core.hooksPath .githooks
+git config core.hooksPath .githooks/linux
