@@ -59,10 +59,39 @@
 				type="number"
 				step="1" />
 		</label>
+		<label style="display: flex">
+			Max Steps:
+			<input
+				id="max-steps"
+				class="canvas-size-input"
+				type="number"
+				step="1"
+				value="70" />
+		</label>
+		<label style="display: flex">
+			CFG minmax:
+			<input
+				id="min-cfg"
+				class="canvas-size-input"
+				type="number"
+				step="0.1"
+				value="-1.0" />
+			::
+			<input
+				id="max-cfg"
+				class="canvas-size-input"
+				type="number"
+				step="0.1"
+				value="30.0" />
+		</label>
+		<p>Refresh the page to apply settings.</p>
 
 		<script>
 			const canvasWidth = document.getElementById("canvas-width");
 			const canvasHeight = document.getElementById("canvas-height");
+			const maxSteps = document.getElementById("max-steps");
+			const minCfg = document.getElementById("min-cfg");
+			const maxCfg = document.getElementById("max-cfg");
 
 			function writeToLocalStorage() {
 				localStorage.setItem(
@@ -73,6 +102,9 @@
 					"openoutpaint/settings.canvas-height",
 					canvasHeight.value
 				);
+				localStorage.setItem("openoutpaint/settings.max-steps", maxSteps.value);
+				localStorage.setItem("openoutpaint/settings.min-cfg", minCfg.value);
+				localStorage.setItem("openoutpaint/settings.max-cfg", maxCfg.value);
 			}
 
 			// Loads values from local storage
@@ -80,11 +112,20 @@
 				localStorage.getItem("openoutpaint/settings.canvas-width") || 2048;
 			canvasHeight.value =
 				localStorage.getItem("openoutpaint/settings.canvas-height") || 2048;
+			maxSteps.value =
+				localStorage.getItem("openoutpaint/settings.max-steps") || 70;
+			minCfg.value =
+				localStorage.getItem("openoutpaint/settings.min-cfg") || -1;
+			maxCfg.value =
+				localStorage.getItem("openoutpaint/settings.max-cfg") || 30;
 
 			writeToLocalStorage();
 
 			canvasWidth.onchange = writeToLocalStorage;
 			canvasHeight.onchange = writeToLocalStorage;
+			maxSteps.onchange = writeToLocalStorage;
+			minCfg.onchange = writeToLocalStorage;
+			maxCfg.onchange = writeToLocalStorage;
 		</script>
 	</body>
 </html>
