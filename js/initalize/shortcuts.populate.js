@@ -14,7 +14,7 @@ keyboard.onShortcut({key: "KeyD"}, () => {
 keyboard.onShortcut({key: "KeyM"}, () => {
 	tools.maskbrush.enable();
 });
-keyboard.onShortcut({key: "KeyB"}, () => {
+keyboard.onShortcut({key: "KeyC"}, () => {
 	tools.colorbrush.enable();
 });
 keyboard.onShortcut({key: "KeyI"}, () => {
@@ -28,7 +28,4 @@ keyboard.onShortcut({key: "KeyU"}, () => {
 });
 keyboard.onShortcut({key: "KeyN"}, () => {
 	tools.interrogate.enable();
-});
-keyboard.onShortcut({key: "KeyC"}, () => {
-	maskPaintLayer.clear();
 });
