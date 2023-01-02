@@ -43,6 +43,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - saves your preferences/imported images to browser localstorage for maximum convenience
 - reset to defaults button to unsave your preferences if things go squirrely
 - floating navigable undo/redo palette with ctrl+z/y keyboard shortcuts for additional maximum convenience and desquirreliness
+- optional generate-ahead function to keep crankin' out the dreams while you look through the ones that already exist
 - _all this and much more for the low, low price of simply already owning an expensive GPU!_
 
 ## operation
