@@ -3,7 +3,6 @@ let generationQueue = [];
 let generationAreas = new Set();
 let generating = false;
 
-
 /**
  * Starts progress monitoring bar
  *
@@ -378,7 +377,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 	const sendInterrupt = () => {
 		fetch(`${host}${config.api.path}interrupt`, {method: "POST"});
-	}
+	};
 
 	// Add Interrupt Button
 	const interruptButton = makeElement("button", bb.x + bb.w - 100, bb.y + bb.h);
@@ -394,7 +393,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	// First Dream Run
 	console.info(`[dream] Generating images for prompt '${request.prompt}'`);
 	console.debug(request);
-
 
 	eagerGenerateCount = toolbar._current_tool.state.eagerGenerateCount;
 	isDreamComplete = false;
@@ -438,13 +436,15 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	}
 
 	const needMoreGenerations = () => {
-		return (eagerGenerateCount > 0) && 
-				(images.length - highestNavigatedImageIndex <= eagerGenerateCount);
-	}
+		return (
+			eagerGenerateCount > 0 &&
+			images.length - highestNavigatedImageIndex <= eagerGenerateCount
+		);
+	};
 
 	const isGenerationPending = () => {
 		return generationQueue.length > 0;
-	}
+	};
 
 	let highestNavigatedImageIndex = 0;
 
@@ -535,7 +535,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		if (needMoreGenerations() && !isGenerationPending() && !isDreamComplete) {
 			makeMore();
 		}
-	
 	};
 
 	const discardImg = async () => {
@@ -781,7 +780,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	if (needMoreGenerations()) {
 		makeMore();
 	}
-
 };
 
 /**
@@ -1508,7 +1506,6 @@ const dreamTool = () =>
 						"Preserve Brushed Masks"
 					).label;
 
-
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
@@ -1522,7 +1519,6 @@ const dreamTool = () =>
 						}
 					).slider;
 
-
 					// Eager generation Slider
 					state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
 						state,
@@ -1535,8 +1531,6 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
-
-
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -1549,7 +1543,6 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
-				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},
 			shortcut: "D",
@@ -2070,18 +2063,18 @@ const img2imgTool = () =>
 						}
 					).slider;
 
-				// Eager generation Slider
-				state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
-					state,
-					"eagerGenerateCount",
-					"Generate-ahead count",
-					{
-						min: 0,
-						max: 100,
-						step: 2,
-						textStep: 1,
-					}
-										).slider;
+					// Eager generation Slider
+					state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
+						state,
+						"eagerGenerateCount",
+						"Generate-ahead count",
+						{
+							min: 0,
+							max: 100,
+							step: 2,
+							textStep: 1,
+						}
+					).slider;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2099,7 +2092,6 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
-				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},
 			shortcut: "I",
@@ -2108,8 +2100,7 @@ const img2imgTool = () =>
 
 window.onbeforeunload = async () => {
 	// Stop current generation on page close
-	if (generating)
-		await sendInterrupt();
+	if (generating) await sendInterrupt();
 };
 
 const sendSeed = (seed) => {
