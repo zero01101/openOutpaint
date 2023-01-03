@@ -343,6 +343,12 @@ async function testHostConnection() {
 			const response = await fetch(
 				document.getElementById("host").value + "/sdapi/v1/options"
 			);
+			const optionsdata = await response.json();
+			if (optionsdata["use_scale_latent_for_hires_fix"]) {
+				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nor newer.`;
+				console.error(message);
+				alert(message);
+			}
 			switch (response.status) {
 				case 200: {
 					setConnectionStatus("online");
