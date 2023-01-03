@@ -650,7 +650,7 @@ makeSlider(
 makeSlider(
 	"HRfix Denoising",
 	document.getElementById("hrDenoising"),
-	"denoising_strength",
+	"hr_denoising_strength",
 	0.0,
 	1.0,
 	0.05,
@@ -1141,9 +1141,9 @@ function loadSettings() {
 			: localStorage.getItem("openoutpaint/hr_scale");
 
 	let _hrfix_denoising =
-		localStorage.getItem("openoutpaint/denoising_strength") === null
+		localStorage.getItem("openoutpaint/hr_denoising_strength") === null
 			? 0.7
-			: localStorage.getItem("openoutpaint/denoising_strength");
+			: localStorage.getItem("openoutpaint/hr_denoising_strength");
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);

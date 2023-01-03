@@ -146,6 +146,9 @@ const _dream = async (endpoint, request) => {
 			request.width = newWidth;
 			request.height = newHeight;
 		}
+		if (endpoint == "txt2img") {
+			request.denoising_strength = stableDiffusionData.hr_denoising_strength;
+		}
 		const response = await fetch(apiURL, {
 			method: "POST",
 			headers: {
@@ -2146,7 +2149,7 @@ const img2imgTool = () =>
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
-				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
+				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				const btnArray2 = document.createElement("div");
