@@ -1,7 +1,7 @@
 # Updates html files with cache busting urls including file hashes.
 
 # Actual file processing
-$htmlfiles = Get-ChildItem -Path . -Recurse -Filter "*.html" | Resolve-path -relative
+$htmlfiles = Get-ChildItem -Path . -Recurse -Filter "*.html" | Where {$_.FullName -notlike "*\node_modules\*"} | Resolve-path -relative
 foreach ($htmlfile in $htmlfiles) {
     Write-Host "[info] Processing '${htmlfile}' for cache busting..." -ForegroundColor Blue
 
