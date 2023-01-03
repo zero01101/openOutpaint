@@ -927,6 +927,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			request.height
 		);
 		request.mask = maskCanvas.toDataURL();
+		request.inpainting_fill = stableDiffusionData.outpainting_fill;
 
 		// Dream
 		_generate("img2img", request, bb, {
@@ -1538,6 +1539,23 @@ const dreamTool = () =>
 						"invisible"
 					);
 
+					// outpaint fill type select list
+					state.ctxmenu.outpaintTypeSelect = _toolbar_input.selectlist(
+						state,
+						"outpainting_fill",
+						"Outpaint Type",
+						{
+							0: "fill",
+							1: "original (AVOID)",
+							2: "latent noise (suggested)",
+							3: "latent nothing",
+						},
+						2, // AVOID ORIGINAL FOR OUTPAINT OR ELSE but we still give you the option because we love you
+						() => {
+							stableDiffusionData.outpainting_fill = state.outpainting_fill;
+						}
+					).label;
+
 					// Preserve Brushed Masks Checkbox
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
 						state,
@@ -1587,6 +1605,7 @@ const dreamTool = () =>
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.outpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},

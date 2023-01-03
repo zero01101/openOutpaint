@@ -103,7 +103,8 @@ var stableDiffusionData = {
 	mask: "",
 	init_images: [],
 	inpaint_full_res: false,
-	inpainting_fill: 2,
+	inpainting_fill: 1,
+	outpainting_fill: 2,
 	enable_hr: false,
 	restore_faces: false,
 	//firstphase_width: 0,
@@ -344,9 +345,13 @@ async function testHostConnection() {
 			);
 			const optionsdata = await response.json();
 			if (optionsdata["use_scale_latent_for_hires_fix"]) {
-				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nor newer.`;
+				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18 or newer.\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nHRfix options have been disabled.`;
 				console.error(message);
-				alert(message);
+				if (notify) alert(message);
+				document
+					.getElementById("cbxHRFix")
+					.setAttribute("disabled", "disabled");
+				stableDiffusionData.enable_hr = false;
 			}
 			switch (response.status) {
 				case 200: {
@@ -563,6 +568,7 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 	"HRfix Upscaler",
 	document.getElementById("hrFixUpscaler")
 );
+
 hrFixUpscalerAutoComplete.onchange.on(({value}) => {
 	stableDiffusionData.hr_upscaler = value;
 	localStorage.setItem(`openoutpaint/hr_upscaler`, value);
