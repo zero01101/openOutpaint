@@ -560,6 +560,7 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 );
 hrFixUpscalerAutoComplete.onchange.on(({value}) => {
 	stableDiffusionData.hr_upscaler = value;
+	localStorage.setItem(`openoutpaint/hr_upscaler`, value);
 });
 
 const resSlider = makeSlider(
@@ -647,7 +648,7 @@ makeSlider(
 	"denoising_strength",
 	0.0,
 	1.0,
-	0.1,
+	0.05,
 	0.7,
 	0.01
 );
@@ -1103,6 +1104,20 @@ function loadSettings() {
 			? true
 			: localStorage.getItem("openoutpaint/sync_cursor_size") === "true";
 
+	let _hrfix_scale =
+		localStorage.getItem("openoutpaint/hr_scale") === null
+			? 2.0
+			: localStorage.getItem("openoutpaint/hr_scale");
+
+	let _hrfix_upscaler =
+		localStorage.getItem("openoutpaint/hr_upscaler") === null
+			? "None"
+			: localStorage.getItem("openoutpaint/hr_upscaler");
+
+	let _hrfix_denoising =
+		localStorage.getItem("openoutpaint/denoising_strength") === null
+			? 0.7
+			: localStorage.getItem("openoutpaint/denoising_strength");
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
@@ -1110,6 +1125,9 @@ function loadSettings() {
 	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =
 		Boolean(_sync_cursor_size);
+	document.getElementById("hrFixScale").value = Number(_hrfix_scale);
+	document.getElementById("hrFixUpscaler").value = Number(_hrfix_upscaler);
+	document.getElementById("hrDenoising").value = Number(_hrfix_denoising);
 }
 
 imageCollection.element.addEventListener(
