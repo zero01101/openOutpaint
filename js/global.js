@@ -3,6 +3,11 @@
  */
 
 const global = {
+	// If this is the first run of openOutpaint
+	get firstRun() {
+		return this._firstRun;
+	},
+
 	// Connection
 	_connection: "offline",
 	set connection(v) {
@@ -46,3 +51,5 @@ const global = {
 		this.debug = !this.debug;
 	},
 };
+
+global._firstRun = !localStorage.getItem("openoutpaint/host");

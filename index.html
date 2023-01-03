@@ -5,12 +5,12 @@
 		<title>openOutpaint 🐠</title>
 		<!-- CSS Variables -->
 		<link href="css/colors.css?v=3f81e80" rel="stylesheet" />
-		<link href="css/icons.css?v=a25504c" rel="stylesheet" />
+		<link href="css/icons.css?v=caa702e" rel="stylesheet" />
 
 		<link href="css/index.css?v=69d3b9e" rel="stylesheet" />
 		<link href="css/layers.css?v=b4fbf61" rel="stylesheet" />
 
-		<link href="css/ui/generic.css?v=79bee9b" rel="stylesheet" />
+		<link href="css/ui/generic.css?v=4b9afe2" rel="stylesheet" />
 
 		<link href="css/ui/history.css?v=0b03861" rel="stylesheet" />
 		<link href="css/ui/layers.css?v=4fd95fe" rel="stylesheet" />
@@ -98,9 +98,12 @@
 						step="1" />
 					<br />
 					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
-					<label for="cbxHRFix">Auto txt2img HRfix</label>
+					<label for="cbxHRFix">Apply txt2img HRfix</label>
 					<br />
-					<div id="hrFixLock"></div>
+					<div id="hrFixScale"></div>
+					<label id="hrFixLabel">Choose HRfix upscaler</label>
+					<div id="hrFixUpscaler"></div>
+					<div id="hrDenoising"></div>
 					<input
 						type="checkbox"
 						id="cbxRestoreFaces"
@@ -118,27 +121,27 @@
 					<div id="cfgScale"></div>
 					<div id="batchSize"></div>
 					<div id="batchCount"></div>
+					<label for="maskBlur">Mask blur:</label>
+					<span id="maskBlurText"></span>
+					<br />
+					<input
+						type="number"
+						id="maskBlur"
+						name="maskBlur"
+						min="0"
+						max="256"
+						value="0"
+						step="1"
+						onchange="changeMaskBlur()" />
+					<br />
+					<input
+						type="checkbox"
+						id="cbxSmooth"
+						checked
+						onchange="changeSmoothRendering()" />
+					<label for="cbxSmooth">Smooth Rendering</label>
 				</div>
-				<!-- Unsectioned -->
-				<label for="maskBlur">Mask blur:</label>
-				<span id="maskBlurText"></span>
-				<br />
-				<input
-					type="number"
-					id="maskBlur"
-					name="maskBlur"
-					min="0"
-					max="256"
-					value="0"
-					step="1"
-					onchange="changeMaskBlur()" />
-				<br />
-				<input
-					type="checkbox"
-					id="cbxSmooth"
-					checked
-					onchange="changeSmoothRendering()" />
-				<label for="cbxSmooth">Smooth Rendering</label>
+
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>
 				<div class="content">
@@ -187,7 +190,7 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							Alpha release v0.0.12.3
+							Alpha release v0.0.12.5
 						</a>
 					</span>
 					<br />
@@ -311,12 +314,12 @@
 				<div class="ui separator"></div>
 				<iframe
 					id="page-overlay"
-					src="pages/configuration.html?v=ae8af5d"></iframe>
+					src="pages/configuration.html?v=3d710ce"></iframe>
 			</div>
 		</div>
 
 		<!-- Basics -->
-		<script src="js/global.js?v=3da0b2e" type="text/javascript"></script>
+		<script src="js/global.js?v=1807d6e" type="text/javascript"></script>
 
 		<!-- Base Libs -->
 		<script src="js/lib/util.js?v=7f6847c" type="text/javascript"></script>
@@ -325,7 +328,7 @@
 		<script src="js/lib/layers.js?v=a1f8aea" type="text/javascript"></script>
 		<script src="js/lib/commands.js?v=00464cb" type="text/javascript"></script>
 
-		<script src="js/lib/toolbar.js?v=d483951" type="text/javascript"></script>
+		<script src="js/lib/toolbar.js?v=d15051f" type="text/javascript"></script>
 		<script src="js/lib/ui.js?v=76ede2b" type="text/javascript"></script>
 
 		<script
@@ -337,7 +340,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=133b74b" type="text/javascript"></script>
+		<script src="js/index.js?v=1fba031" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=fc92d14"
@@ -356,14 +359,14 @@
 			src="js/ui/tool/maskbrush.js?v=1e8a893"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/colorbrush.js?v=1bd7288"
+			src="js/ui/tool/colorbrush.js?v=8acb4f6"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/select.js?v=533feab"
+			src="js/ui/tool/select.js?v=ade791e"
 			type="text/javascript"></script>
-		<script src="js/ui/tool/stamp.js?v=81b8908" type="text/javascript"></script>
+		<script src="js/ui/tool/stamp.js?v=3c07ac8" type="text/javascript"></script>
 		<script
-			src="js/ui/tool/interrogate.js?v=af51c4d"
+			src="js/ui/tool/interrogate.js?v=e579ff1"
 			type="text/javascript"></script>
 
 		<!-- Initialize -->

@@ -1,3 +1,34 @@
+.ui.inline-icon {
+	position: relative;
+
+	display: flex;
+}
+
+.ui.inline-icon::after {
+	content: "";
+	display: block;
+
+	position: absolute;
+
+	box-sizing: border-box;
+
+	margin: auto;
+	top: 15%;
+	bottom: 15%;
+
+	mask-size: contain;
+	mask-repeat: no-repeat;
+
+	max-height: 70%;
+	aspect-ratio: 1;
+
+	left: 0;
+	right: 0;
+
+	background-color: var(--c-text);
+}
+
+.ui.inline-icon.icon-eye-off::after,
 .ui.icon > .icon-eye-off {
 	-webkit-mask-image: url("../res/icons/eye-off.svg");
 	mask-image: url("../res/icons/eye-off.svg");
@@ -41,4 +72,58 @@
 .ui.icon > .icon-settings {
 	-webkit-mask-image: url("../res/icons/settings.svg");
 	mask-image: url("../res/icons/settings.svg");
+}
+
+.ui.inline-icon.icon-grid::after,
+.ui.icon > .icon-grid {
+	-webkit-mask-image: url("../res/icons/grid.svg");
+	mask-image: url("../res/icons/grid.svg");
+}
+
+.ui.inline-icon.icon-venetian-mask::after,
+.ui.icon > .icon-venetian-mask {
+	-webkit-mask-image: url("../res/icons/venetian-mask.svg");
+	mask-image: url("../res/icons/venetian-mask.svg");
+}
+
+.ui.inline-icon.icon-brush::after,
+.ui.icon > .icon-brush {
+	-webkit-mask-image: url("../res/icons/brush.svg");
+	mask-image: url("../res/icons/brush.svg");
+}
+
+.ui.inline-icon.icon-paintbrush::after,
+.ui.icon > .icon-paintbrush {
+	-webkit-mask-image: url("../res/icons/paintbrush.svg");
+	mask-image: url("../res/icons/paintbrush.svg");
+}
+
+.ui.inline-icon.icon-expand::after,
+.ui.icon > .icon-expand {
+	-webkit-mask-image: url("../res/icons/expand.svg");
+	mask-image: url("../res/icons/expand.svg");
+}
+
+.ui.inline-icon.icon-pin::after,
+.ui.icon > .icon-pin {
+	-webkit-mask-image: url("../res/icons/pin.svg");
+	mask-image: url("../res/icons/pin.svg");
+}
+
+.ui.inline-icon.icon-box-select::after,
+.ui.icon > .icon-box-select {
+	-webkit-mask-image: url("../res/icons/box-select.svg");
+	mask-image: url("../res/icons/box-select.svg");
+}
+
+.ui.inline-icon.icon-maximize::after,
+.ui.icon > .icon-maximize {
+	-webkit-mask-image: url("../res/icons/maximize.svg");
+	mask-image: url("../res/icons/maximize.svg");
+}
+
+.ui.inline-icon.icon-clipboard-list::after,
+.ui.icon > .icon-clipboard-list {
+	-webkit-mask-image: url("../res/icons/clipboard-list.svg");
+	mask-image: url("../res/icons/clipboard-list.svg");
 }
