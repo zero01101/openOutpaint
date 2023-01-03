@@ -1576,9 +1576,9 @@ const dreamTool = () =>
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
-				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
-				menu.appendChild(state.ctxmenu.preserveMasksLabel);
-				menu.appendChild(document.createElement("br"));
+				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
+				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
+				// menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},
