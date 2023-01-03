@@ -368,11 +368,17 @@ const stampTool = () =>
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
 					// Snap To Grid Checkbox
-					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
-						state,
-						"snapToGrid",
-						"Snap To Grid"
-					).label;
+					const array = document.createElement("div");
+					array.classList.add("checkbox-array");
+					array.appendChild(
+						_toolbar_input.checkbox(
+							state,
+							"snapToGrid",
+							"Snap To Grid",
+							"icon-grid"
+						).checkbox
+					);
+					state.ctxmenu.snapToGridLabel = array;
 
 					// Create resource list
 					const uploadButtonId = `upload-btn-${guid()}`;

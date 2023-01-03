@@ -349,13 +349,16 @@ const colorBrushTool = () =>
 					state.ctxmenu = {};
 
 					// Affects Mask Checkbox
+					const array = document.createElement("div");
 					const affectMaskCheckbox = _toolbar_input.checkbox(
 						state,
 						"affectMask",
-						"Affect Mask"
-					).label;
+						"Affect Mask",
+						"icon-venetian-mask"
+					).checkbox;
+					array.appendChild(affectMaskCheckbox);
 
-					state.ctxmenu.affectMaskCheckbox = affectMaskCheckbox;
+					state.ctxmenu.affectMaskCheckbox = array;
 
 					// Brush size slider
 					const brushSizeSlider = _toolbar_input.slider(
