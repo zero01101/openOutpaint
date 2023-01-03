@@ -137,7 +137,6 @@ var host = "";
 var url = "/sdapi/v1/";
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 
-//
 function startup() {
 	testHostConfiguration();
 	loadSettings();
@@ -804,12 +803,14 @@ async function getUpscalers() {
 }
 
 async function getModels() {
-	var url = document.getElementById("host").value + "/sdapi/v1/sd-models";
+	const url = document.getElementById("host").value + "/sdapi/v1/sd-models";
+	let opt = null;
+
 	try {
 		const response = await fetch(url);
 		const data = await response.json();
 
-		modelAutoComplete.options = data.map((option) => ({
+		opt = data.map((option) => ({
 			name: option.title,
 			value: option.title,
 			optionelcb: (el) => {
@@ -817,6 +818,8 @@ async function getModels() {
 					el.classList.add("inpainting");
 			},
 		}));
+
+		modelAutoComplete.options = opt;
 
 		try {
 			const optResponse = await fetch(
@@ -838,10 +841,10 @@ async function getModels() {
 
 	modelAutoComplete.onchange.on(async ({value}) => {
 		console.log(`[index] Changing model to [${value}]`);
-		var payload = {
+		const payload = {
 			sd_model_checkpoint: value,
 		};
-		var url = document.getElementById("host").value + "/sdapi/v1/options/";
+		const url = document.getElementById("host").value + "/sdapi/v1/options/";
 		try {
 			await fetch(url, {
 				method: "POST",
@@ -861,6 +864,25 @@ async function getModels() {
 			);
 		}
 	});
+
+	// If first time running, ask if user wants to switch to an inpainting model
+	if (global.firstRun && !modelAutoComplete.value.includes("inpainting")) {
+		const inpainting = opt.find(({name}) => name.includes("inpainting"));
+
+		let message =
+			"It seems this is your first time using openOutpaint. It is highly recommended that you switch to an inpainting model. \
+			These are highlighted as green in the model selector.";
+
+		if (inpainting) {
+			message += `\n\nWe have found the inpainting model\n\n - ${inpainting.name}\n\navailable in the webui. Do you want to switch to it?`;
+			if (confirm(message)) {
+				modelAutoComplete.value = inpainting.value;
+			}
+		} else {
+			message += `\n\nNo inpainting model seems to be available in the webui. It is recommended that you download an inpainting model, or outpainting results may not be optimal.`;
+			alert(message);
+		}
+	}
 }
 
 async function getConfig() {
