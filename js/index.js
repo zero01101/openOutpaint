@@ -103,7 +103,7 @@ var stableDiffusionData = {
 	mask: "",
 	init_images: [],
 	inpaint_full_res: false,
-	inpainting_fill: 2,
+	inpainting_fill: 1,
 	enable_hr: false,
 	restore_faces: false,
 	//firstphase_width: 0,

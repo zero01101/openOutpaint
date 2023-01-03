@@ -991,7 +991,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	request.height = resolution.h;
 
 	request.denoising_strength = state.denoisingStrength;
-	request.inpainting_fill = state.inpainting_fill; //let's see how this works //1; // For img2img use original
+	request.inpainting_fill = state.inpainting_fill ?? 1; //let's see how this works //1; // For img2img use original
 
 	// Load prompt (maybe we should add some events so we don't have to do this)
 	request.prompt = document.getElementById("prompt").value;
