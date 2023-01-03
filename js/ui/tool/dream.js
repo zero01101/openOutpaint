@@ -816,16 +816,21 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		bbCanvas.height = bb.h;
 		const bbCtx = bbCanvas.getContext("2d");
 
-		const reqCanvas = document.createElement("canvas");
-		reqCanvas.width = request.width;
-		reqCanvas.height = request.height;
-		const reqCtx = reqCanvas.getContext("2d");
+		const maskCanvas = document.createElement("canvas");
+		maskCanvas.width = request.width;
+		maskCanvas.height = request.height;
+		const maskCtx = maskCanvas.getContext("2d");
+
+		const initCanvas = document.createElement("canvas");
+		initCanvas.width = request.width;
+		initCanvas.height = request.height;
+		const initCtx = initCanvas.getContext("2d");
 
 		bbCtx.fillStyle = "#000F";
 
 		// Get init image
-		reqCtx.fillRect(0, 0, request.width, request.height);
-		reqCtx.drawImage(
+		initCtx.fillRect(0, 0, request.width, request.height);
+		initCtx.drawImage(
 			visibleCanvas,
 			0,
 			0,
@@ -836,7 +841,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			request.width,
 			request.height
 		);
-		request.init_images = [reqCanvas.toDataURL()];
+		request.init_images = [initCanvas.toDataURL()];
 
 		// Get mask image
 		bbCtx.fillStyle = "#000F";
@@ -890,8 +895,8 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		bbCtx.fillStyle = "#FFFF";
 		bbCtx.fillRect(0, 0, bb.w, bb.h);
 
-		reqCtx.clearRect(0, 0, reqCanvas.width, reqCanvas.height);
-		reqCtx.drawImage(
+		maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+		maskCtx.drawImage(
 			bbCanvas,
 			0,
 			0,
@@ -902,7 +907,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			request.width,
 			request.height
 		);
-		request.mask = reqCanvas.toDataURL();
+		request.mask = maskCanvas.toDataURL();
 
 		// Dream
 		_generate("img2img", request, bb, {
