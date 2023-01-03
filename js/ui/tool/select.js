@@ -633,23 +633,26 @@ const selectTransformTool = () =>
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
 						"snapToGrid",
-						"Snap To Grid"
-					).label;
+						"Snap To Grid",
+						"icon-grid"
+					).checkbox;
 
 					// Keep Aspect Ratio
 					state.ctxmenu.keepAspectRatioLabel = _toolbar_input.checkbox(
 						state,
 						"keepAspectRatio",
-						"Keep Aspect Ratio"
-					).label;
+						"Keep Aspect Ratio",
+						"icon-maximize"
+					).checkbox;
 
 					// Use Clipboard
 					const clipboardCheckbox = _toolbar_input.checkbox(
 						state,
 						"useClipboard",
-						"Use clipboard"
+						"Use clipboard",
+						"icon-clipboard-list"
 					);
-					state.ctxmenu.useClipboardLabel = clipboardCheckbox.label;
+					state.ctxmenu.useClipboardLabel = clipboardCheckbox.checkbox;
 					if (!(navigator.clipboard && navigator.clipboard.write))
 						clipboardCheckbox.checkbox.disabled = true; // Disable if not available
 
@@ -760,11 +763,12 @@ const selectTransformTool = () =>
 					state.ctxmenu.actionArray = actionArray;
 					state.ctxmenu.visibleActionArray = visibleActionArray;
 				}
-				menu.appendChild(state.ctxmenu.snapToGridLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.keepAspectRatioLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.useClipboardLabel);
+				const array = document.createElement("div");
+				array.classList.add("checkbox-array");
+				array.appendChild(state.ctxmenu.snapToGridLabel);
+				array.appendChild(state.ctxmenu.keepAspectRatioLabel);
+				array.appendChild(state.ctxmenu.useClipboardLabel);
+				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);
 				menu.appendChild(state.ctxmenu.actionArray);
 				menu.appendChild(state.ctxmenu.visibleActionArray);

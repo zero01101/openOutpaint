@@ -97,8 +97,9 @@ const interrogateTool = () =>
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
 						"snapToGrid",
-						"Snap To Grid"
-					).label;
+						"Snap To Grid",
+						"icon-grid"
+					).checkbox;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);

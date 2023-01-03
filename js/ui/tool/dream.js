@@ -1473,24 +1473,27 @@ const dreamTool = () =>
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
 						"snapToGrid",
-						"Snap To Grid"
-					).label;
+						"Snap To Grid",
+						"icon-grid"
+					).checkbox;
 
 					// Invert Mask Checkbox
 					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
 						state,
 						"invertMask",
 						"Invert Mask",
+						["icon-venetian-mask", "invert-mask-checkbox"],
 						() => {
 							setMask(state.invertMask ? "hold" : "clear");
 						}
-					).label;
+					).checkbox;
 
 					// Keep Masked Content Checkbox
 					state.ctxmenu.keepUnmaskedLabel = _toolbar_input.checkbox(
 						state,
 						"keepUnmasked",
 						"Keep Unmasked",
+						"icon-pin",
 						() => {
 							if (state.keepUnmasked) {
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.remove(
@@ -1506,7 +1509,7 @@ const dreamTool = () =>
 								);
 							}
 						}
-					).label;
+					).checkbox;
 
 					// Keep Masked Content Blur Slider
 					state.ctxmenu.keepUnmaskedBlurSlider = _toolbar_input.slider(
@@ -1531,8 +1534,9 @@ const dreamTool = () =>
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
 						state,
 						"preserveMasks",
-						"Preserve Brushed Masks"
-					).label;
+						"Preserve Brushed Masks",
+						"icon-paintbrush"
+					).checkbox;
 
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
@@ -1562,15 +1566,19 @@ const dreamTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
-				menu.appendChild(state.ctxmenu.snapToGridLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.invertMaskLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.keepUnmaskedLabel);
+				const array = document.createElement("div");
+				array.classList.add("checkbox-array");
+				array.appendChild(state.ctxmenu.snapToGridLabel);
+				//menu.appendChild(document.createElement("br"));
+				array.appendChild(state.ctxmenu.invertMaskLabel);
+				array.appendChild(state.ctxmenu.preserveMasksLabel);
+				//menu.appendChild(document.createElement("br"));
+				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
+				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
-				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
-				menu.appendChild(state.ctxmenu.preserveMasksLabel);
-				menu.appendChild(document.createElement("br"));
+				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
+				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
+				// menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},
@@ -1991,24 +1999,27 @@ const img2imgTool = () =>
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
 						"snapToGrid",
-						"Snap To Grid"
-					).label;
+						"Snap To Grid",
+						"icon-grid"
+					).checkbox;
 
 					// Invert Mask Checkbox
 					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
 						state,
 						"invertMask",
 						"Invert Mask",
+						["icon-venetian-mask", "invert-mask-checkbox"],
 						() => {
 							setMask(state.invertMask ? "hold" : "clear");
 						}
-					).label;
+					).checkbox;
 
 					// Keep Masked Content Checkbox
 					state.ctxmenu.keepUnmaskedLabel = _toolbar_input.checkbox(
 						state,
 						"keepUnmasked",
 						"Keep Unmasked",
+						"icon-pin",
 						() => {
 							if (state.keepUnmasked) {
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.remove(
@@ -2024,7 +2035,7 @@ const img2imgTool = () =>
 								);
 							}
 						}
-					).label;
+					).checkbox;
 
 					// Keep Masked Content Blur Slider
 					state.ctxmenu.keepUnmaskedBlurSlider = _toolbar_input.slider(
@@ -2049,15 +2060,17 @@ const img2imgTool = () =>
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
 						state,
 						"preserveMasks",
-						"Preserve Brushed Masks"
-					).label;
+						"Preserve Brushed Masks",
+						"icon-paintbrush"
+					).checkbox;
 
 					// Inpaint Full Resolution Checkbox
 					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
 						state,
 						"fullResolution",
-						"Inpaint Full Resolution"
-					).label;
+						"Inpaint Full Resolution",
+						"icon-expand"
+					).checkbox;
 
 					// Denoising Strength Slider
 					state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
@@ -2076,8 +2089,9 @@ const img2imgTool = () =>
 					state.ctxmenu.borderMaskGradientCheckbox = _toolbar_input.checkbox(
 						state,
 						"gradient",
-						"Border Mask Gradient"
-					).label;
+						"Border Mask Gradient",
+						"icon-box-select"
+					).checkbox;
 
 					// Border Mask Size Slider
 					state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
@@ -2124,20 +2138,22 @@ const img2imgTool = () =>
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
-				menu.appendChild(state.ctxmenu.snapToGridLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.invertMaskLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.keepUnmaskedLabel);
+				const array = document.createElement("div");
+				array.classList.add("checkbox-array");
+				array.appendChild(state.ctxmenu.snapToGridLabel);
+				array.appendChild(state.ctxmenu.invertMaskLabel);
+				array.appendChild(state.ctxmenu.preserveMasksLabel);
+				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
+				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
-				menu.appendChild(state.ctxmenu.preserveMasksLabel);
-				menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.fullResolutionLabel);
-				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
-				menu.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
+				const btnArray2 = document.createElement("div");
+				btnArray2.classList.add("checkbox-array");
+				btnArray2.appendChild(state.ctxmenu.fullResolutionLabel);
+				btnArray2.appendChild(state.ctxmenu.borderMaskGradientCheckbox);
+				menu.appendChild(btnArray2);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},

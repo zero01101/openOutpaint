@@ -145,16 +145,23 @@ const toolbar = {
  * Premade inputs for populating the context menus
  */
 const _toolbar_input = {
-	checkbox: (state, dataKey, text, cb = null) => {
+	checkbox: (state, dataKey, text, classes, cb = null) => {
 		if (state[dataKey] === undefined) state[dataKey] = false;
 
 		const checkbox = document.createElement("input");
 		checkbox.type = "checkbox";
+		checkbox.classList.add("oo-checkbox", "ui", "inline-icon");
+
+		if (typeof classes === "string") classes = [classes];
+
+		if (classes) checkbox.classList.add(...classes);
 		checkbox.checked = state[dataKey];
 		checkbox.onchange = () => {
 			state[dataKey] = checkbox.checked;
 			cb && cb();
 		};
+
+		checkbox.title = text;
 
 		const label = document.createElement("label");
 		label.appendChild(checkbox);
