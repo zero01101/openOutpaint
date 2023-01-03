@@ -98,9 +98,12 @@
 						step="1" />
 					<br />
 					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
-					<label for="cbxHRFix">Auto txt2img HRfix</label>
+					<label for="cbxHRFix">Apply txt2img HRfix</label>
 					<br />
-					<div id="hrFixLock"></div>
+					<div id="hrFixScale"></div>
+					<label id="hrFixLabel">Choose HRfix upscaler</label>
+					<div id="hrFixUpscaler"></div>
+					<div id="hrDenoising"></div>
 					<input
 						type="checkbox"
 						id="cbxRestoreFaces"
@@ -118,27 +121,27 @@
 					<div id="cfgScale"></div>
 					<div id="batchSize"></div>
 					<div id="batchCount"></div>
+					<label for="maskBlur">Mask blur:</label>
+					<span id="maskBlurText"></span>
+					<br />
+					<input
+						type="number"
+						id="maskBlur"
+						name="maskBlur"
+						min="0"
+						max="256"
+						value="0"
+						step="1"
+						onchange="changeMaskBlur()" />
+					<br />
+					<input
+						type="checkbox"
+						id="cbxSmooth"
+						checked
+						onchange="changeSmoothRendering()" />
+					<label for="cbxSmooth">Smooth Rendering</label>
 				</div>
-				<!-- Unsectioned -->
-				<label for="maskBlur">Mask blur:</label>
-				<span id="maskBlurText"></span>
-				<br />
-				<input
-					type="number"
-					id="maskBlur"
-					name="maskBlur"
-					min="0"
-					max="256"
-					value="0"
-					step="1"
-					onchange="changeMaskBlur()" />
-				<br />
-				<input
-					type="checkbox"
-					id="cbxSmooth"
-					checked
-					onchange="changeSmoothRendering()" />
-				<label for="cbxSmooth">Smooth Rendering</label>
+
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>
 				<div class="content">
@@ -187,7 +190,7 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							Alpha release v0.0.12.3
+							Alpha release v0.0.12.5
 						</a>
 					</span>
 					<br />
@@ -311,7 +314,7 @@
 				<div class="ui separator"></div>
 				<iframe
 					id="page-overlay"
-					src="pages/configuration.html?v=ae8af5d"></iframe>
+					src="pages/configuration.html?v=3d710ce"></iframe>
 			</div>
 		</div>
 
@@ -337,7 +340,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=133b74b" type="text/javascript"></script>
+		<script src="js/index.js?v=a30c20a" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=fc92d14"
@@ -351,7 +354,7 @@
 			src="js/ui/tool/generic.js?v=2bcd36d"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=832aa62" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=45cb85f" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=1e8a893"
 			type="text/javascript"></script>

@@ -106,8 +106,10 @@ var stableDiffusionData = {
 	inpainting_fill: 2,
 	enable_hr: false,
 	restore_faces: false,
-	firstphase_width: 0,
-	firstphase_height: 0,
+	//firstphase_width: 0,
+	//firstphase_height: 0, //20230102 welp looks like the entire way HRfix is implemented has become bonkersly different
+	hr_scale: 2.0,
+	hr_upscaler: "None",
 	styles: [],
 	// here's some more fields that might be useful
 
@@ -341,6 +343,12 @@ async function testHostConnection() {
 			const response = await fetch(
 				document.getElementById("host").value + "/sdapi/v1/options"
 			);
+			const optionsdata = await response.json();
+			if (optionsdata["use_scale_latent_for_hires_fix"]) {
+				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nor newer.`;
+				console.error(message);
+				alert(message);
+			}
 			switch (response.status) {
 				case 200: {
 					setConnectionStatus("online");
@@ -552,6 +560,15 @@ const upscalerAutoComplete = createAutoComplete(
 	document.getElementById("upscaler-ac-select")
 );
 
+const hrFixUpscalerAutoComplete = createAutoComplete(
+	"HRfix Upscaler",
+	document.getElementById("hrFixUpscaler")
+);
+hrFixUpscalerAutoComplete.onchange.on(({value}) => {
+	stableDiffusionData.hr_upscaler = value;
+	localStorage.setItem(`openoutpaint/hr_upscaler`, value);
+});
+
 const resSlider = makeSlider(
 	"Resolution",
 	document.getElementById("resolution"),
@@ -563,8 +580,6 @@ const resSlider = makeSlider(
 	2,
 	(v) => {
 		stableDiffusionData.width = stableDiffusionData.height = v;
-		stableDiffusionData.firstphase_width =
-			stableDiffusionData.firstphase_height = v / 2;
 
 		toolbar.currentTool &&
 			toolbar.currentTool.redraw &&
@@ -621,15 +636,27 @@ makeSlider(
 	1
 );
 
+// 20230102 grumble grumble
 makeSlider(
-	"HRfix Lock Px.",
-	document.getElementById("hrFixLock"),
-	"hr_fix_lock_px",
+	"HRfix Scale",
+	document.getElementById("hrFixScale"),
+	"hr_scale",
+	1.0,
+	4.0,
+	0.1,
+	2.0,
+	0.1
+);
+
+makeSlider(
+	"HRfix Denoising",
+	document.getElementById("hrDenoising"),
+	"denoising_strength",
 	0.0,
-	768.0,
-	256.0,
-	0.0,
-	1.0
+	1.0,
+	0.05,
+	0.7,
+	0.01
 );
 
 function changeMaskBlur() {
@@ -649,6 +676,23 @@ function changeHiResFix() {
 		document.getElementById("cbxHRFix").checked
 	);
 	localStorage.setItem("openoutpaint/enable_hr", stableDiffusionData.enable_hr);
+	var hrfSlider = document.getElementById("hrFixScale");
+	var hrfOpotions = document.getElementById("hrFixUpscaler");
+	var hrfLabel = document.getElementById("hrFixLabel");
+	var hrfDenoiseSlider = document.getElementById("hrDenoising");
+	if (stableDiffusionData.enable_hr) {
+		hrfSlider.classList.remove("invisible");
+		hrfOpotions.classList.remove("invisible");
+		hrfLabel.classList.remove("invisible");
+		hrfDenoiseSlider.classList.remove("invisible");
+		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add("invisible");
+	} else {
+		hrfSlider.classList.add("invisible");
+		hrfOpotions.classList.add("invisible");
+		hrfLabel.classList.add("invisible");
+		hrfDenoiseSlider.classList.add("invisible");
+		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove("invisible");
+	}
 }
 
 function changeRestoreFaces() {
@@ -743,17 +787,26 @@ async function getUpscalers() {
 			"[index] purposefully_incorrect_data response, ignore above error"
 		);
 		// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
-		const upscalers = data.detail
+		const upscalersPlusNone = data.detail
 			.split(": ")[1]
 			.split(",")
-			.map((v) => v.trim())
-			.filter((v) => v !== "None"); // converting the result to a list of upscalers
+			.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
+		const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
+		upscalersPlusNone.push("Latent");
+		upscalersPlusNone.push("Latent (nearest)"); // GRUMBLE GRUMBLE
 
 		upscalerAutoComplete.options = upscalers.map((u) => {
 			return {name: u, value: u};
 		});
+		hrFixUpscalerAutoComplete.options = upscalersPlusNone.map((u) => {
+			return {name: u, value: u};
+		});
 
 		upscalerAutoComplete.value = upscalers[0];
+		hrFixUpscalerAutoComplete.value =
+			localStorage.getItem("openoutpaint/hr_upscaler") === null
+				? "None"
+				: localStorage.getItem("openoutpaint/hr_upscaler");
 	} catch (e) {
 		console.warn("[index] Failed to fetch upscalers:");
 		console.warn(e);
@@ -1060,6 +1113,15 @@ function loadSettings() {
 			? true
 			: localStorage.getItem("openoutpaint/sync_cursor_size") === "true";
 
+	let _hrfix_scale =
+		localStorage.getItem("openoutpaint/hr_scale") === null
+			? 2.0
+			: localStorage.getItem("openoutpaint/hr_scale");
+
+	let _hrfix_denoising =
+		localStorage.getItem("openoutpaint/denoising_strength") === null
+			? 0.7
+			: localStorage.getItem("openoutpaint/denoising_strength");
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
@@ -1067,6 +1129,8 @@ function loadSettings() {
 	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =
 		Boolean(_sync_cursor_size);
+	document.getElementById("hrFixScale").value = Number(_hrfix_scale);
+	document.getElementById("hrDenoising").value = Number(_hrfix_denoising);
 }
 
 imageCollection.element.addEventListener(

@@ -130,6 +130,22 @@ const _dream = async (endpoint, request) => {
 	let data = null;
 	try {
 		generating = true;
+		if (
+			endpoint == "txt2img" &&
+			request.enable_hr &&
+			localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true"
+		) {
+			/**
+			 * try and make the new HRfix method useful for our purposes
+			 * since it now returns an image that's been upscaled x the hr_scale parameter,
+			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
+			 * by the scale factor so it returns something about the same size as we wanted initially
+			 */
+			var newWidth = Math.floor(request.width / request.hr_scale);
+			var newHeight = Math.floor(request.height / request.hr_scale);
+			request.width = newWidth;
+			request.height = newHeight;
+		}
 		const response = await fetch(apiURL, {
 			method: "POST",
 			headers: {
@@ -1387,18 +1403,6 @@ const dreamTool = () =>
 						h: stableDiffusionData.height,
 					};
 
-					//hacky set non-square auto hrfix values
-					let hrLockPx =
-						localStorage.getItem("openoutpaint/hr_fix_lock_px") ?? 0;
-					stableDiffusionData.firstphase_height =
-						hrLockPx == 0 || resolution.h / 2 <= hrLockPx
-							? resolution.h / 2
-							: hrLockPx;
-					stableDiffusionData.firstphase_width =
-						hrLockPx == 0 || resolution.w / 2 <= hrLockPx
-							? resolution.w / 2
-							: hrLockPx;
-
 					if (global.connection === "online") {
 						dream_generate_callback(bb, resolution, state);
 					} else {
@@ -1492,8 +1496,14 @@ const dreamTool = () =>
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.remove(
 									"invisible"
 								);
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
+									"invisible"
+								);
 							} else {
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove(
+									"invisible"
+								);
 							}
 						}
 					).label;
@@ -1510,6 +1520,12 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
+
+					state.ctxmenu.keepUnmaskedBlurSliderLinebreak =
+						document.createElement("br");
+					state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
+						"invisible"
+					);
 
 					// Preserve Brushed Masks Checkbox
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
@@ -1552,6 +1568,7 @@ const dreamTool = () =>
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
