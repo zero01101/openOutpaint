@@ -1441,7 +1441,7 @@ const dreamTool = () =>
 					dream_erase_callback(bb, state);
 				};
 			},
-			populateContextMenu: (menu, state) => {
+			populateContextMenu: (menu, state, tool) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
 
@@ -1463,7 +1463,7 @@ const dreamTool = () =>
 									resSlider.value = state.cursorSize;
 								}
 
-								state.redraw();
+								if (tool.enabled) state.redraw();
 							},
 						}
 					);
@@ -1972,7 +1972,7 @@ const img2imgTool = () =>
 					dream_erase_callback(bb, state);
 				};
 			},
-			populateContextMenu: (menu, state) => {
+			populateContextMenu: (menu, state, tool) => {
 				if (!state.ctxmenu) {
 					state.ctxmenu = {};
 
@@ -1990,6 +1990,8 @@ const img2imgTool = () =>
 								if (global.syncCursorSize) {
 									resSlider.value = state.cursorSize;
 								}
+
+								if (tool.enabled) state.redraw();
 							},
 						}
 					);

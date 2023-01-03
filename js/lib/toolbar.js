@@ -106,24 +106,24 @@ const toolbar = {
 				while (contextMenuEl.lastChild) {
 					contextMenuEl.removeChild(contextMenuEl.lastChild);
 				}
-				options.populateContextMenu(contextMenuEl, tool.state);
+				options.populateContextMenu(contextMenuEl, tool.state, tool);
 
 				tool._element && tool._element.classList.add("using");
 				tool.enabled = true;
 
 				this._current_tool = tool;
-				enable(tool.state, opt);
+				enable(tool.state, opt, tool);
 			},
 			disable: (opt = null) => {
 				tool._element && tool._element.classList.remove("using");
 				this._current_tool = null;
 				tool.enabled = false;
-				disable(tool.state, opt);
+				disable(tool.state, opt, tool);
 			},
 		};
 
 		// Initalize
-		options.init && options.init(tool.state);
+		options.init && options.init(tool.state, tool);
 
 		this.tools.push(tool);
 
