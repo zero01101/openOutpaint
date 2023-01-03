@@ -797,7 +797,10 @@ async function getUpscalers() {
 		});
 
 		upscalerAutoComplete.value = upscalers[0];
-		hrFixUpscalerAutoComplete.value = upscalersPlusNone[0];
+		hrFixUpscalerAutoComplete.value =
+			localStorage.getItem("openoutpaint/hr_upscaler") === null
+				? "None"
+				: localStorage.getItem("openoutpaint/hr_upscaler");
 	} catch (e) {
 		console.warn("[index] Failed to fetch upscalers:");
 		console.warn(e);
@@ -1109,11 +1112,6 @@ function loadSettings() {
 			? 2.0
 			: localStorage.getItem("openoutpaint/hr_scale");
 
-	let _hrfix_upscaler =
-		localStorage.getItem("openoutpaint/hr_upscaler") === null
-			? "None"
-			: localStorage.getItem("openoutpaint/hr_upscaler");
-
 	let _hrfix_denoising =
 		localStorage.getItem("openoutpaint/denoising_strength") === null
 			? 0.7
@@ -1126,7 +1124,6 @@ function loadSettings() {
 	document.getElementById("cbxSyncCursorSize").checked =
 		Boolean(_sync_cursor_size);
 	document.getElementById("hrFixScale").value = Number(_hrfix_scale);
-	document.getElementById("hrFixUpscaler").value = Number(_hrfix_upscaler);
 	document.getElementById("hrDenoising").value = Number(_hrfix_denoising);
 }
 
