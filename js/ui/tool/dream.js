@@ -75,15 +75,17 @@ const _monitorProgress = (bb, oncheck = null) => {
 	};
 };
 
-let busy = false
+let busy = false;
 const generating = (val) => {
-	busy = val
+	busy = val;
 	if (busy) {
-		window.onbeforeunload = async () => { await sendInterrupt(); };
-	}	else {
-		window.onbeforeunload = null
+		window.onbeforeunload = async () => {
+			await sendInterrupt();
+		};
+	} else {
+		window.onbeforeunload = null;
 	}
-}
+};
 
 /**
  * Starts a dream
@@ -733,7 +735,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		mouse.listen.world.btn.middle.onclick.clear(onmorehandler);
 		mouse.listen.world.onwheel.clear(onwheelhandler);
 		isDreamComplete = true;
-		generating(false)
+		generating(false);
 	};
 
 	redraw();
