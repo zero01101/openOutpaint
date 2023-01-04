@@ -10,11 +10,20 @@
  */
 
 /**
+ * Extra command information
+ *
+ * @typedef CommandExtraParams
+ * @property {boolean} recordHistory The title passed to the command being run
+ * @property {Record<string, any>} extra Extra information to be stored in the history entry
+ */
+
+/**
  * A command, which is run, then returns a CommandEntry object that can be used to manually undo/redo it
  *
  * @callback Command
  * @param {string} title The title passed to the command being run
- * @param {*} options A options object for the command
+ * @param {any} options A options object for the command
+ * @param {CommandExtraParams} extra A options object for the command
  * @returns {Promise<CommandEntry>}
  */
 

@@ -74,10 +74,15 @@ const commands = makeReadOnly(
 		 * @param {string} name Command identifier (name)
 		 * @param {CommandDoCallback} run A method that performs the action for the first time
 		 * @param {CommandUndoCallback} undo A method that reverses what the run method did
-		 * @param {CommandDoCallback} redo A method that redoes the action after undone (default: run)
+		 * @param {object} options Extra options
+		 * @param {CommandDoCallback} options.redo A method that redoes the action after undone (default: run)
 		 * @returns {Command}
 		 */
-		createCommand(name, run, undo, redo = run) {
+		createCommand(name, run, undo, options = {}) {
+			defaultOpt(options, {
+				redo: run,
+			});
+
 			const command = async function runWrapper(title, options, extra) {
 				// Create copy of options and state object
 				const copy = {};
@@ -89,6 +94,7 @@ const commands = makeReadOnly(
 					id: guid(),
 					title,
 					state,
+					extra: extra.extra,
 				};
 
 				// Attempt to run command
@@ -176,11 +182,13 @@ const commands = makeReadOnly(
 		 * @param {string} name The name of the command to run
 		 * @param {string} title The display name of the command on the history panel view
 		 * @param {any} options The options to be sent to the command to be run
+		 * @param {CommandExtraParams} extra Extra running options
 		 * @return {Promise<{undo: () => void, redo: () => void}>} The command's return value
 		 */
 		async runCommand(name, title, options = null, extra = {}) {
 			defaultOpt(extra, {
 				recordHistory: true,
+				extra: {},
 			});
 			if (!this._types[name])
 				throw new ReferenceError(`[commands] Command '${name}' does not exist`);

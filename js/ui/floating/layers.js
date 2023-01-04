@@ -531,9 +531,11 @@ commands.createCommand(
 		state.drawCommand.undo();
 		state.delCommand.undo();
 	},
-	(title, options, state) => {
-		state.drawCommand.redo();
-		state.delCommand.redo();
+	{
+		redo: (title, options, state) => {
+			state.drawCommand.redo();
+			state.delCommand.redo();
+		},
 	}
 );
 
