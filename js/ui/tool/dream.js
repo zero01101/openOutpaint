@@ -77,7 +77,6 @@ const _monitorProgress = (bb, oncheck = null) => {
 
 let busy = false
 const generating = (val) => {
-	console.log('GENERATING', val)
 	busy = val
 	if (busy) {
 		window.onbeforeunload = async () => { await sendInterrupt(); };
