@@ -1,7 +1,6 @@
 let blockNewImages = false;
 let generationQueue = [];
 let generationAreas = new Set();
-let generating = false;
 
 /**
  * Starts progress monitoring bar
@@ -76,6 +75,16 @@ const _monitorProgress = (bb, oncheck = null) => {
 	};
 };
 
+let busy = false
+const generating = (val) => {
+	busy = val
+	if (busy) {
+		window.onbeforeunload = async () => { await sendInterrupt(); };
+	}	else {
+		window.onbeforeunload = null
+	}
+}
+
 /**
  * Starts a dream
  *
@@ -129,7 +138,7 @@ const _dream = async (endpoint, request) => {
 	/** @type {StableDiffusionResponse} */
 	let data = null;
 	try {
-		generating = true;
+		generating(true);
 		if (
 			endpoint == "txt2img" &&
 			request.enable_hr &&
@@ -176,7 +185,7 @@ const _dream = async (endpoint, request) => {
 
 		data = await response.json();
 	} finally {
-		generating = false;
+		generating(false);
 	}
 	var responseSubdata = JSON.parse(data.info);
 	var returnData = {
@@ -724,9 +733,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		mouse.listen.world.btn.middle.onclick.clear(onmorehandler);
 		mouse.listen.world.onwheel.clear(onwheelhandler);
 		isDreamComplete = true;
-		if (generating) {
-			sendInterrupt();
-		}
+		generating(false)
 	};
 
 	redraw();
@@ -2205,11 +2212,6 @@ const img2imgTool = () =>
 			shortcut: "I",
 		}
 	);
-
-window.onbeforeunload = async () => {
-	// Stop current generation on page close
-	if (generating) await sendInterrupt();
-};
 
 const sendSeed = (seed) => {
 	stableDiffusionData.seed = document.getElementById("seed").value = seed;
