@@ -141,6 +141,22 @@ const _dream = async (endpoint, request) => {
 			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
 			 * by the scale factor so it returns something about the same size as we wanted initially
 			 */
+
+			// ok so instead, only do that if stableDiffusionData.hr_fix_lock_px > 0
+			if (stableDiffusionData.hr_fix_lock_px > 0) {
+				// find the appropriate scale factor for hrfix
+				var widthFactor =
+					request.width / stableDiffusionData.hr_fix_lock_px <= 4
+						? request.width / stableDiffusionData.hr_fix_lock_px
+						: 4;
+				var heightFactor =
+					request.height / stableDiffusionData.hr_fix_lock_px <= 4
+						? request.height / stableDiffusionData.hr_fix_lock_px
+						: 4;
+				var factor = heightFactor > widthFactor ? heightFactor : widthFactor;
+				request.hr_scale = hrFixScaleSlider.value = factor < 1 ? 1 : factor;
+			}
+
 			var newWidth = Math.floor(request.width / request.hr_scale);
 			var newHeight = Math.floor(request.height / request.hr_scale);
 			request.width = newWidth;

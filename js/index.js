@@ -642,7 +642,7 @@ makeSlider(
 );
 
 // 20230102 grumble grumble
-makeSlider(
+const hrFixScaleSlider = makeSlider(
 	"HRfix Scale",
 	document.getElementById("hrFixScale"),
 	"hr_scale",
@@ -662,6 +662,17 @@ makeSlider(
 	0.05,
 	0.7,
 	0.01
+);
+
+const lockPxSlider = makeSlider(
+	"HRfix Autoscale Lock Px.",
+	document.getElementById("hrFixLockPx"),
+	"hr_fix_lock_px",
+	0,
+	1024,
+	256,
+	0,
+	1
 );
 
 function changeMaskBlur() {
@@ -685,17 +696,20 @@ function changeHiResFix() {
 	var hrfOpotions = document.getElementById("hrFixUpscaler");
 	var hrfLabel = document.getElementById("hrFixLabel");
 	var hrfDenoiseSlider = document.getElementById("hrDenoising");
+	var hrfLockPxSlider = document.getElementById("hrFixLockPx");
 	if (stableDiffusionData.enable_hr) {
 		hrfSlider.classList.remove("invisible");
 		hrfOpotions.classList.remove("invisible");
 		hrfLabel.classList.remove("invisible");
 		hrfDenoiseSlider.classList.remove("invisible");
+		hrfLockPxSlider.classList.remove("invisible");
 		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add("invisible");
 	} else {
 		hrfSlider.classList.add("invisible");
 		hrfOpotions.classList.add("invisible");
 		hrfLabel.classList.add("invisible");
 		hrfDenoiseSlider.classList.add("invisible");
+		hrfLockPxSlider.classList.add("invisible");
 		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove("invisible");
 	}
 }
@@ -1150,6 +1164,11 @@ function loadSettings() {
 		localStorage.getItem("openoutpaint/hr_denoising_strength") === null
 			? 0.7
 			: localStorage.getItem("openoutpaint/hr_denoising_strength");
+	let _hrfix_lock_px =
+		localStorage.getItem("openoutpaint/hr_fix_lock_px") === null
+			? 0
+			: localStorage.getItem("openoutpaint/hr_fix_lock_px");
+
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
@@ -1159,6 +1178,7 @@ function loadSettings() {
 		Boolean(_sync_cursor_size);
 	document.getElementById("hrFixScale").value = Number(_hrfix_scale);
 	document.getElementById("hrDenoising").value = Number(_hrfix_denoising);
+	document.getElementById("hrFixLockPx").value = Number(_hrfix_lock_px);
 }
 
 imageCollection.element.addEventListener(
