@@ -141,41 +141,7 @@ const _dream = async (endpoint, request) => {
 	let data = null;
 	try {
 		generating(true);
-		if (
-			endpoint == "txt2img" &&
-			request.enable_hr &&
-			localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true"
-		) {
-			/**
-			 * try and make the new HRfix method useful for our purposes
-			 * since it now returns an image that's been upscaled x the hr_scale parameter,
-			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
-			 * by the scale factor so it returns something about the same size as we wanted initially
-			 */
 
-			// ok so instead, only do that if stableDiffusionData.hr_fix_lock_px > 0
-			if (stableDiffusionData.hr_fix_lock_px > 0) {
-				// find the appropriate scale factor for hrfix
-				var widthFactor =
-					request.width / stableDiffusionData.hr_fix_lock_px <= 4
-						? request.width / stableDiffusionData.hr_fix_lock_px
-						: 4;
-				var heightFactor =
-					request.height / stableDiffusionData.hr_fix_lock_px <= 4
-						? request.height / stableDiffusionData.hr_fix_lock_px
-						: 4;
-				var factor = heightFactor > widthFactor ? heightFactor : widthFactor;
-				request.hr_scale = hrFixScaleSlider.value = factor < 1 ? 1 : factor;
-			}
-
-			var newWidth = Math.floor(request.width / request.hr_scale);
-			var newHeight = Math.floor(request.height / request.hr_scale);
-			request.width = newWidth;
-			request.height = newHeight;
-		}
-		if (endpoint == "txt2img") {
-			request.denoising_strength = stableDiffusionData.hr_denoising_strength;
-		}
 		const response = await fetch(apiURL, {
 			method: "POST",
 			headers: {
@@ -849,6 +815,50 @@ const dream_generate_callback = async (bb, resolution, state) => {
 
 	// Use txt2img if canvas is blank
 	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
+		if (
+			!global.isOldHRFix &&
+			request.enable_hr &&
+			localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true"
+		) {
+			/**
+			 * try and make the new HRfix method useful for our purposes
+			 * since it now returns an image that's been upscaled x the hr_scale parameter,
+			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
+			 * by the scale factor so it returns something about the same size as we wanted initially
+			 */
+
+			// ok so instead, only do that if stableDiffusionData.hr_fix_lock_px > 0
+			if (stableDiffusionData.hr_fix_lock_px > 0) {
+				// find the appropriate scale factor for hrfix
+				var widthFactor =
+					request.width / stableDiffusionData.hr_fix_lock_px <= 4
+						? request.width / stableDiffusionData.hr_fix_lock_px
+						: 4;
+				var heightFactor =
+					request.height / stableDiffusionData.hr_fix_lock_px <= 4
+						? request.height / stableDiffusionData.hr_fix_lock_px
+						: 4;
+				var factor = heightFactor > widthFactor ? heightFactor : widthFactor;
+				request.hr_scale = hrFixScaleSlider.value = factor < 1 ? 1 : factor;
+			}
+
+			var newWidth = Math.floor(request.width / request.hr_scale);
+			var newHeight = Math.floor(request.height / request.hr_scale);
+			request.width = newWidth;
+			request.height = newHeight;
+		}
+
+		// For compatibility with the old HRFix API
+		if (global.isOldHRFix && request.enable_hr) {
+			request.firstphase_width = request.width / 2;
+			request.firstphase_height = request.height / 2;
+		}
+
+		// Only set this if HRFix is enabled in the first place
+		request.denoising_strength = request.enable_hr
+			? stableDiffusionData.hr_denoising_strength
+			: 1;
+
 		// Dream
 		_generate("txt2img", request, bb);
 	} else {
