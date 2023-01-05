@@ -100,28 +100,13 @@
 					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
 					<label for="cbxHRFix">Apply txt2img HRfix</label>
 					<br />
-					<label class="hrfix">Resize to (>0 overrides scale):</label>
+					<input
+						type="checkbox"
+						id="cbxHRFSquare"
+						onchange="changeHiResSquare()"
+						class="hrfix" />
+					<label for="cbxHRFSquare" class="hrfix">Square Aspect</label>
 					<br class="hrfix" />
-					<label for="hrfOutX" class="hrfix">X:</label>
-					<input
-						type="number"
-						id="hr_resize_x"
-						onchange="changeHRFX()"
-						min="0"
-						max="2048"
-						value="0"
-						step="8"
-						class="hrfix thirdwidth" />
-					<label for="hrfOutY" class="hrfix">Y:</label>
-					<input
-						type="number"
-						id="hr_resize_y"
-						onchange="changeHRFY()"
-						min="0"
-						max="2048"
-						value="0"
-						step="8"
-						class="hrfix thirdwidth" />
 					<div id="hrFixScale" class="hrfix"></div>
 					<div id="hrFixLockPx" class="hrfix"></div>
 					<div id="hrFixSteps" class="hrfix"></div>

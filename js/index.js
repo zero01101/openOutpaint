@@ -114,6 +114,7 @@ var stableDiffusionData = {
 	hr_second_pass_steps: 0,
 	hr_resize_x: 0,
 	hr_resize_y: 0,
+	hr_square_aspect: false,
 	styles: [],
 	// here's some more fields that might be useful
 
@@ -729,23 +730,17 @@ function changeHiResFix() {
 		document
 			.querySelectorAll(".hrfix")
 			.forEach((el) => el.classList.remove("invisible"));
-		// hrfSlider.classList.remove("invisible");
-		// hrfOpotions.classList.remove("invisible");
-		// hrfLabel.classList.remove("invisible");
-		// hrfDenoiseSlider.classList.remove("invisible");
-		// hrfLockPxSlider.classList.remove("invisible");
-		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add("invisible");
 	} else {
 		document
 			.querySelectorAll(".hrfix")
 			.forEach((el) => el.classList.add("invisible"));
-		// hrfSlider.classList.add("invisible");
-		// hrfOpotions.classList.add("invisible");
-		// hrfLabel.classList.add("invisible");
-		// hrfDenoiseSlider.classList.add("invisible");
-		// hrfLockPxSlider.classList.add("invisible");
-		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove("invisible");
 	}
+}
+
+function changeHiResSquare() {
+	stableDiffusionData.hr_square_aspect = Boolean(
+		document.getElementById("cbxHRFSquare").checked
+	);
 }
 
 function changeRestoreFaces() {
@@ -845,7 +840,17 @@ async function getUpscalers() {
 			.split(",")
 			.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
 		const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
+		// upscalersPlusNone.push([
+		// 	"Latent",
+		// 	"Latent (antialiased)",
+		// 	"Latent (bicubic)",
+		// 	"Latent (bicubic, antialiased)",
+		// 	"Latent (nearest)",
+		// ]);
 		upscalersPlusNone.push("Latent");
+		upscalersPlusNone.push("Latent (antialiased)");
+		upscalersPlusNone.push("Latent (bicubic)");
+		upscalersPlusNone.push("Latent (bicubic, antialiased)");
 		upscalersPlusNone.push("Latent (nearest)"); // GRUMBLE GRUMBLE
 
 		upscalerAutoComplete.options = upscalers.map((u) => {

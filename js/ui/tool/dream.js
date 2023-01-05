@@ -844,20 +844,20 @@ const dream_generate_callback = async (bb, resolution, state) => {
 
 			var newWidth = Math.floor(request.width / request.hr_scale);
 			var newHeight = Math.floor(request.height / request.hr_scale);
-			request.hr_resize_x = stableDiffusionData.hr_resize_x;
-			request.hr_resize_y = stableDiffusionData.hr_resize_y;
-			request.width =
-				stableDiffusionData.hr_resize_x || stableDiffusionData.hr_resize_y > 0
-					? request.width
-					: newWidth;
-			request.height =
-				stableDiffusionData.hr_resize_x || stableDiffusionData.hr_resize_y > 0
-					? request.height
-					: newHeight; //in webUI if _either_ x or y is > 0 then their values are used over scale as per https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/81490780949fffed77493b4bd741e96ec737fe27#diff-ddc07d50fa3b043925b1e831b1373976798d62c9f5c11fcb16c6c830bd3857cdR104
+			if (stableDiffusionData.hr_square_aspect) {
+				larger = newWidth > newHeight ? newWidth : newHeight;
+				newWidth = larger;
+				newHeight = larger;
+			}
+			request.hr_resize_x = request.width;
+			request.hr_resize_y = request.height; // screw the scale, damn the man, setting specified output dimensions overrides it anyway, who needs the thing, i need to revisit like all the hrfix code now though because i don't know if NOT lying to it is even worthwhile anymore
+			request.width = newWidth;
+			request.height = newHeight;
 		}
 
 		// For compatibility with the old HRFix API
 		if (global.isOldHRFix && request.enable_hr) {
+			// For compatibility with the old HRFix API
 			request.firstphase_width = request.width / 2;
 			request.firstphase_height = request.height / 2;
 		}
