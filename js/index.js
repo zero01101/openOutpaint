@@ -165,6 +165,7 @@ function startup() {
 	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
+	changeHiResSquare();
 	changeRestoreFaces();
 	changeSyncCursorSize();
 }
@@ -690,7 +691,7 @@ const hrStepsSlider = makeSlider(
 	0,
 	localStorage.getItem("openoutpaint/settings.max-steps") || 70,
 	5,
-	30,
+	0,
 	1
 );
 

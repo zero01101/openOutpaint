@@ -84,11 +84,12 @@
 				step="0.1"
 				value="30.0" />
 		</label>
+		<!-- <p>Refresh the page to apply aabove.</p> -->
+		<hr />
 		<label style="display: flex">
 			Lie to HRfix:
 			<input id="hrfix-liar" class="canvas-size-input" type="checkbox" />
 		</label>
-		<p>Refresh the page to apply settings.</p>
 
 		<script>
 			const canvasWidth = document.getElementById("canvas-width");
@@ -127,8 +128,11 @@
 				localStorage.getItem("openoutpaint/settings.min-cfg") || -1;
 			maxCfg.value =
 				localStorage.getItem("openoutpaint/settings.max-cfg") || 30;
-			hrfixLiar.checked =
-				localStorage.getItem("openoutpaint/settings.hrfix-liar") || true;
+			let _enable_dishonesty =
+				localStorage.getItem("openoutpaint/settings.hrfix-liar") === null
+					? true
+					: localStorage.getItem("openoutpaint/settings.hrfix-liar") === "true";
+			hrfixLiar.checked = _enable_dishonesty;
 
 			writeToLocalStorage();
 
