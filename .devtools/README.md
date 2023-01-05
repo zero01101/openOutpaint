@@ -3,9 +3,9 @@
 This is a folder containing some handy scripts to help developers to automate workflows and write code in openOutpaint's standards.
 All scripts must be run from the root of the project.
 
-## `sethooks.sh` script
+## `sethooks.sh` and `sethooks.ps1` scripts
 
-This script will setup git hooks for this project. Hooks are mainly for cache busting purposes for now. It is recommended to run this script and setup hooks before any commits are made.
+These scripts will setup git hooks for this project. Hooks are mainly for cache busting purposes for now. It is recommended to run this script and setup hooks before any commits are made.
 
 ## `lint.sh` script
 
