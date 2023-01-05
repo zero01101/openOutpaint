@@ -345,12 +345,16 @@ async function testHostConnection() {
 			);
 			const optionsdata = await response.json();
 			if (optionsdata["use_scale_latent_for_hires_fix"]) {
-				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18 or newer.\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nHRfix options have been disabled.`;
-				console.error(message);
+				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18 or newer.\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nHRfix will fallback to half-resolution only.`;
+				console.warn(message);
 				if (notify) alert(message);
+				// Hide all new hrfix options
 				document
-					.getElementById("cbxHRFix")
-					.setAttribute("disabled", "disabled");
+					.querySelectorAll(".hrfix")
+					.forEach((el) => (el.style.display = "none"));
+
+				// We are using old HRFix
+				global.isOldHRFix = true;
 				stableDiffusionData.enable_hr = false;
 			}
 			switch (response.status) {

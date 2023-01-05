@@ -50,6 +50,9 @@ const global = {
 	toggledebug() {
 		this.debug = !this.debug;
 	},
+
+	// HRFix compatibility shenanigans
+	isOldHRFix: false,
 };
 
 global._firstRun = !localStorage.getItem("openoutpaint/host");
