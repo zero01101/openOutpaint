@@ -48,7 +48,7 @@ const commands = makeReadOnly(
 			for (var i = 0; i < n && this.current + 1 < this._history.length; i++) {
 				try {
 					await this._history[++this._current].redo();
-				} catch {
+				} catch (e) {
 					console.warn("[commands] Failed to redo command");
 					console.warn(e);
 					this._current--;
