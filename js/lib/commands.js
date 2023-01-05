@@ -83,6 +83,8 @@ const commands = makeReadOnly(
 				redo: run,
 			});
 
+			const redo = options.redo;
+
 			const command = async function runWrapper(title, options, extra) {
 				// Create copy of options and state object
 				const copy = {};
