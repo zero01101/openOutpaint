@@ -855,9 +855,10 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		}
 
 		// Only set this if HRFix is enabled in the first place
-		request.denoising_strength = request.enable_hr
-			? stableDiffusionData.hr_denoising_strength
-			: 1;
+		request.denoising_strength =
+			!global.isOldHRFix && request.enable_hr
+				? stableDiffusionData.hr_denoising_strength
+				: 1;
 
 		// Dream
 		_generate("txt2img", request, bb);
