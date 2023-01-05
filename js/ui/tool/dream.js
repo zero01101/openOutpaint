@@ -844,8 +844,16 @@ const dream_generate_callback = async (bb, resolution, state) => {
 
 			var newWidth = Math.floor(request.width / request.hr_scale);
 			var newHeight = Math.floor(request.height / request.hr_scale);
-			request.width = newWidth;
-			request.height = newHeight;
+			request.hr_resize_x = stableDiffusionData.hr_resize_x;
+			request.hr_resize_y = stableDiffusionData.hr_resize_y;
+			request.width =
+				stableDiffusionData.hr_resize_x || stableDiffusionData.hr_resize_y > 0
+					? request.width
+					: newWidth;
+			request.height =
+				stableDiffusionData.hr_resize_x || stableDiffusionData.hr_resize_y > 0
+					? request.height
+					: newHeight; //in webUI if _either_ x or y is > 0 then their values are used over scale as per https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/81490780949fffed77493b4bd741e96ec737fe27#diff-ddc07d50fa3b043925b1e831b1373976798d62c9f5c11fcb16c6c830bd3857cdR104
 		}
 
 		// For compatibility with the old HRFix API

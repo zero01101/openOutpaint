@@ -7,7 +7,7 @@
 		<link href="css/colors.css?v=3f81e80" rel="stylesheet" />
 		<link href="css/icons.css?v=caa702e" rel="stylesheet" />
 
-		<link href="css/index.css?v=69d3b9e" rel="stylesheet" />
+		<link href="css/index.css?v=5b8d4d6" rel="stylesheet" />
 		<link href="css/layers.css?v=b4fbf61" rel="stylesheet" />
 
 		<link href="css/ui/generic.css?v=4b9afe2" rel="stylesheet" />
@@ -100,8 +100,31 @@
 					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
 					<label for="cbxHRFix">Apply txt2img HRfix</label>
 					<br />
+					<label class="hrfix">Resize to (>0 overrides scale):</label>
+					<br class="hrfix" />
+					<label for="hrfOutX" class="hrfix">X:</label>
+					<input
+						type="number"
+						id="hr_resize_x"
+						onchange="changeHRFX()"
+						min="0"
+						max="2048"
+						value="0"
+						step="8"
+						class="hrfix thirdwidth" />
+					<label for="hrfOutY" class="hrfix">Y:</label>
+					<input
+						type="number"
+						id="hr_resize_y"
+						onchange="changeHRFY()"
+						min="0"
+						max="2048"
+						value="0"
+						step="8"
+						class="hrfix thirdwidth" />
 					<div id="hrFixScale" class="hrfix"></div>
 					<div id="hrFixLockPx" class="hrfix"></div>
+					<div id="hrFixSteps" class="hrfix"></div>
 					<label id="hrFixLabel" class="hrfix">Choose HRfix upscaler</label>
 					<div id="hrFixUpscaler" class="hrfix"></div>
 					<div id="hrDenoising" class="hrfix"></div>
@@ -323,7 +346,7 @@
 		<script src="js/global.js?v=3a1cde6" type="text/javascript"></script>
 
 		<!-- Base Libs -->
-		<script src="js/lib/util.js?v=7f6847c" type="text/javascript"></script>
+		<script src="js/lib/util.js?v=5838390" type="text/javascript"></script>
 		<script src="js/lib/events.js?v=2ab7933" type="text/javascript"></script>
 		<script src="js/lib/input.js?v=09298ac" type="text/javascript"></script>
 		<script src="js/lib/layers.js?v=a1f8aea" type="text/javascript"></script>
@@ -341,7 +364,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=afc36b6" type="text/javascript"></script>
+		<script src="js/index.js?v=87cef1a" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=fc92d14"
@@ -352,10 +375,10 @@
 
 		<!-- Load Tools -->
 		<script
-			src="js/ui/tool/generic.js?v=2bcd36d"
+			src="js/ui/tool/generic.js?v=f1a19a4"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=1f10ae6" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=0c4379b" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=1e8a893"
 			type="text/javascript"></script>

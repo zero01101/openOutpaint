@@ -644,3 +644,9 @@ select > .style-select-option:active {
 .button.tool.active {
 	background-color: rgb(60, 60, 130);
 }
+
+/* Miscellaneous garbage */
+
+.thirdwidth {
+	max-width: 33%;
+}
