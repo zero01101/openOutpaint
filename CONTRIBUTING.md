@@ -17,7 +17,7 @@ We use github to host code, to track issues and feature requests, as well as acc
 Pull requests are the best way to propose changes to the codebase (we use [Github Flow](https://guides.github.com/introduction/flow/index.html)). We actively welcome your pull requests:
 
 1. Fork the repo and create your branch from `main` or `testing`.
-2. Setup [commit hooks](../openOutpaint/.devtools/README.md) for automatic calculation of cache busting hashes for resources.
+2. Setup [commit hooks](https://github.com/zero01101/openOutpaint/tree/main/.devtools) for automatic calculation of cache busting hashes for resources.
 3. Please add comments when reasonable, and when possible, use [JSDoc](https://jsdoc.app/) for documenting types. Lack of this will not prevent your pull being merged, but it would be nice to have.
 4. If you've added code that should be tested please pull into `testing`. For documentation and smaller fixes, a pull request directly to `main` should be okay, unless it pertains to changes only present in `testing`.
 5. Create a pull request with a short description of what you did. Thanks for your contribution!
