@@ -58,6 +58,8 @@ A1111 webUI must be launched with the `--api` flag enabled, and the `--cors-allo
 
 ### surprising incompatibilities
 
+**_COLAB USERS: you may experience issues installing openOutpaint (and other webUI extensions) - there is a workaround that has been discovered and tested against [TheLastBen's fast-stable-diffusion](https://github.com/TheLastBen/fast-stable-diffusion). Please see [this discussion](https://github.com/TheLastBen/fast-stable-diffusion/discussions/1161) containing the workaround, which requires adding a command into the final cell of the colab, as well as setting `Enable_API` to `True`._**
+
 If anything goes wrong with openOutpaint, try running it on another browser and disable all extensions and try again. If a new incompatible extension is found, please open an issue so we can notify other users of extension incompatibilities.
 
 - [microsoft editor extension for chrome/edge seems to disable the overmask slider](https://github.com/zero01101/openOutpaint/discussions/88#discussioncomment-4498341)
