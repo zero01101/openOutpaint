@@ -48,6 +48,8 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 ## operation
 
+**_NOTE: [PLEASE SEE DOCUMENTATION REGARDING NEW HRfix FEATURES](https://github.com/zero01101/openOutpaint/wiki/Manual#hrfix) IMPLEMENTED AS OF webUI COMMIT [ef27a18](https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)_**
+
 ### prerequisities
 
 you'll obviously need A1111's webUI installed before you can use this, thus you're presumed to have an operational python install up and running to boot.
