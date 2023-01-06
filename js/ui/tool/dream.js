@@ -156,6 +156,7 @@ const _dream = async (endpoint, request) => {
 		generating(false);
 	}
 	var responseSubdata = JSON.parse(data.info);
+	console.debug(responseSubdata);
 	var returnData = {
 		images: data.images,
 		seeds: responseSubdata.all_seeds,
@@ -815,41 +816,64 @@ const dream_generate_callback = async (bb, resolution, state) => {
 
 	// Use txt2img if canvas is blank
 	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
-		if (
-			!global.isOldHRFix &&
-			request.enable_hr &&
-			localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true"
-		) {
+		if (!global.isOldHRFix && request.enable_hr) {
 			/**
 			 * try and make the new HRfix method useful for our purposes
-			 * since it now returns an image that's been upscaled x the hr_scale parameter,
-			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
-			 * by the scale factor so it returns something about the same size as we wanted initially
 			 */
-
-			// ok so instead, only do that if stableDiffusionData.hr_fix_lock_px > 0
-			if (stableDiffusionData.hr_fix_lock_px > 0) {
-				// find the appropriate scale factor for hrfix
+			// laziness convenience
+			let lockpx = stableDiffusionData.hr_fix_lock_px;
+			if (lockpx > 0) {
+				// find the most appropriate scale factor for hrfix
 				var widthFactor =
-					request.width / stableDiffusionData.hr_fix_lock_px <= 4
-						? request.width / stableDiffusionData.hr_fix_lock_px
-						: 4;
+					request.width / lockpx <= 4 ? request.width / lockpx : 4;
 				var heightFactor =
-					request.height / stableDiffusionData.hr_fix_lock_px <= 4
-						? request.height / stableDiffusionData.hr_fix_lock_px
-						: 4;
+					request.height / lockpx <= 4 ? request.height / lockpx : 4;
 				var factor = heightFactor > widthFactor ? heightFactor : widthFactor;
 				request.hr_scale = hrFixScaleSlider.value = factor < 1 ? 1 : factor;
 			}
+			// moar laziness convenience
+			var divW = Math.floor(request.width / request.hr_scale);
+			var divH = Math.floor(request.height / request.hr_scale);
 
-			var newWidth = Math.floor(request.width / request.hr_scale);
-			var newHeight = Math.floor(request.height / request.hr_scale);
-			request.width = newWidth;
-			request.height = newHeight;
+			if (localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true") {
+				/**
+				 * since it now returns an image that's been upscaled x the hr_scale parameter,
+				 * we cheekily lie to SD and tell it that the original dimensions are _divided_
+				 * by the scale factor so it returns something about the same size as we wanted initially
+				 */
+				var firstpassWidth = divW;
+				var firstpassHeight = divH; // liar's firstpass output resolution
+				var desiredWidth = request.width;
+				var desiredHeight = request.height; // truthful desired output resolution
+			} else {
+				// use scale normally, dump supersampled image into undersized reticle
+				var desiredWidth = request.width * request.hr_scale;
+				var desiredHeight = request.height * request.hr_scale; //desired 2nd-pass output resolution
+				var firstpassWidth = request.width;
+				var firstpassHeight = request.height;
+			}
+
+			// ensure firstpass "resolution" complies with lockpx
+			if (lockpx > 0) {
+				//sigh repeated loop
+				firstpassWidth = divW < lockpx ? divW : lockpx;
+				firstpassHeight = divH < lockpx ? divH : lockpx;
+			}
+
+			if (stableDiffusionData.hr_square_aspect) {
+				larger =
+					firstpassWidth > firstpassHeight ? firstpassWidth : firstpassHeight;
+				firstpassWidth = firstpassHeight = larger;
+			}
+			request.width = firstpassWidth;
+			request.height = firstpassHeight;
+			request.hr_resize_x = desiredWidth;
+			request.hr_resize_y = desiredHeight;
 		}
 
 		// For compatibility with the old HRFix API
 		if (global.isOldHRFix && request.enable_hr) {
+			// For compatibility with the old HRFix API
 			request.firstphase_width = request.width / 2;
 			request.firstphase_height = request.height / 2;
 		}

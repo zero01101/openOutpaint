@@ -111,6 +111,10 @@ var stableDiffusionData = {
 	//firstphase_height: 0, //20230102 welp looks like the entire way HRfix is implemented has become bonkersly different
 	hr_scale: 2.0,
 	hr_upscaler: "None",
+	hr_second_pass_steps: 0,
+	hr_resize_x: 0,
+	hr_resize_y: 0,
+	hr_square_aspect: false,
 	styles: [],
 	// here's some more fields that might be useful
 
@@ -161,6 +165,7 @@ function startup() {
 	changeSmoothRendering();
 	changeSeed();
 	changeHiResFix();
+	changeHiResSquare();
 	changeRestoreFaces();
 	changeSyncCursorSize();
 }
@@ -679,6 +684,17 @@ const lockPxSlider = makeSlider(
 	1
 );
 
+const hrStepsSlider = makeSlider(
+	"HRfix Steps",
+	document.getElementById("hrFixSteps"),
+	"hr_second_pass_steps",
+	0,
+	localStorage.getItem("openoutpaint/settings.max-steps") || 70,
+	5,
+	0,
+	1
+);
+
 function changeMaskBlur() {
 	stableDiffusionData.mask_blur = parseInt(
 		document.getElementById("maskBlur").value
@@ -691,31 +707,41 @@ function changeSeed() {
 	localStorage.setItem("openoutpaint/seed", stableDiffusionData.seed);
 }
 
+function changeHRFX() {
+	stableDiffusionData.hr_resize_x =
+		document.getElementById("hr_resize_x").value;
+}
+
+function changeHRFY() {
+	stableDiffusionData.hr_resize_y =
+		document.getElementById("hr_resize_y").value;
+}
+
 function changeHiResFix() {
 	stableDiffusionData.enable_hr = Boolean(
 		document.getElementById("cbxHRFix").checked
 	);
 	localStorage.setItem("openoutpaint/enable_hr", stableDiffusionData.enable_hr);
-	var hrfSlider = document.getElementById("hrFixScale");
-	var hrfOpotions = document.getElementById("hrFixUpscaler");
-	var hrfLabel = document.getElementById("hrFixLabel");
-	var hrfDenoiseSlider = document.getElementById("hrDenoising");
-	var hrfLockPxSlider = document.getElementById("hrFixLockPx");
+	// var hrfSlider = document.getElementById("hrFixScale");
+	// var hrfOpotions = document.getElementById("hrFixUpscaler");
+	// var hrfLabel = document.getElementById("hrFixLabel");
+	// var hrfDenoiseSlider = document.getElementById("hrDenoising");
+	// var hrfLockPxSlider = document.getElementById("hrFixLockPx");
 	if (stableDiffusionData.enable_hr) {
-		hrfSlider.classList.remove("invisible");
-		hrfOpotions.classList.remove("invisible");
-		hrfLabel.classList.remove("invisible");
-		hrfDenoiseSlider.classList.remove("invisible");
-		hrfLockPxSlider.classList.remove("invisible");
-		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add("invisible");
+		document
+			.querySelectorAll(".hrfix")
+			.forEach((el) => el.classList.remove("invisible"));
 	} else {
-		hrfSlider.classList.add("invisible");
-		hrfOpotions.classList.add("invisible");
-		hrfLabel.classList.add("invisible");
-		hrfDenoiseSlider.classList.add("invisible");
-		hrfLockPxSlider.classList.add("invisible");
-		//state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove("invisible");
+		document
+			.querySelectorAll(".hrfix")
+			.forEach((el) => el.classList.add("invisible"));
 	}
+}
+
+function changeHiResSquare() {
+	stableDiffusionData.hr_square_aspect = Boolean(
+		document.getElementById("cbxHRFSquare").checked
+	);
 }
 
 function changeRestoreFaces() {
@@ -815,7 +841,17 @@ async function getUpscalers() {
 			.split(",")
 			.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
 		const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
+		// upscalersPlusNone.push([
+		// 	"Latent",
+		// 	"Latent (antialiased)",
+		// 	"Latent (bicubic)",
+		// 	"Latent (bicubic, antialiased)",
+		// 	"Latent (nearest)",
+		// ]);
 		upscalersPlusNone.push("Latent");
+		upscalersPlusNone.push("Latent (antialiased)");
+		upscalersPlusNone.push("Latent (bicubic)");
+		upscalersPlusNone.push("Latent (bicubic, antialiased)");
 		upscalersPlusNone.push("Latent (nearest)"); // GRUMBLE GRUMBLE
 
 		upscalerAutoComplete.options = upscalers.map((u) => {

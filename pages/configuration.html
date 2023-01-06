@@ -7,7 +7,7 @@
 		<link href="../css/colors.css?v=3f81e80" rel="stylesheet" />
 		<link href="../css/icons.css?v=caa702e" rel="stylesheet" />
 
-		<link href="../css/index.css?v=69d3b9e" rel="stylesheet" />
+		<link href="../css/index.css?v=5b8d4d6" rel="stylesheet" />
 		<link href="../css/layers.css?v=b4fbf61" rel="stylesheet" />
 
 		<link href="../css/ui/generic.css?v=4b9afe2" rel="stylesheet" />
@@ -84,11 +84,12 @@
 				step="0.1"
 				value="30.0" />
 		</label>
+		<!-- <p>Refresh the page to apply aabove.</p> -->
+		<hr />
 		<label style="display: flex">
 			Lie to HRfix:
 			<input id="hrfix-liar" class="canvas-size-input" type="checkbox" />
 		</label>
-		<p>Refresh the page to apply settings.</p>
 
 		<script>
 			const canvasWidth = document.getElementById("canvas-width");
@@ -127,8 +128,11 @@
 				localStorage.getItem("openoutpaint/settings.min-cfg") || -1;
 			maxCfg.value =
 				localStorage.getItem("openoutpaint/settings.max-cfg") || 30;
-			hrfixLiar.checked =
-				localStorage.getItem("openoutpaint/settings.hrfix-liar") || true;
+			let _enable_dishonesty =
+				localStorage.getItem("openoutpaint/settings.hrfix-liar") === null
+					? true
+					: localStorage.getItem("openoutpaint/settings.hrfix-liar") === "true";
+			hrfixLiar.checked = _enable_dishonesty;
 
 			writeToLocalStorage();
 
