@@ -820,13 +820,10 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			/**
 			 * try and make the new HRfix method useful for our purposes
 			 */
-
-			//laziness convenience
+			// laziness convenience
 			let lockpx = stableDiffusionData.hr_fix_lock_px;
-			var divW = Math.floor(request.width / request.hr_scale);
-			var divH = Math.floor(request.height / request.hr_scale);
 			if (lockpx > 0) {
-				// find the appropriate scale factor for hrfix
+				// find the most appropriate scale factor for hrfix
 				var widthFactor =
 					request.width / lockpx <= 4 ? request.width / lockpx : 4;
 				var heightFactor =
@@ -834,6 +831,9 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				var factor = heightFactor > widthFactor ? heightFactor : widthFactor;
 				request.hr_scale = hrFixScaleSlider.value = factor < 1 ? 1 : factor;
 			}
+			// moar laziness convenience
+			var divW = Math.floor(request.width / request.hr_scale);
+			var divH = Math.floor(request.height / request.hr_scale);
 
 			if (localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true") {
 				/**
@@ -855,8 +855,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 
 			// ensure firstpass "resolution" complies with lockpx
 			if (lockpx > 0) {
-				//sigh repeated code
-				// scale down by hr_scale?
+				//sigh repeated loop
 				firstpassWidth = divW < lockpx ? divW : lockpx;
 				firstpassHeight = divH < lockpx ? divH : lockpx;
 			}
