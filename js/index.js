@@ -140,6 +140,19 @@ var host = "";
 var url = "/sdapi/v1/";
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 
+function getSDData() {
+	const w = workspaces.current.settings;
+	w.ste;
+	return {
+		prompt: w.prompt,
+		negative_prompt: w.neg_prompt,
+		seed: w.seed,
+
+		cfg_scale: w.cfg_scale,
+		steps: w.steps,
+	};
+}
+
 function startup() {
 	testHostConfiguration();
 	loadSettings();
@@ -521,16 +534,16 @@ const makeSlider = (
 	textStep = null,
 	valuecb = null
 ) => {
-	const local = lsKey && localStorage.getItem(`openoutpaint/${lsKey}`);
+	const local = lsKey && workspaces.current.settings[lsKey];
 	const def = parseFloat(local === null ? defaultValue : local);
 	let cb = (v) => {
 		stableDiffusionData[lsKey] = v;
-		if (lsKey) localStorage.setItem(`openoutpaint/${lsKey}`, v);
+		if (lsKey) workspaces.current.settings[lsKey] = v;
 	};
 	if (valuecb) {
 		cb = (v) => {
 			valuecb(v);
-			localStorage.setItem(`openoutpaint/${lsKey}`, v);
+			if (lsKey) workspaces.current.settings[lsKey] = v;
 		};
 	}
 	return createSlider(label, el, {
@@ -1140,11 +1153,6 @@ function loadSettings() {
 		localStorage.getItem("openoutpaint/mask_blur") == null
 			? 0
 			: localStorage.getItem("openoutpaint/mask_blur");
-	var _seed =
-		localStorage.getItem("openoutpaint/seed") == null
-			? -1
-			: localStorage.getItem("openoutpaint/seed");
-
 	let _enable_hr =
 		localStorage.getItem("openoutpaint/enable_hr") === null
 			? false
@@ -1175,7 +1183,7 @@ function loadSettings() {
 
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
-	document.getElementById("seed").value = Number(_seed);
+	document.getElementById("seed").value = workspaces.current.settings.seed;
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
 	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =
