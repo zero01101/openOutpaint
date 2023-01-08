@@ -460,24 +460,20 @@ async function testHostConnection() {
 
 	// Checks every 5 seconds if offline, 60 seconds if online
 	const checkAgain = () => {
+		checkFocus();
 		if (focused || firstTimeOnline) {
 			setTimeout(
 				async () => {
 					let simple = !firstTimeOnline;
 					await checkConnection(false, simple);
-					checkFocus();
 					checkAgain();
 				},
 				connectionStatus ? 60000 : 5000
-				// connectionStatus ? 10000 : 1000 //TODO REMOVE DEBUG REPLACE TO 60000 : 5000
 			);
 		} else {
 			setTimeout(() => {
-				console.debug("unfocused, zzz");
-				checkFocus();
 				checkAgain();
 			}, 60000);
-			// }, 1000); //TODO REMOVE DEBUG REPLACE TO 60000
 		}
 	};
 
@@ -1294,12 +1290,10 @@ document.addEventListener("visibilitychange", () => {
 
 window.addEventListener("blur", () => {
 	checkFocus();
-	console.warn("openoutpaint unfocused");
 });
 
 window.addEventListener("focus", () => {
 	checkFocus();
-	console.warn("openoutpaint focused");
 });
 
 function checkFocus() {
@@ -1309,5 +1303,4 @@ function checkFocus() {
 	} else {
 		focused = true;
 	}
-	console.debug("FOCUSED: " + focused); //TODO comment out or something //seriously it stops working without this here wtf
 }
