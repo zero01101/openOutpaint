@@ -65,6 +65,12 @@ uiCanvas.width = uiCanvas.clientWidth;
 uiCanvas.height = uiCanvas.clientHeight;
 const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 
+/** @type {HTMLCanvasElement} */
+const uiDebugCanvas = document.getElementById("layer-debug-overlay"); // where mouse cursor renders
+uiDebugCanvas.width = uiDebugCanvas.clientWidth;
+uiDebugCanvas.height = uiDebugCanvas.clientHeight;
+const uiDebugCtx = uiDebugCanvas.getContext("2d", {desynchronized: true});
+
 /**
  * Here we setup canvas dynamic scaling
  */
@@ -160,54 +166,68 @@ debugLayer.hide(); // Hidden by default
  * The global viewport object (may be modularized in the future). All
  * coordinates given are of the center of the viewport
  *
- * cx and cy are the viewport's world coordinates, scaled to zoom level.
- * _x and _y are actual coordinates in the DOM space
+ * cx and cy are the viewport's world coordinates.
  *
  * The transform() function does some transforms and writes them to the
  * provided element.
  */
 const viewport = {
-	get cx() {
-		return this._x * this.zoom;
-	},
-
-	set cx(v) {
-		return (this._x = v / this.zoom);
-	},
-	_x: 0,
-	get cy() {
-		return this._y * this.zoom;
-	},
-	set cy(v) {
-		return (this._y = v / this.zoom);
-	},
-	_y: 0,
+	cx: 0,
+	cy: 0,
 	zoom: 1,
 	rotation: 0,
 	get w() {
-		return (window.innerWidth * 1) / this.zoom;
+		return window.innerWidth * 1;
 	},
 	get h() {
-		return (window.innerHeight * 1) / this.zoom;
+		return window.innerHeight * 1;
 	},
 	viewToCanvas(x, y) {
+		return this.matrix.transformPoint({x, y});
 		return {
 			x: this.cx + this.w * (x / window.innerWidth - 0.5),
 			y: this.cy + this.h * (y / window.innerHeight - 0.5),
 		};
 	},
 	canvasToView(x, y) {
+		return this.imatrix.transformPoint({x, y});
 		return {
 			x: window.innerWidth * ((x - this.cx) / this.w) + window.innerWidth / 2,
 			y: window.innerHeight * ((y - this.cy) / this.h) + window.innerHeight / 2,
 		};
 	},
+
+	/**
+	 * The transformation matrix (vp to world)
+	 *
+	 * @type {DOMMatrix}
+	 */
+	get matrix() {
+		const matrix = new DOMMatrix();
+
+		matrix.scaleSelf(1 / this.zoom);
+		matrix.translateSelf(this.cx - this.w / 2, this.cy - this.h / 2);
+
+		return matrix;
+	},
+
+	/**
+	 * The transformation matrix (world to vp)
+	 *
+	 * @type {DOMMatrix}
+	 */
+	get imatrix() {
+		return this.matrix.invertSelf();
+	},
+
 	/**
 	 * Apply transformation
 	 *
 	 * @param {HTMLElement} el Element to apply CSS transform to
 	 */
 	transform(el) {
+		el.style.transform = this.imatrix;
+		return;
 		el.style.transformOrigin = `${this.cx}px ${this.cy}px`;
 		el.style.transform = `scale(${this.zoom}) translate(${-(
 			this._x -
@@ -216,8 +236,8 @@ const viewport = {
 	},
 };
 
-viewport.cx = imageCollection.size.w / 2;
-viewport.cy = imageCollection.size.h / 2;
+//viewport.cx = imageCollection.size.w / 2;
+//viewport.cy = imageCollection.size.h / 2;
 
 let worldInit = null;
 
@@ -320,8 +340,8 @@ const cameraPaintStart = (evn) => {
 
 const cameraPaint = (evn) => {
 	if (worldInit) {
-		viewport.cx = worldInit.x + (evn.ix - evn.x) / viewport.zoom;
-		viewport.cy = worldInit.y + (evn.iy - evn.y) / viewport.zoom;
+		viewport.cx = worldInit.x + (evn.ix - evn.x);
+		viewport.cy = worldInit.y + (evn.iy - evn.y);
 
 		// Limits
 		viewport.cx = Math.max(
@@ -337,13 +357,6 @@ const cameraPaint = (evn) => {
 	}
 
 	viewport.transform(imageCollection.element);
-	if (global.debug) {
-		debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-		debugCtx.fillStyle = "#F0F";
-		debugCtx.beginPath();
-		debugCtx.arc(viewport.cx, viewport.cy, 5, 0, Math.PI * 2);
-		debugCtx.fill();
-	}
 };
 
 const cameraPaintEnd = (evn) => {

@@ -64,6 +64,18 @@ class BoundingBox {
 			h: maxy - miny,
 		});
 	}
+
+	/**
+	 * Returns a transformed bounding box (using top-left, bottom-right points)
+	 *
+	 * @param {DOMMatrix} transform Transformation matrix to transform points
+	 */
+	transform(transform) {
+		return BoundingBox.fromStartEnd(
+			transform.transformPoint({x: this.x, y: this.y}),
+			transform.transformPoint({x: this.x + this.w, y: this.y + this.h})
+		);
+	}
 }
 
 /**

@@ -45,7 +45,7 @@
 	right: 0;
 }
 
-#layer-overlay {
+.overlay-canvas {
 	position: fixed;
 
 	top: 0;

@@ -174,6 +174,8 @@ const _tool = {
 
 			/**
 			 * Gets the selection bounding box
+			 *
+			 * @returns {BoundingBox}
 			 */
 			get bb() {
 				if (this._dirty_bb && this._selected) {
@@ -273,4 +275,137 @@ const _tool = {
 
 		return selection;
 	},
+
+	/**
+	 * Processes cursor position
+	 *
+	 * @param {Point} wpoint World coordinate of the cursor
+	 * @param {boolean} snapToGrid Snap to grid
+	 */
+	_process_cursor(wpoint, snapToGrid) {
+		// Get cursor positions
+		let x = wpoint.x;
+		let y = wpoint.y;
+		let sx = x;
+		let sy = y;
+
+		if (snapToGrid) {
+			sx += snap(x, 0, config.gridSize);
+			sy += snap(y, 0, config.gridSize);
+		}
+
+		const vpc = viewport.canvasToView(x, y);
+		const vpsc = viewport.canvasToView(sx, sy);
+
+		return {
+			// World Coordinates
+			x,
+			y,
+			sx,
+			sy,
+
+			// Viewport Coordinates
+			vpx: vpc.x,
+			vpy: vpc.y,
+			vpsx: vpsc.x,
+			vpsy: vpsc.y,
+		};
+	},
+
+	/**
+	 * Represents a marquee selection with an image
+	 */
+	MarqueeSelection: class {
+		/** @type {HTMLCanvasElement} */
+		canvas;
+
+		/**
+		 * @type {Point}
+		 */
+		position = {x: 0, y: 0};
+		scale = 1;
+		rotation = 0;
+
+		/**
+		 * @param {HTMLCanvasElement} canvas Selected image canvas
+		 * @param {Point} position Initial position of the selection
+		 */
+		constructor(canvas, position = {x: 0, y: 0}) {
+			this.canvas = canvas;
+			this.position = position;
+		}
+
+		/**
+		 * Draws the marquee selector box
+		 *
+		 * @param {CanvasRenderingContext2D} context A context for rendering the box to
+		 * @param {DOMMatrix} transform A transformation matrix to transform the position by
+		 */
+		drawBox(context, transform = new DOMMatrix()) {
+			context.save();
+			context.setTransform(transform);
+
+			context.scale(this.scale, this.scale);
+			context.rotate((this.rotation * 180) / Math.PI);
+			context.translate(this.position.x, this.position.y);
+
+			// Line Color
+			context.strokeStyle = "#FFF";
+
+			// Draw the box itself
+			context.save();
+			context.lineWidth = 2;
+			context.setLineDash([4, 2]);
+
+			context.beginPath();
+			context.strokeRect(
+				-this.canvas.width / 2,
+				-this.canvas.height / 2,
+				this.canvas.width,
+				this.canvas.height
+			);
+
+			context.restore();
+
+			context.restore();
+		}
+
+		/**
+		 * Draws the selected images
+		 *
+		 * @param {CanvasRenderingContext2D} context A context for rendering the box to
+		 * @param {DOMMatrix} transform A transformation matrix to transform the position by
+		 */
+		drawImage(context, transform = new DOMMatrix()) {
+			context.save();
+			context.setTransform(transform);
+
+			context.scale(this.scale, this.scale);
+			context.rotate((this.rotation * 180) / Math.PI);
+			context.translate(this.position.x, this.position.y);
+
+			context.restore();
+		}
+	},
+
+	/**
+	 * Marquee Selection with an image
+	 */
+	_marquee_selection(state) {
+		return {
+			// Location of the origin of the selection
+			position: {x: 0, y: 0},
+			// Scale of the selection
+			scale: 1,
+			// Angle of the selection (radians)
+			rotation: 0,
+
+			/**
+			 * Draws the selection
+			 */
+			draw() {},
+		};
+	},
 };
+
+name;

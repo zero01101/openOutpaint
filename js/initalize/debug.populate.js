@@ -31,3 +31,5 @@ mouse.listen.world.onmousemove.on((evn) => {
 		debugCtx.fill();
 	}
 });
+
+window.addEventListener("DOMContentLoaded", () => (global.debug = true));

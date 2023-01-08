@@ -5,6 +5,9 @@
  */
 const config = makeReadOnly(
 	{
+		// Grid Size
+		gridSize: 64,
+
 		// Scroll Tick Limit (How much must scroll to reach next tick)
 		wheelTickSize: 50,
 
