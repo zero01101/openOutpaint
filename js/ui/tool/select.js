@@ -1,3 +1,7 @@
+/**
+ * TODO: REFACTOR THIS WHOLE THING
+ */
+
 const selectTransformTool = () =>
 	toolbar.registerTool(
 		"./res/icons/box-select.svg",
@@ -70,6 +74,7 @@ const selectTransformTool = () =>
 
 				state.original = null;
 				state.dragging = null;
+				state.rotation = 0;
 				state._selected = null;
 				Object.defineProperty(state, "selected", {
 					get: () => state._selected,
@@ -114,6 +119,9 @@ const selectTransformTool = () =>
 					if (state.dragging) state.dragging = null;
 					else state.selected = null;
 
+					state.rotation = 0;
+					state.original = null;
+
 					state.redraw();
 				};
 
@@ -148,56 +156,49 @@ const selectTransformTool = () =>
 								y <= this.y + this.h
 							);
 						},
-						handles() {
-							const _createHandle = (x, y, originOffset = null) => {
-								return {
-									x,
-									y,
-									scaleTo: (tx, ty, keepAspectRatio = true) => {
-										const origin = {
-											x: this.original.x + this.original.w / 2,
-											y: this.original.y + this.original.h / 2,
-										};
-										let nx = tx;
-										let ny = ty;
+						center() {
+							return {x: this.x + this.w / 2, y: this.y + this.h / 2};
+						},
+						createHandle(x, y, originOffset = null) {
+							return {
+								x,
+								y,
+								scaleTo: (tx, ty, keepAspectRatio = true) => {
+									const origin = {
+										x: this.original.x + this.original.w / 2,
+										y: this.original.y + this.original.h / 2,
+									};
+									let nx = tx;
+									let ny = ty;
 
-										let xRatio = (nx - origin.x) / (x - origin.x);
-										let yRatio = (ny - origin.y) / (y - origin.y);
-										if (keepAspectRatio)
-											xRatio = yRatio = Math.min(xRatio, yRatio);
+									let xRatio = (nx - origin.x) / (x - origin.x);
+									let yRatio = (ny - origin.y) / (y - origin.y);
+									if (keepAspectRatio)
+										xRatio = yRatio = Math.min(xRatio, yRatio);
 
-										if (Number.isFinite(xRatio)) {
-											let left = this.original.x;
-											let right = this.original.x + this.original.w;
+									if (Number.isFinite(xRatio)) {
+										let left = this.original.x;
+										let right = this.original.x + this.original.w;
 
-											left = (left - origin.x) * xRatio + origin.x;
-											right = (right - origin.x) * xRatio + origin.x;
+										left = (left - origin.x) * xRatio + origin.x;
+										right = (right - origin.x) * xRatio + origin.x;
 
-											this.x = left;
-											this.w = right - left;
-										}
+										this.x = left;
+										this.w = right - left;
+									}
 
-										if (Number.isFinite(yRatio)) {
-											let top = this.original.y;
-											let bottom = this.original.y + this.original.h;
+									if (Number.isFinite(yRatio)) {
+										let top = this.original.y;
+										let bottom = this.original.y + this.original.h;
 
-											top = (top - origin.y) * yRatio + origin.y;
-											bottom = (bottom - origin.y) * yRatio + origin.y;
+										top = (top - origin.y) * yRatio + origin.y;
+										bottom = (bottom - origin.y) * yRatio + origin.y;
 
-											this.y = top;
-											this.h = bottom - top;
-										}
-									},
-								};
+										this.y = top;
+										this.h = bottom - top;
+									}
+								},
 							};
-
-							const size = viewport.zoom * 10;
-							return [
-								_createHandle(this.x, this.y, size),
-								_createHandle(this.x + this.w, this.y, size),
-								_createHandle(this.x, this.y + this.h, size),
-								_createHandle(this.x + this.w, this.y + this.h, size),
-							];
 						},
 					};
 				};
@@ -217,13 +218,17 @@ const selectTransformTool = () =>
 						y += snap(evn.y, 0, 64);
 					}
 
-					const vpc = viewport.canvasToView(x, y);
-
 					uiCtx.save();
 
 					// Update scale
 					if (state.scaling) {
 						state.scaling.scaleTo(x, y, state.keepAspectRatio);
+					}
+
+					// Update rotation
+					if (state.rotating) {
+						const center = state.selected.center();
+						state.rotation = Math.atan2(evn.x - center.x, center.y - evn.y);
 					}
 
 					// Update position
@@ -254,16 +259,17 @@ const selectTransformTool = () =>
 						uiCtx.setLineDash([]);
 					}
 
+					// Draw selected box
 					if (state.selected) {
 						ovCtx.lineWidth = 1;
 						ovCtx.strokeStyle = "#FFF";
 
-						const bb = {
+						const bb = new BoundingBox({
 							x: state.selected.x,
 							y: state.selected.y,
 							w: state.selected.w,
 							h: state.selected.h,
-						};
+						});
 
 						const bbvp = {
 							...viewport.canvasToView(bb.x, bb.y),
@@ -271,17 +277,32 @@ const selectTransformTool = () =>
 							h: viewport.zoom * bb.h,
 						};
 
+						const scenter = state.selected.center();
+
 						// Draw Image
 						ovCtx.save();
+
 						ovCtx.filter = `opacity(${state.selectionPeekOpacity}%)`;
+
+						ovCtx.translate(scenter.x, scenter.y);
+						ovCtx.rotate(state.rotation);
+
+						const matrix = ovCtx.getTransform();
+						const imatrix = matrix.invertSelf();
+
+						const cursor = imatrix.transformPoint({
+							x: evn.x,
+							y: evn.y,
+						});
+
 						ovCtx.drawImage(
 							state.selected.image,
 							0,
 							0,
 							state.selected.image.width,
 							state.selected.image.height,
-							state.selected.x,
-							state.selected.y,
+							-state.selected.w / 2,
+							-state.selected.h / 2,
 							state.selected.w,
 							state.selected.h
 						);
@@ -289,69 +310,122 @@ const selectTransformTool = () =>
 
 						state.originalDisplayLayer.clear();
 						state.originalDisplayLayer.ctx.save();
+
+						state.originalDisplayLayer.ctx.translate(scenter.x, scenter.y);
+						state.originalDisplayLayer.ctx.rotate(state.rotation);
+
 						state.originalDisplayLayer.ctx.drawImage(
 							state.selected.image,
 							0,
 							0,
 							state.selected.image.width,
 							state.selected.image.height,
-							state.selected.x,
-							state.selected.y,
+							-state.selected.w / 2,
+							-state.selected.h / 2,
 							state.selected.w,
 							state.selected.h
 						);
 						state.originalDisplayLayer.ctx.restore();
 
+						uiCtx.save();
+						const centerx = bbvp.x + bbvp.w / 2;
+						const centery = bbvp.y + bbvp.h / 2;
+
+						uiCtx.translate(centerx, centery);
+						uiCtx.rotate(state.rotation);
+
+						const matrixvp = uiCtx.getTransform();
+						const imatrixvp = matrixvp.invertSelf();
+
+						const cursorvp = imatrixvp.transformPoint({
+							x: evn.evn.clientX,
+							y: evn.evn.clientY,
+						});
+
 						// Draw selection box
 						uiCtx.strokeStyle = "#FFF";
 						uiCtx.setLineDash([4, 2]);
-						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
+						uiCtx.strokeRect(-bbvp.w / 2, -bbvp.h / 2, bbvp.w, bbvp.h);
 						uiCtx.setLineDash([]);
 
 						// Draw Scaling/Rotation Origin
 						uiCtx.beginPath();
-						uiCtx.arc(
-							bbvp.x + bbvp.w / 2,
-							bbvp.y + bbvp.h / 2,
-							5,
-							0,
-							2 * Math.PI
-						);
+						uiCtx.arc(0, 0, 5, 0, 2 * Math.PI);
 						uiCtx.stroke();
 
-						// Draw Scaling Handles
-						let cursorInHandle = false;
-						state.selected.handles().forEach((handle) => {
-							const bbvph = {
-								...viewport.canvasToView(handle.x, handle.y),
-								w: 10,
-								h: 10,
-							};
+						// Draw Rotation Handle
+						let cursorInAnyHandle = false;
+						{
+							let radius = config.handleDrawSize / 2;
 
-							bbvph.x -= 5;
-							bbvph.y -= 5;
+							const dx = cursorvp.x;
+							const dy =
+								cursorvp.y - (-bbvp.h / 2 - config.rotateHandleDistance);
+							const dmax = config.handleDetectSize / 2;
 
-							const inhandle =
-								evn.evn.clientX > bbvph.x &&
-								evn.evn.clientX < bbvph.x + bbvph.w &&
-								evn.evn.clientY > bbvph.y &&
-								evn.evn.clientY < bbvph.y + bbvph.h;
-
-							if (inhandle) {
-								cursorInHandle = true;
-								uiCtx.strokeRect(
-									bbvph.x - 1,
-									bbvph.y - 1,
-									bbvph.w + 2,
-									bbvph.h + 2
-								);
-							} else {
-								uiCtx.strokeRect(bbvph.x, bbvph.y, bbvph.w, bbvph.h);
+							if (dx * dx + dy * dy < dmax * dmax) {
+								cursorInAnyHandle ||= true;
+								radius *= config.handleDrawHoverScale;
 							}
-						});
+
+							uiCtx.beginPath();
+							uiCtx.moveTo(0, -bbvp.h / 2);
+							uiCtx.lineTo(
+								0,
+								-bbvp.h / 2 - config.rotateHandleDistance + radius
+							);
+							uiCtx.stroke();
+
+							uiCtx.beginPath();
+							uiCtx.arc(
+								0,
+								-bbvp.h / 2 - config.rotateHandleDistance,
+								radius,
+								0,
+								Math.PI * 2
+							);
+							uiCtx.stroke();
+						}
+
+						// Draw Scaling Handles
+						const drawHandle = (hx, hy) => {
+							// Handle Draw Range
+							let hs = config.handleDrawSize;
+
+							// Handle Detection Range
+							let dhs = config.handleDetectSize;
+
+							const handleBB = new BoundingBox({
+								x: hx - dhs / 2,
+								y: hy - dhs / 2,
+								w: dhs,
+								h: dhs,
+							});
+
+							const cursorInHandle = handleBB.contains(cursorvp.x, cursorvp.y);
+
+							cursorInAnyHandle ||= cursorInHandle;
+
+							if (cursorInHandle) hs *= config.handleDrawHoverScale;
+
+							uiCtx.strokeRect(hx - hs / 2, hy - hs / 2, hs, hs);
+						};
+
+						drawHandle(-bbvp.w / 2, -bbvp.h / 2);
+						drawHandle(bbvp.w / 2, -bbvp.h / 2);
+						drawHandle(-bbvp.w / 2, bbvp.h / 2);
+						drawHandle(bbvp.w / 2, bbvp.h / 2);
+
+						uiCtx.restore();
 
 						// Change cursor
-						if (cursorInHandle || state.selected.contains(evn.x, evn.y))
+						if (
+							cursorInAnyHandle ||
+							(-bb.w / 2 < cursor.x &&
+								bb.w / 2 > cursor.x &&
+								-bb.h / 2 < cursor.y &&
+								bb.h / 2 > cursor.y)
+						)
 							imageCollection.inputElement.style.cursor = "pointer";
 					}
 
@@ -369,7 +443,8 @@ const selectTransformTool = () =>
 							state.original.x === state.selected.x &&
 							state.original.y === state.selected.y &&
 							state.original.w === state.selected.w &&
-							state.original.h === state.selected.h)
+							state.original.h === state.selected.h &&
+							state.rotation === 0)
 					) {
 						state.reset();
 						return;
@@ -386,12 +461,13 @@ const selectTransformTool = () =>
 							...state.original,
 							ctx: state.originalLayer.ctx,
 						});
+
+						// Use display layer as source
+						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas);
+
 						commands.runCommand("drawImage", "Image Transform Draw", {
-							image: state.selected.image,
-							x: Math.round(state.selected.x),
-							y: Math.round(state.selected.y),
-							w: Math.round(state.selected.w),
-							h: Math.round(state.selected.h),
+							image: canvas,
+							...bb,
 						});
 						state.reset(true);
 					}
@@ -408,35 +484,96 @@ const selectTransformTool = () =>
 
 					// If is selected, check if drag is in handles/body and act accordingly
 					if (state.selected) {
-						const handles = state.selected.handles();
+						// Get transformation matrices
+						const bb = {
+							x: state.selected.x,
+							y: state.selected.y,
+							w: state.selected.w,
+							h: state.selected.h,
+						};
 
-						const activeHandle = handles.find((v) => {
-							const vpc = viewport.canvasToView(v.x, v.y);
-							const tlc = viewport.viewToCanvas(vpc.x - 5, vpc.y - 5);
-							const brc = viewport.viewToCanvas(vpc.x + 5, vpc.y + 5);
-							const bb = {
-								x: tlc.x,
-								y: tlc.y,
-								w: brc.x - tlc.x,
-								h: brc.y - tlc.y,
-							};
+						const bbvp = {
+							...viewport.canvasToView(bb.x, bb.y),
+							w: viewport.zoom * bb.w,
+							h: viewport.zoom * bb.h,
+						};
 
-							return (
-								evn.ix > bb.x &&
-								evn.ix < bb.x + bb.w &&
-								evn.iy > bb.y &&
-								evn.iy < bb.y + bb.h
-							);
-						});
+						const ivp = viewport.canvasToView(evn.ix, evn.iy);
+
+						// Viewport Coordinates
+						uiCtx.save();
+						const centerx = bbvp.x + bbvp.w / 2;
+						const centery = bbvp.y + bbvp.h / 2;
+
+						uiCtx.translate(centerx, centery);
+						uiCtx.rotate(state.rotation);
+
+						const matrixvp = uiCtx.getTransform();
+						const imatrixvp = matrixvp.invertSelf();
+
+						const cursorvp = imatrixvp.transformPoint(ivp);
+
+						uiCtx.restore();
+
+						// World Coordinates
+						const scenter = state.selected.center();
+
+						ovCtx.save();
+
+						ovCtx.translate(scenter.x, scenter.y);
+						ovCtx.rotate(state.rotation);
+
+						const matrix = ovCtx.getTransform();
+						const imatrix = matrix.invertSelf();
+
+						ovCtx.restore();
+
+						// Check rotation handle
+						let rotationHandle = false;
+
+						const dx = cursorvp.x;
+						const dy = cursorvp.y - (-bbvp.h / 2 - config.rotateHandleDistance);
+						const dmax = config.handleDetectSize / 2;
+
+						if (dx * dx + dy * dy < dmax * dmax) rotationHandle = true;
+
+						// Check handles
+						let activeHandle = null;
+						const testHandle = (hx, hy, hwx, hwy) => {
+							// Handle Detection Range
+							let dhs = config.handleDetectSize;
+
+							const handleBB = new BoundingBox({
+								x: hx - dhs / 2,
+								y: hy - dhs / 2,
+								w: dhs,
+								h: dhs,
+							});
+
+							if (handleBB.contains(cursorvp.x, cursorvp.y)) {
+								activeHandle = state.selected.createHandle(hx, hy);
+							}
+						};
+
+						testHandle(-bbvp.w / 2, -bbvp.h / 2);
+						testHandle(bbvp.w / 2, -bbvp.h / 2);
+						testHandle(-bbvp.w / 2, bbvp.h / 2);
+						testHandle(bbvp.w / 2, bbvp.h / 2);
+
 						if (activeHandle) {
 							state.scaling = activeHandle;
-							return;
-						} else if (state.selected.contains(ix, iy)) {
+						} else if (rotationHandle) {
+							state.rotating = true;
+						} else if (state.selected.contains(evn.ix, evn.iy)) {
 							state.moving = {
-								offset: {x: ix - state.selected.x, y: iy - state.selected.y},
+								snapOffset: {x: evn.ix - ix, y: evn.iy - iy},
+								offset: {
+									x: ix - state.selected.x,
+									y: iy - state.selected.y,
+								},
 							};
-							return;
 						}
+						return;
 					}
 					// If it is not, just create new selection
 					state.reset();
@@ -457,6 +594,8 @@ const selectTransformTool = () =>
 						state.selected.updateOriginal();
 						state.scaling = null;
 						// If we are moving the selection, just... stop
+					} else if (state.rotating) {
+						state.rotating = false;
 					} else if (state.moving) {
 						state.moving = null;
 						/**
@@ -481,6 +620,8 @@ const selectTransformTool = () =>
 							after: uil.layer,
 							category: "select-display",
 						});
+
+						state.rotation = 0;
 
 						// Cut out selected portion of the image for manipulation
 						const cvs = document.createElement("canvas");
