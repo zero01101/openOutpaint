@@ -366,7 +366,6 @@ async function testHostConnection() {
 				const response = await fetch(
 					document.getElementById("host").value + "/sdapi/v1/progress" // seems to be the "lightest" endpoint?
 				);
-				const responseData = await response.json();
 				switch (response.status) {
 					case 200: {
 						setConnectionStatus("online");
@@ -445,7 +444,7 @@ async function testHostConnection() {
 		return status;
 	};
 
-	if (focused) {
+	if (focused || firstTimeOnline) {
 		await checkConnection(!urlParams.has("noprompt"));
 	}
 
@@ -461,7 +460,7 @@ async function testHostConnection() {
 
 	// Checks every 5 seconds if offline, 60 seconds if online
 	const checkAgain = () => {
-		if (focused) {
+		if (focused || firstTimeOnline) {
 			setTimeout(
 				async () => {
 					let simple = !firstTimeOnline;
@@ -470,7 +469,7 @@ async function testHostConnection() {
 					checkAgain();
 				},
 				connectionStatus ? 60000 : 5000
-				//connectionStatus ? 5000 : 5000 //TODO REMOVE DEBUG REPLACE TO 60000 : 5000
+				// connectionStatus ? 10000 : 1000 //TODO REMOVE DEBUG REPLACE TO 60000 : 5000
 			);
 		} else {
 			setTimeout(() => {
@@ -478,13 +477,11 @@ async function testHostConnection() {
 				checkFocus();
 				checkAgain();
 			}, 60000);
-			//}, 5000); //TODO REMOVE DEBUG REPLACE TO 60000
+			// }, 1000); //TODO REMOVE DEBUG REPLACE TO 60000
 		}
 	};
 
-	if (focused) {
-		checkAgain();
-	}
+	checkAgain();
 
 	return () => {
 		checkConnection().catch(() => {});
@@ -1295,11 +1292,22 @@ document.addEventListener("visibilitychange", () => {
 	checkFocus();
 });
 
+window.addEventListener("blur", () => {
+	checkFocus();
+	console.warn("openoutpaint unfocused");
+});
+
+window.addEventListener("focus", () => {
+	checkFocus();
+	console.warn("openoutpaint focused");
+});
+
 function checkFocus() {
-	if (!document.hidden) {
-		focused = true;
-	} else {
+	let hasFocus = document.hasFocus();
+	if (document.hidden || !hasFocus) {
 		focused = false;
+	} else {
+		focused = true;
 	}
-	console.debug("FOCUSED: " + focused); //TODO comment out or something
+	console.debug("FOCUSED: " + focused); //TODO comment out or something //seriously it stops working without this here wtf
 }
