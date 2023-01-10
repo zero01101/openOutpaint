@@ -25,6 +25,7 @@
 
 .layer-render-target .collection {
 	position: absolute;
+	transform-origin: 0px 0px;
 }
 
 .layer-render-target .collection > .collection-input-overlay {

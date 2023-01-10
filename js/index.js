@@ -143,6 +143,7 @@ var stableDiffusionData = {
 var host = "";
 var url = "/sdapi/v1/";
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
+var focused = true;
 
 function startup() {
 	testHostConfiguration();
@@ -168,6 +169,7 @@ function startup() {
 	changeHiResSquare();
 	changeRestoreFaces();
 	changeSyncCursorSize();
+	checkFocus();
 }
 
 function setFixedHost(h, changePromptMessage) {
@@ -335,7 +337,23 @@ async function testHostConnection() {
 
 	let checkInProgress = false;
 
-	const checkConnection = async (notify = false) => {
+	const checkConnection = async (
+		notify = false,
+		simpleProgressStatus = false
+	) => {
+		const apiIssueResult = () => {
+			setConnectionStatus("apiissue");
+			const message = `The host is online, but the API seems to be disabled.\nHave you run the webui with the flag '--api', or is the flag '--gradio-debug' currently active?`;
+			console.error(message);
+			if (notify) alert(message);
+		};
+
+		const offlineResult = () => {
+			setConnectionStatus("offline");
+			const message = `The connection with the host returned an error: ${response.status} - ${response.statusText}`;
+			console.error(message);
+			if (notify) alert(message);
+		};
 		if (checkInProgress)
 			throw new CheckInProgressError(
 				"Check is currently in progress, please try again"
@@ -344,50 +362,63 @@ async function testHostConnection() {
 		var url = document.getElementById("host").value + "/startup-events";
 		// Attempt normal request
 		try {
-			// Check if API is available
-			const response = await fetch(
-				document.getElementById("host").value + "/sdapi/v1/options"
-			);
-			const optionsdata = await response.json();
-			if (optionsdata["use_scale_latent_for_hires_fix"]) {
-				const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18 or newer.\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nHRfix will fallback to half-resolution only.`;
-				console.warn(message);
-				if (notify) alert(message);
-				// Hide all new hrfix options
-				document
-					.querySelectorAll(".hrfix")
-					.forEach((el) => (el.style.display = "none"));
-
-				// We are using old HRFix
-				global.isOldHRFix = true;
-				stableDiffusionData.enable_hr = false;
-			}
-			switch (response.status) {
-				case 200: {
-					setConnectionStatus("online");
-					// Load data as soon as connection is first stablished
-					if (firstTimeOnline) {
-						getConfig();
-						getStyles();
-						getSamplers();
-						getUpscalers();
-						getModels();
-						firstTimeOnline = false;
+			if (simpleProgressStatus) {
+				const response = await fetch(
+					document.getElementById("host").value + "/sdapi/v1/progress" // seems to be the "lightest" endpoint?
+				);
+				switch (response.status) {
+					case 200: {
+						setConnectionStatus("online");
+						break;
 					}
-					break;
+					case 404: {
+						apiIssueResult();
+						break;
+					}
+					default: {
+						offlineResult();
+					}
 				}
-				case 404: {
-					setConnectionStatus("apiissue");
-					const message = `The host is online, but the API seems to be disabled.\nHave you run the webui with the flag '--api', or is the flag '--gradio-debug' currently active?`;
-					console.error(message);
+			} else {
+				// Check if API is available
+				const response = await fetch(
+					document.getElementById("host").value + "/sdapi/v1/options"
+				);
+				const optionsdata = await response.json();
+				if (optionsdata["use_scale_latent_for_hires_fix"]) {
+					const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18 or newer.\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nHRfix will fallback to half-resolution only.`;
+					console.warn(message);
 					if (notify) alert(message);
-					break;
+					// Hide all new hrfix options
+					document
+						.querySelectorAll(".hrfix")
+						.forEach((el) => (el.style.display = "none"));
+
+					// We are using old HRFix
+					global.isOldHRFix = true;
+					stableDiffusionData.enable_hr = false;
 				}
-				default: {
-					setConnectionStatus("offline");
-					const message = `The connection with the host returned an error: ${response.status} - ${response.statusText}`;
-					console.error(message);
-					if (notify) alert(message);
+				switch (response.status) {
+					case 200: {
+						setConnectionStatus("online");
+						// Load data as soon as connection is first stablished
+						if (firstTimeOnline) {
+							getConfig();
+							getStyles();
+							getSamplers();
+							getUpscalers();
+							getModels();
+							firstTimeOnline = false;
+						}
+						break;
+					}
+					case 404: {
+						apiIssueResult();
+						break;
+					}
+					default: {
+						offlineResult();
+					}
 				}
 			}
 		} catch (e) {
@@ -413,7 +444,9 @@ async function testHostConnection() {
 		return status;
 	};
 
-	await checkConnection(!urlParams.has("noprompt"));
+	if (focused || firstTimeOnline) {
+		await checkConnection(!urlParams.has("noprompt"));
+	}
 
 	// On click, attempt to refresh
 	connectionIndicator.onclick = async () => {
@@ -425,15 +458,23 @@ async function testHostConnection() {
 		}
 	};
 
-	// Checks every 5 seconds if offline, 30 seconds if online
+	// Checks every 5 seconds if offline, 60 seconds if online
 	const checkAgain = () => {
-		setTimeout(
-			async () => {
-				await checkConnection();
+		checkFocus();
+		if (focused || firstTimeOnline) {
+			setTimeout(
+				async () => {
+					let simple = !firstTimeOnline;
+					await checkConnection(false, simple);
+					checkAgain();
+				},
+				connectionStatus ? 60000 : 5000
+			);
+		} else {
+			setTimeout(() => {
 				checkAgain();
-			},
-			connectionStatus ? 30000 : 5000
-		);
+			}, 60000);
+		}
 	};
 
 	checkAgain();
@@ -1240,5 +1281,26 @@ imageCollection.element.addEventListener(
 function resetToDefaults() {
 	if (confirm("Are you sure you want to clear your settings?")) {
 		localStorage.clear();
+	}
+}
+
+document.addEventListener("visibilitychange", () => {
+	checkFocus();
+});
+
+window.addEventListener("blur", () => {
+	checkFocus();
+});
+
+window.addEventListener("focus", () => {
+	checkFocus();
+});
+
+function checkFocus() {
+	let hasFocus = document.hasFocus();
+	if (document.hidden || !hasFocus) {
+		focused = false;
+	} else {
+		focused = true;
 	}
 }

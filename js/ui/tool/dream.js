@@ -177,6 +177,7 @@ const _dream = async (endpoint, request) => {
  * @returns {Promise<HTMLImageElement | null>}
  */
 const _generate = async (endpoint, request, bb, options = {}) => {
+	var alertCount = 0;
 	defaultOpt(options, {
 		drawEvery: 0.2 / request.n_iter,
 		keepUnmask: null,
@@ -532,9 +533,14 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			seeds.push(...dreamData.seeds);
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
-			alert(
-				`Error generating images. Please try again or see console for more details`
-			);
+			if (alertCount < 2) {
+				alert(
+					`Error generating images. Please try again or see console for more details`
+				);
+			} else {
+				eagerGenerateCount = 0;
+			}
+			alertCount++;
 			console.warn(`[dream] Error generating images:`);
 			console.warn(e);
 		} finally {
@@ -1912,11 +1918,10 @@ const img2imgTool = () =>
 						return;
 					}
 
-					const bbvp = {
-						...viewport.canvasToView(bb.x, bb.y),
-						w: viewport.zoom * bb.w,
-						h: viewport.zoom * bb.h,
-					};
+					const bbvp = BoundingBox.fromStartEnd(
+						viewport.canvasToView(bb.tl),
+						viewport.canvasToView(bb.br)
+					);
 
 					// For displaying border mask
 					const bbCanvas = document.createElement("canvas");

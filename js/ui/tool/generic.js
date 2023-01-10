@@ -27,11 +27,10 @@ const _tool = {
 			reticleStyle: global.hasActiveInput ? "#BBF" : "#FFF",
 		});
 
-		const bbvp = {
-			...viewport.canvasToView(bb.x, bb.y),
-			w: viewport.zoom * bb.w,
-			h: viewport.zoom * bb.h,
-		};
+		const bbvp = BoundingBox.fromStartEnd(
+			viewport.canvasToView(bb.tl),
+			viewport.canvasToView(bb.br)
+		);
 
 		uiCtx.save();
 
