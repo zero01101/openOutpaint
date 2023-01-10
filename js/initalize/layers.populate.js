@@ -160,61 +160,72 @@ debugLayer.hide(); // Hidden by default
  * The global viewport object (may be modularized in the future). All
  * coordinates given are of the center of the viewport
  *
- * cx and cy are the viewport's world coordinates, scaled to zoom level.
- * _x and _y are actual coordinates in the DOM space
+ * cx and cy are the viewport's world coordinates.
  *
  * The transform() function does some transforms and writes them to the
  * provided element.
  */
-const viewport = {
-	get cx() {
-		return this._x * this.zoom;
-	},
+class Viewport {
+	cx = 0;
+	cy = 0;
 
-	set cx(v) {
-		return (this._x = v / this.zoom);
-	},
-	_x: 0,
-	get cy() {
-		return this._y * this.zoom;
-	},
-	set cy(v) {
-		return (this._y = v / this.zoom);
-	},
-	_y: 0,
-	zoom: 1,
-	rotation: 0,
+	zoom = 1;
+
+	/**
+	 * Gets viewport width in canvas coordinates
+	 */
 	get w() {
-		return (window.innerWidth * 1) / this.zoom;
-	},
+		return window.innerWidth * this.zoom;
+	}
+
+	/**
+	 * Gets viewport height in canvas coordinates
+	 */
 	get h() {
-		return (window.innerHeight * 1) / this.zoom;
-	},
+		return window.innerHeight * this.zoom;
+	}
+
+	constructor(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	get v2c() {
+		const m = new DOMMatrix();
+
+		m.translateSelf(-this.w / 2, -this.h / 2);
+		m.translateSelf(this.cx, this.cy);
+		m.scaleSelf(this.zoom);
+
+		return m;
+	}
+
+	get c2v() {
+		return this.v2c.invertSelf();
+	}
+
 	viewToCanvas(x, y) {
-		return {
-			x: this.cx + this.w * (x / window.innerWidth - 0.5),
-			y: this.cy + this.h * (y / window.innerHeight - 0.5),
-		};
-	},
+		if (x.x !== undefined) return this.v2c.transformPoint(x);
+		return this.v2c.transformPoint({x, y});
+	}
+
 	canvasToView(x, y) {
-		return {
-			x: window.innerWidth * ((x - this.cx) / this.w) + window.innerWidth / 2,
-			y: window.innerHeight * ((y - this.cy) / this.h) + window.innerHeight / 2,
-		};
-	},
+		if (x.x !== undefined) return this.c2v.transformPoint(x);
+		return this.c2v.transformPoint({x, y});
+	}
+
 	/**
 	 * Apply transformation
 	 *
 	 * @param {HTMLElement} el Element to apply CSS transform to
 	 */
 	transform(el) {
-		el.style.transformOrigin = `${this.cx}px ${this.cy}px`;
-		el.style.transform = `scale(${this.zoom}) translate(${-(
-			this._x -
-			this.w / 2
-		)}px, ${-(this._y - this.h / 2)}px)`;
-	},
-};
+		el.style.transformOrigin = "0px 0px";
+		el.style.transform = this.c2v;
+	}
+}
+
+const viewport = new Viewport(0, 0);
 
 viewport.cx = imageCollection.size.w / 2;
 viewport.cy = imageCollection.size.h / 2;
@@ -296,7 +307,7 @@ mouse.listen.camera.onwheel.on((evn) => {
 	const pcy = viewport.cy;
 
 	// Apply zoom
-	viewport.zoom *= 1 - evn.delta * 0.0002;
+	viewport.zoom *= 1 + evn.delta * 0.0002;
 
 	// Apply normal zoom (center of viewport)
 	viewport.cx = pcx;
@@ -305,11 +316,11 @@ mouse.listen.camera.onwheel.on((evn) => {
 	viewport.transform(imageCollection.element);
 
 	// Calculate new viewport center and move
-	const newCursorPosition = viewport.viewToCanvas(evn.x, evn.y);
-	viewport.cx = pcx - (newCursorPosition.x - cursorPosition.x);
-	viewport.cy = pcy - (newCursorPosition.y - cursorPosition.y);
+	//const newCursorPosition = viewport.viewToCanvas(evn.x, evn.y);
+	//viewport.cx = pcx - (newCursorPosition.x - cursorPosition.x);
+	//viewport.cy = pcy - (newCursorPosition.y - cursorPosition.y);
 
-	viewport.transform(imageCollection.element);
+	//viewport.transform(imageCollection.element);
 
 	toolbar.currentTool.redraw();
 });
@@ -320,8 +331,8 @@ const cameraPaintStart = (evn) => {
 
 const cameraPaint = (evn) => {
 	if (worldInit) {
-		viewport.cx = worldInit.x + (evn.ix - evn.x) / viewport.zoom;
-		viewport.cy = worldInit.y + (evn.iy - evn.y) / viewport.zoom;
+		viewport.cx = worldInit.x + (evn.ix - evn.x) * viewport.zoom;
+		viewport.cy = worldInit.y + (evn.iy - evn.y) * viewport.zoom;
 
 		// Limits
 		viewport.cx = Math.max(

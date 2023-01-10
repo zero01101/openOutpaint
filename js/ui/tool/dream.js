@@ -1918,11 +1918,10 @@ const img2imgTool = () =>
 						return;
 					}
 
-					const bbvp = {
-						...viewport.canvasToView(bb.x, bb.y),
-						w: viewport.zoom * bb.w,
-						h: viewport.zoom * bb.h,
-					};
+					const bbvp = BoundingBox.fromStartEnd(
+						viewport.canvasToView(bb.tl),
+						viewport.canvasToView(bb.br)
+					);
 
 					// For displaying border mask
 					const bbCanvas = document.createElement("canvas");

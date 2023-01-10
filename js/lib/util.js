@@ -32,6 +32,16 @@ class BoundingBox {
 	w = 0;
 	h = 0;
 
+	/** @type {Point} */
+	get tl() {
+		return {x: this.x, y: this.y};
+	}
+
+	/** @type {Point} */
+	get br() {
+		return {x: this.x + this.w, y: this.y + this.h};
+	}
+
 	constructor({x, y, w, h} = {x: 0, y: 0, w: 0, h: 0}) {
 		this.x = x;
 		this.y = y;
