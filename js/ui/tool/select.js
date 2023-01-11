@@ -15,6 +15,7 @@ const selectTransformTool = () =>
 			mouse.listen.world.onmousemove.on(state.movecb);
 			mouse.listen.world.btn.left.onclick.on(state.clickcb);
 			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 
 			// Canvas right mouse handler
@@ -39,6 +40,7 @@ const selectTransformTool = () =>
 			mouse.listen.world.onmousemove.clear(state.movecb);
 			mouse.listen.world.btn.left.onclick.clear(state.clickcb);
 			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
 			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
@@ -124,48 +126,89 @@ const selectTransformTool = () =>
 
 				// Selection Handlers
 				const selection = _tool._draggable_selection(state);
-				state.dragstartcb = (evn) => selection.dragstartcb(evn);
-				state.dragcb = (evn) => selection.dragcb(evn);
-				state.dragendcb = (evn) => selection.dragendcb(evn);
 
 				// Mouse Move Handler
+				let eraseSelectedBox = () => null;
 				let eraseCursor = () => null;
+				let eraseSelection = () => null;
 				state.movecb = (evn) => {
 					// Get cursor positions
 					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
 
-					// Draw cursor
+					// Erase Cursor
+					eraseSelectedBox();
+					eraseSelection();
 					eraseCursor();
-					eraseCursor = _tool._cursor_draw(sx, sy);
+					imageCollection.inputElement.style.cursor = "default";
 
 					// Draw Box and Selected Image
 					if (state.selected) {
-						state.selected.drawBox(uiCtx);
+						eraseSelectedBox = state.selected.drawBox(uiCtx, viewport.c2v);
 					}
 
 					// Draw Selection
 					if (selection.exists) {
+						uiCtx.save();
 						uiCtx.setLineDash([2, 2]);
-						uiCtx.lineWidth = 1;
+						uiCtx.lineWidth = 2;
 						uiCtx.strokeStyle = "#FFF";
 
-						const vpbb = selection.bb.transform(viewport.matrix);
+						const bbvp = selection.bb.transform(viewport.c2v);
+						uiCtx.beginPath();
+						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
+						uiCtx.stroke();
+
+						eraseSelection = () =>
+							uiCtx.clearRect(
+								bbvp.x - 10,
+								bbvp.y - 10,
+								bbvp.w + 20,
+								bbvp.h + 20
+							);
+
+						uiCtx.restore();
+					}
+
+					// Draw cursor
+					eraseCursor = _tool._cursor_draw(sx, sy);
+
+					// Pointer
+					if (state.selected && state.selected.contains(x, y)) {
+						imageCollection.inputElement.style.cursor = "pointer";
 					}
 				};
 
 				// Handles left mouse clicks
 				state.clickcb = (evn) => {};
 
-				// Handles left mouse drag events
+				// Handles left mouse drag start events
 				state.dragstartcb = (evn) => {
-					if (state.selected && state.selected.hasCursor()) {
-					} else {
-						state.selection;
-					}
+					selection.dragstartcb(evn);
+				};
+
+				// Handles left mouse drag events
+				state.dragcb = (evn) => {
+					selection.dragcb(evn);
 				};
 
 				// Handles left mouse drag end events
-				state.dragendcb = (evn) => {};
+				state.dragendcb = (evn) => {
+					selection.dragendcb(evn);
+
+					if (selection.exists) {
+						if (selection.bb.w !== 0 && selection.bb.h !== 0) {
+							// TODO: CHANGE THIS
+							state.selected = new _tool.MarqueeSelection(
+								uil.getVisible(selection.bb),
+								selection.bb.center
+							);
+						}
+
+						selection.deselect();
+					}
+
+					state.redraw();
+				};
 
 				// Handler for right clicks. Basically resets everything
 				state.cancelcb = (evn) => {

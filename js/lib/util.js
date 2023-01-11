@@ -42,6 +42,11 @@ class BoundingBox {
 		return {x: this.x + this.w, y: this.y + this.h};
 	}
 
+	/** @type {Point} */
+	get center() {
+		return {x: this.x + this.w / 2, y: this.y + this.h / 2};
+	}
+
 	constructor({x, y, w, h} = {x: 0, y: 0, w: 0, h: 0}) {
 		this.x = x;
 		this.y = y;

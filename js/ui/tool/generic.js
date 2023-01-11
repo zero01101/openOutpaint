@@ -27,10 +27,7 @@ const _tool = {
 			reticleStyle: global.hasActiveInput ? "#BBF" : "#FFF",
 		});
 
-		const bbvp = BoundingBox.fromStartEnd(
-			viewport.canvasToView(bb.tl),
-			viewport.canvasToView(bb.br)
-		);
+		const bbvp = bb.transform(viewport.c2v);
 
 		uiCtx.save();
 
@@ -322,7 +319,7 @@ const _tool = {
 		 * @type {Point}
 		 */
 		position = {x: 0, y: 0};
-		scale = 1;
+		scale = {x: 1, y: 1};
 		rotation = 0;
 
 		/**
@@ -334,6 +331,31 @@ const _tool = {
 			this.position = position;
 		}
 
+		get matrix() {
+			const m = new DOMMatrix();
+
+			m.scaleSelf(this.scale.x, this.scale.y);
+			m.rotateSelf((this.rotation * 180) / Math.PI);
+			m.translateSelf(this.position.x, this.position.y);
+
+			return m;
+		}
+
+		/**
+		 * If the main marquee box contains a given point
+		 *
+		 * @param {number} x X coordinate of the point
+		 * @param {number} y Y coordinate of the point
+		 */
+		contains(x, y) {
+			const p = this.matrix.invertSelf().transformPoint({x, y});
+
+			return (
+				Math.abs(p.x) < this.canvas.width / 2 &&
+				Math.abs(p.y) < this.canvas.height / 2
+			);
+		}
+
 		/**
 		 * Draws the marquee selector box
 		 *
@@ -342,17 +364,16 @@ const _tool = {
 		 */
 		drawBox(context, transform = new DOMMatrix()) {
 			context.save();
-			context.setTransform(transform);
 
-			context.scale(this.scale, this.scale);
-			context.rotate((this.rotation * 180) / Math.PI);
-			context.translate(this.position.x, this.position.y);
+			const m = transform.multiply(this.matrix);
 
-			// Line Color
-			context.strokeStyle = "#FFF";
+			context.setTransform(m);
 
 			// Draw the box itself
 			context.save();
+
+			// Line Style
+			context.strokeStyle = "#FFF";
 			context.lineWidth = 2;
 			context.setLineDash([4, 2]);
 
@@ -363,10 +384,26 @@ const _tool = {
 				this.canvas.width,
 				this.canvas.height
 			);
+			context.stroke();
 
 			context.restore();
 
 			context.restore();
+
+			return () => {
+				context.save();
+
+				context.setTransform(m);
+
+				context.clearRect(
+					-this.canvas.width / 2 - 10,
+					-this.canvas.height / 2 - 10,
+					this.canvas.width + 20,
+					this.canvas.height + 20
+				);
+
+				context.restore();
+			};
 		}
 
 		/**
