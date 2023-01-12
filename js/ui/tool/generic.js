@@ -315,12 +315,40 @@ const _tool = {
 		/** @type {HTMLCanvasElement} */
 		canvas;
 
+		_dirty = false;
+		_position = {x: 0, y: 0};
 		/**
 		 * @type {Point}
 		 */
-		position = {x: 0, y: 0};
-		scale = {x: 1, y: 1};
-		rotation = 0;
+		get position() {
+			return this._position;
+		}
+		set position(v) {
+			this._dirty = true;
+			this._position = v;
+		}
+
+		_scale = {x: 1, y: 1};
+		/**
+		 * @type {Point}
+		 */
+		get scale() {
+			return this._scale;
+		}
+		set scale(v) {
+			if (v.x === 0 || v.y === 0) return;
+			this._dirty = true;
+			this._scale = v;
+		}
+
+		_rotation = 0;
+		get rotation() {
+			return this._rotation;
+		}
+		set rotation(v) {
+			this._dirty = true;
+			this._rotation = v;
+		}
 
 		/**
 		 * @param {HTMLCanvasElement} canvas Selected image canvas
@@ -331,14 +359,28 @@ const _tool = {
 			this.position = position;
 		}
 
+		/** @type {DOMMatrix} */
+		_rtmatrix = null;
+		get rtmatrix() {
+			if (!this._rtmatrix || this._dirty) {
+				const m = new DOMMatrix();
+
+				m.translateSelf(this.position.x, this.position.y);
+				m.rotateSelf((this.rotation * 180) / Math.PI);
+
+				this._rtmatrix = m;
+			}
+
+			return this._rtmatrix;
+		}
+
+		/** @type {DOMMatrix} */
+		_matrix = null;
 		get matrix() {
-			const m = new DOMMatrix();
-
-			m.scaleSelf(this.scale.x, this.scale.y);
-			m.rotateSelf((this.rotation * 180) / Math.PI);
-			m.translateSelf(this.position.x, this.position.y);
-
-			return m;
+			if (!this._matrix || this._dirty) {
+				this._matrix = this.rtmatrix.scaleSelf(this.scale.x, this.scale.y);
+			}
+			return this._matrix;
 		}
 
 		/**
@@ -356,44 +398,201 @@ const _tool = {
 			);
 		}
 
+		hoveringHandle(x, y) {
+			const localbb = new BoundingBox({
+				x: -this.canvas.width / 2,
+				y: -this.canvas.height / 2,
+				w: this.canvas.width,
+				h: this.canvas.height,
+			});
+
+			const localc = this.matrix.inverse().transformPoint({x, y});
+			const ontl =
+				Math.max(
+					Math.abs(localc.x - localbb.tl.x),
+					Math.abs(localc.y - localbb.tl.y)
+				) <
+				config.handleDetectSize / 2;
+			const ontr =
+				Math.max(
+					Math.abs(localc.x - localbb.tr.x),
+					Math.abs(localc.y - localbb.tr.y)
+				) <
+				config.handleDetectSize / 2;
+			const onbl =
+				Math.max(
+					Math.abs(localc.x - localbb.bl.x),
+					Math.abs(localc.y - localbb.bl.y)
+				) <
+				config.handleDetectSize / 2;
+			const onbr =
+				Math.max(
+					Math.abs(localc.x - localbb.br.x),
+					Math.abs(localc.y - localbb.br.y)
+				) <
+				config.handleDetectSize / 2;
+
+			return {onHandle: ontl || ontr || onbl || onbr, ontl, ontr, onbl, onbr};
+		}
+
+		hoveringBox(x, y) {
+			const localbb = new BoundingBox({
+				x: -this.canvas.width / 2,
+				y: -this.canvas.height / 2,
+				w: this.canvas.width,
+				h: this.canvas.height,
+			});
+
+			const localc = this.matrix.inverse().transformPoint({x, y});
+
+			return (
+				!this.hoveringHandle(x, y).onHandle &&
+				localbb.contains(localc.x, localc.y)
+			);
+		}
+
 		/**
 		 * Draws the marquee selector box
 		 *
 		 * @param {CanvasRenderingContext2D} context A context for rendering the box to
+		 * @param {Point} cursor Cursor position
 		 * @param {DOMMatrix} transform A transformation matrix to transform the position by
 		 */
-		drawBox(context, transform = new DOMMatrix()) {
-			context.save();
-
+		drawBox(context, cursor, transform = new DOMMatrix()) {
 			const m = transform.multiply(this.matrix);
 
-			context.setTransform(m);
-
-			// Draw the box itself
 			context.save();
+
+			const localbb = new BoundingBox({
+				x: -this.canvas.width / 2,
+				y: -this.canvas.height / 2,
+				w: this.canvas.width,
+				h: this.canvas.height,
+			});
 
 			// Line Style
 			context.strokeStyle = "#FFF";
 			context.lineWidth = 2;
-			context.setLineDash([4, 2]);
+
+			const tl = m.transformPoint(localbb.tl);
+			const tr = m.transformPoint(localbb.tr);
+			const bl = m.transformPoint(localbb.bl);
+			const br = m.transformPoint(localbb.br);
+
+			const bbc = m.transformPoint({x: 0, y: 0});
 
 			context.beginPath();
-			context.strokeRect(
+			context.arc(bbc.x, bbc.y, 5, 0, Math.PI * 2);
+			context.stroke();
+
+			context.setLineDash([4, 2]);
+
+			// Draw main rectangle
+			context.beginPath();
+			context.moveTo(tl.x, tl.y);
+			context.lineTo(tr.x, tr.y);
+			context.lineTo(br.x, br.y);
+			context.lineTo(bl.x, bl.y);
+			context.lineTo(tl.x, tl.y);
+			context.stroke();
+
+			// Draw handles
+			const drawHandle = (pt, hover) => {
+				let hsz = config.handleDrawSize / 2;
+				if (hover) hsz *= config.handleDrawHoverScale;
+
+				const hm = new DOMMatrix().rotateSelf(this.rotation);
+
+				const htl = hm.transformPoint({x: -hsz, y: -hsz});
+				const htr = hm.transformPoint({x: hsz, y: -hsz});
+				const hbr = hm.transformPoint({x: hsz, y: hsz});
+				const hbl = hm.transformPoint({x: -hsz, y: hsz});
+
+				context.beginPath();
+				context.moveTo(htl.x + pt.x, htl.y + pt.y);
+				context.lineTo(htr.x + pt.x, htr.y + pt.y);
+				context.lineTo(hbr.x + pt.x, hbr.y + pt.y);
+				context.lineTo(hbl.x + pt.x, hbl.y + pt.y);
+				context.lineTo(htl.x + pt.x, htl.y + pt.y);
+				context.stroke();
+			};
+
+			context.strokeStyle = "#FFF";
+			context.lineWidth = 2;
+			context.setLineDash([]);
+
+			const {ontl, ontr, onbl, onbr} = this.hoveringHandle(cursor.x, cursor.y);
+
+			drawHandle(tl, ontl);
+			drawHandle(tr, ontr);
+			drawHandle(bl, onbl);
+			drawHandle(br, onbr);
+
+			context.restore();
+
+			return () => {
+				const border = config.handleDrawSize * config.handleDrawHoverScale;
+
+				const minx = Math.min(tl.x, tr.x, bl.x, br.x) - border;
+				const maxx = Math.max(tl.x, tr.x, bl.x, br.x) + border;
+				const miny = Math.min(tl.y, tr.y, bl.y, br.y) - border;
+				const maxy = Math.max(tl.y, tr.y, bl.y, br.y) + border;
+
+				context.clearRect(minx, miny, maxx - minx, maxy - miny);
+			};
+		}
+
+		/**
+		 * Draws the selected image
+		 *
+		 * @param {CanvasRenderingContext2D} context A context for rendering the image to
+		 * @param {CanvasRenderingContext2D} peekctx A context for rendering the layer peeking to
+		 * @param {object} options
+		 * @param {DOMMatrix} options.transform A transformation matrix to transform the position by
+		 * @param {number} options.opacity Opacity of the peek display
+		 */
+		drawImage(context, peekctx, options = {}) {
+			defaultOpt(options, {
+				transform: new DOMMatrix(),
+				opacity: 0.4,
+			});
+
+			context.save();
+			peekctx.save();
+
+			const m = options.transform.multiply(this.matrix);
+
+			// Draw image
+			context.setTransform(m);
+			context.drawImage(
+				this.canvas,
 				-this.canvas.width / 2,
 				-this.canvas.height / 2,
 				this.canvas.width,
 				this.canvas.height
 			);
-			context.stroke();
 
-			context.restore();
+			// Draw peek
+			peekctx.filter = `opacity(${options.opacity * 100}%)`;
+			peekctx.setTransform(m);
+			peekctx.drawImage(
+				this.canvas,
+				-this.canvas.width / 2,
+				-this.canvas.height / 2,
+				this.canvas.width,
+				this.canvas.height
+			);
 
+			peekctx.restore();
 			context.restore();
 
 			return () => {
-				context.save();
+				// Here we only save transform for performance
+				const pt = context.getTransform();
+				const ppt = context.getTransform();
 
 				context.setTransform(m);
+				peekctx.setTransform(m);
 
 				context.clearRect(
 					-this.canvas.width / 2 - 10,
@@ -402,46 +601,16 @@ const _tool = {
 					this.canvas.height + 20
 				);
 
-				context.restore();
+				peekctx.clearRect(
+					-this.canvas.width / 2 - 10,
+					-this.canvas.height / 2 - 10,
+					this.canvas.width + 20,
+					this.canvas.height + 20
+				);
+
+				context.setTransform(pt);
+				peekctx.setTransform(ppt);
 			};
 		}
-
-		/**
-		 * Draws the selected images
-		 *
-		 * @param {CanvasRenderingContext2D} context A context for rendering the box to
-		 * @param {DOMMatrix} transform A transformation matrix to transform the position by
-		 */
-		drawImage(context, transform = new DOMMatrix()) {
-			context.save();
-			context.setTransform(transform);
-
-			context.scale(this.scale, this.scale);
-			context.rotate((this.rotation * 180) / Math.PI);
-			context.translate(this.position.x, this.position.y);
-
-			context.restore();
-		}
-	},
-
-	/**
-	 * Marquee Selection with an image
-	 */
-	_marquee_selection(state) {
-		return {
-			// Location of the origin of the selection
-			position: {x: 0, y: 0},
-			// Scale of the selection
-			scale: 1,
-			// Angle of the selection (radians)
-			rotation: 0,
-
-			/**
-			 * Draws the selection
-			 */
-			draw() {},
-		};
 	},
 };
-
-name;

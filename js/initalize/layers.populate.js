@@ -322,7 +322,8 @@ mouse.listen.camera.onwheel.on((evn) => {
 
 	//viewport.transform(imageCollection.element);
 
-	toolbar.currentTool.redraw();
+	toolbar._current_tool.state.redrawui &&
+		toolbar._current_tool.state.redrawui();
 });
 
 const cameraPaintStart = (evn) => {
@@ -348,6 +349,9 @@ const cameraPaint = (evn) => {
 	}
 
 	viewport.transform(imageCollection.element);
+	toolbar._current_tool.state.redrawui &&
+		toolbar._current_tool.state.redrawui();
+
 	if (global.debug) {
 		debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
 		debugCtx.fillStyle = "#F0F";

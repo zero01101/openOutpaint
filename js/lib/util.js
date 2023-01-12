@@ -38,6 +38,16 @@ class BoundingBox {
 	}
 
 	/** @type {Point} */
+	get tr() {
+		return {x: this.x + this.w, y: this.y};
+	}
+
+	/** @type {Point} */
+	get bl() {
+		return {x: this.x, y: this.y + this.h};
+	}
+
+	/** @type {Point} */
 	get br() {
 		return {x: this.x + this.w, y: this.y + this.h};
 	}
