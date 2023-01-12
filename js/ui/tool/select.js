@@ -466,11 +466,11 @@ const selectTransformTool = () =>
 
 					ctx.clearRect(0, 0, state.selected.w, state.selected.h);
 					ctx.drawImage(
-						state.selected.image,
+						state.selected.canvas,
 						0,
 						0,
-						state.selected.image.width,
-						state.selected.image.height,
+						state.selected.canvas.width,
+						state.selected.canvas.height,
 						0,
 						0,
 						state.selected.w,
@@ -600,7 +600,7 @@ const selectTransformTool = () =>
 					saveSelectionButton.onclick = () => {
 						downloadCanvas({
 							cropToContent: false,
-							canvas: state.selected.image,
+							canvas: state.selected.canvas,
 						});
 					};
 
@@ -611,7 +611,7 @@ const selectTransformTool = () =>
 					createResourceButton.title = "Saves Selection as a Resource";
 					createResourceButton.onclick = () => {
 						const image = document.createElement("img");
-						image.src = state.selected.image.toDataURL();
+						image.src = state.selected.canvas.toDataURL();
 						image.onload = () => {
 							tools.stamp.state.addResource("Selection Resource", image);
 							tools.stamp.enable();
