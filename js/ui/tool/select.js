@@ -267,8 +267,11 @@ const selectTransformTool = () =>
 							image: canvas,
 							...bb,
 						});
+
+						state.reset(true);
+					} else {
+						state.reset();
 					}
-					state.reset(true);
 				};
 
 				// Handles left mouse drag start events
