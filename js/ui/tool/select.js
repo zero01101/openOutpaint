@@ -375,7 +375,7 @@ const selectTransformTool = () =>
 							angle =
 								config.rotationSnappingAngles.find(
 									(v) => Math.abs(v - angle) < config.rotationSnappingDistance
-								) || angle;
+								) ?? angle;
 
 						state.selected.rotation = angle;
 					}

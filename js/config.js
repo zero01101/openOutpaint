@@ -25,15 +25,15 @@ const config = makeReadOnly(
 		rotationSnappingDistance: (10 * Math.PI) / 180,
 		// Rotation Snapping Angles
 		rotationSnappingAngles: [
+			(-Math.PI * 4) / 4,
+			(-Math.PI * 3) / 4,
+			(-Math.PI * 2) / 4,
+			(-Math.PI * 1) / 4,
 			0,
-			Math.PI / 4,
-			Math.PI / 2,
+			(Math.PI * 1) / 4,
+			(Math.PI * 2) / 4,
 			(Math.PI * 3) / 4,
-			Math.PI,
-			(Math.PI * 5) / 4,
-			(Math.PI * 6) / 4,
-			(Math.PI * 7) / 4,
-			Math.PI * 2,
+			(Math.PI * 4) / 4,
 		],
 
 		// Endpoint

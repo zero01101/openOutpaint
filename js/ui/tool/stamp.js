@@ -1,3 +1,41 @@
+/**
+ * Generic wheel handler
+ */
+let _stamp_wheel_accum = 0;
+
+const _stamp_onwheel = (evn, state) => {
+	if (evn.mode !== WheelEvent.DOM_DELTA_PIXEL) {
+		// We don't really handle non-pixel scrolling
+		return;
+	}
+
+	let delta = evn.delta;
+	if (evn.evn.shiftKey) delta *= 0.01;
+
+	// A simple but (I hope) effective fix for mouse wheel behavior
+	_stamp_wheel_accum += delta;
+
+	if (
+		!evn.evn.shiftKey &&
+		Math.abs(_stamp_wheel_accum) > config.wheelTickSize
+	) {
+		// Snap to next or previous position
+		const v =
+			state.scale - 0.1 * (_stamp_wheel_accum / Math.abs(_stamp_wheel_accum));
+
+		state.setScale(v + snap(v, 0, 0.1));
+		state.redraw(evn);
+
+		_stamp_wheel_accum = 0; // Zero accumulation
+	} else if (evn.evn.shiftKey && Math.abs(_stamp_wheel_accum) >= 1) {
+		const v = state.scale - _stamp_wheel_accum * 0.01;
+		state.setScale(v);
+		state.redraw(evn);
+
+		_stamp_wheel_accum = 0; // Zero accumulation
+	}
+};
+
 const stampTool = () =>
 	toolbar.registerTool(
 		"./res/icons/file-up.svg",
@@ -13,6 +51,12 @@ const stampTool = () =>
 			mouse.listen.world.onmousemove.on(state.movecb);
 			mouse.listen.world.btn.left.onclick.on(state.drawcb);
 			mouse.listen.world.btn.right.onclick.on(state.cancelcb);
+
+			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
+
+			mouse.listen.world.onwheel.on(state.onwheelcb);
 
 			// For calls from other tools to paste image
 			if (opt && opt.image) {
@@ -41,6 +85,12 @@ const stampTool = () =>
 			mouse.listen.world.btn.left.onclick.clear(state.drawcb);
 			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
 
+			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
+			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
+
+			mouse.listen.world.onwheel.clear(state.onwheelcb);
+
 			ovLayer.clear();
 		},
 		{
@@ -54,7 +104,15 @@ const stampTool = () =>
 				state.lastMouseMove = {x: 0, y: 0};
 				state.block_res_change = true;
 
+				// Current Rotation
+				let rotation = 0;
+				let rotating = null;
+				// Current Scale
+				state.scale = 1;
+
 				state.selectResource = (resource, nolock = true, deselect = true) => {
+					rotation = 0;
+					state.setScale(1);
 					if (nolock && state.ctxmenu.uploadButton.disabled) return;
 
 					console.debug(
@@ -290,32 +348,65 @@ const stampTool = () =>
 					syncResources();
 				};
 
-				state.movecb = (evn) => {
-					let x = evn.x;
-					let y = evn.y;
-					if (state.snapToGrid) {
-						x += snap(evn.x, 0, 64);
-						y += snap(evn.y, 0, 64);
+				state.onwheelcb = (evn) => {
+					_stamp_onwheel(evn, state);
+				};
+
+				state.dragstartcb = (evn) => {
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
+					rotating = {x: sx, y: sy};
+				};
+
+				state.dragcb = (evn) => {
+					if (rotating) {
+						rotation = Math.atan2(rotating.x - evn.x, evn.y - rotating.y);
+
+						if (evn.evn.shiftKey)
+							rotation =
+								config.rotationSnappingAngles.find(
+									(v) =>
+										Math.abs(v - rotation) < config.rotationSnappingDistance
+								) ?? rotation;
 					}
+				};
 
-					const vpc = viewport.canvasToView(x, y);
-					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
-					state.erasePrevCursor && state.erasePrevCursor();
+				state.dragendcb = (evn) => {
+					rotating = null;
+				};
 
-					uiCtx.save();
+				let erasePrevCursor = () => null;
+
+				state.movecb = (evn) => {
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
+
+					// Erase Previous Cursors
+					erasePrevCursor();
 
 					state.lastMouseMove = evn;
 
 					ovLayer.clear();
 
+					let px = sx;
+					let py = sy;
+
+					if (rotating) {
+						px = rotating.x;
+						py = rotating.y;
+					}
+
 					// Draw selected image
 					if (state.selected) {
-						ovCtx.drawImage(state.selected.image, x, y);
+						ovCtx.save();
+						ovCtx.translate(px, py);
+						ovCtx.scale(state.scale, state.scale);
+						ovCtx.rotate(rotation);
+
+						ovCtx.drawImage(state.selected.image, 0, 0);
+						ovCtx.restore();
 					}
 
 					// Draw current cursor location
-					state.erasePrevCursor = _tool._cursor_draw(x, y);
-					uiCtx.restore();
+					erasePrevCursor = _tool._cursor_draw(px, py);
 				};
 
 				state.redraw = () => {
@@ -323,20 +414,16 @@ const stampTool = () =>
 				};
 
 				state.drawcb = (evn) => {
-					let x = evn.x;
-					let y = evn.y;
-					if (state.snapToGrid) {
-						x += snap(evn.x, 0, 64);
-						y += snap(evn.y, 0, 64);
-					}
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
 
 					const resource = state.selected;
 
 					if (resource) {
+						const {canvas, bb} = cropCanvas(ovCanvas, {border: 10});
 						commands.runCommand("drawImage", "Image Stamp", {
-							image: resource.image,
-							x,
-							y,
+							image: canvas,
+							x: bb.x,
+							y: bb.y,
 						});
 
 						if (resource.temporary) {
@@ -379,6 +466,16 @@ const stampTool = () =>
 						).checkbox
 					);
 					state.ctxmenu.snapToGridLabel = array;
+
+					// Scale Slider
+					const scaleSlider = _toolbar_input.slider(state, "scale", "Scale", {
+						min: 0.01,
+						max: 10,
+						step: 0.1,
+						textStep: 0.01,
+					});
+					state.ctxmenu.scaleSlider = scaleSlider.slider;
+					state.setScale = scaleSlider.setValue;
 
 					// Create resource list
 					const uploadButtonId = `upload-btn-${guid()}`;
@@ -528,6 +625,7 @@ const stampTool = () =>
 			},
 			populateContextMenu: (menu, state) => {
 				menu.appendChild(state.ctxmenu.snapToGridLabel);
+				menu.appendChild(state.ctxmenu.scaleSlider);
 				menu.appendChild(state.ctxmenu.resourceManager);
 			},
 			shortcut: "U",

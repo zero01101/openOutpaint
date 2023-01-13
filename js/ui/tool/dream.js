@@ -1255,16 +1255,28 @@ const _dream_onwheel = (evn, state) => {
 		return;
 	}
 
-	// A simple but (I hope) effective fix for mouse wheel behavior
-	_dream_wheel_accum += evn.delta;
+	let delta = evn.delta;
+	if (evn.evn.shiftKey) delta *= 0.01;
 
-	if (Math.abs(_dream_wheel_accum) > config.wheelTickSize) {
+	// A simple but (I hope) effective fix for mouse wheel behavior
+	_dream_wheel_accum += delta;
+
+	if (
+		!evn.evn.shiftKey &&
+		Math.abs(_dream_wheel_accum) > config.wheelTickSize
+	) {
 		// Snap to next or previous position
 		const v =
 			state.cursorSize -
 			128 * (_dream_wheel_accum / Math.abs(_dream_wheel_accum));
 
 		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
+		state.mousemovecb(evn);
+
+		_dream_wheel_accum = 0; // Zero accumulation
+	} else if (evn.evn.shiftKey && Math.abs(_dream_wheel_accum) >= 1) {
+		const v = state.cursorSize - _dream_wheel_accum;
+		state.cursorSize = state.setCursorSize(v);
 		state.mousemovecb(evn);
 
 		_dream_wheel_accum = 0; // Zero accumulation
