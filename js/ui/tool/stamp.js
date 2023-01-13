@@ -472,7 +472,7 @@ const stampTool = () =>
 						min: 0.01,
 						max: 10,
 						step: 0.1,
-						textStep: 0.01,
+						textStep: 0.001,
 					});
 					state.ctxmenu.scaleSlider = scaleSlider.slider;
 					state.setScale = scaleSlider.setValue;

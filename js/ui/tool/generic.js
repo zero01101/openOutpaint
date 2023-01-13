@@ -399,10 +399,12 @@ const _tool = {
 		}
 
 		hoveringRotateHandle(x, y, scale = 1) {
-			const localc = this.matrix.inverse().transformPoint({x, y});
+			const localc = this.rtmatrix.inverse().transformPoint({x, y});
 			const localrh = {
 				x: 0,
-				y: -this.canvas.height / 2 - config.rotateHandleDistance * scale,
+				y:
+					(-this.scale.y * this.canvas.height) / 2 -
+					config.rotateHandleDistance * scale,
 			};
 
 			const dx = Math.abs(localc.x - localrh.x);
