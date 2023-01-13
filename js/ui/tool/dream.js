@@ -517,6 +517,17 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		});
 	};
 
+	const removeImg = async () => {
+		if (!images[at]) return;
+		images.splice(at, 1);
+		seeds.splice(at, 1);
+		if (at >= images.length) at = 0;
+		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		var seed = seeds[at];
+		seedbtn.title = "Use seed " + seed;
+		redraw();
+	};
+
 	const makeMore = async () => {
 		const moreQ = await waitQueue();
 		try {
@@ -596,6 +607,9 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			case "+":
 				makeMore();
 				break;
+			case "-":
+				removeImg();
+				break;
 			default:
 				switch (evn.code) {
 					case "ArrowRight":
@@ -659,7 +673,11 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	const oncancelhandler = mouse.listen.world.btn.right.onclick.on(
 		(evn, state) => {
 			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
-				discardImg();
+				if (images.length > 1) {
+					removeImg();
+				} else {
+					discardImg();
+				}
 				imageCollection.inputElement.style.cursor = "auto";
 				state.dream_processed = true;
 			}
@@ -742,6 +760,12 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	morebtn.title = "Generate More";
 	morebtn.addEventListener("click", makeMore);
 	imageSelectMenu.appendChild(morebtn);
+
+	const removebtn = document.createElement("button");
+	removebtn.textContent = "-";
+	removebtn.title = "Remove From Batch";
+	removebtn.addEventListener("click", removeImg);
+	imageSelectMenu.appendChild(removebtn);
 
 	const acceptbtn = document.createElement("button");
 	acceptbtn.textContent = "Y";
