@@ -111,6 +111,12 @@ const selectTransformTool = () =>
 					}
 				};
 
+				/** @type {{selected: Point, offset: Point} | null} */
+				let moving = null;
+				/** @type {{handle: Point} | null} */
+				let scaling = null;
+				let rotating = false;
+
 				// Clears selection and make things right
 				state.reset = (erase = false) => {
 					if (state.selected && !erase)
@@ -129,18 +135,15 @@ const selectTransformTool = () =>
 
 					state.rotation = 0;
 					state.original = null;
-					state.moving = false;
+					moving = null;
+					scaling = null;
+					rotating = null;
 
 					state.redraw();
 				};
 
 				// Selection Handlers
 				const selection = _tool._draggable_selection(state);
-
-				/** @type {{selected: Point, offset: Point} | null} */
-				let moving = null;
-				/** @type {{handle: Point} | null} */
-				let scaling = null;
 
 				// UI Erasers
 				let eraseSelectedBox = () => null;
@@ -191,7 +194,8 @@ const selectTransformTool = () =>
 
 						if (
 							state.selected.hoveringBox(x, y) ||
-							state.selected.hoveringHandle(x, y).onHandle
+							state.selected.hoveringHandle(x, y, viewport.zoom).onHandle ||
+							state.selected.hoveringRotateHandle(x, y, viewport.zoom)
 						) {
 							imageCollection.inputElement.style.cursor = "pointer";
 						}
@@ -286,11 +290,16 @@ const selectTransformTool = () =>
 
 					if (state.selected) {
 						const hoveringBox = state.selected.hoveringBox(ix, iy);
-						const hoveringHandle = state.selected.hoveringHandle(ix, iy);
-
-						const localc = state.selected.matrix
-							.inverse()
-							.transformPoint({x: ix, y: iy});
+						const hoveringHandle = state.selected.hoveringHandle(
+							ix,
+							iy,
+							viewport.zoom
+						);
+						const hoveringRotateHandle = state.selected.hoveringRotateHandle(
+							ix,
+							iy,
+							viewport.zoom
+						);
 
 						if (hoveringBox) {
 							// Start dragging
@@ -327,38 +336,56 @@ const selectTransformTool = () =>
 								handle,
 							};
 							return;
+						} else if (hoveringRotateHandle) {
+							rotating = true;
+							return;
 						}
 					}
 					selection.dragstartcb(evn);
+				};
+
+				const transform = (evn, x, y, sx, sy) => {
+					if (moving) {
+						state.selected.position = {
+							x: sx - moving.offset.x,
+							y: sy - moving.offset.y,
+						};
+					}
+
+					if (scaling) {
+						/** @type {DOMMatrix} */
+						const m = state.selected.rtmatrix.invertSelf();
+						const lscursor = m.transformPoint({x: sx, y: sy});
+
+						const xs = lscursor.x / scaling.handle.x;
+						const xy = lscursor.y / scaling.handle.y;
+
+						if (!state.keepAspectRatio) state.selected.scale = {x: xs, y: xy};
+						else {
+							const scale = Math.max(xs, xy);
+							state.selected.scale = {x: scale, y: scale};
+						}
+					}
+
+					if (rotating) {
+						const center = state.selected.matrix.transformPoint({x: 0, y: 0});
+						let angle = Math.atan2(x - center.x, center.y - y);
+
+						if (evn.evn.shiftKey)
+							angle =
+								config.rotationSnappingAngles.find(
+									(v) => Math.abs(v - angle) < config.rotationSnappingDistance
+								) || angle;
+
+						state.selected.rotation = angle;
+					}
 				};
 
 				// Handles left mouse drag events
 				state.dragcb = (evn) => {
 					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
 
-					if (state.selected) {
-						if (moving) {
-							state.selected.position = {
-								x: sx - moving.offset.x,
-								y: sy - moving.offset.y,
-							};
-						}
-
-						if (scaling) {
-							/** @type {DOMMatrix} */
-							const m = state.selected.rtmatrix.invertSelf();
-							const lscursor = m.transformPoint({x: sx, y: sy});
-
-							const xs = lscursor.x / scaling.handle.x;
-							const xy = lscursor.y / scaling.handle.y;
-
-							if (!state.keepAspectRatio) state.selected.scale = {x: xs, y: xy};
-							else {
-								const scale = Math.max(xs, xy);
-								state.selected.scale = {x: scale, y: scale};
-							}
-						}
-					}
+					if (state.selected) transform(evn, x, y, sx, sy);
 
 					if (selection.exists) selection.dragcb(evn);
 				};
@@ -406,32 +433,11 @@ const selectTransformTool = () =>
 						selection.deselect();
 					}
 
-					if (state.selected) {
-						if (moving) {
-							state.selected.position = {
-								x: sx - moving.offset.x,
-								y: sy - moving.offset.y,
-							};
-						}
-
-						if (scaling) {
-							/** @type {DOMMatrix} */
-							const m = state.selected.rtmatrix.invertSelf();
-							const lscursor = m.transformPoint({x: sx, y: sy});
-
-							const xs = lscursor.x / scaling.handle.x;
-							const xy = lscursor.y / scaling.handle.y;
-
-							if (!state.keepAspectRatio) state.selected.scale = {x: xs, y: xy};
-							else {
-								const scale = Math.max(xs, xy);
-								state.selected.scale = {x: scale, y: scale};
-							}
-						}
-					}
+					if (state.selected) transform(evn, x, y, sx, sy);
 
 					moving = null;
 					scaling = null;
+					rotating = false;
 
 					state.redraw();
 				};

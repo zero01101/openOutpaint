@@ -21,6 +21,21 @@ const config = makeReadOnly(
 		// Rotate Handle Distance (from selection)
 		rotateHandleDistance: 32,
 
+		// Rotation Snapping Distance
+		rotationSnappingDistance: (10 * Math.PI) / 180,
+		// Rotation Snapping Angles
+		rotationSnappingAngles: [
+			0,
+			Math.PI / 4,
+			Math.PI / 2,
+			(Math.PI * 3) / 4,
+			Math.PI,
+			(Math.PI * 5) / 4,
+			(Math.PI * 6) / 4,
+			(Math.PI * 7) / 4,
+			Math.PI * 2,
+		],
+
 		// Endpoint
 		api: makeReadOnly({path: "/sdapi/v1/"}),
 	},

@@ -398,39 +398,55 @@ const _tool = {
 			);
 		}
 
-		hoveringHandle(x, y) {
+		hoveringRotateHandle(x, y, scale = 1) {
+			const localc = this.matrix.inverse().transformPoint({x, y});
+			const localrh = {
+				x: 0,
+				y: -this.canvas.height / 2 - config.rotateHandleDistance * scale,
+			};
+
+			const dx = Math.abs(localc.x - localrh.x);
+			const dy = Math.abs(localc.y - localrh.y);
+
+			return (
+				dx * dx + dy * dy <
+				(scale * scale * config.handleDetectSize * config.handleDetectSize) / 4
+			);
+		}
+
+		hoveringHandle(x, y, scale = 1) {
 			const localbb = new BoundingBox({
-				x: -this.canvas.width / 2,
-				y: -this.canvas.height / 2,
-				w: this.canvas.width,
-				h: this.canvas.height,
+				x: (this.scale.x * -this.canvas.width) / 2,
+				y: (this.scale.y * -this.canvas.height) / 2,
+				w: this.canvas.width * this.scale.x,
+				h: this.canvas.height * this.scale.y,
 			});
 
-			const localc = this.matrix.inverse().transformPoint({x, y});
+			const localc = this.rtmatrix.inverse().transformPoint({x, y});
 			const ontl =
 				Math.max(
 					Math.abs(localc.x - localbb.tl.x),
 					Math.abs(localc.y - localbb.tl.y)
 				) <
-				config.handleDetectSize / 2;
+				(config.handleDetectSize / 2) * scale;
 			const ontr =
 				Math.max(
 					Math.abs(localc.x - localbb.tr.x),
 					Math.abs(localc.y - localbb.tr.y)
 				) <
-				config.handleDetectSize / 2;
+				(config.handleDetectSize / 2) * scale;
 			const onbl =
 				Math.max(
 					Math.abs(localc.x - localbb.bl.x),
 					Math.abs(localc.y - localbb.bl.y)
 				) <
-				config.handleDetectSize / 2;
+				(config.handleDetectSize / 2) * scale;
 			const onbr =
 				Math.max(
 					Math.abs(localc.x - localbb.br.x),
 					Math.abs(localc.y - localbb.br.y)
 				) <
-				config.handleDetectSize / 2;
+				(config.handleDetectSize / 2) * scale;
 
 			return {onHandle: ontl || ontr || onbl || onbr, ontl, ontr, onbl, onbr};
 		}
@@ -459,6 +475,8 @@ const _tool = {
 		 * @param {DOMMatrix} transform A transformation matrix to transform the position by
 		 */
 		drawBox(context, cursor, transform = new DOMMatrix()) {
+			const drawscale =
+				1 / Math.sqrt(transform.a * transform.a + transform.b * transform.b);
 			const m = transform.multiply(this.matrix);
 
 			context.save();
@@ -496,12 +514,31 @@ const _tool = {
 			context.lineTo(tl.x, tl.y);
 			context.stroke();
 
+			// Draw rotation handle
+			context.setLineDash([]);
+
+			const hm = new DOMMatrix().rotateSelf((this.rotation * 180) / Math.PI);
+			const tm = m.transformPoint({x: 0, y: -this.canvas.height / 2});
+			const rho = hm.transformPoint({x: 0, y: -config.rotateHandleDistance});
+			const rh = {x: tm.x + rho.x, y: tm.y + rho.y};
+
+			let handleRadius = config.handleDrawSize / 2;
+			if (this.hoveringRotateHandle(cursor.x, cursor.y, drawscale))
+				handleRadius *= config.handleDrawHoverScale;
+
+			context.beginPath();
+			context.moveTo(tm.x, tm.y);
+			context.lineTo(rh.x, rh.y);
+			context.stroke();
+
+			context.beginPath();
+			context.arc(rh.x, rh.y, handleRadius, 0, 2 * Math.PI);
+			context.stroke();
+
 			// Draw handles
 			const drawHandle = (pt, hover) => {
 				let hsz = config.handleDrawSize / 2;
 				if (hover) hsz *= config.handleDrawHoverScale;
-
-				const hm = new DOMMatrix().rotateSelf(this.rotation);
 
 				const htl = hm.transformPoint({x: -hsz, y: -hsz});
 				const htr = hm.transformPoint({x: hsz, y: -hsz});
@@ -521,7 +558,11 @@ const _tool = {
 			context.lineWidth = 2;
 			context.setLineDash([]);
 
-			const {ontl, ontr, onbl, onbr} = this.hoveringHandle(cursor.x, cursor.y);
+			const {ontl, ontr, onbl, onbr} = this.hoveringHandle(
+				cursor.x,
+				cursor.y,
+				drawscale
+			);
 
 			drawHandle(tl, ontl);
 			drawHandle(tr, ontr);
@@ -533,10 +574,10 @@ const _tool = {
 			return () => {
 				const border = config.handleDrawSize * config.handleDrawHoverScale;
 
-				const minx = Math.min(tl.x, tr.x, bl.x, br.x) - border;
-				const maxx = Math.max(tl.x, tr.x, bl.x, br.x) + border;
-				const miny = Math.min(tl.y, tr.y, bl.y, br.y) - border;
-				const maxy = Math.max(tl.y, tr.y, bl.y, br.y) + border;
+				const minx = Math.min(tl.x, tr.x, bl.x, br.x, rh.x) - border;
+				const maxx = Math.max(tl.x, tr.x, bl.x, br.x, rh.x) + border;
+				const miny = Math.min(tl.y, tr.y, bl.y, br.y, rh.y) - border;
+				const maxy = Math.max(tl.y, tr.y, bl.y, br.y, rh.y) + border;
 
 				context.clearRect(minx, miny, maxx - minx, maxy - miny);
 			};
