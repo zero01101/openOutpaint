@@ -91,7 +91,7 @@ const toolbar = {
 			enabled: false,
 			_element: null,
 			state: {
-				redrawui: () => tool.redraw(),
+				redrawui: () => tool.state.redraw && tool.state.redraw(),
 			},
 			options,
 			/**

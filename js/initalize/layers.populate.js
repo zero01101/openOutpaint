@@ -322,8 +322,7 @@ mouse.listen.camera.onwheel.on((evn) => {
 
 	//viewport.transform(imageCollection.element);
 
-	toolbar._current_tool.state.redrawui &&
-		toolbar._current_tool.state.redrawui();
+	toolbar._current_tool.redrawui && toolbar._current_tool.redrawui();
 });
 
 const cameraPaintStart = (evn) => {
