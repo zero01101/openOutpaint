@@ -318,7 +318,7 @@ function createAutoComplete(name, wrapper, options = {}) {
 	}
 
 	function updateOptions(value = null) {
-		text = value ?? inputEl.value.toLowerCase().trim();
+		const text = value ?? inputEl.value.toLowerCase().trim();
 
 		acobj._options.forEach((opt) => {
 			const textLocation = opt.name.toLowerCase().indexOf(text);
