@@ -53,6 +53,8 @@ body:
         - iOS
         - Android
         - Other/Cloud
+    validations:
+      required: true
   - type: dropdown
     id: browsers
     attributes:
@@ -65,22 +67,22 @@ body:
         - Apple Safari
         - Microsoft Edge
         - Other
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: browser-extensions
     attributes:
       label: Browser Extensions/Addons
       description: Please list all browser extensions/addons you have running.  Some have been known to cause issues with openOutpaint.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: webui-commandline
     attributes:
       label: AUTOMATIC1111 webUI Commandline Arguments
       description: Please list all used commandline arguments passed to A1111 webUI (i.e. `--api`).
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: misc
     attributes:
