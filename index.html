@@ -5,15 +5,15 @@
 		<title>openOutpaint 🐠</title>
 		<!-- CSS Variables -->
 		<link href="css/colors.css?v=3f81e80" rel="stylesheet" />
-		<link href="css/icons.css?v=caa702e" rel="stylesheet" />
+		<link href="css/icons.css?v=9ae0466" rel="stylesheet" />
 
 		<link href="css/index.css?v=5b8d4d6" rel="stylesheet" />
-		<link href="css/layers.css?v=b4fbf61" rel="stylesheet" />
+		<link href="css/layers.css?v=92c0352" rel="stylesheet" />
 
-		<link href="css/ui/generic.css?v=4b9afe2" rel="stylesheet" />
+		<link href="css/ui/generic.css?v=802bd41" rel="stylesheet" />
 
 		<link href="css/ui/history.css?v=0b03861" rel="stylesheet" />
-		<link href="css/ui/layers.css?v=4fd95fe" rel="stylesheet" />
+		<link href="css/ui/layers.css?v=ae472cd" rel="stylesheet" />
 		<link href="css/ui/toolbar.css?v=109c78f" rel="stylesheet" />
 
 		<!-- Tool Specific CSS -->
@@ -49,6 +49,7 @@
 						</div>
 					</div>
 				</label>
+
 				<!-- Prompts section -->
 				<button type="button" class="collapsible">Prompts</button>
 				<div class="content prompt">
@@ -319,7 +320,8 @@
 		<div id="layer-render" class="layer-render-target"></div>
 
 		<!-- Overlay -->
-		<canvas id="layer-overlay" class="layer-overlay"></canvas>
+		<canvas id="layer-overlay" class="overlay-canvas"></canvas>
+		<canvas id="layer-debug-overlay" class="overlay-canvas"></canvas>
 
 		<!-- Page Overlay -->
 		<div id="page-overlay-wrapper" class="page-overlay invisible">
@@ -331,7 +333,7 @@
 				<div class="ui separator"></div>
 				<iframe
 					id="page-overlay"
-					src="pages/configuration.html?v=3d710ce"></iframe>
+					src="pages/configuration.html?v=7fca00b"></iframe>
 			</div>
 		</div>
 
@@ -339,21 +341,21 @@
 		<script src="js/global.js?v=3a1cde6" type="text/javascript"></script>
 
 		<!-- Base Libs -->
-		<script src="js/lib/util.js?v=7f6847c" type="text/javascript"></script>
+		<script src="js/lib/util.js?v=49a78a6" type="text/javascript"></script>
 		<script src="js/lib/events.js?v=2ab7933" type="text/javascript"></script>
 		<script src="js/lib/input.js?v=09298ac" type="text/javascript"></script>
 		<script src="js/lib/layers.js?v=a1f8aea" type="text/javascript"></script>
 		<script src="js/lib/commands.js?v=bf23c83" type="text/javascript"></script>
 
-		<script src="js/lib/toolbar.js?v=ca3fccf" type="text/javascript"></script>
+		<script src="js/lib/toolbar.js?v=306d637" type="text/javascript"></script>
 		<script src="js/lib/ui.js?v=76ede2b" type="text/javascript"></script>
 
 		<script
-			src="js/initalize/layers.populate.js?v=c81f0a5"
+			src="js/initalize/layers.populate.js?v=39785ac"
 			type="text/javascript"></script>
 
 		<!-- Configuration -->
-		<script src="js/config.js?v=8da6a43" type="text/javascript"></script>
+		<script src="js/config.js?v=e0345e0" type="text/javascript"></script>
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
@@ -368,20 +370,20 @@
 
 		<!-- Load Tools -->
 		<script
-			src="js/ui/tool/generic.js?v=2bcd36d"
+			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=f18c203" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=eb98dc9" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=1e8a893"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/colorbrush.js?v=8acb4f6"
+			src="js/ui/tool/colorbrush.js?v=3f8c01a"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/select.js?v=ade791e"
+			src="js/ui/tool/select.js?v=e27bbdf"
 			type="text/javascript"></script>
-		<script src="js/ui/tool/stamp.js?v=3c07ac8" type="text/javascript"></script>
+		<script src="js/ui/tool/stamp.js?v=4a86ff8" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/interrogate.js?v=e579ff1"
 			type="text/javascript"></script>

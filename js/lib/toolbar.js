@@ -90,13 +90,19 @@ const toolbar = {
 			name: toolname,
 			enabled: false,
 			_element: null,
-			state: {},
+			state: {
+				redrawui: () => tool.state.redraw && tool.state.redraw(),
+			},
 			options,
 			/**
 			 * If the tool has a redraw() function in its state, then run it
 			 */
 			redraw: () => {
+				tool.state.redrawui && tool.state.redrawui();
 				tool.state.redraw && tool.state.redraw();
+			},
+			redrawui: () => {
+				tool.state.redrawui && tool.state.redrawui();
 			},
 			enable: (opt = null) => {
 				if (toolbar._locked) return;
