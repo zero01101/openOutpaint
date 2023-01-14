@@ -799,20 +799,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	});
 	imageSelectMenu.appendChild(resourcebtn);
 
-	const deletebtn = document.createElement("button");
-	deletebtn.textContent = "D";
-	deletebtn.title = "Delete Image";
-	deletebtn.addEventListener("click", async () => {
-		images.splice(at, 1);
-		seeds.splice(at, 1);
-
-		at = Math.min(at, images.length - 1);
-
-		imageindextxt.textContent = `${at}/${images.length - 1}`;
-		redraw();
-	});
-	imageSelectMenu.appendChild(deletebtn);
-
 	const savebtn = document.createElement("button");
 	savebtn.textContent = "S";
 	savebtn.title = "Download image to computer";
