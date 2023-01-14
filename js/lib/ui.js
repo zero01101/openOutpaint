@@ -304,7 +304,7 @@ function createAutoComplete(name, wrapper, options = {}) {
 				autocompleteEl.appendChild(optionEl);
 			});
 
-			updateOptions();
+			updateOptions("");
 		},
 	};
 
@@ -317,8 +317,8 @@ function createAutoComplete(name, wrapper, options = {}) {
 			.join(", ");
 	}
 
-	function updateOptions() {
-		const text = inputEl.value.toLowerCase().trim();
+	function updateOptions(value = null) {
+		text = value ?? inputEl.value.toLowerCase().trim();
 
 		acobj._options.forEach((opt) => {
 			const textLocation = opt.name.toLowerCase().indexOf(text);
