@@ -1,7 +1,3 @@
-/**
- * TODO: REFACTOR THIS WHOLE THING
- */
-
 const selectTransformTool = () =>
 	toolbar.registerTool(
 		"./res/icons/box-select.svg",
