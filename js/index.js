@@ -589,7 +589,7 @@ const makeSlider = (
 	});
 };
 
-const modelAutoComplete = createAutoComplete(
+let modelAutoComplete = createAutoComplete(
 	"Model",
 	document.getElementById("models-ac-select")
 );
@@ -954,6 +954,28 @@ async function getUpscalers() {
 		
 	})
 	*/
+}
+
+async function refreshModels() {
+	var original = document.getElementById("models-ac-select");
+	var newdiv = document.createElement("div");
+	newdiv.id = "models-ac-select";
+	original.replaceWith(newdiv);
+	modelAutoComplete = createAutoComplete(
+		"Model",
+		document.getElementById("models-ac-select")
+	);
+	modelAutoComplete.onchange.on(({value}) => {
+		if (value.toLowerCase().includes("inpainting"))
+			document.querySelector(
+				"#models-ac-select input.autocomplete-text"
+			).style.backgroundColor = "#cfc";
+		else
+			document.querySelector(
+				"#models-ac-select input.autocomplete-text"
+			).style.backgroundColor = "#fcc";
+	});
+	getModels();
 }
 
 async function getModels() {
