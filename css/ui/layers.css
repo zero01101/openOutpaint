@@ -158,7 +158,9 @@
 
 	background-color: #293d3d77;
 
+	-webkit-mask-image: url("../../res/icons/chevron-up.svg");
 	mask-image: url("../../res/icons/chevron-up.svg");
+	-webkit-mask-size: contain;
 	mask-size: contain;
 
 	width: 60px;
