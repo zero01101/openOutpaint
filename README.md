@@ -29,16 +29,16 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - optional (visibly) inverted mask mode - red masks get mutated, blue masks stay the same, but you can't take both pills at once
 - inpainting color brush to bring out your inner vincent van bob ross
 - dedicated img2img tool with optional border masking for enhanced output coherence with existing subject matter
-- marquee select tool to select regions and arbitrarily scale, create stamps, move chunks, peek at lower layers, do all sorts of damage
+- marquee select tool to select regions and arbitrarily scale, rotate, create stamps, move chunks, peek at lower layers, do all sorts of damage
 - optionally decoupled cursor size and output resolution
 - interrogate tool
 - floating control panel to easily change models/samplers/steps/prompts/CFG/etc options for each dream summoned from the latent void _(NOTE: model switching requires A1111 webUI to be on commit [5a6387e](https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/5a6387e189dc365c47a7979b9040d5b6fdd7ba43) or more recent)_
 - floating toolbox with handy keyboard shortcuts
 - optional grid snapping for precision
 - optional hi-res fix for blank/txt2img dreams
-  - **_NOTE: as of v0.0.12.5/webUI commit [ef27a18](https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d), HRfix has been COMPLETELY reworked and no longer works remotely the same, thus openOutpaint's implementation is no longer compatible with versions of A1111 predating that. You will be alerted to the outdated webUI and the HRfix option will become limited to simply using [reticle dimensions / 2] in this event._**
+  - **_NOTE: as of v0.0.12.5/webUI commit [ef27a18](https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d), HRfix has been COMPLETELY reworked and no longer works remotely the same, thus openOutpaint's implementation is no longer compatible with versions of A1111 predating that. You will be alerted to the outdated webUI and the HRfix option will become limited to simply using [reticle dimensions / 2] in this event. Please see the [manual entry](https://github.com/zero01101/openOutpaint/wiki/Manual#hrfix) regarding HRfix and its available options._**
 - optional overmasking for potentially better seams between outpaints - set overmask px value to 0 to disable the feature
-- import arbitrary images and scale/stamp on the canvas whenever, wherever you'd like
+- import arbitrary images and rotate/scale/stamp on the canvas whenever, wherever you'd like
 - upscaler support for final output images
 - saves your preferences/imported images to browser localstorage for maximum convenience
 - reset to defaults button to unsave your preferences if things go squirrely
