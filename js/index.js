@@ -591,7 +591,10 @@ const makeSlider = (
 
 let modelAutoComplete = createAutoComplete(
 	"Model",
-	document.getElementById("models-ac-select")
+	document.getElementById("models-ac-select"),
+	{},
+	document.getElementById("refreshModelsBtn"),
+	"refreshable"
 );
 modelAutoComplete.onchange.on(({value}) => {
 	if (value.toLowerCase().includes("inpainting"))
