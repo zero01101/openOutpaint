@@ -25,6 +25,7 @@
 
 .layer-render-target .collection {
 	position: absolute;
+	transform-origin: 0px 0px;
 }
 
 .layer-render-target .collection > .collection-input-overlay {
@@ -45,7 +46,7 @@
 	right: 0;
 }
 
-#layer-overlay {
+.overlay-canvas {
 	position: fixed;
 
 	top: 0;

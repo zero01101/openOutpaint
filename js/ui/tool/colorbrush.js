@@ -176,7 +176,7 @@ const colorBrushTool = () =>
 					uiCtx.arc(
 						vcp.x,
 						vcp.y,
-						(state.eyedropper ? 50 : state.brushSize / 2) * viewport.zoom,
+						(state.eyedropper ? 50 : state.brushSize / 2) / viewport.zoom,
 						0,
 						2 * Math.PI,
 						true
@@ -197,7 +197,7 @@ const colorBrushTool = () =>
 						uiCtx.arc(
 							vcp.x,
 							vcp.y,
-							(state.brushSize / 2) * viewport.zoom,
+							state.brushSize / (2 * viewport.zoom),
 							0,
 							2 * Math.PI,
 							true

@@ -156,6 +156,7 @@ const _dream = async (endpoint, request) => {
 		generating(false);
 	}
 	var responseSubdata = JSON.parse(data.info);
+	console.debug(responseSubdata);
 	var returnData = {
 		images: data.images,
 		seeds: responseSubdata.all_seeds,
@@ -176,6 +177,7 @@ const _dream = async (endpoint, request) => {
  * @returns {Promise<HTMLImageElement | null>}
  */
 const _generate = async (endpoint, request, bb, options = {}) => {
+	var alertCount = 0;
 	defaultOpt(options, {
 		drawEvery: 0.2 / request.n_iter,
 		keepUnmask: null,
@@ -515,6 +517,17 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		});
 	};
 
+	const removeImg = async () => {
+		if (!images[at]) return;
+		images.splice(at, 1);
+		seeds.splice(at, 1);
+		if (at >= images.length) at = 0;
+		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		var seed = seeds[at];
+		seedbtn.title = "Use seed " + seed;
+		redraw();
+	};
+
 	const makeMore = async () => {
 		const moreQ = await waitQueue();
 		try {
@@ -531,9 +544,14 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			seeds.push(...dreamData.seeds);
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
-			alert(
-				`Error generating images. Please try again or see console for more details`
-			);
+			if (alertCount < 2) {
+				alert(
+					`Error generating images. Please try again or see console for more details`
+				);
+			} else {
+				eagerGenerateCount = 0;
+			}
+			alertCount++;
 			console.warn(`[dream] Error generating images:`);
 			console.warn(e);
 		} finally {
@@ -588,6 +606,9 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		switch (evn.key) {
 			case "+":
 				makeMore();
+				break;
+			case "-":
+				removeImg();
 				break;
 			default:
 				switch (evn.code) {
@@ -652,7 +673,11 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	const oncancelhandler = mouse.listen.world.btn.right.onclick.on(
 		(evn, state) => {
 			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
-				discardImg();
+				if (images.length > 1) {
+					removeImg();
+				} else {
+					discardImg();
+				}
 				imageCollection.inputElement.style.cursor = "auto";
 				state.dream_processed = true;
 			}
@@ -736,6 +761,12 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	morebtn.addEventListener("click", makeMore);
 	imageSelectMenu.appendChild(morebtn);
 
+	const removebtn = document.createElement("button");
+	removebtn.textContent = "-";
+	removebtn.title = "Remove From Batch";
+	removebtn.addEventListener("click", removeImg);
+	imageSelectMenu.appendChild(removebtn);
+
 	const acceptbtn = document.createElement("button");
 	acceptbtn.textContent = "Y";
 	acceptbtn.title = "Apply Current";
@@ -815,41 +846,64 @@ const dream_generate_callback = async (bb, resolution, state) => {
 
 	// Use txt2img if canvas is blank
 	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
-		if (
-			!global.isOldHRFix &&
-			request.enable_hr &&
-			localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true"
-		) {
+		if (!global.isOldHRFix && request.enable_hr) {
 			/**
 			 * try and make the new HRfix method useful for our purposes
-			 * since it now returns an image that's been upscaled x the hr_scale parameter,
-			 * we cheekily lie to SD and tell it that the original dimensions are _divided_
-			 * by the scale factor so it returns something about the same size as we wanted initially
 			 */
-
-			// ok so instead, only do that if stableDiffusionData.hr_fix_lock_px > 0
-			if (stableDiffusionData.hr_fix_lock_px > 0) {
-				// find the appropriate scale factor for hrfix
+			// laziness convenience
+			let lockpx = stableDiffusionData.hr_fix_lock_px;
+			if (lockpx > 0) {
+				// find the most appropriate scale factor for hrfix
 				var widthFactor =
-					request.width / stableDiffusionData.hr_fix_lock_px <= 4
-						? request.width / stableDiffusionData.hr_fix_lock_px
-						: 4;
+					request.width / lockpx <= 4 ? request.width / lockpx : 4;
 				var heightFactor =
-					request.height / stableDiffusionData.hr_fix_lock_px <= 4
-						? request.height / stableDiffusionData.hr_fix_lock_px
-						: 4;
+					request.height / lockpx <= 4 ? request.height / lockpx : 4;
 				var factor = heightFactor > widthFactor ? heightFactor : widthFactor;
 				request.hr_scale = hrFixScaleSlider.value = factor < 1 ? 1 : factor;
 			}
+			// moar laziness convenience
+			var divW = Math.floor(request.width / request.hr_scale);
+			var divH = Math.floor(request.height / request.hr_scale);
 
-			var newWidth = Math.floor(request.width / request.hr_scale);
-			var newHeight = Math.floor(request.height / request.hr_scale);
-			request.width = newWidth;
-			request.height = newHeight;
+			if (localStorage.getItem("openoutpaint/settings.hrfix-liar") == "true") {
+				/**
+				 * since it now returns an image that's been upscaled x the hr_scale parameter,
+				 * we cheekily lie to SD and tell it that the original dimensions are _divided_
+				 * by the scale factor so it returns something about the same size as we wanted initially
+				 */
+				var firstpassWidth = divW;
+				var firstpassHeight = divH; // liar's firstpass output resolution
+				var desiredWidth = request.width;
+				var desiredHeight = request.height; // truthful desired output resolution
+			} else {
+				// use scale normally, dump supersampled image into undersized reticle
+				var desiredWidth = request.width * request.hr_scale;
+				var desiredHeight = request.height * request.hr_scale; //desired 2nd-pass output resolution
+				var firstpassWidth = request.width;
+				var firstpassHeight = request.height;
+			}
+
+			// ensure firstpass "resolution" complies with lockpx
+			if (lockpx > 0) {
+				//sigh repeated loop
+				firstpassWidth = divW < lockpx ? divW : lockpx;
+				firstpassHeight = divH < lockpx ? divH : lockpx;
+			}
+
+			if (stableDiffusionData.hr_square_aspect) {
+				larger =
+					firstpassWidth > firstpassHeight ? firstpassWidth : firstpassHeight;
+				firstpassWidth = firstpassHeight = larger;
+			}
+			request.width = firstpassWidth;
+			request.height = firstpassHeight;
+			request.hr_resize_x = desiredWidth;
+			request.hr_resize_y = desiredHeight;
 		}
 
 		// For compatibility with the old HRFix API
 		if (global.isOldHRFix && request.enable_hr) {
+			// For compatibility with the old HRFix API
 			request.firstphase_width = request.width / 2;
 			request.firstphase_height = request.height / 2;
 		}
@@ -1187,16 +1241,28 @@ const _dream_onwheel = (evn, state) => {
 		return;
 	}
 
-	// A simple but (I hope) effective fix for mouse wheel behavior
-	_dream_wheel_accum += evn.delta;
+	let delta = evn.delta;
+	if (evn.evn.shiftKey) delta *= 0.01;
 
-	if (Math.abs(_dream_wheel_accum) > config.wheelTickSize) {
+	// A simple but (I hope) effective fix for mouse wheel behavior
+	_dream_wheel_accum += delta;
+
+	if (
+		!evn.evn.shiftKey &&
+		Math.abs(_dream_wheel_accum) > config.wheelTickSize
+	) {
 		// Snap to next or previous position
 		const v =
 			state.cursorSize -
 			128 * (_dream_wheel_accum / Math.abs(_dream_wheel_accum));
 
 		state.cursorSize = state.setCursorSize(v + snap(v, 0, 128));
+		state.mousemovecb(evn);
+
+		_dream_wheel_accum = 0; // Zero accumulation
+	} else if (evn.evn.shiftKey && Math.abs(_dream_wheel_accum) >= 1) {
+		const v = state.cursorSize - _dream_wheel_accum;
+		state.cursorSize = state.setCursorSize(v);
 		state.mousemovecb(evn);
 
 		_dream_wheel_accum = 0; // Zero accumulation
@@ -1888,11 +1954,10 @@ const img2imgTool = () =>
 						return;
 					}
 
-					const bbvp = {
-						...viewport.canvasToView(bb.x, bb.y),
-						w: viewport.zoom * bb.w,
-						h: viewport.zoom * bb.h,
-					};
+					const bbvp = BoundingBox.fromStartEnd(
+						viewport.canvasToView(bb.tl),
+						viewport.canvasToView(bb.br)
+					);
 
 					// For displaying border mask
 					const bbCanvas = document.createElement("canvas");

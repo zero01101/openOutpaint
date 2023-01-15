@@ -32,6 +32,31 @@ class BoundingBox {
 	w = 0;
 	h = 0;
 
+	/** @type {Point} */
+	get tl() {
+		return {x: this.x, y: this.y};
+	}
+
+	/** @type {Point} */
+	get tr() {
+		return {x: this.x + this.w, y: this.y};
+	}
+
+	/** @type {Point} */
+	get bl() {
+		return {x: this.x, y: this.y + this.h};
+	}
+
+	/** @type {Point} */
+	get br() {
+		return {x: this.x + this.w, y: this.y + this.h};
+	}
+
+	/** @type {Point} */
+	get center() {
+		return {x: this.x + this.w / 2, y: this.y + this.h / 2};
+	}
+
 	constructor({x, y, w, h} = {x: 0, y: 0, w: 0, h: 0}) {
 		this.x = x;
 		this.y = y;
@@ -63,6 +88,18 @@ class BoundingBox {
 			w: maxx - minx,
 			h: maxy - miny,
 		});
+	}
+
+	/**
+	 * Returns a transformed bounding box (using top-left, bottom-right points)
+	 *
+	 * @param {DOMMatrix} transform Transformation matrix to transform points
+	 */
+	transform(transform) {
+		return BoundingBox.fromStartEnd(
+			transform.transformPoint({x: this.x, y: this.y}),
+			transform.transformPoint({x: this.x + this.w, y: this.y + this.h})
+		);
 	}
 }
 

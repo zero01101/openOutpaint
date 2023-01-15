@@ -17,7 +17,9 @@
 	bottom: 15%;
 
 	mask-size: contain;
+	-webkit-mask-size: contain;
 	mask-repeat: no-repeat;
+	-webkit-mask-repeat: no-repeat;
 
 	max-height: 70%;
 	aspect-ratio: 1;

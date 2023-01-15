@@ -11,6 +11,7 @@ const selectTransformTool = () =>
 			mouse.listen.world.onmousemove.on(state.movecb);
 			mouse.listen.world.btn.left.onclick.on(state.clickcb);
 			mouse.listen.world.btn.left.ondragstart.on(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 
 			// Canvas right mouse handler
@@ -29,12 +30,19 @@ const selectTransformTool = () =>
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
 
 			state.selected = null;
+
+			// Register Layer
+			state.originalDisplayLayer = imageCollection.registerLayer(null, {
+				after: uil.layer,
+				category: "select-display",
+			});
 		},
 		(state, opt) => {
 			// Clear all those listeners and shortcuts we set up
 			mouse.listen.world.onmousemove.clear(state.movecb);
 			mouse.listen.world.btn.left.onclick.clear(state.clickcb);
 			mouse.listen.world.btn.left.ondragstart.clear(state.dragstartcb);
+			mouse.listen.world.btn.left.ondrag.clear(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
 			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
@@ -55,6 +63,10 @@ const selectTransformTool = () =>
 
 			// Clears overlay
 			imageCollection.inputElement.style.cursor = "auto";
+
+			// Delete Layer
+			imageCollection.deleteLayer(state.originalDisplayLayer);
+			state.originalDisplayLayer = null;
 		},
 		{
 			init: (state) => {
@@ -69,7 +81,6 @@ const selectTransformTool = () =>
 				state.selectionPeekOpacity = 40;
 
 				state.original = null;
-				state.dragging = null;
 				state._selected = null;
 				Object.defineProperty(state, "selected", {
 					get: () => state._selected,
@@ -80,7 +91,6 @@ const selectTransformTool = () =>
 						return (state._selected = v);
 					},
 				});
-				state.moving = null;
 
 				// Some things to easy request for a redraw
 				state.lastMouseTarget = null;
@@ -97,423 +107,334 @@ const selectTransformTool = () =>
 					}
 				};
 
+				/** @type {{selected: Point, offset: Point} | null} */
+				let moving = null;
+				/** @type {{handle: Point} | null} */
+				let scaling = null;
+				let rotating = false;
+
 				// Clears selection and make things right
 				state.reset = (erase = false) => {
 					if (state.selected && !erase)
-						state.originalLayer.ctx.drawImage(
-							state.original.image,
+						state.original.layer.ctx.drawImage(
+							state.selected.canvas,
 							state.original.x,
 							state.original.y
 						);
 
 					if (state.originalDisplayLayer) {
-						imageCollection.deleteLayer(state.originalDisplayLayer);
-						state.originalDisplayLayer = null;
+						state.originalDisplayLayer.clear();
 					}
 
 					if (state.dragging) state.dragging = null;
 					else state.selected = null;
 
+					state.rotation = 0;
+					state.original = null;
+					moving = null;
+					scaling = null;
+					rotating = null;
+
 					state.redraw();
 				};
 
-				// Selection bounding box object. Has some witchery to deal with handles.
-				const selectionBB = (x1, y1, x2, y2) => {
-					x1 = Math.round(x1);
-					y1 = Math.round(y1);
-					x2 = Math.round(x2);
-					y2 = Math.round(y2);
-					return {
-						original: {
-							x: Math.min(x1, x2),
-							y: Math.min(y1, y2),
-							w: Math.abs(x1 - x2),
-							h: Math.abs(y1 - y2),
-						},
-						x: Math.min(x1, x2),
-						y: Math.min(y1, y2),
-						w: Math.abs(x1 - x2),
-						h: Math.abs(y1 - y2),
-						updateOriginal() {
-							this.original.x = this.x;
-							this.original.y = this.y;
-							this.original.w = this.w;
-							this.original.h = this.h;
-						},
-						contains(x, y) {
-							return (
-								this.x <= x &&
-								x <= this.x + this.w &&
-								this.y <= y &&
-								y <= this.y + this.h
-							);
-						},
-						handles() {
-							const _createHandle = (x, y, originOffset = null) => {
-								return {
-									x,
-									y,
-									scaleTo: (tx, ty, keepAspectRatio = true) => {
-										const origin = {
-											x: this.original.x + this.original.w / 2,
-											y: this.original.y + this.original.h / 2,
-										};
-										let nx = tx;
-										let ny = ty;
+				// Selection Handlers
+				const selection = _tool._draggable_selection(state);
 
-										let xRatio = (nx - origin.x) / (x - origin.x);
-										let yRatio = (ny - origin.y) / (y - origin.y);
-										if (keepAspectRatio)
-											xRatio = yRatio = Math.min(xRatio, yRatio);
+				// UI Erasers
+				let eraseSelectedBox = () => null;
+				let eraseSelectedImage = () => null;
+				let eraseCursor = () => null;
+				let eraseSelection = () => null;
 
-										if (Number.isFinite(xRatio)) {
-											let left = this.original.x;
-											let right = this.original.x + this.original.w;
+				// Redraw UI
+				state.redrawui = () => {
+					// Get cursor positions
+					const {x, y, sx, sy} = _tool._process_cursor(
+						state.lastMouseMove,
+						state.snapToGrid
+					);
 
-											left = (left - origin.x) * xRatio + origin.x;
-											right = (right - origin.x) * xRatio + origin.x;
-
-											this.x = left;
-											this.w = right - left;
-										}
-
-										if (Number.isFinite(yRatio)) {
-											let top = this.original.y;
-											let bottom = this.original.y + this.original.h;
-
-											top = (top - origin.y) * yRatio + origin.y;
-											bottom = (bottom - origin.y) * yRatio + origin.y;
-
-											this.y = top;
-											this.h = bottom - top;
-										}
-									},
-								};
-							};
-
-							const size = viewport.zoom * 10;
-							return [
-								_createHandle(this.x, this.y, size),
-								_createHandle(this.x + this.w, this.y, size),
-								_createHandle(this.x, this.y + this.h, size),
-								_createHandle(this.x + this.w, this.y + this.h, size),
-							];
-						},
-					};
-				};
-
-				// Mouse move handler. As always, also renders cursor
-				state.movecb = (evn) => {
-					ovLayer.clear();
-					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
-					state.erasePrevCursor && state.erasePrevCursor();
-					imageCollection.inputElement.style.cursor = "auto";
-					state.lastMouseTarget = evn.target;
-					state.lastMouseMove = evn;
-					let x = evn.x;
-					let y = evn.y;
-					if (state.snapToGrid) {
-						x += snap(evn.x, 0, 64);
-						y += snap(evn.y, 0, 64);
-					}
-
-					const vpc = viewport.canvasToView(x, y);
-
-					uiCtx.save();
-
-					// Update scale
-					if (state.scaling) {
-						state.scaling.scaleTo(x, y, state.keepAspectRatio);
-					}
-
-					// Update position
-					if (state.moving) {
-						state.selected.x = Math.round(x - state.moving.offset.x);
-						state.selected.y = Math.round(y - state.moving.offset.y);
-						state.selected.updateOriginal();
-					}
-
-					// Draw dragging box
-					if (state.dragging) {
-						uiCtx.setLineDash([2, 2]);
-						uiCtx.lineWidth = 1;
-						uiCtx.strokeStyle = "#FFF";
-
-						const ix = state.dragging.ix;
-						const iy = state.dragging.iy;
-
-						const bb = selectionBB(ix, iy, x, y);
-
-						const bbvp = {
-							...viewport.canvasToView(bb.x, bb.y),
-							w: viewport.zoom * bb.w,
-							h: viewport.zoom * bb.h,
-						};
-
-						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
-						uiCtx.setLineDash([]);
-					}
+					eraseSelectedBox();
 
 					if (state.selected) {
-						ovCtx.lineWidth = 1;
-						ovCtx.strokeStyle = "#FFF";
-
-						const bb = {
-							x: state.selected.x,
-							y: state.selected.y,
-							w: state.selected.w,
-							h: state.selected.h,
-						};
-
-						const bbvp = {
-							...viewport.canvasToView(bb.x, bb.y),
-							w: viewport.zoom * bb.w,
-							h: viewport.zoom * bb.h,
-						};
-
-						// Draw Image
-						ovCtx.save();
-						ovCtx.filter = `opacity(${state.selectionPeekOpacity}%)`;
-						ovCtx.drawImage(
-							state.selected.image,
-							0,
-							0,
-							state.selected.image.width,
-							state.selected.image.height,
-							state.selected.x,
-							state.selected.y,
-							state.selected.w,
-							state.selected.h
+						eraseSelectedBox = state.selected.drawBox(
+							uiCtx,
+							{x, y},
+							viewport.c2v
 						);
-						ovCtx.restore();
+					}
+				};
 
-						state.originalDisplayLayer.clear();
-						state.originalDisplayLayer.ctx.save();
-						state.originalDisplayLayer.ctx.drawImage(
-							state.selected.image,
-							0,
-							0,
-							state.selected.image.width,
-							state.selected.image.height,
-							state.selected.x,
-							state.selected.y,
-							state.selected.w,
-							state.selected.h
+				// Mouse Move Handler
+				state.movecb = (evn) => {
+					state.lastMouseMove = evn;
+
+					// Get cursor positions
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
+
+					// Erase Cursor
+					eraseSelectedBox();
+					eraseSelectedImage();
+					eraseSelection();
+					eraseCursor();
+					imageCollection.inputElement.style.cursor = "default";
+
+					// Draw Box and Selected Image
+					if (state.selected) {
+						eraseSelectedBox = state.selected.drawBox(
+							uiCtx,
+							{x, y},
+							viewport.c2v
 						);
-						state.originalDisplayLayer.ctx.restore();
 
-						// Draw selection box
-						uiCtx.strokeStyle = "#FFF";
-						uiCtx.setLineDash([4, 2]);
-						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
-						uiCtx.setLineDash([]);
-
-						// Draw Scaling/Rotation Origin
-						uiCtx.beginPath();
-						uiCtx.arc(
-							bbvp.x + bbvp.w / 2,
-							bbvp.y + bbvp.h / 2,
-							5,
-							0,
-							2 * Math.PI
-						);
-						uiCtx.stroke();
-
-						// Draw Scaling Handles
-						let cursorInHandle = false;
-						state.selected.handles().forEach((handle) => {
-							const bbvph = {
-								...viewport.canvasToView(handle.x, handle.y),
-								w: 10,
-								h: 10,
-							};
-
-							bbvph.x -= 5;
-							bbvph.y -= 5;
-
-							const inhandle =
-								evn.evn.clientX > bbvph.x &&
-								evn.evn.clientX < bbvph.x + bbvph.w &&
-								evn.evn.clientY > bbvph.y &&
-								evn.evn.clientY < bbvph.y + bbvph.h;
-
-							if (inhandle) {
-								cursorInHandle = true;
-								uiCtx.strokeRect(
-									bbvph.x - 1,
-									bbvph.y - 1,
-									bbvph.w + 2,
-									bbvph.h + 2
-								);
-							} else {
-								uiCtx.strokeRect(bbvph.x, bbvph.y, bbvph.w, bbvph.h);
-							}
-						});
-
-						// Change cursor
-						if (cursorInHandle || state.selected.contains(evn.x, evn.y))
+						if (
+							state.selected.hoveringBox(x, y) ||
+							state.selected.hoveringHandle(x, y, viewport.zoom).onHandle ||
+							state.selected.hoveringRotateHandle(x, y, viewport.zoom)
+						) {
 							imageCollection.inputElement.style.cursor = "pointer";
+						}
+
+						eraseSelectedImage = state.selected.drawImage(
+							state.originalDisplayLayer.ctx,
+							ovCtx,
+							{opacity: state.selectionPeekOpacity / 100}
+						);
 					}
 
-					// Draw current cursor location
-					state.erasePrevCursor = _tool._cursor_draw(x, y);
+					// Draw Selection
+					if (selection.exists) {
+						uiCtx.save();
+						uiCtx.setLineDash([2, 2]);
+						uiCtx.lineWidth = 2;
+						uiCtx.strokeStyle = "#FFF";
 
-					uiCtx.restore();
+						const bbvp = selection.bb.transform(viewport.c2v);
+						uiCtx.beginPath();
+						uiCtx.strokeRect(bbvp.x, bbvp.y, bbvp.w, bbvp.h);
+						uiCtx.stroke();
+
+						eraseSelection = () =>
+							uiCtx.clearRect(
+								bbvp.x - 10,
+								bbvp.y - 10,
+								bbvp.w + 20,
+								bbvp.h + 20
+							);
+
+						uiCtx.restore();
+					}
+
+					// Draw cursor
+					eraseCursor = _tool._cursor_draw(sx, sy);
 				};
 
 				// Handles left mouse clicks
 				state.clickcb = (evn) => {
 					if (
-						!state.original ||
-						(state.originalLayer === uil.layer &&
-							state.original.x === state.selected.x &&
-							state.original.y === state.selected.y &&
-							state.original.w === state.selected.w &&
-							state.original.h === state.selected.h)
+						state.selected &&
+						!(
+							state.selected.rotation === 0 &&
+							state.selected.scale.x === 1 &&
+							state.selected.scale.y === 1 &&
+							state.selected.position.x === state.original.sx &&
+							state.selected.position.y === state.original.sy &&
+							state.original.layer === uil.layer
+						)
 					) {
-						state.reset();
-						return;
-					}
-
-					// If something is selected, commit changes to the canvas
-					if (state.selected) {
-						state.originalLayer.ctx.drawImage(
-							state.selected.image,
+						// Put original image back
+						state.original.layer.ctx.drawImage(
+							state.selected.canvas,
 							state.original.x,
 							state.original.y
 						);
-						commands.runCommand("eraseImage", "Image Transform Erase", {
-							...state.original,
-							ctx: state.originalLayer.ctx,
+
+						// Erase Original Selection Area
+						commands.runCommand("eraseImage", "Transform Tool Erase", {
+							ctx: state.original.layer.ctx,
+							x: state.original.x,
+							y: state.original.y,
+							w: state.selected.canvas.width,
+							h: state.selected.canvas.height,
 						});
-						commands.runCommand("drawImage", "Image Transform Draw", {
-							image: state.selected.image,
-							x: Math.round(state.selected.x),
-							y: Math.round(state.selected.y),
-							w: Math.round(state.selected.w),
-							h: Math.round(state.selected.h),
+
+						// Draw Image
+						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas, {
+							border: 10,
 						});
+						commands.runCommand("drawImage", "Transform Tool Apply", {
+							image: canvas,
+							...bb,
+						});
+
 						state.reset(true);
+					} else {
+						state.reset();
+					}
+				};
+
+				// Handles left mouse drag start events
+				state.dragstartcb = (evn) => {
+					const {
+						x: ix,
+						y: iy,
+						sx: six,
+						sy: siy,
+					} = _tool._process_cursor({x: evn.ix, y: evn.iy}, state.snapToGrid);
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
+
+					if (state.selected) {
+						const hoveringBox = state.selected.hoveringBox(ix, iy);
+						const hoveringHandle = state.selected.hoveringHandle(
+							ix,
+							iy,
+							viewport.zoom
+						);
+						const hoveringRotateHandle = state.selected.hoveringRotateHandle(
+							ix,
+							iy,
+							viewport.zoom
+						);
+
+						if (hoveringBox) {
+							// Start dragging
+							moving = {
+								selected: state.selected.position,
+								offset: {
+									x: six - state.selected.position.x,
+									y: siy - state.selected.position.y,
+								},
+							};
+							return;
+						} else if (hoveringHandle.onHandle) {
+							// Start scaling
+							let handle = {x: 0, y: 0};
+
+							const lbb = new BoundingBox({
+								x: -state.selected.canvas.width / 2,
+								y: -state.selected.canvas.height / 2,
+								w: state.selected.canvas.width,
+								h: state.selected.canvas.height,
+							});
+
+							if (hoveringHandle.ontl) {
+								handle = lbb.tl;
+							} else if (hoveringHandle.ontr) {
+								handle = lbb.tr;
+							} else if (hoveringHandle.onbl) {
+								handle = lbb.bl;
+							} else {
+								handle = lbb.br;
+							}
+
+							scaling = {
+								handle,
+							};
+							return;
+						} else if (hoveringRotateHandle) {
+							rotating = true;
+							return;
+						}
+					}
+					selection.dragstartcb(evn);
+				};
+
+				const transform = (evn, x, y, sx, sy) => {
+					if (moving) {
+						state.selected.position = {
+							x: sx - moving.offset.x,
+							y: sy - moving.offset.y,
+						};
+					}
+
+					if (scaling) {
+						/** @type {DOMMatrix} */
+						const m = state.selected.rtmatrix.invertSelf();
+						const lscursor = m.transformPoint({x: sx, y: sy});
+
+						const xs = lscursor.x / scaling.handle.x;
+						const xy = lscursor.y / scaling.handle.y;
+
+						if (!state.keepAspectRatio) state.selected.scale = {x: xs, y: xy};
+						else {
+							const scale = Math.max(xs, xy);
+							state.selected.scale = {x: scale, y: scale};
+						}
+					}
+
+					if (rotating) {
+						const center = state.selected.matrix.transformPoint({x: 0, y: 0});
+						let angle = Math.atan2(x - center.x, center.y - y);
+
+						if (evn.evn.shiftKey)
+							angle =
+								config.rotationSnappingAngles.find(
+									(v) => Math.abs(v - angle) < config.rotationSnappingDistance
+								) ?? angle;
+
+						state.selected.rotation = angle;
 					}
 				};
 
 				// Handles left mouse drag events
-				state.dragstartcb = (evn) => {
-					let ix = evn.ix;
-					let iy = evn.iy;
-					if (state.snapToGrid) {
-						ix += snap(evn.ix, 0, 64);
-						iy += snap(evn.iy, 0, 64);
-					}
+				state.dragcb = (evn) => {
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
 
-					// If is selected, check if drag is in handles/body and act accordingly
-					if (state.selected) {
-						const handles = state.selected.handles();
+					if (state.selected) transform(evn, x, y, sx, sy);
 
-						const activeHandle = handles.find((v) => {
-							const vpc = viewport.canvasToView(v.x, v.y);
-							const tlc = viewport.viewToCanvas(vpc.x - 5, vpc.y - 5);
-							const brc = viewport.viewToCanvas(vpc.x + 5, vpc.y + 5);
-							const bb = {
-								x: tlc.x,
-								y: tlc.y,
-								w: brc.x - tlc.x,
-								h: brc.y - tlc.y,
-							};
-
-							return (
-								evn.ix > bb.x &&
-								evn.ix < bb.x + bb.w &&
-								evn.iy > bb.y &&
-								evn.iy < bb.y + bb.h
-							);
-						});
-						if (activeHandle) {
-							state.scaling = activeHandle;
-							return;
-						} else if (state.selected.contains(ix, iy)) {
-							state.moving = {
-								offset: {x: ix - state.selected.x, y: iy - state.selected.y},
-							};
-							return;
-						}
-					}
-					// If it is not, just create new selection
-					state.reset();
-					state.dragging = {ix, iy};
+					if (selection.exists) selection.dragcb(evn);
 				};
 
 				// Handles left mouse drag end events
 				state.dragendcb = (evn) => {
-					let x = evn.x;
-					let y = evn.y;
-					if (state.snapToGrid) {
-						x += snap(evn.x, 0, 64);
-						y += snap(evn.y, 0, 64);
+					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
+
+					if (selection.exists) {
+						selection.dragendcb(evn);
+
+						const bb = selection.bb;
+
+						state.reset();
+
+						if (selection.exists && bb.w !== 0 && bb.h !== 0) {
+							const canvas = document.createElement("canvas");
+							canvas.width = bb.w;
+							canvas.height = bb.h;
+							canvas
+								.getContext("2d")
+								.drawImage(
+									uil.canvas,
+									bb.x,
+									bb.y,
+									bb.w,
+									bb.h,
+									0,
+									0,
+									bb.w,
+									bb.h
+								);
+
+							uil.ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
+
+							state.original = {
+								...bb,
+								sx: selection.bb.center.x,
+								sy: selection.bb.center.y,
+								layer: uil.layer,
+							};
+							state.selected = new _tool.MarqueeSelection(canvas, bb.center);
+						}
+
+						selection.deselect();
 					}
 
-					// If we are scaling, stop scaling and do some handler magic
-					if (state.scaling) {
-						state.selected.updateOriginal();
-						state.scaling = null;
-						// If we are moving the selection, just... stop
-					} else if (state.moving) {
-						state.moving = null;
-						/**
-						 * If we are dragging, create a cutout selection area and save to an auxiliar image
-						 * We will be rendering the image to the overlay, so it will not be noticeable
-						 */
-					} else if (state.dragging) {
-						state.original = selectionBB(
-							state.dragging.ix,
-							state.dragging.iy,
-							x,
-							y
-						);
-						state.selected = selectionBB(
-							state.dragging.ix,
-							state.dragging.iy,
-							x,
-							y
-						);
-						state.originalLayer = uil.layer;
-						state.originalDisplayLayer = imageCollection.registerLayer(null, {
-							after: uil.layer,
-							category: "select-display",
-						});
+					if (state.selected) transform(evn, x, y, sx, sy);
 
-						// Cut out selected portion of the image for manipulation
-						const cvs = document.createElement("canvas");
-						cvs.width = state.selected.w;
-						cvs.height = state.selected.h;
-						const ctx = cvs.getContext("2d");
+					moving = null;
+					scaling = null;
+					rotating = false;
 
-						ctx.drawImage(
-							uil.canvas,
-							state.selected.x,
-							state.selected.y,
-							state.selected.w,
-							state.selected.h,
-							0,
-							0,
-							state.selected.w,
-							state.selected.h
-						);
-
-						uil.ctx.clearRect(
-							state.selected.x,
-							state.selected.y,
-							state.selected.w,
-							state.selected.h
-						);
-						state.selected.image = cvs;
-						state.original.image = cvs;
-
-						if (state.selected.w === 0 || state.selected.h === 0)
-							state.selected = null;
-
-						state.dragging = null;
-					}
 					state.redraw();
 				};
 
@@ -550,11 +471,11 @@ const selectTransformTool = () =>
 
 					ctx.clearRect(0, 0, state.selected.w, state.selected.h);
 					ctx.drawImage(
-						state.selected.image,
+						state.selected.canvas,
 						0,
 						0,
-						state.selected.image.width,
-						state.selected.image.height,
+						state.selected.canvas.width,
+						state.selected.canvas.height,
 						0,
 						0,
 						state.selected.w,
@@ -684,7 +605,7 @@ const selectTransformTool = () =>
 					saveSelectionButton.onclick = () => {
 						downloadCanvas({
 							cropToContent: false,
-							canvas: state.selected.image,
+							canvas: state.selected.canvas,
 						});
 					};
 
@@ -695,7 +616,7 @@ const selectTransformTool = () =>
 					createResourceButton.title = "Saves Selection as a Resource";
 					createResourceButton.onclick = () => {
 						const image = document.createElement("img");
-						image.src = state.selected.image.toDataURL();
+						image.src = state.selected.canvas.toDataURL();
 						image.onload = () => {
 							tools.stamp.state.addResource("Selection Resource", image);
 							tools.stamp.enable();
