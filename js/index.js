@@ -589,9 +589,12 @@ const makeSlider = (
 	});
 };
 
-const modelAutoComplete = createAutoComplete(
+let modelAutoComplete = createAutoComplete(
 	"Model",
-	document.getElementById("models-ac-select")
+	document.getElementById("models-ac-select"),
+	{},
+	document.getElementById("refreshModelsBtn"),
+	"refreshable"
 );
 modelAutoComplete.onchange.on(({value}) => {
 	if (value.toLowerCase().includes("inpainting"))
@@ -956,7 +959,7 @@ async function getUpscalers() {
 	*/
 }
 
-async function getModels() {
+async function getModels(refresh = false) {
 	const url = document.getElementById("host").value + "/sdapi/v1/sd-models";
 	let opt = null;
 
@@ -983,7 +986,7 @@ async function getModels() {
 
 			const model = optData.sd_model_checkpoint;
 			console.log("Current model: " + model);
-			modelAutoComplete.value = model;
+			if (modelAutoComplete.value !== model) modelAutoComplete.value = model;
 		} catch (e) {
 			console.warn("[index] Failed to fetch current model:");
 			console.warn(e);
@@ -993,31 +996,32 @@ async function getModels() {
 		console.warn(e);
 	}
 
-	modelAutoComplete.onchange.on(async ({value}) => {
-		console.log(`[index] Changing model to [${value}]`);
-		const payload = {
-			sd_model_checkpoint: value,
-		};
-		const url = document.getElementById("host").value + "/sdapi/v1/options/";
-		try {
-			await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(payload),
-			});
+	if (!refresh)
+		modelAutoComplete.onchange.on(async ({value}) => {
+			console.log(`[index] Changing model to [${value}]`);
+			const payload = {
+				sd_model_checkpoint: value,
+			};
+			const url = document.getElementById("host").value + "/sdapi/v1/options/";
+			try {
+				await fetch(url, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(payload),
+				});
 
-			alert(`Model changed to [${value}]`);
-		} catch (e) {
-			console.warn("[index] Error changing model");
-			console.warn(e);
+				alert(`Model changed to [${value}]`);
+			} catch (e) {
+				console.warn("[index] Error changing model");
+				console.warn(e);
 
-			alert(
-				"Error changing model, please check console for additional information"
-			);
-		}
-	});
+				alert(
+					"Error changing model, please check console for additional information"
+				);
+			}
+		});
 
 	// If first time running, ask if user wants to switch to an inpainting model
 	if (global.firstRun && !modelAutoComplete.value.includes("inpainting")) {

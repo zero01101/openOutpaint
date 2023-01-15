@@ -7,10 +7,10 @@
 		<link href="css/colors.css?v=3f81e80" rel="stylesheet" />
 		<link href="css/icons.css?v=9ae0466" rel="stylesheet" />
 
-		<link href="css/index.css?v=5b8d4d6" rel="stylesheet" />
+		<link href="css/index.css?v=882f400" rel="stylesheet" />
 		<link href="css/layers.css?v=92c0352" rel="stylesheet" />
 
-		<link href="css/ui/generic.css?v=802bd41" rel="stylesheet" />
+		<link href="css/ui/generic.css?v=30837f8" rel="stylesheet" />
 
 		<link href="css/ui/history.css?v=0b03861" rel="stylesheet" />
 		<link href="css/ui/layers.css?v=ae472cd" rel="stylesheet" />
@@ -85,6 +85,13 @@
 				<div class="content">
 					<label>Model:</label>
 					<div id="models-ac-select"></div>
+					<button id="refreshModelsBtn" onclick="getModels(true)">
+						<img
+							class="refreshbutton"
+							src="./res/icons/refresh-cw.svg"
+							alt="refresh models"
+							title="refresh models" />
+					</button>
 					<label>Sampler:</label>
 					<div id="sampler-ac-select"></div>
 					<label for="seed">Seed (-1 for random):</label>
@@ -348,7 +355,7 @@
 		<script src="js/lib/commands.js?v=bf23c83" type="text/javascript"></script>
 
 		<script src="js/lib/toolbar.js?v=306d637" type="text/javascript"></script>
-		<script src="js/lib/ui.js?v=76ede2b" type="text/javascript"></script>
+		<script src="js/lib/ui.js?v=fe9b702" type="text/javascript"></script>
 
 		<script
 			src="js/initalize/layers.populate.js?v=39785ac"
@@ -359,7 +366,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=b446b93" type="text/javascript"></script>
+		<script src="js/index.js?v=dc296e8" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=fc92d14"

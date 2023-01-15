@@ -650,3 +650,8 @@ select > .style-select-option:active {
 .thirdwidth {
 	max-width: 33%;
 }
+
+.refreshbutton {
+	max-width: 50%;
+	max-height: 50%;
+}

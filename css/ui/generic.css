@@ -212,6 +212,10 @@ div.autocomplete > .autocomplete-text {
 	width: 100%;
 }
 
+div.autocomplete > .refreshable {
+	width: 82% !important;
+}
+
 div.autocomplete > .autocomplete-list {
 	position: absolute;
 
