@@ -461,26 +461,28 @@ const selectTransformTool = () =>
 
 				// Handles copying
 				state.ctrlccb = (evn, cut = false) => {
+					if (!state.selected) return;
+
+					if (
+						isCanvasBlank(
+							0,
+							0,
+							state.selected.canvas.width,
+							state.selected.canvas.height,
+							state.selected.canvas
+						)
+					)
+						return;
 					// We create a new canvas to store the data
 					state.clipboard.copy = document.createElement("canvas");
 
-					state.clipboard.copy.width = state.selected.w;
-					state.clipboard.copy.height = state.selected.h;
+					state.clipboard.copy.width = state.selected.canvas.width;
+					state.clipboard.copy.height = state.selected.canvas.height;
 
 					const ctx = state.clipboard.copy.getContext("2d");
 
 					ctx.clearRect(0, 0, state.selected.w, state.selected.h);
-					ctx.drawImage(
-						state.selected.canvas,
-						0,
-						0,
-						state.selected.canvas.width,
-						state.selected.canvas.height,
-						0,
-						0,
-						state.selected.w,
-						state.selected.h
-					);
+					ctx.drawImage(state.selected.canvas, 0, 0);
 
 					// If cutting, we reverse the selection and erase the selection area
 					if (cut) {
@@ -505,7 +507,7 @@ const selectTransformTool = () =>
 				};
 
 				// Handles pasting
-				state.ctrlvcb = (evn) => {
+				state.ctrlvcb = async (evn) => {
 					if (state.useClipboard) {
 						// If we use the clipboard, do some proccessing of clipboard data (ugly but kind of minimum required)
 						navigator.clipboard &&
@@ -532,6 +534,7 @@ const selectTransformTool = () =>
 						// Use internal clipboard
 						const image = document.createElement("img");
 						image.src = state.clipboard.copy.toDataURL();
+						await image.decode();
 
 						// Send to stamp, as clipboard temporary data
 						tools.stamp.enable({
