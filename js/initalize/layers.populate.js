@@ -73,7 +73,7 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 	expandSize = parseInt(expandSize, 10);
 
 	const askSize = (e) => {
-		if (e.ctrlKey ) return expandSize;
+		if (e.ctrlKey) return expandSize;
 		const by = prompt("How much do you want to expand by?", expandSize);
 
 		if (!by) return null;
