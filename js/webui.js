@@ -2,6 +2,32 @@
  * This file should only be actually loaded if we are in a trusted environment.
  */
 (async () => {
+	let parentWindow = null;
+	const webui = {
+		/** @type {{name: string, id: string}[]} */
+		destinations: null,
+
+		/**
+		 * Sends a
+		 *
+		 * @param {HTMLCanvas} canvas Canvas to send the data of
+		 * @param {string} destination The ID of the destination
+		 */
+		sendTo(canvas, destination) {
+			if (!this.destinations.find((d) => d.id === destination))
+				throw new Error("[webui] Given destination is not available");
+
+			parentWindow &&
+				parentWindow.postMessage({
+					type: "openoutpaint/sendto",
+					message: {
+						image: canvas.toDataURL(),
+						destination,
+					},
+				});
+		},
+	};
+
 	// Check if key file exists
 	const response = await fetch("key.json");
 
@@ -48,8 +74,6 @@
 	}
 
 	if (data) {
-		let parentWindow = null;
-
 		if (!data.trusted) console.debug(`[webui] Loaded key`);
 
 		window.addEventListener("message", ({data, origin, source}) => {
@@ -65,6 +89,11 @@
 				console.warn(`[webui] Communication has not been initialized`);
 			}
 
+			if (global.debug) {
+				console.debug("[webui] Received message:");
+				console.debug(data);
+			}
+
 			try {
 				switch (data.type) {
 					case "openoutpaint/init":
@@ -77,6 +106,7 @@
 								data.host,
 								`Are you sure you want to modify the host?\nThis configuration was provided by the hosting page\n - ${parentWindow.document.title} (${origin})`
 							);
+						if (data.destinations) webui.destinations = data.destinations;
 
 						break;
 					case "openoutpaint/add-resource":
@@ -142,4 +172,7 @@
 			}
 		});
 	}
-})();
+	return webui;
+})().then((value) => {
+	global.webui = value;
+});
