@@ -25,6 +25,11 @@ const selectTransformTool = () =>
 			uil.onactive.on(state.uilayeractivecb);
 
 			// Registers keyboard shortcuts
+			keyboard.onShortcut({ctrl: true, key: "KeyA"}, state.ctrlacb);
+			keyboard.onShortcut(
+				{ctrl: true, shift: true, key: "KeyA"},
+				state.ctrlsacb
+			);
 			keyboard.onShortcut({ctrl: true, key: "KeyC"}, state.ctrlccb);
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
@@ -49,6 +54,8 @@ const selectTransformTool = () =>
 
 			keyboard.listen.onkeyclick.clear(state.keyclickcb);
 			keyboard.listen.onkeydown.clear(state.keydowncb);
+			keyboard.deleteShortcut(state.ctrlacb, "KeyA");
+			keyboard.deleteShortcut(state.ctrlsacb, "KeyA");
 			keyboard.deleteShortcut(state.ctrlccb, "KeyC");
 			keyboard.deleteShortcut(state.ctrlvcb, "KeyV");
 			keyboard.deleteShortcut(state.ctrlxcb, "KeyX");
@@ -387,6 +394,29 @@ const selectTransformTool = () =>
 				};
 
 				// Handles left mouse drag end events
+
+				/** @type {(bb: BoundingBox) => void} */
+				const select = (bb) => {
+					const canvas = document.createElement("canvas");
+					canvas.width = bb.w;
+					canvas.height = bb.h;
+					canvas
+						.getContext("2d")
+						.drawImage(uil.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+
+					uil.ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
+
+					state.original = {
+						...bb,
+						sx: bb.center.x,
+						sy: bb.center.y,
+						layer: uil.layer,
+					};
+					state.selected = new _tool.MarqueeSelection(canvas, bb.center);
+
+					state.redraw();
+				};
+
 				state.dragendcb = (evn) => {
 					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
 
@@ -397,34 +427,7 @@ const selectTransformTool = () =>
 
 						state.reset();
 
-						if (selection.exists && bb.w !== 0 && bb.h !== 0) {
-							const canvas = document.createElement("canvas");
-							canvas.width = bb.w;
-							canvas.height = bb.h;
-							canvas
-								.getContext("2d")
-								.drawImage(
-									uil.canvas,
-									bb.x,
-									bb.y,
-									bb.w,
-									bb.h,
-									0,
-									0,
-									bb.w,
-									bb.h
-								);
-
-							uil.ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
-
-							state.original = {
-								...bb,
-								sx: selection.bb.center.x,
-								sy: selection.bb.center.y,
-								layer: uil.layer,
-							};
-							state.selected = new _tool.MarqueeSelection(canvas, bb.center);
-						}
+						if (selection.exists && bb.w !== 0 && bb.h !== 0) select(bb);
 
 						selection.deselect();
 					}
@@ -454,6 +457,40 @@ const selectTransformTool = () =>
 								commands.runCommand("eraseImage", "Erase Area", state.selected);
 							state.selected = null;
 							state.redraw();
+					}
+				};
+
+				// Register Ctrl-A Shortcut
+				state.ctrlacb = () => {
+					try {
+						const {bb} = cropCanvas(uil.canvas);
+						select(bb);
+					} catch (e) {
+						// Ignore errors
+					}
+				};
+
+				state.ctrlsacb = () => {
+					// Shift Key selects based on all visible layer information
+					const tl = {x: Infinity, y: Infinity};
+					const br = {x: -Infinity, y: -Infinity};
+
+					uil.layers.forEach(({layer}) => {
+						try {
+							const {bb} = cropCanvas(layer.canvas);
+
+							tl.x = Math.min(bb.tl.x, tl.x);
+							tl.y = Math.min(bb.tl.y, tl.y);
+
+							br.x = Math.max(bb.br.x, br.x);
+							br.y = Math.max(bb.br.y, br.y);
+						} catch (e) {
+							// Ignore errors
+						}
+					});
+
+					if (Number.isFinite(br.x - tl.y)) {
+						select(BoundingBox.fromStartEnd(tl, br));
 					}
 				};
 
