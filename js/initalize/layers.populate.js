@@ -93,7 +93,11 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 		let size = null;
 		if ((size = askSize(e))) {
 			imageCollection.expand(size, 0, 0, 0);
-			drawBackground();
+			bgLayer.canvas.style.backgroundPosition = `${-snap(
+				imageCollection.origin.x,
+				0,
+				config.gridSize * 2
+			)}px ${-snap(imageCollection.origin.y, 0, config.gridSize * 2)}px`;
 			const newLeft = -imageCollection.inputOffset.x - imageCollection.origin.x;
 			leftButton.style.left = newLeft - 64 + "px";
 			topButton.style.left = newLeft + "px";
@@ -111,7 +115,6 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 		let size = null;
 		if ((size = askSize(e))) {
 			imageCollection.expand(0, 0, size, 0);
-			drawBackground();
 			rightButton.style.left =
 				parseInt(rightButton.style.left, 10) + size + "px";
 			topButton.style.width = imageCollection.size.w + "px";
@@ -127,7 +130,11 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 		let size = null;
 		if ((size = askSize(e))) {
 			imageCollection.expand(0, size, 0, 0);
-			drawBackground();
+			bgLayer.canvas.style.backgroundPosition = `${-snap(
+				imageCollection.origin.x,
+				0,
+				config.gridSize * 2
+			)}px ${-snap(imageCollection.origin.y, 0, config.gridSize * 2)}px`;
 			const newTop = -imageCollection.inputOffset.y - imageCollection.origin.y;
 			topButton.style.top = newTop - 64 + "px";
 			leftButton.style.top = newTop + "px";
@@ -145,7 +152,6 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 		let size = null;
 		if ((size = askSize(e))) {
 			imageCollection.expand(0, 0, 0, size);
-			drawBackground();
 			bottomButton.style.top =
 				parseInt(bottomButton.style.top, 10) + size + "px";
 			leftButton.style.height = imageCollection.size.h + "px";

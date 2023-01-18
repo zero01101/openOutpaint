@@ -149,6 +149,7 @@
 	cursor: pointer;
 
 	transition-duration: 300ms;
+	transition-property: background-color;
 
 	border: 2px solid #293d3d30;
 }

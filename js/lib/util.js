@@ -302,7 +302,7 @@ function makeWriteOnce(obj, name = "write-once object", exceptions = []) {
  * @param {number} [gridSize=64] Size of the grid
  * @returns	an offset, in which [i + offset = (a location snapped to the grid)]
  */
-function snap(i, offset = 0, gridSize = 64) {
+function snap(i, offset = 0, gridSize = config.gridSize) {
 	let diff = i - offset;
 	if (diff < 0) {
 		diff += gridSize * Math.ceil(Math.abs(diff / gridSize));
