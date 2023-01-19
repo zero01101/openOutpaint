@@ -144,7 +144,7 @@
 	padding: 0;
 	border: 0;
 
-	background-color: transparent;
+	background-color: #4667;
 
 	cursor: pointer;
 
@@ -152,6 +152,10 @@
 	transition-property: background-color;
 
 	border: 2px solid #293d3d30;
+}
+
+.expand-button:hover {
+	background-color: #293d3d77;
 }
 
 .expand-button::after {
@@ -199,8 +203,4 @@
 .expand-button.bottom {
 	border-bottom-right-radius: 10px;
 	border-bottom-left-radius: 10px;
-}
-
-.expand-button:hover {
-	background-color: #293d3d77;
 }

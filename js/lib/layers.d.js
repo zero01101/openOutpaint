@@ -35,7 +35,7 @@
  * @property {string} name The display name of the collection
  * @property {HTMLDivElement} element The base element of the collection
  * @property {HTMLDivElement} inputElement The element used for input handling for the collection
- * @property {Point} inputOffset The offset for calculating layer coordinates from input element input information
+ * @property {Point} divOffset The offset for calculating layer coordinates from input element input information
  * @property {Point} origin The location of the origin ((0, 0) point) of the collection (If canvas goes from -64, -32 to 128, 512, it's (64, 32))
  * @property {BoundingBox} bb The current bounding box of the collection, in layer coordinates
  * @property {{[key: string]: Layer}} layers An object for quick access to named layers of the collection

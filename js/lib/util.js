@@ -460,8 +460,8 @@ const makeElement = (
 	x,
 	y,
 	offset = {
-		x: -imageCollection.inputOffset.x,
-		y: -imageCollection.inputOffset.y,
+		x: -imageCollection.divOffset.x,
+		y: -imageCollection.divOffset.y,
 	}
 ) => {
 	const el = document.createElement(type);
