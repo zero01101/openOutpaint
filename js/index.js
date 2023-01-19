@@ -822,6 +822,32 @@ function isCanvasBlank(x, y, w, h, canvas) {
 }
 
 function drawBackground() {
+	{
+		// Existing Canvas BG
+		const canvas = document.createElement("canvas");
+		canvas.width = config.gridSize * 2;
+		canvas.height = config.gridSize * 2;
+
+		const ctx = canvas.getContext("2d");
+		ctx.fillStyle = theme.grid.dark;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = theme.grid.light;
+		ctx.fillRect(0, 0, config.gridSize, config.gridSize);
+		ctx.fillRect(
+			config.gridSize,
+			config.gridSize,
+			config.gridSize,
+			config.gridSize
+		);
+
+		canvas.toBlob((blob) => {
+			const url = window.URL.createObjectURL(blob);
+			console.debug(url);
+			bgLayer.canvas.style.backgroundImage = `url(${url})`;
+		});
+	}
+	return;
+
 	// Checkerboard
 	let darkTileColor = "#333";
 	let lightTileColor = "#555";

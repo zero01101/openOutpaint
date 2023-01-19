@@ -615,6 +615,7 @@ window.onkeydown = (evn) => {
 				!!callback.alt === evn.altKey &&
 				!!callback.shift === evn.shiftKey
 			) {
+				evn.preventDefault();
 				// onshortcut event
 				keyboard.listen.onshortcut.emit({
 					target: evn.target,
