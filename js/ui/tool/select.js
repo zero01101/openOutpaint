@@ -714,7 +714,7 @@ const selectTransformTool = () =>
 						createVisibleResourceButton.disabled = true;
 					};
 
-					// Disable buttons (if something is selected)
+					// Enable buttons (if something is selected)
 					state.ctxmenu.enableButtons = () => {
 						saveSelectionButton.disabled = "";
 						createResourceButton.disabled = "";
@@ -723,6 +723,21 @@ const selectTransformTool = () =>
 					};
 					state.ctxmenu.actionArray = actionArray;
 					state.ctxmenu.visibleActionArray = visibleActionArray;
+
+					// Send Selection to Destination
+					state.ctxmenu.sendSelected = document.createElement("select");
+					state.ctxmenu.sendSelected.style.width = "100%";
+					state.ctxmenu.sendSelected.addEventListener("change", (evn) => {
+						const v = evn.target.value;
+						if (state.selected && v !== "None")
+							global.webui && global.webui.sendTo(state.selected.canvas, v);
+						evn.target.value = "None";
+					});
+
+					let opt = document.createElement("option");
+					opt.textContent = "Send To...";
+					opt.value = "None";
+					state.ctxmenu.sendSelected.appendChild(opt);
 				}
 				const array = document.createElement("div");
 				array.classList.add("checkbox-array");
@@ -733,6 +748,23 @@ const selectTransformTool = () =>
 				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);
 				menu.appendChild(state.ctxmenu.actionArray);
 				menu.appendChild(state.ctxmenu.visibleActionArray);
+				if (global.webui && global.webui.destinations) {
+					while (state.ctxmenu.sendSelected.lastChild.value !== "None") {
+						state.ctxmenu.sendSelected.removeChild(
+							state.ctxmenu.sendSelected.lastChild
+						);
+					}
+
+					global.webui.destinations.forEach((dst) => {
+						const opt = document.createElement("option");
+						opt.textContent = dst.name;
+						opt.value = dst.id;
+
+						state.ctxmenu.sendSelected.appendChild(opt);
+					});
+
+					menu.appendChild(state.ctxmenu.sendSelected);
+				}
 			},
 			shortcut: "S",
 		}
