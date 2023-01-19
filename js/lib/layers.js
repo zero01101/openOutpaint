@@ -327,6 +327,32 @@ const layers = {
 					}
 				},
 
+				/**
+				 * Auto-expands the collection and its full layers to make sure it fits the box we pass
+				 *
+				 * @param {?BoundingBox} box
+				 */
+				auto_expand_to_fit(box) {
+					var expand_by = [0,0,0,0];
+					if ( box.x < this.bb.x ) { 
+						expand_by[0] = this.bb.x - box.x; 
+					}
+					if ( box.y < this.bb.y ) { 
+						expand_by[1] = this.bb.y - box.y; 
+					}
+					if ( box.x + box.w > this.bb.x + this.bb.w ) { 
+						expand_by[2] = (box.x + box.w) - (this.bb.x + this.bb.w); 
+					}
+					if ( box.y + box.h > this.bb.y + this.bb.h ) { 
+						expand_by[3] = (box.y + box.h) - (this.bb.y + this.bb.h); 
+					}
+					
+					if ( JSON.stringify(expand_by) !== JSON.stringify([0,0,0,0]) ) {
+						this.expand(...expand_by);
+						drawBackground();
+					}
+				},
+
 				size,
 				resolution: options.resolution,
 
