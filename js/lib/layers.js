@@ -180,7 +180,7 @@ const layers = {
 	 * @param {object} options Extra options for the collection
 	 * @param {string} [options.name=key] The display name of the collection
 	 * @param {{key: string, options: object}} [options.initLayer] The configuration for the initial layer to be created
-	 * @param {number} [options.inputSizeMultiplier=9] Size of the input area element, in pixels
+	 * @param {number} [options.divSizeMultiplier=9] Size of the input area element, in pixels
 	 * @param {HTMLElement} [options.targetElement] Element the collection will be inserted into
 	 * @param {Size} [options.resolution=size] The resolution of the collection (canvas size). Not sure it works.
 	 * @returns {LayerCollection} The newly created layer collection
@@ -197,7 +197,7 @@ const layers = {
 			},
 
 			// Input multiplier (Size of the input element div)
-			inputSizeMultiplier: 9,
+			divSizeMultiplier: 9,
 
 			// Target
 			targetElement: document.getElementById("layer-render"),
@@ -206,7 +206,7 @@ const layers = {
 			resolution: size,
 		});
 
-		if (options.inputSizeMultiplier % 2 === 0) options.inputSizeMultiplier++;
+		if (options.divSizeMultiplier % 2 === 0) options.divSizeMultiplier++;
 
 		// Path used for logging purposes
 		const _logpath = "layers.collections." + key;
@@ -221,10 +221,24 @@ const layers = {
 		element.style.height = `${size.h}px`;
 		element.classList.add("collection");
 
+		// Background element (element for background drawing)
+		const bgel = document.createElement("div");
+		bgel.id = `collection-bg-${id}`;
+		bgel.classList.add(
+			"collection-div",
+			"collection-underlay",
+			"collection-bg"
+		);
+		element.appendChild(bgel);
+
 		// Input element (overlay element for input handling)
 		const inputel = document.createElement("div");
 		inputel.id = `collection-input-${id}`;
-		inputel.classList.add("collection-input-overlay");
+		inputel.classList.add(
+			"collection-div",
+			"collection-overlay",
+			"collection-input-overlay"
+		);
 		element.appendChild(inputel);
 
 		options.targetElement.appendChild(element);
@@ -242,10 +256,13 @@ const layers = {
 				key,
 				name: options.name,
 				element,
+
+				bgElement: bgel,
 				inputElement: inputel,
-				_inputOffset: null,
-				get inputOffset() {
-					return this._inputOffset;
+
+				_divOffset: null,
+				get divOffset() {
+					return this._divOffset;
 				},
 
 				_origin: {x: 0, y: 0},
@@ -264,38 +281,56 @@ const layers = {
 
 				_resizeInputDiv() {
 					// Set offset
-					const oldOffset = {...this._inputOffset};
-					this._inputOffset = {
+					const oldOffset = {...this._divOffset};
+					this._divOffset = {
 						x:
-							-Math.floor(options.inputSizeMultiplier / 2) * size.w -
+							-Math.floor(options.divSizeMultiplier / 2) * size.w -
 							this._origin.x,
 						y:
-							-Math.floor(options.inputSizeMultiplier / 2) * size.h -
+							-Math.floor(options.divSizeMultiplier / 2) * size.h -
 							this._origin.y,
 					};
 
+					// Resize the background element
+					this.bgElement.style.left = `${this.divOffset.x}px`;
+					this.bgElement.style.top = `${this.divOffset.y}px`;
+					this.bgElement.style.width = `${
+						size.w * options.divSizeMultiplier
+					}px`;
+					this.bgElement.style.height = `${
+						size.h * options.divSizeMultiplier
+					}px`;
+
+					// Move elements inside to new offset
+					for (const child of this.bgElement.children) {
+						if (child.style.position === "absolute") {
+							child.style.left = `${
+								parseInt(child.style.left, 10) + oldOffset.x - this._divOffset.x
+							}px`;
+							child.style.top = `${
+								parseInt(child.style.top, 10) + oldOffset.y - this._divOffset.y
+							}px`;
+						}
+					}
+
 					// Resize the input element
-					this.inputElement.style.left = `${this.inputOffset.x}px`;
-					this.inputElement.style.top = `${this.inputOffset.y}px`;
+					this.inputElement.style.left = `${this.divOffset.x}px`;
+					this.inputElement.style.top = `${this.divOffset.y}px`;
 					this.inputElement.style.width = `${
-						size.w * options.inputSizeMultiplier
+						size.w * options.divSizeMultiplier
 					}px`;
 					this.inputElement.style.height = `${
-						size.h * options.inputSizeMultiplier
+						size.h * options.divSizeMultiplier
 					}px`;
 
 					// Move elements inside to new offset
 					for (const child of this.inputElement.children) {
 						if (child.style.position === "absolute") {
 							child.style.left = `${
-								parseInt(child.style.left, 10) +
-								oldOffset.x -
-								this._inputOffset.x
+								parseInt(child.style.left, 10) + oldOffset.x - this._divOffset.x
 							}px`;
 							child.style.top = `${
-								parseInt(child.style.top, 10) +
-								oldOffset.y -
-								this._inputOffset.y
+								parseInt(child.style.top, 10) + oldOffset.y - this._divOffset.y
 							}px`;
 						}
 					}
@@ -324,6 +359,31 @@ const layers = {
 
 					for (const layer of this._layers) {
 						layer.moveTo(layer.x, layer.y);
+					}
+				},
+
+				/**
+				 * Auto-expands the collection and its full layers to make sure it fits the box we pass
+				 *
+				 * @param {?BoundingBox} box
+				 */
+				auto_expand_to_fit(box) {
+					var expand_by = [0, 0, 0, 0];
+					if (box.x < this.bb.x) {
+						expand_by[0] = this.bb.x - box.x;
+					}
+					if (box.y < this.bb.y) {
+						expand_by[1] = this.bb.y - box.y;
+					}
+					if (box.x + box.w > this.bb.x + this.bb.w) {
+						expand_by[2] = box.x + box.w - (this.bb.x + this.bb.w);
+					}
+					if (box.y + box.h > this.bb.y + this.bb.h) {
+						expand_by[3] = box.y + box.h - (this.bb.y + this.bb.h);
+					}
+
+					if (JSON.stringify(expand_by) !== JSON.stringify([0, 0, 0, 0])) {
+						this.expand(...expand_by);
 					}
 				},
 
@@ -660,7 +720,7 @@ const layers = {
 				},
 			},
 			_logpath,
-			["_inputOffset"]
+			["_divOffset"]
 		);
 
 		collection._resizeInputDiv();

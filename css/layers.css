@@ -28,12 +28,18 @@
 	transform-origin: 0px 0px;
 }
 
-.layer-render-target .collection > .collection-input-overlay {
+.layer-render-target .collection > .collection-div {
 	position: absolute;
 
 	top: 0;
 	left: 0;
+}
 
+.layer-render-target .collection > .collection-underlay {
+	z-index: -10;
+}
+
+.layer-render-target .collection > .collection-overlay {
 	z-index: 10;
 }
 

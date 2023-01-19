@@ -1515,6 +1515,8 @@ const dreamTool = () =>
 					};
 
 					if (global.connection === "online") {
+						imageCollection.auto_expand_to_fit(bb);
+						recalculateBg();
 						dream_generate_callback(bb, resolution, state);
 					} else {
 						const stop = march(bb, {

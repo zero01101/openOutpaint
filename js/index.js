@@ -821,6 +821,19 @@ function isCanvasBlank(x, y, w, h, canvas) {
 		.data.some((channel) => channel !== 0);
 }
 
+function recalculateBg() {
+	bgLayer.canvas.style.backgroundPosition = `${-snap(
+		imageCollection.origin.x,
+		0,
+		config.gridSize * 2
+	)}px ${-snap(imageCollection.origin.y, 0, config.gridSize * 2)}px`;
+	imageCollection.bgElement.style.backgroundPosition = `${-snap(
+		-imageCollection.divOffset.x,
+		0,
+		config.gridSize * 2
+	)}px ${-snap(-imageCollection.divOffset.y, 0, config.gridSize * 2)}px`;
+}
+
 function drawBackground() {
 	{
 		// Existing Canvas BG
@@ -842,8 +855,31 @@ function drawBackground() {
 
 		canvas.toBlob((blob) => {
 			const url = window.URL.createObjectURL(blob);
-			console.debug(url);
 			bgLayer.canvas.style.backgroundImage = `url(${url})`;
+		});
+	}
+
+	{
+		// External Canvas BG
+		const canvas = document.createElement("canvas");
+		canvas.width = config.gridSize * 2;
+		canvas.height = config.gridSize * 2;
+
+		const ctx = canvas.getContext("2d");
+		ctx.fillStyle = theme.grid.extDark;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.fillStyle = theme.grid.extLight;
+		ctx.fillRect(0, 0, config.gridSize, config.gridSize);
+		ctx.fillRect(
+			config.gridSize,
+			config.gridSize,
+			config.gridSize,
+			config.gridSize
+		);
+
+		canvas.toBlob((blob) => {
+			const url = window.URL.createObjectURL(blob);
+			imageCollection.bgElement.style.backgroundImage = `url(${url})`;
 		});
 	}
 	return;
