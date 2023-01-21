@@ -618,6 +618,7 @@ const layers = {
 						collection._layers.splice(index, 0, layer);
 					}
 					if (key) collection.layers[key] = layer;
+					collection.layers[id] = layer;
 
 					if (key === null)
 						console.debug(
@@ -651,7 +652,8 @@ const layers = {
 					layers.listen.onlayerdelete.emit({
 						layer: lobj,
 					});
-					if (lobj.key) delete collection.layers[lobj.key];
+					if (lobj.key) collection.layers[lobj.key] = undefined;
+					collection.layers[lobj.id] = undefined;
 
 					collection.element.removeChild(lobj.canvas);
 
