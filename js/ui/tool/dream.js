@@ -96,6 +96,13 @@ const generating = (val) => {
  */
 const _dream = async (endpoint, request) => {
 	const apiURL = `${host}${config.api.path}${endpoint}`;
+	// if script fields are populated add them to the request
+	var scriptName = document.getElementById("script-name-input").value;
+	var scriptArgs = document.getElementById("script-args-input").value;
+	if (scriptName.trim() != "" && scriptArgs.trim() != "") {
+		request.script_name = scriptName;
+		request.script_args = scriptArgs.split(",");
+	}
 
 	// Debugging is enabled
 	if (global.debug) {

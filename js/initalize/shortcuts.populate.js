@@ -29,3 +29,11 @@ keyboard.onShortcut({key: "KeyU"}, () => {
 keyboard.onShortcut({key: "KeyN"}, () => {
 	tools.interrogate.enable();
 });
+keyboard.onShortcut({key: "Backquote"}, () => {
+	var hax0r = document.getElementById("ui-script");
+	if (hax0r.style.display === "none") {
+		hax0r.style.display = "block";
+	} else {
+		hax0r.style.display = "none";
+	}
+});
