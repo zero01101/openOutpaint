@@ -396,6 +396,8 @@ const stampTool = () =>
 
 					// Draw selected image
 					if (state.selected) {
+						const bb = getBoundingBox(sx,sy,1,1,false)
+						imageCollection.auto_expand_to_fit(bb);
 						ovCtx.save();
 						ovCtx.translate(px, py);
 						ovCtx.scale(state.scale, state.scale);
