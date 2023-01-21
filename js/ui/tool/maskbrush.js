@@ -133,7 +133,7 @@ const maskBrushTool = () =>
 
 				state.movecb = (evn) => {
 					const vcp = {x: evn.evn.clientX, y: evn.evn.clientY};
-					const scp = state.brushSize * viewport.zoom;
+					const scp = state.brushSize / viewport.zoom;
 
 					state.clearPrevCursor();
 					state;
