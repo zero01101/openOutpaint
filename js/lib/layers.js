@@ -384,6 +384,7 @@ const layers = {
 
 					if (JSON.stringify(expand_by) !== JSON.stringify([0, 0, 0, 0])) {
 						this.expand(...expand_by);
+						recalculateBg();
 					}
 				},
 
