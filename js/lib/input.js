@@ -529,9 +529,9 @@ const keyboard = {
 			this.shortcuts[shortcut.key] = [];
 
 		this.shortcuts[shortcut.key].push({
-			ctrl: !!shortcut.ctrl,
-			alt: !!shortcut.alt,
-			shift: !!shortcut.shift,
+			ctrl: shortcut.ctrl,
+			alt: shortcut.alt,
+			shift: shortcut.shift,
 			id: guid(),
 			callback,
 		});
@@ -610,11 +610,16 @@ window.onkeydown = (evn) => {
 
 	if (callbacks)
 		callbacks.forEach((callback) => {
-			if (
-				!!callback.ctrl === evn.ctrlKey &&
-				!!callback.alt === evn.altKey &&
-				!!callback.shift === evn.shiftKey
-			) {
+			let activate = true;
+
+			if (callback.ctrl !== null && !!callback.ctrl !== evn.ctrlKey)
+				activate = false;
+			if (callback.shift !== null && !!callback.shift !== evn.shiftKey)
+				activate = false;
+			if (callback.alt !== null && !!callback.alt !== evn.altKey)
+				activate = false;
+
+			if (activate) {
 				evn.preventDefault();
 				// onshortcut event
 				keyboard.listen.onshortcut.emit({

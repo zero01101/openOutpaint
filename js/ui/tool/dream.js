@@ -100,8 +100,9 @@ const _dream = async (endpoint, request) => {
 	var scriptName = document.getElementById("script-name-input").value;
 	var scriptArgs = document.getElementById("script-args-input").value;
 	if (scriptName.trim() != "" && scriptArgs.trim() != "") {
-		request.script_name = scriptName;
-		request.script_args = scriptArgs.split(",");
+		request.script_name = scriptName.trim();
+		// This is necessary so types can be properly specified
+		request.script_args = JSON.parse(scriptArgs.trim() || "[]");
 	}
 
 	// Debugging is enabled
