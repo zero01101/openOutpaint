@@ -25,6 +25,11 @@ const selectTransformTool = () =>
 			uil.onactive.on(state.uilayeractivecb);
 
 			// Registers keyboard shortcuts
+			keyboard.onShortcut({ctrl: true, key: "KeyA"}, state.ctrlacb);
+			keyboard.onShortcut(
+				{ctrl: true, shift: true, key: "KeyA"},
+				state.ctrlsacb
+			);
 			keyboard.onShortcut({ctrl: true, key: "KeyC"}, state.ctrlccb);
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
@@ -49,6 +54,8 @@ const selectTransformTool = () =>
 
 			keyboard.listen.onkeyclick.clear(state.keyclickcb);
 			keyboard.listen.onkeydown.clear(state.keydowncb);
+			keyboard.deleteShortcut(state.ctrlacb, "KeyA");
+			keyboard.deleteShortcut(state.ctrlsacb, "KeyA");
 			keyboard.deleteShortcut(state.ctrlccb, "KeyC");
 			keyboard.deleteShortcut(state.ctrlvcb, "KeyV");
 			keyboard.deleteShortcut(state.ctrlxcb, "KeyX");
@@ -387,6 +394,29 @@ const selectTransformTool = () =>
 				};
 
 				// Handles left mouse drag end events
+
+				/** @type {(bb: BoundingBox) => void} */
+				const select = (bb) => {
+					const canvas = document.createElement("canvas");
+					canvas.width = bb.w;
+					canvas.height = bb.h;
+					canvas
+						.getContext("2d")
+						.drawImage(uil.canvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+
+					uil.ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
+
+					state.original = {
+						...bb,
+						sx: bb.center.x,
+						sy: bb.center.y,
+						layer: uil.layer,
+					};
+					state.selected = new _tool.MarqueeSelection(canvas, bb.center);
+
+					state.redraw();
+				};
+
 				state.dragendcb = (evn) => {
 					const {x, y, sx, sy} = _tool._process_cursor(evn, state.snapToGrid);
 
@@ -397,34 +427,7 @@ const selectTransformTool = () =>
 
 						state.reset();
 
-						if (selection.exists && bb.w !== 0 && bb.h !== 0) {
-							const canvas = document.createElement("canvas");
-							canvas.width = bb.w;
-							canvas.height = bb.h;
-							canvas
-								.getContext("2d")
-								.drawImage(
-									uil.canvas,
-									bb.x,
-									bb.y,
-									bb.w,
-									bb.h,
-									0,
-									0,
-									bb.w,
-									bb.h
-								);
-
-							uil.ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
-
-							state.original = {
-								...bb,
-								sx: selection.bb.center.x,
-								sy: selection.bb.center.y,
-								layer: uil.layer,
-							};
-							state.selected = new _tool.MarqueeSelection(canvas, bb.center);
-						}
+						if (selection.exists && bb.w !== 0 && bb.h !== 0) select(bb);
 
 						selection.deselect();
 					}
@@ -457,30 +460,66 @@ const selectTransformTool = () =>
 					}
 				};
 
+				// Register Ctrl-A Shortcut
+				state.ctrlacb = () => {
+					try {
+						const {bb} = cropCanvas(uil.canvas);
+						select(bb);
+					} catch (e) {
+						// Ignore errors
+					}
+				};
+
+				state.ctrlsacb = () => {
+					// Shift Key selects based on all visible layer information
+					const tl = {x: Infinity, y: Infinity};
+					const br = {x: -Infinity, y: -Infinity};
+
+					uil.layers.forEach(({layer}) => {
+						try {
+							const {bb} = cropCanvas(layer.canvas);
+
+							tl.x = Math.min(bb.tl.x, tl.x);
+							tl.y = Math.min(bb.tl.y, tl.y);
+
+							br.x = Math.max(bb.br.x, br.x);
+							br.y = Math.max(bb.br.y, br.y);
+						} catch (e) {
+							// Ignore errors
+						}
+					});
+
+					if (Number.isFinite(br.x - tl.y)) {
+						select(BoundingBox.fromStartEnd(tl, br));
+					}
+				};
+
 				// Register Ctrl-C/V Shortcut
 
 				// Handles copying
 				state.ctrlccb = (evn, cut = false) => {
+					if (!state.selected) return;
+
+					if (
+						isCanvasBlank(
+							0,
+							0,
+							state.selected.canvas.width,
+							state.selected.canvas.height,
+							state.selected.canvas
+						)
+					)
+						return;
 					// We create a new canvas to store the data
 					state.clipboard.copy = document.createElement("canvas");
 
-					state.clipboard.copy.width = state.selected.w;
-					state.clipboard.copy.height = state.selected.h;
+					state.clipboard.copy.width = state.selected.canvas.width;
+					state.clipboard.copy.height = state.selected.canvas.height;
 
 					const ctx = state.clipboard.copy.getContext("2d");
 
 					ctx.clearRect(0, 0, state.selected.w, state.selected.h);
-					ctx.drawImage(
-						state.selected.canvas,
-						0,
-						0,
-						state.selected.canvas.width,
-						state.selected.canvas.height,
-						0,
-						0,
-						state.selected.w,
-						state.selected.h
-					);
+					ctx.drawImage(state.selected.canvas, 0, 0);
 
 					// If cutting, we reverse the selection and erase the selection area
 					if (cut) {
@@ -505,7 +544,7 @@ const selectTransformTool = () =>
 				};
 
 				// Handles pasting
-				state.ctrlvcb = (evn) => {
+				state.ctrlvcb = async (evn) => {
 					if (state.useClipboard) {
 						// If we use the clipboard, do some proccessing of clipboard data (ugly but kind of minimum required)
 						navigator.clipboard &&
@@ -532,6 +571,7 @@ const selectTransformTool = () =>
 						// Use internal clipboard
 						const image = document.createElement("img");
 						image.src = state.clipboard.copy.toDataURL();
+						await image.decode();
 
 						// Send to stamp, as clipboard temporary data
 						tools.stamp.enable({
@@ -674,7 +714,7 @@ const selectTransformTool = () =>
 						createVisibleResourceButton.disabled = true;
 					};
 
-					// Disable buttons (if something is selected)
+					// Enable buttons (if something is selected)
 					state.ctxmenu.enableButtons = () => {
 						saveSelectionButton.disabled = "";
 						createResourceButton.disabled = "";
@@ -683,6 +723,21 @@ const selectTransformTool = () =>
 					};
 					state.ctxmenu.actionArray = actionArray;
 					state.ctxmenu.visibleActionArray = visibleActionArray;
+
+					// Send Selection to Destination
+					state.ctxmenu.sendSelected = document.createElement("select");
+					state.ctxmenu.sendSelected.style.width = "100%";
+					state.ctxmenu.sendSelected.addEventListener("change", (evn) => {
+						const v = evn.target.value;
+						if (state.selected && v !== "None")
+							global.webui && global.webui.sendTo(state.selected.canvas, v);
+						evn.target.value = "None";
+					});
+
+					let opt = document.createElement("option");
+					opt.textContent = "Send To...";
+					opt.value = "None";
+					state.ctxmenu.sendSelected.appendChild(opt);
 				}
 				const array = document.createElement("div");
 				array.classList.add("checkbox-array");
@@ -693,6 +748,23 @@ const selectTransformTool = () =>
 				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);
 				menu.appendChild(state.ctxmenu.actionArray);
 				menu.appendChild(state.ctxmenu.visibleActionArray);
+				if (global.webui && global.webui.destinations) {
+					while (state.ctxmenu.sendSelected.lastChild.value !== "None") {
+						state.ctxmenu.sendSelected.removeChild(
+							state.ctxmenu.sendSelected.lastChild
+						);
+					}
+
+					global.webui.destinations.forEach((dst) => {
+						const opt = document.createElement("option");
+						opt.textContent = dst.name;
+						opt.value = dst.id;
+
+						state.ctxmenu.sendSelected.appendChild(opt);
+					});
+
+					menu.appendChild(state.ctxmenu.sendSelected);
+				}
 			},
 			shortcut: "S",
 		}

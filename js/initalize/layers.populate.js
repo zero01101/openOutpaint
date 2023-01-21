@@ -72,7 +72,8 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 	let expandSize = localStorage.getItem("openoutpaint/expand-size") || 1024;
 	expandSize = parseInt(expandSize, 10);
 
-	const askSize = () => {
+	const askSize = (e) => {
+		if (e.ctrlKey) return expandSize;
 		const by = prompt("How much do you want to expand by?", expandSize);
 
 		if (!by) return null;
@@ -88,11 +89,15 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 	leftButton.classList.add("expand-button", "left");
 	leftButton.style.width = "64px";
 	leftButton.style.height = `${imageCollection.size.h}px`;
-	leftButton.addEventListener("click", () => {
+	leftButton.addEventListener("click", (e) => {
 		let size = null;
-		if ((size = askSize())) {
+		if ((size = askSize(e))) {
 			imageCollection.expand(size, 0, 0, 0);
-			drawBackground();
+			bgLayer.canvas.style.backgroundPosition = `${-snap(
+				imageCollection.origin.x,
+				0,
+				config.gridSize * 2
+			)}px ${-snap(imageCollection.origin.y, 0, config.gridSize * 2)}px`;
 			const newLeft = -imageCollection.inputOffset.x - imageCollection.origin.x;
 			leftButton.style.left = newLeft - 64 + "px";
 			topButton.style.left = newLeft + "px";
@@ -106,11 +111,10 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 	rightButton.classList.add("expand-button", "right");
 	rightButton.style.width = "64px";
 	rightButton.style.height = `${imageCollection.size.h}px`;
-	rightButton.addEventListener("click", () => {
+	rightButton.addEventListener("click", (e) => {
 		let size = null;
-		if ((size = askSize())) {
+		if ((size = askSize(e))) {
 			imageCollection.expand(0, 0, size, 0);
-			drawBackground();
 			rightButton.style.left =
 				parseInt(rightButton.style.left, 10) + size + "px";
 			topButton.style.width = imageCollection.size.w + "px";
@@ -122,11 +126,15 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 	topButton.classList.add("expand-button", "top");
 	topButton.style.height = "64px";
 	topButton.style.width = `${imageCollection.size.w}px`;
-	topButton.addEventListener("click", () => {
+	topButton.addEventListener("click", (e) => {
 		let size = null;
-		if ((size = askSize())) {
+		if ((size = askSize(e))) {
 			imageCollection.expand(0, size, 0, 0);
-			drawBackground();
+			bgLayer.canvas.style.backgroundPosition = `${-snap(
+				imageCollection.origin.x,
+				0,
+				config.gridSize * 2
+			)}px ${-snap(imageCollection.origin.y, 0, config.gridSize * 2)}px`;
 			const newTop = -imageCollection.inputOffset.y - imageCollection.origin.y;
 			topButton.style.top = newTop - 64 + "px";
 			leftButton.style.top = newTop + "px";
@@ -140,11 +148,10 @@ const uiCtx = uiCanvas.getContext("2d", {desynchronized: true});
 	bottomButton.classList.add("expand-button", "bottom");
 	bottomButton.style.height = "64px";
 	bottomButton.style.width = `${imageCollection.size.w}px`;
-	bottomButton.addEventListener("click", () => {
+	bottomButton.addEventListener("click", (e) => {
 		let size = null;
-		if ((size = askSize())) {
+		if ((size = askSize(e))) {
 			imageCollection.expand(0, 0, 0, size);
-			drawBackground();
 			bottomButton.style.top =
 				parseInt(bottomButton.style.top, 10) + size + "px";
 			leftButton.style.height = imageCollection.size.h + "px";

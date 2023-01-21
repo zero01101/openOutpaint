@@ -53,6 +53,9 @@ const global = {
 
 	// HRFix compatibility shenanigans
 	isOldHRFix: false,
+
+	// WebUI object to communitate with parent window
+	webui: null,
 };
 
 global._firstRun = !localStorage.getItem("openoutpaint/host");
