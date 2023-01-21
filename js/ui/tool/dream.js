@@ -521,7 +521,8 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		if (!images[at]) return;
 		images.splice(at, 1);
 		seeds.splice(at, 1);
-		if (at >= images.length) at = 0;
+		if (at > images.length - 1) prevImg();
+		if (images.length - 1 === 0) discardImg();
 		imageindextxt.textContent = `${at}/${images.length - 1}`;
 		var seed = seeds[at];
 		seedbtn.title = "Use seed " + seed;
