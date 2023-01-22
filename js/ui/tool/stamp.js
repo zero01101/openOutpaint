@@ -396,8 +396,6 @@ const stampTool = () =>
 
 					// Draw selected image
 					if (state.selected) {
-						const bb = getBoundingBox(sx,sy,1,1,false)
-						imageCollection.auto_expand_to_fit(bb);
 						ovCtx.save();
 						ovCtx.translate(px, py);
 						ovCtx.scale(state.scale, state.scale);
@@ -421,6 +419,10 @@ const stampTool = () =>
 					const resource = state.selected;
 
 					if (resource) {
+						const real_bb = getBoundingBox(sx,sy,1,1); //TODO:Here we have to get the actual real bounding box somehow
+						imageCollection.auto_expand_to_fit(real_bb);
+						state.redraw();
+
 						const {canvas, bb} = cropCanvas(ovCanvas, {border: 10});
 						commands.runCommand("drawImage", "Image Stamp", {
 							image: canvas,
