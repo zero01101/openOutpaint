@@ -8,6 +8,7 @@ const uil = {
 
 	_ui_layer_list: document.getElementById("layer-list"),
 	layers: [],
+	layerIndex: {},
 	_active: null,
 	set active(v) {
 		this.onactive.emit({
@@ -26,6 +27,7 @@ const uil = {
 		return this._active;
 	},
 
+	/** @type {Layer} */
 	get layer() {
 		return this.active && this.active.layer;
 	},
@@ -321,6 +323,118 @@ const uil = {
 	},
 };
 
+class UILayer {
+	/** @type {string} Layer ID */
+	id;
+
+	/** @type {string} Display name of the layer */
+	name;
+
+	/** @type {Layer} Associated real layer */
+	layer;
+
+	/** @type {string} Custom key to access this layer */
+	key;
+
+	/** @type {string} The group the UI layer is on (for some categorization) */
+	group;
+
+	/** @type {boolean} If the layer displays the delete button */
+	deletable;
+
+	/** @type {HTMLElement} The entry element on the UI */
+	entry;
+
+	/** @type {boolean} [internal] Whether the layer is actually hidden right now */
+	_hidden;
+
+	/** @type {boolean} Whether the layer is hidden or not */
+	set hidden(v) {
+		if (v) {
+			this._hidden = true;
+			this.layer.hide(v);
+			this.entry && this.entry.classList.add("hidden");
+		} else {
+			this._hidden = false;
+			this.layer.unhide(v);
+			this.entry && this.entry.classList.remove("hidden");
+		}
+	}
+	get hidden() {
+		return this._hidden;
+	}
+
+	/** @type {CanvasRenderingContext2D} */
+	get ctx() {
+		return this.layer.ctx;
+	}
+
+	/** @type {HTMLCanvasElement} */
+	get canvas() {
+		return this.layer.canvas;
+	}
+
+	/**
+	 * Creates a new UI Layer
+	 *
+	 * @param {string} name Display name of the layer
+	 * @param {object} extra
+	 * @param {string} extra.id The id of the layer to create
+	 * @param {string} extra.group The group the layer is on (for some categorization)
+	 * @param {string} extra.key Custom key to access this layer
+	 * @param {string} extra.deletable If the layer displays the delete button
+	 */
+	constructor(name, extra = {}) {
+		defaultOpt(extra, {
+			id: null,
+			group: null,
+			key: null,
+			deletable: true,
+		});
+
+		this.layer = imageCollection.registerLayer(extra.key, {
+			id: extra.id,
+			name,
+			category: "user",
+			after:
+				(uil.layers.length > 0 && uil.layers[uil.layers.length - 1].layer) ||
+				bgLayer,
+		});
+
+		this.name = name;
+		this.id = this.layer.id;
+		this.key = extra.key;
+		this.group = extra.group;
+		this.deletable = extra.deletable;
+
+		this.hidden = false;
+	}
+
+	/**
+	 * Register layer in uil
+	 */
+	register() {
+		uil.layers.push(this);
+		uil.layerIndex[this.id] = this;
+		uil.layerIndex[this.key] = this;
+	}
+
+	/**
+	 * Removes layer registration from uil
+	 */
+	unregister() {
+		const index = uil.layers.findIndex((v) => v === this);
+
+		if (index === -1) throw new ReferenceError("Layer could not be found");
+
+		if (uil.active === this)
+			uil.active = uil.layers[index + 1] || uil.layers[index - 1];
+		uil.layers.splice(index, 1);
+		uil.layerIndex[this.id] = undefined;
+		uil.layerIndex[this.key] = undefined;
+	}
+}
+
 /**
  * Command for creating a new layer
  */
@@ -329,61 +443,73 @@ commands.createCommand(
 	(title, opt, state) => {
 		const options = Object.assign({}, opt) || {};
 		defaultOpt(options, {
+			id: guid(),
 			group: null,
 			name: "New Layer",
+			key: null,
 			deletable: true,
 		});
 
 		if (!state.layer) {
-			const {group, name} = options;
+			let {id, name, group, key, deletable} = state;
 
-			const layer = imageCollection.registerLayer(null, {
-				name,
-				category: "user",
-				after:
-					(uil.layers.length > 0 && uil.layers[uil.layers.length - 1].layer) ||
-					bgLayer,
+			if (!state.imported) {
+				id = options.id;
+				name = options.name;
+				group = options.group;
+				key = options.key;
+				deletable = options.deletable;
+
+				state.name = name;
+				state.group = group;
+				state.key = key;
+				state.deletable = deletable;
+			}
+
+			state.layer = new UILayer(name, {
+				id,
+				group,
+				key: key,
+				deletable: deletable,
 			});
 
-			state.layer = {
-				id: layer.id,
-				group,
-				name,
-				deletable: options.deletable,
-				_hidden: false,
-				set hidden(v) {
-					if (v) {
-						this._hidden = true;
-						this.layer.hide(v);
-						this.entry && this.entry.classList.add("hidden");
-					} else {
-						this._hidden = false;
-						this.layer.unhide(v);
-						this.entry && this.entry.classList.remove("hidden");
-					}
-				},
-				get hidden() {
-					return this._hidden;
-				},
-				entry: null,
-				layer,
-			};
+			if (state.hidden !== undefined) state.layer.hidden = state.hidden;
+
+			state.id = state.layer.id;
 		}
-		uil.layers.push(state.layer);
+
+		state.layer.register();
 
 		uil._syncLayers();
 
 		uil.active = state.layer;
 	},
 	(title, state) => {
-		const index = uil.layers.findIndex((v) => v === state.layer);
+		state.layer.unregister();
 
-		if (index === -1) throw new ReferenceError("Layer could not be found");
-
-		if (uil.active === state.layer)
-			uil.active = uil.layers[index + 1] || uil.layers[index - 1];
-		uil.layers.splice(index, 1);
 		uil._syncLayers();
+	},
+	{
+		exportfn(state) {
+			return {
+				id: state.layer.id,
+				hidden: state.layer.hidden,
+
+				name: state.layer.name,
+				group: state.group,
+				key: state.key,
+				deletable: state.deletable,
+			};
+		},
+		importfn(value, state) {
+			state.id = value.id;
+			state.hidden = value.hidden;
+
+			state.name = value.name;
+			state.group = value.group;
+			state.key = value.key;
+			state.deletable = value.deletable;
+		},
 	}
 );
 
@@ -424,6 +550,20 @@ commands.createCommand(
 	},
 	(title, state) => {
 		uil._moveLayerTo(state.layer, state.oldposition);
+	},
+	{
+		exportfn(state) {
+			return {
+				layer: state.layer.id,
+				position: state.position,
+				oldposition: state.oldposition,
+			};
+		},
+		importfn(value, state) {
+			state.layer = uil.layerIndex[value.layer];
+			state.position = value.position;
+			state.oldposition = value.oldposition;
+		},
 	}
 );
 
@@ -470,6 +610,18 @@ commands.createCommand(
 		uil._syncLayers();
 
 		state.layer.hidden = false;
+	},
+	{
+		exportfn(state) {
+			return {
+				layer: state.layer.id,
+				position: state.position,
+			};
+		},
+		importfn(value, state) {
+			state.layer = uil.layerIndex[value.layer];
+			state.position = value.position;
+		},
 	}
 );
 
@@ -485,27 +637,34 @@ commands.createCommand(
 			layerD: null,
 		});
 
-		const layerS = options.layer || uil.active;
+		if (state.imported) {
+			state.layerS = uil.layerIndex[state.layerSID];
+			state.layerD = uil.layerIndex[state.layerDID];
+		}
 
-		if (!layerS.deletable)
-			throw new TypeError(
-				"[layer.mergeLayer] Layer is a root layer and cannot be merged"
-			);
+		if (!state.layerS) {
+			const layerS = options.layer || uil.active;
 
-		const index = uil.layers.indexOf(layerS);
-		if (index === -1)
-			throw new ReferenceError("[layer.mergeLayer] Layer could not be found");
+			if (!layerS.deletable)
+				throw new TypeError(
+					"[layer.mergeLayer] Layer is a undeletable layer and cannot be merged"
+				);
 
-		if (index === 0 && !options.layerD)
-			throw new ReferenceError(
-				"[layer.mergeLayer] No layer below source layer exists"
-			);
+			const index = uil.layers.indexOf(layerS);
+			if (index === -1)
+				throw new ReferenceError("[layer.mergeLayer] Layer could not be found");
 
-		// Use layer under source layer to merge into if not given
-		const layerD = options.layerD || uil.layers[index - 1];
+			if (index === 0 && !options.layerD)
+				throw new ReferenceError(
+					"[layer.mergeLayer] No layer below source layer exists"
+				);
 
-		state.layerS = layerS;
-		state.layerD = layerD;
+			// Use layer under source layer to merge into if not given
+			const layerD = options.layerD || uil.layers[index - 1];
+
+			state.layerS = layerS;
+			state.layerD = layerD;
+		}
 
 		// REFERENCE: This is a great reference for metacommands (commands that use other commands)
 		// These commands should NOT record history as we are already executing a command
@@ -516,7 +675,7 @@ commands.createCommand(
 				image: state.layerS.layer.canvas,
 				x: 0,
 				y: 0,
-				ctx: state.layerD.layer.ctx,
+				layer: state.layerD.layer,
 			},
 			{recordHistory: false}
 		);
@@ -536,12 +695,22 @@ commands.createCommand(
 			state.drawCommand.redo();
 			state.delCommand.redo();
 		},
+		exportfn(state) {
+			return {
+				layerS: state.layerS.id,
+				layerD: state.layerD.id,
+			};
+		},
+		importfn(value, state) {
+			state.layerSID = value.layerS;
+			state.layerDID = value.layerD;
+		},
 	}
 );
 
 commands.runCommand(
 	"addLayer",
 	"Initial Layer Creation",
-	{name: "Default Image Layer", deletable: false},
+	{name: "Default Image Layer", key: "default", deletable: false},
 	{recordHistory: false}
 );

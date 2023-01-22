@@ -502,7 +502,7 @@ function newImage(evt) {
 	uil.layers.forEach(({layer}) => {
 		commands.runCommand("eraseImage", "Clear Canvas", {
 			...layer.bb,
-			ctx: layer.ctx,
+			layer,
 		});
 	});
 }
@@ -860,25 +860,116 @@ function drawBackground() {
 		});
 	}
 	return;
+}
 
-	// Checkerboard
-	let darkTileColor = "#333";
-	let lightTileColor = "#555";
-	for (
-		var x = -bgLayer.origin.x - 64;
-		x < bgLayer.canvas.width - bgLayer.origin.x;
-		x += 64
-	) {
-		for (
-			var y = -bgLayer.origin.y - 64;
-			y < bgLayer.canvas.height - bgLayer.origin.y;
-			y += 64
-		) {
-			bgLayer.ctx.fillStyle =
-				(x + y) % 128 === 0 ? lightTileColor : darkTileColor;
-			bgLayer.ctx.fillRect(x, y, 64, 64);
-		}
+async function exportWorkspaceState() {
+	return {
+		defaultLayer: {
+			id: uil.layerIndex.default.id,
+			name: uil.layerIndex.default.name,
+		},
+		bb: {
+			x: imageCollection.bb.x,
+			y: imageCollection.bb.y,
+			w: imageCollection.bb.w,
+			h: imageCollection.bb.h,
+		},
+		history: await commands.export(),
+	};
+}
+
+async function importWorkspaceState(state) {
+	// Start from zero, effectively
+	await commands.undo(commands._history.length);
+
+	// Setup initial layer
+	const layer = uil.layerIndex.default;
+	layer.deletable = true;
+
+	await commands.runCommand(
+		"addLayer",
+		"Temporary Layer",
+		{name: "Temporary Layer", key: "tmp"},
+		{recordHistory: false}
+	);
+
+	await commands.runCommand(
+		"deleteLayer",
+		"Deleted Layer",
+		{
+			layer,
+		},
+		{recordHistory: false}
+	);
+
+	await commands.runCommand(
+		"addLayer",
+		"Initial Layer Creation",
+		{
+			id: state.defaultLayer.id,
+			name: state.defaultLayer.name,
+			key: "default",
+			deletable: false,
+		},
+		{recordHistory: false}
+	);
+
+	await commands.runCommand(
+		"deleteLayer",
+		"Deleted Layer",
+		{
+			layer: uil.layerIndex.tmp,
+		},
+		{recordHistory: false}
+	);
+
+	// Resize canvas to match original size
+	const sbb = new BoundingBox(state.bb);
+
+	const bb = imageCollection.bb;
+	let eleft = 0;
+	if (bb.x > sbb.x) eleft = bb.x - sbb.x;
+	let etop = 0;
+	if (bb.y > sbb.y) etop = bb.y - sbb.y;
+
+	let eright = 0;
+	if (bb.tr.x < sbb.tr.x) eright = sbb.tr.x - bb.tr.x;
+	let ebottom = 0;
+	if (bb.br.y < sbb.br.y) ebottom = sbb.br.y - bb.br.y;
+
+	imageCollection.expand(eleft, etop, eright, ebottom);
+
+	// Run commands in order
+	for (const command of state.history) {
+		await commands.import(command);
 	}
+}
+
+async function saveWorkspaceToFile() {
+	const workspace = await exportWorkspaceState();
+
+	const blob = new Blob([JSON.stringify(workspace)], {
+		type: "application/json",
+	});
+
+	const url = URL.createObjectURL(blob);
+	var link = document.createElement("a"); // Or maybe get it from the current document
+	link.href = url;
+	link.download = `${new Date().toISOString()}_openOutpaint_workspace.json`;
+	link.click();
+}
+
+async function loadWorkspaceFromFile() {
+	const input = document.createElement("input");
+	input.type = "file";
+	input.accept = "application/json";
+	input.addEventListener("change", async (evn) => {
+		let files = Array.from(input.files);
+		const json = await files[0].text();
+
+		importWorkspaceState(JSON.parse(json));
+	});
+	input.click();
 }
 
 async function getUpscalers() {

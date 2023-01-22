@@ -335,6 +335,7 @@ const layers = {
 				 *
 				 * @param {string | null} key Name and key to use to access layer. If null, it is a temporary layer.
 				 * @param {object} options
+				 * @param {string} options.id
 				 * @param {string} options.name
 				 * @param {?BoundingBox} options.bb
 				 * @param {string} [options.category]
@@ -346,9 +347,12 @@ const layers = {
 				 */
 				registerLayer(key = null, options = {}) {
 					// Make ID
-					const id = guid();
+					const id = options.id ?? guid();
 
 					defaultOpt(options, {
+						// ID of the layer
+						id: null,
+
 						// Display name for the layer
 						name: key || `Temporary ${id}`,
 

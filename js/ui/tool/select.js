@@ -248,6 +248,13 @@ const selectTransformTool = () =>
 							state.selected.position.x === state.original.sx &&
 							state.selected.position.y === state.original.sy &&
 							state.original.layer === uil.layer
+						) &&
+						!isCanvasBlank(
+							0,
+							0,
+							state.selected.canvas.width,
+							state.selected.canvas.height,
+							state.selected.canvas
 						)
 					) {
 						// Put original image back
@@ -259,7 +266,7 @@ const selectTransformTool = () =>
 
 						// Erase Original Selection Area
 						commands.runCommand("eraseImage", "Transform Tool Erase", {
-							ctx: state.original.layer.ctx,
+							layer: state.original.layer,
 							x: state.original.x,
 							y: state.original.y,
 							w: state.selected.canvas.width,
