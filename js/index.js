@@ -1342,7 +1342,7 @@ function changeScript(evt) {
 	switch (selected) {
 		case "Loopback": {
 			scriptName.value = selected;
-			scriptArgs.value = "[8, .99]";
+			scriptArgs.value = "[8, 0.99]";
 			break;
 		}
 		case "Prompt matrix": {
