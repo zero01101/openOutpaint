@@ -1351,20 +1351,30 @@ function changeScript(evt) {
 		case "Loopback": {
 			scriptArgs.value = "[8, 0.99]";
 			scriptArgs.title =
-				"Params:\nloops (int)\ndenoising_strength_change_factor (decimal, 0.90-1.10)";
+				"Params:\n" +
+				"loops (int) //def: 8\n" +
+				"denoising_strength_change_factor (decimal, 0.90-1.10) //def: 0.99";
 			break;
 		}
 		case "Prompt matrix": {
 			scriptArgs.value = "[false, false]";
 			scriptArgs.title =
-				"Params:\nput_at_start (bool): expect pipe (|) delimited options at start of prompt\ndifferent_seeds (bool): use different seeds for each picture";
+				"Params:\n" +
+				"put_at_start (bool): expect pipe (|) delimited options at start of prompt //def: false\n" +
+				"different_seeds (bool): use different seeds for each picture //def: false";
 			break;
 		}
 		case "X/Y plot": {
 			scriptArgs.value =
-				'[4, "5-50 [5]", 5, "2.4-17.4 [5]", false, true, false]';
+				'[4, "5-30 [5]", 5, "2.5-12.5 [5]", false, true, false]';
 			scriptArgs.title =
-				"Params:\nx_type (int): index of axis type (see below)\nx_values (mixed, str)\ny_type (int)\ny_values (mixed, str)\ndraw_legend (bool): return grid of all images\ninclude_lone_images (bool): return individual images\nno_fixed_seeds (bool): use different seeds for each picture\n\n" +
+				"Params:\nx_type (int): index of axis type (see below) //def: 4\n" +
+				"x_values (mixed, str) //def: 5-30 [5]\n" +
+				"y_type (int) //def: 5\n" +
+				"y_values (mixed, str) //def: 2.5-12.5 [5]\n" +
+				"draw_legend (bool): return grid of all images //def: false\n" +
+				"include_lone_images (bool): return individual images //def: true\n" +
+				"no_fixed_seeds (bool): use different seeds for each picture //def: false\n\n" +
 				"Available axis types:\n" +
 				"0: Nothing\n" +
 				"1: Seed\n" +
@@ -1394,12 +1404,14 @@ function changeScript(evt) {
 		case "custom": {
 			scriptName.value = "";
 			scriptArgs.value = "";
+			scriptArgs.title = "";
 			enable();
 			break;
 		}
 		case "":
 		default: {
 			scriptArgs.value = "";
+			scriptArgs.title = "";
 		}
 	}
 }
