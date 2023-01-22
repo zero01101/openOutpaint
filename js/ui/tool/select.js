@@ -424,6 +424,7 @@ const selectTransformTool = () =>
 						selection.dragendcb(evn);
 
 						const bb = selection.bb;
+						imageCollection.auto_expand_to_fit(bb);
 
 						state.reset();
 
