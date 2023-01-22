@@ -1336,30 +1336,69 @@ function checkFocus() {
 }
 
 function changeScript(evt) {
+	let enable = () => {
+		scriptName.disabled = false;
+	};
+	let disable = () => {
+		scriptName.disabled = true;
+	};
 	let selected = evt.target.value;
 	let scriptName = document.getElementById("script-name-input");
 	let scriptArgs = document.getElementById("script-args-input");
+	scriptName.value = selected;
+	disable();
 	switch (selected) {
 		case "Loopback": {
-			scriptName.value = selected;
 			scriptArgs.value = "[8, 0.99]";
+			scriptArgs.title =
+				"Params:\nloops (int)\ndenoising_strength_change_factor (decimal, 0.90-1.10)";
 			break;
 		}
 		case "Prompt matrix": {
-			scriptName.value = selected;
 			scriptArgs.value = "[false, false]";
+			scriptArgs.title =
+				"Params:\nput_at_start (bool): expect pipe (|) delimited options at start of prompt\ndifferent_seeds (bool): use different seeds for each picture";
 			break;
 		}
 		case "X/Y plot": {
-			scriptName.value = selected;
 			scriptArgs.value =
-				'[4, "5-50 [5]", 5, "2.4-17.4 [5]", true, true, false]';
+				'[4, "5-50 [5]", 5, "2.4-17.4 [5]", false, true, false]';
+			scriptArgs.title =
+				"Params:\nx_type (int): index of axis type (see below)\nx_values (mixed, str)\ny_type (int)\ny_values (mixed, str)\ndraw_legend (bool): return grid of all images\ninclude_lone_images (bool): return individual images\nno_fixed_seeds (bool): use different seeds for each picture\n\n" +
+				"Available axis types:\n" +
+				"0: Nothing\n" +
+				"1: Seed\n" +
+				"2: Var. seed\n" +
+				"3: Var. strength\n" +
+				"4: Steps\n" +
+				"5: CFG Scale\n" +
+				"6: Prompt S/R\n" +
+				"7: Prompt order\n" +
+				"8: Sampler\n" +
+				"9: Checkpoint Name\n" +
+				"10: Hypernetwork\n" +
+				"11: Hypernet str.\n" +
+				"12: Sigma Churn\n" +
+				"13: Sigma min\n" +
+				"14: Sigma max\n" +
+				"15: Sigma noise\n" +
+				"16: Eta\n" +
+				"17: Clip skip\n" +
+				"18: Denoising\n" +
+				"19: Hires upscaler\n" +
+				"20: Cond. Image Mask Weight\n" +
+				"21: VAE\n" +
+				"22: Styles";
 			break;
 		}
-		case "custom":
+		case "custom": {
+			scriptName.value = "";
+			scriptArgs.value = "";
+			enable();
+			break;
+		}
 		case "":
 		default: {
-			scriptName.value = "";
 			scriptArgs.value = "";
 		}
 	}
