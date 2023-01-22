@@ -1334,3 +1334,33 @@ function checkFocus() {
 		focused = true;
 	}
 }
+
+function changeScript(evt) {
+	let selected = evt.target.value;
+	let scriptName = document.getElementById("script-name-input");
+	let scriptArgs = document.getElementById("script-args-input");
+	switch (selected) {
+		case "Loopback": {
+			scriptName.value = selected;
+			scriptArgs.value = "[8, .99]";
+			break;
+		}
+		case "Prompt matrix": {
+			scriptName.value = selected;
+			scriptArgs.value = "[false, false]";
+			break;
+		}
+		case "X/Y plot": {
+			scriptName.value = selected;
+			scriptArgs.value =
+				'[4, "5-50 [5]", 5, "2.4-17.4 [5]", true, true, false]';
+			break;
+		}
+		case "custom":
+		case "":
+		default: {
+			scriptName.value = "";
+			scriptArgs.value = "";
+		}
+	}
+}

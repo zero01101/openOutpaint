@@ -311,13 +311,24 @@
 			</div>
 		</div>
 
-		<!-- Manual Scripts-->
+		<!-- Scripts-->
 		<div
 			id="ui-script"
 			class="floating-window"
 			style="right: 10px; top: 400px; display: none">
-			<div class="draggable floating-window-title">Manual Script</div>
+			<div class="draggable floating-window-title">Script</div>
 			<div class="menu-container" style="min-width: 200px">
+				<div id="script-select" class="script-select">
+					<select id="script-selector" onchange="changeScript(event)">
+						<option id="no_selected_script" value="">Select a script...</option>
+						<option id="loopback" value="Loopback">Loopback</option>
+						<option id="prompt_matrix" value="Prompt matrix">
+							Prompt Matrix
+						</option>
+						<option id="xy_plot" value="X/Y plot">X/Y plot</option>
+						<option id="custom" value="custom">Other</option>
+					</select>
+				</div>
 				<div id="script-name" class="script-name">
 					<label for="script-name-input">Script Name:</label>
 					<br />
@@ -389,7 +400,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=6944460" type="text/javascript"></script>
+		<script src="js/index.js?v=5937ea2" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=fc92d14"
@@ -403,7 +414,7 @@
 			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=307a9ca" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=302f0bb" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=1e8a893"
 			type="text/javascript"></script>
@@ -420,7 +431,7 @@
 
 		<!-- Initialize -->
 		<script
-			src="js/initalize/shortcuts.populate.js?v=fd01c47"
+			src="js/initalize/shortcuts.populate.js?v=e68546f"
 			type="text/javascript"></script>
 		<script
 			src="js/initalize/toolbar.populate.js?v=c1ca438"
