@@ -883,12 +883,14 @@ async function getUpscalers() {
 	// hacky way to get the correct list of upscalers
 	var extras_url =
 		document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
-	var empty_image = new Image(1, 1);
+	var empty_image = document.createElement("canvas");
+	empty_image.width = 1;
+	empty_image.height = 1;
 	var purposefully_incorrect_data = {
-		"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
+		resize_mode: 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
 		upscaling_resize: 2,
 		upscaler_1: "fake_upscaler",
-		image: empty_image.src,
+		image: empty_image.toDataURL(),
 	};
 
 	try {
