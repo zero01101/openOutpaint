@@ -849,134 +849,60 @@ function drawBackground() {
 }
 
 async function getUpscalers() {
-	/*
-	 so for some reason when upscalers request returns upscalers, the real-esrgan model names are incorrect, and need to be fetched from /sdapi/v1/realesrgan-models
-	 also the realesrgan models returned are not all correct, extra fun!
-	 LDSR seems to have problems so we dont add that either ->  RuntimeError: Number of dimensions of repeat dims can not be smaller than number of dimensions of tensor
-	 need to figure out why that is, if you dont get this error then you can add it back in
-
-	 Hacky way to get the correct list all in one go is to purposefully make an incorrect request, which then returns
-	 { detail: "Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x" }
-	 from which we can extract the correct list of upscalers
-	*/
-
-	// hacky way to get the correct list of upscalers
-	// var extras_url =
-	// 	document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
-	// var purposefully_incorrect_data = {
-	// 	resize_mode: 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
-	// 	upscaling_resize: 2,
-	// 	upscaler_1: "fake_upscaler",
-	// 	image: empty_image.toDataURL(),
-	// };
-
-	upscalers = [
-		"Lanczos",
-		"Nearest",
-		"LDSR",
-		"SwinIR",
-		"R-ESRGAN General 4xV3",
-		"R-ESRGAN General WDN 4xV3",
-		"R-ESRGAN AnimeVideo",
-		"R-ESRGAN 4x+",
-		"R-ESRGAN 4x+ Anime6B",
-		"R-ESRGAN 2x+",
-	];
+	var url = document.getElementById("host").value + "/sdapi/v1/upscalers";
+	let upscalers = [];
 
 	try {
-		// const response = await fetch(extras_url, {
-		// 	method: "POST",
-		// 	headers: {
-		// 		Accept: "application/json",
-		// 		"Content-Type": "application/json",
-		// 	},
-		// 	body: JSON.stringify(purposefully_incorrect_data),
-		// });
-		// const data = await response.json();
-
-		// console.log(
-		// 	"[index] purposefully_incorrect_data response, ignore above error"
-		// );
-		// // result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
-		// const upscalersPlusNone = data.detail
-		// 	.split(": ")[1]
-		// 	.split(",")
-		// 	.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
-		// const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
-		// upscalersPlusNone.push([
-		// 	"Latent",
-		// 	"Latent (antialiased)",
-		// 	"Latent (bicubic)",
-		// 	"Latent (bicubic, antialiased)",
-		// 	"Latent (nearest)",
-		// ]);
-		const upscalersPlusNone = [...upscalers];
-		upscalersPlusNone.unshift("None"); //this is absurd
-		upscalersPlusNone.push("Latent");
-		upscalersPlusNone.push("Latent (antialiased)");
-		upscalersPlusNone.push("Latent (bicubic)");
-		upscalersPlusNone.push("Latent (bicubic, antialiased)");
-		upscalersPlusNone.push("Latent (nearest)"); // GRUMBLE GRUMBLE
-
-		upscalerAutoComplete.options = upscalers.map((u) => {
-			return {name: u, value: u};
+		const response = await fetch(url, {
+			method: "GET",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
 		});
-		hrFixUpscalerAutoComplete.options = upscalersPlusNone.map((u) => {
-			return {name: u, value: u};
-		});
-
-		upscalerAutoComplete.value = upscalers[0];
-		hrFixUpscalerAutoComplete.value =
-			localStorage.getItem("openoutpaint/hr_upscaler") === null
-				? "None"
-				: localStorage.getItem("openoutpaint/hr_upscaler");
+		const data = await response.json();
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].name.includes("None")) {
+				continue;
+			}
+			upscalers.push(data[i].name);
+		}
 	} catch (e) {
 		console.warn("[index] Failed to fetch upscalers:");
 		console.warn(e);
+		upscalers = [
+			"Lanczos",
+			"Nearest",
+			"LDSR",
+			"SwinIR",
+			"R-ESRGAN General 4xV3",
+			"R-ESRGAN General WDN 4xV3",
+			"R-ESRGAN AnimeVideo",
+			"R-ESRGAN 4x+",
+			"R-ESRGAN 4x+ Anime6B",
+			"R-ESRGAN 2x+",
+		];
 	}
+	const upscalersPlusNone = [...upscalers];
+	upscalersPlusNone.unshift("None");
+	upscalersPlusNone.push("Latent");
+	upscalersPlusNone.push("Latent (antialiased)");
+	upscalersPlusNone.push("Latent (bicubic)");
+	upscalersPlusNone.push("Latent (bicubic, antialiased)");
+	upscalersPlusNone.push("Latent (nearest)");
 
-	/* THE NON HACKY WAY THAT I SIMPLY COULD NOT GET TO PRODUCE A LIST WITHOUT NON WORKING UPSCALERS, FEEL FREE TO TRY AND FIGURE IT OUT
+	upscalerAutoComplete.options = upscalers.map((u) => {
+		return {name: u, value: u};
+	});
+	hrFixUpscalerAutoComplete.options = upscalersPlusNone.map((u) => {
+		return {name: u, value: u};
+	});
 
-	var url = document.getElementById("host").value + "/sdapi/v1/upscalers";
-	var realesrgan_url = document.getElementById("host").value + "/sdapi/v1/realesrgan-models";
-
-	// get upscalers
-	fetch(url)
-		.then((response) => response.json())
-		.then((data) => {
-			console.log(data);
-
-			for (var i = 0; i < data.length; i++) {
-				var option = document.createElement("option");
-
-				if (data[i].name.includes("ESRGAN") || data[i].name.includes("LDSR")) {
-					continue;
-				}
-				option.text = data[i].name;
-				upscalerSelect.add(option);
-			}
-		})
-		.catch((error) => {
-			alert(
-				"Error getting upscalers, please check console for additional info\n" +
-					error
-			);
-		});
-	// fetch realesrgan models separately
-	fetch(realesrgan_url)
-		.then((response) => response.json())
-		.then((data) => {
-			var model = data;
-			for(var i = 0; i < model.length; i++){
-				let option = document.createElement("option");
-				option.text = model[i].name;
-				option.value = model[i].name;
-				upscalerSelect.add(option);
-
-			}
-		
-	})
-	*/
+	upscalerAutoComplete.value = upscalers[0];
+	hrFixUpscalerAutoComplete.value =
+		localStorage.getItem("openoutpaint/hr_upscaler") === null
+			? "None"
+			: localStorage.getItem("openoutpaint/hr_upscaler");
 }
 
 async function getModels(refresh = false) {
