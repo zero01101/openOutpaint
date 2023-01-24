@@ -846,26 +846,6 @@ function drawBackground() {
 			bgLayer.canvas.style.backgroundImage = `url(${url})`;
 		});
 	}
-	return;
-
-	// Checkerboard
-	let darkTileColor = "#333";
-	let lightTileColor = "#555";
-	for (
-		var x = -bgLayer.origin.x - 64;
-		x < bgLayer.canvas.width - bgLayer.origin.x;
-		x += 64
-	) {
-		for (
-			var y = -bgLayer.origin.y - 64;
-			y < bgLayer.canvas.height - bgLayer.origin.y;
-			y += 64
-		) {
-			bgLayer.ctx.fillStyle =
-				(x + y) % 128 === 0 ? lightTileColor : darkTileColor;
-			bgLayer.ctx.fillRect(x, y, 64, 64);
-		}
-	}
 }
 
 async function getUpscalers() {
