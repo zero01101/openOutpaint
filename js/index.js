@@ -1360,7 +1360,7 @@ function changeScript(evt) {
 		}
 		case "X/Y plot": {
 			scriptArgs.value =
-				'[4, "5-30 [5]", 5, "2.5-12.5 [5]", false, true, false]';
+				'[4, "5-30 [5]", 6, "2.5-12.5 [5]", false, true, false]';
 			scriptArgs.title =
 				"Params:\nx_type (int): index of axis type (see below) //def: 4\n" +
 				"x_values (mixed, str) //def: 5-30 [5]\n" +
@@ -1375,13 +1375,13 @@ function changeScript(evt) {
 				"2: Var. seed\n" +
 				"3: Var. strength\n" +
 				"4: Steps\n" +
-				"5: CFG Scale\n" +
-				"6: Prompt S/R\n" +
-				"7: Prompt order\n" +
-				"8: Sampler\n" +
-				"9: Checkpoint Name\n" +
-				"10: Hypernetwork\n" +
-				"11: Hypernet str.\n" +
+				"5: Hires steps (txt2img only)\n" +
+				"6: CFG Scale\n" +
+				"7: Prompt S/R\n" +
+				"8: Prompt order\n" +
+				"9: Sampler (txt2img only)\n" +
+				"10: Sampler (img2img only)\n" +
+				"11: Checkpoint Name\n" +
 				"12: Sigma Churn\n" +
 				"13: Sigma min\n" +
 				"14: Sigma max\n" +
@@ -1389,8 +1389,8 @@ function changeScript(evt) {
 				"16: Eta\n" +
 				"17: Clip skip\n" +
 				"18: Denoising\n" +
-				"19: Hires upscaler\n" +
-				"20: Cond. Image Mask Weight\n" +
+				"19: Hires upscaler (txt2img only)\n" +
+				"20: Cond. Image Mask Weight (img2img only)\n" +
 				"21: VAE\n" +
 				"22: Styles";
 			break;
