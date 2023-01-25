@@ -500,10 +500,19 @@ async function testHostConnection() {
 function newImage(evt) {
 	clearPaintedMask();
 	uil.layers.forEach(({layer}) => {
-		commands.runCommand("eraseImage", "Clear Canvas", {
-			...layer.bb,
-			layer,
-		});
+		commands.runCommand(
+			"eraseImage",
+			"Clear Canvas",
+			{
+				...layer.bb,
+				ctx: layer.ctx,
+			},
+			{
+				extra: {
+					log: `Cleared Canvas`,
+				},
+			}
+		);
 	});
 }
 

@@ -71,6 +71,11 @@
 	transform: rotate(-90deg);
 }
 
+.ui.icon > .icon-scroll {
+	-webkit-mask-image: url("../res/icons/scroll.svg");
+	mask-image: url("../res/icons/scroll.svg");
+}
+
 .ui.icon > .icon-settings {
 	-webkit-mask-image: url("../res/icons/settings.svg");
 	mask-image: url("../res/icons/settings.svg");

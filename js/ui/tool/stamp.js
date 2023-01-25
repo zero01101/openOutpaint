@@ -418,13 +418,35 @@ const stampTool = () =>
 
 					const resource = state.selected;
 
+					let commandLog = `Stamped image '${resource.name}' to x: ${resource.x} and y: ${resource.y}`;
+
+					const addline = (v, newline = true) => {
+						commandLog += v;
+						if (newline) commandLog += "\n";
+					};
+					addline(`    - scaling : ${state.scale}`);
+					addline(
+						`    - rotation: ${
+							Math.round(1000 * ((180 * rotation) / Math.PI)) / 1000
+						} degrees`
+					);
+
 					if (resource) {
 						const {canvas, bb} = cropCanvas(ovCanvas, {border: 10});
-						commands.runCommand("drawImage", "Image Stamp", {
-							image: canvas,
-							x: bb.x,
-							y: bb.y,
-						});
+						commands.runCommand(
+							"drawImage",
+							"Image Stamp",
+							{
+								image: canvas,
+								x: bb.x,
+								y: bb.y,
+							},
+							{
+								extra: {
+									log: commandLog,
+								},
+							}
+						);
 
 						if (resource.temporary) {
 							state.deleteResource(resource.id);

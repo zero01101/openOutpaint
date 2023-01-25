@@ -114,9 +114,18 @@ const uil = {
 						"click",
 						(evn) => {
 							evn.stopPropagation();
-							commands.runCommand("deleteLayer", "Deleted Layer", {
-								layer: uiLayer,
-							});
+							commands.runCommand(
+								"deleteLayer",
+								"Deleted Layer",
+								{
+									layer: uiLayer,
+								},
+								{
+									extra: {
+										log: `Deleted Layer ${uiLayer.name} [${uiLayer.id}]`,
+									},
+								}
+							);
 						},
 						{passive: false}
 					);

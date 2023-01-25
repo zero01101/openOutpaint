@@ -287,10 +287,19 @@ const colorBrushTool = () =>
 					const cropped = cropCanvas(canvas, {border: 10});
 					const bb = cropped.bb;
 
-					commands.runCommand("drawImage", "Color Brush Draw", {
-						image: cropped.canvas,
-						...bb,
-					});
+					commands.runCommand(
+						"drawImage",
+						"Color Brush Draw",
+						{
+							image: cropped.canvas,
+							...bb,
+						},
+						{
+							extra: {
+								log: `Color brush drawn at x: ${bb.x}, y: ${bb.y}, width: ${bb.w}, height: ${bb.h}`,
+							},
+						}
+					);
 
 					ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
 				};
@@ -336,10 +345,19 @@ const colorBrushTool = () =>
 					uil.layer.clear();
 					uil.ctx.drawImageRoot(bkpcanvas, 0, 0);
 
-					commands.runCommand("eraseImage", "Color Brush Erase", {
-						mask: cropped.canvas,
-						...bb,
-					});
+					commands.runCommand(
+						"eraseImage",
+						"Color Brush Erase",
+						{
+							mask: cropped.canvas,
+							...bb,
+						},
+						{
+							extra: {
+								log: `Color brush erase at x: ${bb.x}, y: ${bb.y}, width: ${bb.w}, height: ${bb.h}`,
+							},
+						}
+					);
 
 					ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
 				};

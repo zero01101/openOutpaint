@@ -506,13 +506,39 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				ctx.drawImage(keepUnmaskCanvas, 0, 0);
 			}
 
-			commands.runCommand("drawImage", "Image Dream", {
-				x: bb.x,
-				y: bb.y,
-				w: bb.w,
-				h: bb.h,
-				image: canvas,
-			});
+			let commandLog = "";
+
+			const addline = (v, newline = true) => {
+				commandLog += v;
+				if (newline) commandLog += "\n";
+			};
+
+			addline(
+				`Dreamed image at x: ${bb.x}, y: ${bb.y}, w: ${bb.w}, h: ${bb.h}`
+			);
+			addline(`    - resolution: (${request.width}, ${request.height})`);
+			addline("    - generation:");
+			addline(`        + Seed    = ${seeds[at]}`);
+			addline(`        + Steps   = ${request.steps}`);
+			addline(`        + CFG     = ${request.cfg_scale}`);
+			addline(`        + Sampler = ${request.sampler_index}`, false);
+
+			commands.runCommand(
+				"drawImage",
+				"Image Dream",
+				{
+					x: bb.x,
+					y: bb.y,
+					w: bb.w,
+					h: bb.h,
+					image: canvas,
+				},
+				{
+					extra: {
+						log: commandLog,
+					},
+				}
+			);
 			clean(!toolbar._current_tool.state.preserveMasks);
 		});
 	};
@@ -1027,8 +1053,18 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		});
 	}
 };
+
+/**
+ * Erases an area from the canvas
+ *
+ * @param {BoundingBox} bb Bounding box of the area to be erased
+ */
 const dream_erase_callback = (bb) => {
-	commands.runCommand("eraseImage", "Erase Area", bb);
+	commands.runCommand("eraseImage", "Erase Area", bb, {
+		extra: {
+			log: `Erased area at x: ${bb.x}, y: ${bb.y}, width: ${bb.w}, height: ${bb.h}`,
+		},
+	});
 };
 
 function applyOvermask(canvas, ctx, px) {
