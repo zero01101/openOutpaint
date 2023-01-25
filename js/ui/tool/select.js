@@ -298,7 +298,8 @@ const selectTransformTool = () =>
 							`    - rotation   : ${
 								Math.round(1000 * ((180 * state.selected.rotation) / Math.PI)) /
 								1000
-							} degrees`
+							} degrees`,
+							false
 						);
 
 						// Draw Image

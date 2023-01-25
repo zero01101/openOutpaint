@@ -8,6 +8,7 @@
  * @property {() => void | Promise<void>} redo A method to redo whatever undo did
  * @property {() => any | Promise<any>} export A method to export the command
  * @property {{[key: string]: any}} state The state of the current command instance
+ * @property {{[key: string]: any}} extra Extra information saved with the command
  */
 
 /**
