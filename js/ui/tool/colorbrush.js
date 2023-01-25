@@ -22,8 +22,10 @@ const _color_brush_draw_callback = (evn, state) => {
 };
 
 const _color_brush_erase_callback = (evn, state, ctx) => {
+	ctx.save();
 	ctx.strokeStyle = "black";
 
+	ctx.filter = "blur(" + state.brushBlur + "px)";
 	ctx.lineWidth = state.brushSize;
 	ctx.beginPath();
 	ctx.moveTo(
@@ -33,6 +35,7 @@ const _color_brush_erase_callback = (evn, state, ctx) => {
 	ctx.lineTo(evn.x, evn.y);
 	ctx.lineJoin = ctx.lineCap = "round";
 	ctx.stroke();
+	ctx.restore();
 };
 
 const colorBrushTool = () =>

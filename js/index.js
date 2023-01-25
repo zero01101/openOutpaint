@@ -868,7 +868,6 @@ function drawBackground() {
 			bgLayer.canvas.style.backgroundImage = `url(${url})`;
 		});
 	}
-	return;
 }
 
 async function exportWorkspaceState() {
@@ -994,36 +993,48 @@ async function getUpscalers() {
 	*/
 
 	// hacky way to get the correct list of upscalers
-	var extras_url =
-		document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
-	var empty_image = new Image(1, 1);
-	var purposefully_incorrect_data = {
-		"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
-		upscaling_resize: 2,
-		upscaler_1: "fake_upscaler",
-		image: empty_image.src,
-	};
+	// var extras_url =
+	// 	document.getElementById("host").value + "/sdapi/v1/extra-single-image/"; // endpoint for upscaling, needed for the hacky way to get the correct list of upscalers
+	// var purposefully_incorrect_data = {
+	// 	resize_mode: 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
+	// 	upscaling_resize: 2,
+	// 	upscaler_1: "fake_upscaler",
+	// 	image: empty_image.toDataURL(),
+	// };
+
+	upscalers = [
+		"Lanczos",
+		"Nearest",
+		"LDSR",
+		"SwinIR",
+		"R-ESRGAN General 4xV3",
+		"R-ESRGAN General WDN 4xV3",
+		"R-ESRGAN AnimeVideo",
+		"R-ESRGAN 4x+",
+		"R-ESRGAN 4x+ Anime6B",
+		"R-ESRGAN 2x+",
+	];
 
 	try {
-		const response = await fetch(extras_url, {
-			method: "POST",
-			headers: {
-				Accept: "application/json",
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(purposefully_incorrect_data),
-		});
-		const data = await response.json();
+		// const response = await fetch(extras_url, {
+		// 	method: "POST",
+		// 	headers: {
+		// 		Accept: "application/json",
+		// 		"Content-Type": "application/json",
+		// 	},
+		// 	body: JSON.stringify(purposefully_incorrect_data),
+		// });
+		// const data = await response.json();
 
-		console.log(
-			"[index] purposefully_incorrect_data response, ignore above error"
-		);
-		// result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
-		const upscalersPlusNone = data.detail
-			.split(": ")[1]
-			.split(",")
-			.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
-		const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
+		// console.log(
+		// 	"[index] purposefully_incorrect_data response, ignore above error"
+		// );
+		// // result = purposefully_incorrect_data response: Invalid upscaler, needs to be on of these: None , Lanczos , Nearest , LDSR , BSRGAN , R-ESRGAN General 4xV3 , R-ESRGAN 4x+ Anime6B , ScuNET , ScuNET PSNR , SwinIR_4x
+		// const upscalersPlusNone = data.detail
+		// 	.split(": ")[1]
+		// 	.split(",")
+		// 	.map((v) => v.trim()); // need "None" for stupid hrfix changes razza frazza
+		// const upscalers = upscalersPlusNone.filter((v) => v !== "None"); // converting the result to a list of upscalers
 		// upscalersPlusNone.push([
 		// 	"Latent",
 		// 	"Latent (antialiased)",
@@ -1031,6 +1042,8 @@ async function getUpscalers() {
 		// 	"Latent (bicubic, antialiased)",
 		// 	"Latent (nearest)",
 		// ]);
+		const upscalersPlusNone = [...upscalers];
+		upscalersPlusNone.unshift("None"); //this is absurd
 		upscalersPlusNone.push("Latent");
 		upscalersPlusNone.push("Latent (antialiased)");
 		upscalersPlusNone.push("Latent (bicubic)");

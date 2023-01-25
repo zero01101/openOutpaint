@@ -282,6 +282,11 @@ const selectTransformTool = () =>
 							}
 						);
 
+						// Draw Image
+						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas, {
+							border: 10,
+						});
+
 						let commandLog = "";
 						const addline = (v, newline = true) => {
 							commandLog += v;
@@ -302,10 +307,6 @@ const selectTransformTool = () =>
 							false
 						);
 
-						// Draw Image
-						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas, {
-							border: 10,
-						});
 						commands.runCommand(
 							"drawImage",
 							"Transform Tool Apply",
