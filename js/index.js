@@ -1284,16 +1284,19 @@ function changeScript(evt) {
 				"different_seeds (bool): use different seeds for each picture //def: false";
 			break;
 		}
-		case "X/Y plot": {
+		case "X/Y/Z plot": {
 			scriptArgs.value =
-				'[4, "5-30 [5]", 6, "2.5-12.5 [5]", false, true, false]';
+				'[4, "5-30 [5]", 6, "2.5-12.5 [5]", 0, "", false, true, false, false]';
 			scriptArgs.title =
 				"Params:\nx_type (int): index of axis type (see below) //def: 4\n" +
 				"x_values (mixed, str) //def: 5-30 [5]\n" +
 				"y_type (int) //def: 5\n" +
 				"y_values (mixed, str) //def: 2.5-12.5 [5]\n" +
+				"z_type (int) //def: 0\n" +
+				"z_values (mixed, str) //def: empty string\n" +
 				"draw_legend (bool): return grid of all images //def: false\n" +
 				"include_lone_images (bool): return individual images //def: true\n" +
+				"include_subgrids (bool): return subgrids //def: false\n" +
 				"no_fixed_seeds (bool): use different seeds for each picture //def: false\n\n" +
 				"Available axis types:\n" +
 				"0: Nothing\n" +
