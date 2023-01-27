@@ -122,8 +122,7 @@
 		listWorkspaces();
 
 		// Save Workspace Button
-		saveWorkspaceBtn.addEventListener(
-			"click",
+		saveWorkspaceBtn.addEventListener("click", () =>
 			saveWorkspaceToDB(workspaceAutocomplete.value)
 		);
 
