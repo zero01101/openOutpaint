@@ -38,17 +38,17 @@
 				</button>
 			</div>
 			<div id="info" class="menu-container" style="min-width: 200px">
-				<label>
-					Host
-					<div class="host-field-wrapper">
+				<div class="host-field-wrapper">
+					<div class="host-field">
+						<div class="label">Host</div>
 						<input id="host" value="http://127.0.0.1:7860" />
-						<div
-							id="connection-status-indicator"
-							class="connection-status before">
-							<span id="connection-status-indicator-text">Waiting</span>
-						</div>
 					</div>
-				</label>
+					<div
+						id="connection-status-indicator"
+						class="connection-status before">
+						<span id="connection-status-indicator-text">Waiting</span>
+					</div>
+				</div>
 
 				<!-- Prompts section -->
 				<button type="button" class="collapsible">Prompts</button>
@@ -247,7 +247,10 @@
 			<div class="draggable floating-window-title">
 				History
 				<div style="flex: 1"></div>
-				<button id="history-logs-btn" class="ui icon header-button">
+				<button
+					id="history-logs-btn"
+					class="ui icon header-button"
+					title="Generate History Log">
 					<div class="icon-scroll"></div>
 				</button>
 			</div>

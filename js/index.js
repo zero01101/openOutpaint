@@ -223,8 +223,6 @@ function testHostConfiguration() {
 		host = value;
 		hostEl.value = host;
 		localStorage.setItem("openoutpaint/host", host);
-
-		testHostConfiguration();
 	};
 
 	const current = localStorage.getItem("openoutpaint/host");
