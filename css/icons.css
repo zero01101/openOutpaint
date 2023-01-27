@@ -105,6 +105,39 @@
 	mask-image: url("../res/icons/paintbrush.svg");
 }
 
+.ui.inline-icon.icon-save::after,
+.ui.icon > .icon-save {
+	-webkit-mask-image: url("../res/icons/save.svg");
+	mask-image: url("../res/icons/save.svg");
+}
+
+.ui.inline-icon.icon-pencil::after,
+.ui.icon > .icon-pencil {
+	-webkit-mask-image: url("../res/icons/pencil.svg");
+	mask-image: url("../res/icons/pencil.svg");
+}
+
+.ui.inline-icon.icon-download::after,
+.ui.icon > .icon-download {
+	-webkit-mask-image: url("../res/icons/download.svg");
+	mask-image: url("../res/icons/download.svg");
+}
+.ui.inline-icon.icon-upload::after,
+.ui.icon > .icon-upload {
+	-webkit-mask-image: url("../res/icons/upload.svg");
+	mask-image: url("../res/icons/upload.svg");
+}
+.ui.inline-icon.icon-more-horizontal::after,
+.ui.icon > .icon-more-horizontal {
+	-webkit-mask-image: url("../res/icons/more-horizontal.svg");
+	mask-image: url("../res/icons/more-horizontal.svg");
+}
+.ui.inline-icon.icon-trash::after,
+.ui.icon > .icon-trash {
+	-webkit-mask-image: url("../res/icons/trash.svg");
+	mask-image: url("../res/icons/trash.svg");
+}
+
 .ui.inline-icon.icon-expand::after,
 .ui.icon > .icon-expand {
 	-webkit-mask-image: url("../res/icons/expand.svg");

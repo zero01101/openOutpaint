@@ -886,7 +886,7 @@ async function exportWorkspaceState() {
 
 async function importWorkspaceState(state) {
 	// Start from zero, effectively
-	await commands.undo(commands._history.length);
+	await commands.clear();
 
 	// Setup initial layer
 	const layer = uil.layerIndex.default;
@@ -963,19 +963,6 @@ async function saveWorkspaceToFile() {
 	link.href = url;
 	link.download = `${new Date().toISOString()}_openOutpaint_workspace.json`;
 	link.click();
-}
-
-async function loadWorkspaceFromFile() {
-	const input = document.createElement("input");
-	input.type = "file";
-	input.accept = "application/json";
-	input.addEventListener("change", async (evn) => {
-		let files = Array.from(input.files);
-		const json = await files[0].text();
-
-		importWorkspaceState(JSON.parse(json));
-	});
-	input.click();
 }
 
 async function getUpscalers() {

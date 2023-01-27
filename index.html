@@ -12,6 +12,7 @@
 
 		<link href="css/ui/generic.css?v=30837f8" rel="stylesheet" />
 
+		<link href="css/ui/workspace.css?v=30837f8" rel="stylesheet" />
 		<link href="css/ui/history.css?v=0b03861" rel="stylesheet" />
 		<link href="css/ui/layers.css?v=1d66c2b" rel="stylesheet" />
 		<link href="css/ui/toolbar.css?v=109c78f" rel="stylesheet" />
@@ -38,6 +39,46 @@
 				</button>
 			</div>
 			<div id="info" class="menu-container" style="min-width: 200px">
+				<div
+					id="workspace-select-area"
+					style="display: flex; margin-bottom: 5px">
+					<div id="workspace-select"></div>
+					<div class="buttons" style="display: flex">
+						<button
+							id="save-workspace-btn"
+							class="ui inline-icon icon-save workspace-btn"
+							title="Save Workspace"></button>
+						<button
+							id="rename-workspace-btn"
+							class="ui inline-icon icon-pencil workspace-btn"
+							title="Rename Workspace"></button>
+						<button
+							id="more-workspace-btn"
+							class="ui inline-icon icon-more-horizontal workspace-btn"
+							title="More Options"></button>
+						<div
+							id="more-workspace-menu"
+							class="workspace-collapsible collapsed">
+							<div>
+								<button
+									id="export-workspace-btn"
+									class="ui inline-icon icon-download workspace-btn"
+									title="Export Workspace"></button>
+								<button
+									id="import-workspace-btn"
+									class="ui inline-icon icon-upload workspace-btn"
+									title="Import Workspace"></button>
+								<button
+									id="delete-workspace-btn"
+									class="ui inline-icon icon-trash workspace-btn"
+									title="Delete Workspace"></button>
+							</div>
+							<div style="width: 5px; background-color: var(--c-primary)"></div>
+						</div>
+						<div style="width: 5px; background-color: var(--c-primary)"></div>
+					</div>
+				</div>
+
 				<div class="host-field-wrapper">
 					<div class="host-field">
 						<div class="label">Host</div>
@@ -164,8 +205,6 @@
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>
 				<div class="content">
-					<button onclick="saveWorkspaceToFile()">Save Workspace</button>
-					<button onclick="loadWorkspaceFromFile()">Load Workspace</button>
 					<button onclick="downloadCanvas()">Save canvas</button>
 					<br />
 					<label>Choose upscaler</label>
@@ -365,6 +404,7 @@
 		<script
 			src="js/lib/workspaces.js?v=4fbd55b"
 			type="text/javascript"></script>
+		<script src="js/lib/db.js?v=ac30d16" type="text/javascript"></script>
 		<script src="js/lib/input.js?v=aa14afc" type="text/javascript"></script>
 		<script src="js/lib/layers.js?v=1a452a1" type="text/javascript"></script>
 		<script src="js/lib/commands.js?v=262f0bf" type="text/javascript"></script>
@@ -412,6 +452,9 @@
 			type="text/javascript"></script>
 
 		<!-- Initialize -->
+		<script
+			src="js/initalize/workspace.populate.js?v=fd01c47"
+			type="text/javascript"></script>
 		<script
 			src="js/initalize/shortcuts.populate.js?v=fd01c47"
 			type="text/javascript"></script>

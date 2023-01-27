@@ -41,7 +41,7 @@
 	};
 
 	_commands_events.on((message) => {
-		if (message.action === "run") {
+		if (message.action === "run" || message.action === "clear") {
 			Array.from(historyView.children).forEach((child) => {
 				if (
 					!commands._history.find((entry) => `hist-${entry.id}` === child.id)

@@ -146,13 +146,9 @@ const stampTool = () =>
 				};
 
 				// Open IndexedDB connection
-				const IDBOpenRequest = window.indexedDB.open("stamp", 1);
-
 				// Synchronizes resources array with the DOM and Local Storage
 				const syncResources = () => {
 					// Saves to IndexedDB
-					/** @type {IDBDatabase} */
-					const db = state.stampDB;
 					const resources = db
 						.transaction("resources", "readwrite")
 						.objectStore("resources");
@@ -590,35 +586,9 @@ const stampTool = () =>
 					state.ctxmenu.resourceList = resourceList;
 
 					// Performs resource fetch from IndexedDB
-
-					IDBOpenRequest.onerror = (e) => {
-						console.warn("[stamp] Failed to connect to IndexedDB");
-						console.warn(e);
-					};
-
-					IDBOpenRequest.onupgradeneeded = (e) => {
-						const db = e.target.result;
-
-						console.debug(`[stamp] Setting up database version ${db.version}`);
-
-						const resourcesStore = db.createObjectStore("resources", {
-							keyPath: "id",
-						});
-						resourcesStore.createIndex("name", "name", {unique: false});
-					};
-
-					IDBOpenRequest.onsuccess = async (e) => {
+					const loadResources = async () => {
 						console.debug("[stamp] Connected to IndexedDB");
 
-						state.stampDB = e.target.result;
-
-						state.stampDB.onerror = (evn) => {
-							console.warn(`[stamp] Database Error:`);
-							console.warn(evn.target.errorCode);
-						};
-
-						/** @type {IDBDatabase} */
-						const db = state.stampDB;
 						/** @type {IDBRequest<{id: string, name: string, src: string}[]>} */
 						const FetchAllTransaction = db
 							.transaction("resources")
@@ -648,6 +618,9 @@ const stampTool = () =>
 							syncResources();
 						};
 					};
+
+					if (db) loadResources();
+					else ondatabaseload.on(loadResources);
 				}
 			},
 			populateContextMenu: (menu, state) => {

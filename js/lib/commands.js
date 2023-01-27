@@ -58,6 +58,21 @@ const commands = makeReadOnly(
 		},
 
 		/**
+		 * Clears the history
+		 */
+		async clear() {
+			await this.undo(this._history.length);
+
+			this._history.splice(0, this._history.length);
+
+			_commands_events.emit({
+				action: "clear",
+				state: {},
+				current: commands._current,
+			});
+		},
+
+		/**
 		 * Imports an exported command and runs it
 		 *
 		 * @param {{name: string, title: string, data: any}} exported Exported command
