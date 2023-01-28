@@ -521,7 +521,10 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			addline(`        + Seed    = ${seeds[at]}`);
 			addline(`        + Steps   = ${request.steps}`);
 			addline(`        + CFG     = ${request.cfg_scale}`);
-			addline(`        + Sampler = ${request.sampler_index}`, false);
+			addline(`        + Sampler = ${request.sampler_index}`);
+			addline(`        + Model   = ${modelAutoComplete.value}`);
+			addline(`        + +Prompt = ${request.prompt}`);
+			addline(`        + -Prompt = ${request.negative_prompt}`, false);
 
 			commands.runCommand(
 				"drawImage",
