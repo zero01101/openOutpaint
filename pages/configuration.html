@@ -90,6 +90,10 @@
 			Lie to HRfix:
 			<input id="hrfix-liar" class="canvas-size-input" type="checkbox" />
 		</label>
+		<label style="display: flex">
+			New Layer per Dream:
+			<input id="autolayer" class="canvas-size-input" type="checkbox" />
+		</label>
 
 		<script>
 			const canvasWidth = document.getElementById("canvas-width");
@@ -98,6 +102,7 @@
 			const minCfg = document.getElementById("min-cfg");
 			const maxCfg = document.getElementById("max-cfg");
 			const hrfixLiar = document.getElementById("hrfix-liar");
+			const autolayer = document.getElementById("autolayer");
 
 			function writeToLocalStorage() {
 				localStorage.setItem(
@@ -114,6 +119,10 @@
 				localStorage.setItem(
 					"openoutpaint/settings.hrfix-liar",
 					hrfixLiar.checked
+				);
+				localStorage.setItem(
+					"openoutpaint/settings.autolayer",
+					autolayer.checked
 				);
 			}
 
@@ -133,6 +142,11 @@
 					? true
 					: localStorage.getItem("openoutpaint/settings.hrfix-liar") === "true";
 			hrfixLiar.checked = _enable_dishonesty;
+			let _enable_autolayers =
+				localStorage.getItem("openoutpaint/settings.autolayer") === null
+					? false
+					: localStorage.getItem("openoutpaint/settings.autolayer") === "true";
+			autolayer.checked = _enable_autolayers;
 
 			writeToLocalStorage();
 
@@ -142,6 +156,7 @@
 			minCfg.onchange = writeToLocalStorage;
 			maxCfg.onchange = writeToLocalStorage;
 			hrfixLiar.onchange = writeToLocalStorage;
+			autolayer.onchange = writeToLocalStorage;
 		</script>
 	</body>
 </html>

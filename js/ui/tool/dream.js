@@ -515,6 +515,10 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				ctx.drawImage(keepUnmaskCanvas, 0, 0);
 			}
 
+			if (localStorage.getItem("openoutpaint/settings.autolayer") == "true") {
+				commands.runCommand("addLayer", "Added Layer", {});
+			}
+
 			commands.runCommand("drawImage", "Image Dream", {
 				x: bb.x,
 				y: bb.y,
