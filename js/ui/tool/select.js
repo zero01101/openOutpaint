@@ -248,6 +248,13 @@ const selectTransformTool = () =>
 							state.selected.position.x === state.original.sx &&
 							state.selected.position.y === state.original.sy &&
 							state.original.layer === uil.layer
+						) &&
+						!isCanvasBlank(
+							0,
+							0,
+							state.selected.canvas.width,
+							state.selected.canvas.height,
+							state.selected.canvas
 						)
 					) {
 						// Put original image back
@@ -258,22 +265,61 @@ const selectTransformTool = () =>
 						);
 
 						// Erase Original Selection Area
-						commands.runCommand("eraseImage", "Transform Tool Erase", {
-							ctx: state.original.layer.ctx,
-							x: state.original.x,
-							y: state.original.y,
-							w: state.selected.canvas.width,
-							h: state.selected.canvas.height,
-						});
+						commands.runCommand(
+							"eraseImage",
+							"Transform Tool Erase",
+							{
+								layer: state.original.layer,
+								x: state.original.x,
+								y: state.original.y,
+								w: state.selected.canvas.width,
+								h: state.selected.canvas.height,
+							},
+							{
+								extra: {
+									log: `Erased original selection area at x: ${state.original.x}, y: ${state.original.y}, width: ${state.selected.canvas.width}, height: ${state.selected.canvas.height} from layer ${state.original.layer.id}`,
+								},
+							}
+						);
 
 						// Draw Image
 						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas, {
 							border: 10,
 						});
-						commands.runCommand("drawImage", "Transform Tool Apply", {
-							image: canvas,
-							...bb,
-						});
+
+						let commandLog = "";
+						const addline = (v, newline = true) => {
+							commandLog += v;
+							if (newline) commandLog += "\n";
+						};
+
+						addline(
+							`Draw selected area to x: ${bb.x}, y: ${bb.y}, width: ${bb.w}, height: ${bb.h} to layer ${state.original.layer.id}`
+						);
+						addline(
+							`    - translation: (x: ${state.selected.position.x}, y: ${state.selected.position.y})`
+						);
+						addline(
+							`    - rotation   : ${
+								Math.round(1000 * ((180 * state.selected.rotation) / Math.PI)) /
+								1000
+							} degrees`,
+							false
+						);
+
+						commands.runCommand(
+							"drawImage",
+							"Transform Tool Apply",
+							{
+								image: canvas,
+								...bb,
+							},
+							{
+								extra: {
+									log: commandLog,
+								},
+							}
+						);
 
 						state.reset(true);
 					} else {
@@ -454,7 +500,16 @@ const selectTransformTool = () =>
 						case "Delete":
 							// Deletes selected area
 							state.selected &&
-								commands.runCommand("eraseImage", "Erase Area", state.selected);
+								commands.runCommand(
+									"eraseImage",
+									"Erase Area",
+									state.selected,
+									{
+										extra: {
+											log: `[Placeholder] Delete selected area. TODO it's also broken`,
+										},
+									}
+								);
 							state.selected = null;
 							state.redraw();
 					}
@@ -526,7 +581,11 @@ const selectTransformTool = () =>
 						const aux = state.original;
 						state.reset();
 
-						commands.runCommand("eraseImage", "Cut Image", aux);
+						commands.runCommand("eraseImage", "Cut Image", aux, {
+							extra: {
+								log: `Cut to clipboard a selected area at x: ${aux.x}, y: ${aux.y}, width: ${aux.w}, height: ${aux.h} from layer ${state.original.layer.id}`,
+							},
+						});
 					}
 
 					// Because firefox needs manual activation of the feature

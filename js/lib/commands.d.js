@@ -6,7 +6,9 @@
  * @property {string} title The title passed to the command being run
  * @property {() => void | Promise<void>} undo A method to undo whatever the command did
  * @property {() => void | Promise<void>} redo A method to redo whatever undo did
+ * @property {() => any | Promise<any>} export A method to export the command
  * @property {{[key: string]: any}} state The state of the current command instance
+ * @property {{[key: string]: any}} extra Extra information saved with the command
  */
 
 /**
@@ -14,6 +16,7 @@
  *
  * @typedef CommandExtraParams
  * @property {boolean} recordHistory The title passed to the command being run
+ * @property {any} importData Data to restore the command from
  * @property {Record<string, any>} extra Extra information to be stored in the history entry
  */
 

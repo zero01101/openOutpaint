@@ -335,6 +335,7 @@ const layers = {
 				 *
 				 * @param {string | null} key Name and key to use to access layer. If null, it is a temporary layer.
 				 * @param {object} options
+				 * @param {string} options.id
 				 * @param {string} options.name
 				 * @param {?BoundingBox} options.bb
 				 * @param {string} [options.category]
@@ -346,9 +347,12 @@ const layers = {
 				 */
 				registerLayer(key = null, options = {}) {
 					// Make ID
-					const id = guid();
+					const id = options.id ?? guid();
 
 					defaultOpt(options, {
+						// ID of the layer
+						id: null,
+
 						// Display name for the layer
 						name: key || `Temporary ${id}`,
 
@@ -618,6 +622,7 @@ const layers = {
 						collection._layers.splice(index, 0, layer);
 					}
 					if (key) collection.layers[key] = layer;
+					collection.layers[id] = layer;
 
 					if (key === null)
 						console.debug(
@@ -651,7 +656,8 @@ const layers = {
 					layers.listen.onlayerdelete.emit({
 						layer: lobj,
 					});
-					if (lobj.key) delete collection.layers[lobj.key];
+					if (lobj.key) collection.layers[lobj.key] = undefined;
+					collection.layers[lobj.id] = undefined;
 
 					collection.element.removeChild(lobj.canvas);
 

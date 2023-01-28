@@ -209,7 +209,6 @@ function createSlider(name, wrapper, options = {}) {
  * @param {{name: string, value: string, optionelcb: (el: HTMLOptionElement) => void}[]} options.options Options to add to the selector
  * @param {object} extraEl Additional element to include in wrapper div (e.g. model refresh button)
  * @param {string} extraClass Additional class to attach to the autocomplete input element
- * @returns {AutoCompleteElement}
  */
 function createAutoComplete(
 	name,

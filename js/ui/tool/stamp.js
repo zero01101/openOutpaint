@@ -146,13 +146,9 @@ const stampTool = () =>
 				};
 
 				// Open IndexedDB connection
-				const IDBOpenRequest = window.indexedDB.open("stamp", 1);
-
 				// Synchronizes resources array with the DOM and Local Storage
 				const syncResources = () => {
 					// Saves to IndexedDB
-					/** @type {IDBDatabase} */
-					const db = state.stampDB;
 					const resources = db
 						.transaction("resources", "readwrite")
 						.objectStore("resources");
@@ -425,11 +421,38 @@ const stampTool = () =>
 							commands.runCommand("addLayer", "Added Layer", {});
 						}
 						const {canvas, bb} = cropCanvas(ovCanvas, {border: 10});
-						commands.runCommand("drawImage", "Image Stamp", {
-							image: canvas,
-							x: bb.x,
-							y: bb.y,
-						});
+
+						let commandLog = "";
+
+						const addline = (v, newline = true) => {
+							commandLog += v;
+							if (newline) commandLog += "\n";
+						};
+						addline(
+							`Stamped image '${resource.name}' to x: ${bb.x} and y: ${bb.y}`
+						);
+						addline(`    - scaling : ${state.scale}`);
+						addline(
+							`    - rotation: ${
+								Math.round(1000 * ((180 * rotation) / Math.PI)) / 1000
+							} degrees`,
+							false
+						);
+
+						commands.runCommand(
+							"drawImage",
+							"Image Stamp",
+							{
+								image: canvas,
+								x: bb.x,
+								y: bb.y,
+							},
+							{
+								extra: {
+									log: commandLog,
+								},
+							}
+						);
 
 						if (resource.temporary) {
 							state.deleteResource(resource.id);
@@ -568,35 +591,9 @@ const stampTool = () =>
 					state.ctxmenu.resourceList = resourceList;
 
 					// Performs resource fetch from IndexedDB
-
-					IDBOpenRequest.onerror = (e) => {
-						console.warn("[stamp] Failed to connect to IndexedDB");
-						console.warn(e);
-					};
-
-					IDBOpenRequest.onupgradeneeded = (e) => {
-						const db = e.target.result;
-
-						console.debug(`[stamp] Setting up database version ${db.version}`);
-
-						const resourcesStore = db.createObjectStore("resources", {
-							keyPath: "id",
-						});
-						resourcesStore.createIndex("name", "name", {unique: false});
-					};
-
-					IDBOpenRequest.onsuccess = async (e) => {
+					const loadResources = async () => {
 						console.debug("[stamp] Connected to IndexedDB");
 
-						state.stampDB = e.target.result;
-
-						state.stampDB.onerror = (evn) => {
-							console.warn(`[stamp] Database Error:`);
-							console.warn(evn.target.errorCode);
-						};
-
-						/** @type {IDBDatabase} */
-						const db = state.stampDB;
 						/** @type {IDBRequest<{id: string, name: string, src: string}[]>} */
 						const FetchAllTransaction = db
 							.transaction("resources")
@@ -626,6 +623,9 @@ const stampTool = () =>
 							syncResources();
 						};
 					};
+
+					if (db) loadResources();
+					else ondatabaseload.on(loadResources);
 				}
 			},
 			populateContextMenu: (menu, state) => {

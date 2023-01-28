@@ -4,14 +4,15 @@
 		<meta charset="utf-8" />
 		<title>openOutpaint 🐠</title>
 		<!-- CSS Variables -->
-		<link href="css/colors.css?v=3f81e80" rel="stylesheet" />
-		<link href="css/icons.css?v=9ae0466" rel="stylesheet" />
+		<link href="css/colors.css?v=f732f19" rel="stylesheet" />
+		<link href="css/icons.css?v=466e14e" rel="stylesheet" />
 
-		<link href="css/index.css?v=882f400" rel="stylesheet" />
+		<link href="css/index.css?v=61e08f5" rel="stylesheet" />
 		<link href="css/layers.css?v=92c0352" rel="stylesheet" />
 
 		<link href="css/ui/generic.css?v=30837f8" rel="stylesheet" />
 
+		<link href="css/ui/workspace.css?v=2a9fdf7" rel="stylesheet" />
 		<link href="css/ui/history.css?v=0b03861" rel="stylesheet" />
 		<link href="css/ui/layers.css?v=1d66c2b" rel="stylesheet" />
 		<link href="css/ui/toolbar.css?v=109c78f" rel="stylesheet" />
@@ -38,17 +39,57 @@
 				</button>
 			</div>
 			<div id="info" class="menu-container" style="min-width: 200px">
-				<label>
-					Host
-					<div class="host-field-wrapper">
-						<input id="host" value="http://127.0.0.1:7860" />
+				<div
+					id="workspace-select-area"
+					style="display: flex; margin-bottom: 5px">
+					<div id="workspace-select"></div>
+					<div class="buttons" style="display: flex">
+						<button
+							id="save-workspace-btn"
+							class="ui inline-icon icon-save workspace-btn"
+							title="Save Workspace"></button>
+						<button
+							id="rename-workspace-btn"
+							class="ui inline-icon icon-pencil workspace-btn"
+							title="Rename Workspace"></button>
+						<button
+							id="more-workspace-btn"
+							class="ui inline-icon icon-more-horizontal workspace-btn"
+							title="More Options"></button>
 						<div
-							id="connection-status-indicator"
-							class="connection-status before">
-							<span id="connection-status-indicator-text">Waiting</span>
+							id="more-workspace-menu"
+							class="workspace-collapsible collapsed">
+							<div>
+								<button
+									id="export-workspace-btn"
+									class="ui inline-icon icon-download workspace-btn"
+									title="Export Workspace"></button>
+								<button
+									id="import-workspace-btn"
+									class="ui inline-icon icon-upload workspace-btn"
+									title="Import Workspace"></button>
+								<button
+									id="delete-workspace-btn"
+									class="ui inline-icon icon-trash workspace-btn"
+									title="Delete Workspace"></button>
+							</div>
+							<div style="width: 5px; background-color: var(--c-primary)"></div>
 						</div>
+						<div style="width: 5px; background-color: var(--c-primary)"></div>
 					</div>
-				</label>
+				</div>
+
+				<div class="host-field-wrapper">
+					<div class="host-field">
+						<div class="label">Host</div>
+						<input id="host" value="http://127.0.0.1:7860" />
+					</div>
+					<div
+						id="connection-status-indicator"
+						class="connection-status before">
+						<span id="connection-status-indicator-text">Waiting</span>
+					</div>
+				</div>
 
 				<!-- Prompts section -->
 				<button type="button" class="collapsible">Prompts</button>
@@ -88,7 +129,7 @@
 					<button id="refreshModelsBtn" onclick="getModels(true)">
 						<img
 							class="refreshbutton"
-							src="./res/icons/refresh-cw.svg"
+							src="./res/icons/refresh-cw.svg?v=f627140"
 							alt="refresh models"
 							title="refresh models" />
 					</button>
@@ -100,7 +141,7 @@
 						type="number"
 						id="seed"
 						onchange="changeSeed()"
-						min="1"
+						min="-1"
 						max="9999999999"
 						value="-1"
 						step="1" />
@@ -242,7 +283,16 @@
 
 		<!-- History -->
 		<div id="ui-history" class="floating-window" style="right: 10px; top: 10px">
-			<div class="draggable floating-window-title">History</div>
+			<div class="draggable floating-window-title">
+				History
+				<div style="flex: 1"></div>
+				<button
+					id="history-logs-btn"
+					class="ui icon header-button"
+					title="Generate History Log">
+					<div class="icon-scroll"></div>
+				</button>
+			</div>
 			<div class="menu-container" style="min-width: 200px">
 				<div id="history" class="history"></div>
 				<div class="button-array" style="padding: 10px">
@@ -375,22 +425,27 @@
 				<div class="ui separator"></div>
 				<iframe
 					id="page-overlay"
-					src="pages/configuration.html?v=7fca00b"></iframe>
+					src="pages/configuration.html?v=fdbd833"></iframe>
 			</div>
 		</div>
 
 		<!-- Basics -->
 		<script src="js/global.js?v=ac30d16" type="text/javascript"></script>
+		<script src="js/defaults.js?v=5b06818" type="text/javascript"></script>
 
 		<!-- Base Libs -->
 		<script src="js/lib/util.js?v=e82dd04" type="text/javascript"></script>
 		<script src="js/lib/events.js?v=2ab7933" type="text/javascript"></script>
+		<script
+			src="js/lib/workspaces.js?v=4fbd55b"
+			type="text/javascript"></script>
+		<script src="js/lib/db.js?v=434363b" type="text/javascript"></script>
 		<script src="js/lib/input.js?v=769485c" type="text/javascript"></script>
-		<script src="js/lib/layers.js?v=a1f8aea" type="text/javascript"></script>
-		<script src="js/lib/commands.js?v=bf23c83" type="text/javascript"></script>
+		<script src="js/lib/layers.js?v=1a452a1" type="text/javascript"></script>
+		<script src="js/lib/commands.js?v=ad60afc" type="text/javascript"></script>
 
 		<script src="js/lib/toolbar.js?v=306d637" type="text/javascript"></script>
-		<script src="js/lib/ui.js?v=fe9b702" type="text/javascript"></script>
+		<script src="js/lib/ui.js?v=17014b3" type="text/javascript"></script>
 
 		<script
 			src="js/initalize/layers.populate.js?v=066dc8e"
@@ -402,13 +457,13 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=04d2bb0" type="text/javascript"></script>
+		<script src="js/index.js?v=b1402ee" type="text/javascript"></script>
 
 		<script
-			src="js/ui/floating/history.js?v=fc92d14"
+			src="js/ui/floating/history.js?v=4f29db4"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/floating/layers.js?v=8e66543"
+			src="js/ui/floating/layers.js?v=aa78ec8"
 			type="text/javascript"></script>
 
 		<!-- Load Tools -->
@@ -416,22 +471,25 @@
 			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=07abfe8" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=d1ba895" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=d88810f"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/colorbrush.js?v=6f1d2f4"
+			src="js/ui/tool/colorbrush.js?v=46011ee"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/select.js?v=f290e83"
+			src="js/ui/tool/select.js?v=63fe672"
 			type="text/javascript"></script>
-		<script src="js/ui/tool/stamp.js?v=4a86ff8" type="text/javascript"></script>
+		<script src="js/ui/tool/stamp.js?v=455f9fe" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/interrogate.js?v=e579ff1"
 			type="text/javascript"></script>
 
 		<!-- Initialize -->
+		<script
+			src="js/initalize/workspace.populate.js?v=e5586da"
+			type="text/javascript"></script>
 		<script
 			src="js/initalize/shortcuts.populate.js?v=e68546f"
 			type="text/javascript"></script>

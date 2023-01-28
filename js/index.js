@@ -145,6 +145,19 @@ var url = "/sdapi/v1/";
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var focused = true;
 
+function getSDData() {
+	const w = workspaces.current.settings;
+	w.ste;
+	return {
+		prompt: w.prompt,
+		negative_prompt: w.neg_prompt,
+		seed: w.seed,
+
+		cfg_scale: w.cfg_scale,
+		steps: w.steps,
+	};
+}
+
 function startup() {
 	testHostConfiguration();
 	loadSettings();
@@ -210,8 +223,6 @@ function testHostConfiguration() {
 		host = value;
 		hostEl.value = host;
 		localStorage.setItem("openoutpaint/host", host);
-
-		testHostConfiguration();
 	};
 
 	const current = localStorage.getItem("openoutpaint/host");
@@ -487,10 +498,19 @@ async function testHostConnection() {
 function newImage(evt) {
 	clearPaintedMask();
 	uil.layers.forEach(({layer}) => {
-		commands.runCommand("eraseImage", "Clear Canvas", {
-			...layer.bb,
-			ctx: layer.ctx,
-		});
+		commands.runCommand(
+			"eraseImage",
+			"Clear Canvas",
+			{
+				...layer.bb,
+				ctx: layer.ctx,
+			},
+			{
+				extra: {
+					log: `Cleared Canvas`,
+				},
+			}
+		);
 	});
 }
 
@@ -567,16 +587,16 @@ const makeSlider = (
 	textStep = null,
 	valuecb = null
 ) => {
-	const local = lsKey && localStorage.getItem(`openoutpaint/${lsKey}`);
+	const local = lsKey && workspaces.current.settings[lsKey];
 	const def = parseFloat(local === null ? defaultValue : local);
 	let cb = (v) => {
 		stableDiffusionData[lsKey] = v;
-		if (lsKey) localStorage.setItem(`openoutpaint/${lsKey}`, v);
+		if (lsKey) workspaces.current.settings[lsKey] = v;
 	};
 	if (valuecb) {
 		cb = (v) => {
 			valuecb(v);
-			localStorage.setItem(`openoutpaint/${lsKey}`, v);
+			if (lsKey) workspaces.current.settings[lsKey] = v;
 		};
 	}
 	return createSlider(label, el, {
@@ -846,6 +866,103 @@ function drawBackground() {
 			bgLayer.canvas.style.backgroundImage = `url(${url})`;
 		});
 	}
+}
+
+async function exportWorkspaceState() {
+	return {
+		defaultLayer: {
+			id: uil.layerIndex.default.id,
+			name: uil.layerIndex.default.name,
+		},
+		bb: {
+			x: imageCollection.bb.x,
+			y: imageCollection.bb.y,
+			w: imageCollection.bb.w,
+			h: imageCollection.bb.h,
+		},
+		history: await commands.export(),
+	};
+}
+
+async function importWorkspaceState(state) {
+	// Start from zero, effectively
+	await commands.clear();
+
+	// Setup initial layer
+	const layer = uil.layerIndex.default;
+	layer.deletable = true;
+
+	await commands.runCommand(
+		"addLayer",
+		"Temporary Layer",
+		{name: "Temporary Layer", key: "tmp"},
+		{recordHistory: false}
+	);
+
+	await commands.runCommand(
+		"deleteLayer",
+		"Deleted Layer",
+		{
+			layer,
+		},
+		{recordHistory: false}
+	);
+
+	await commands.runCommand(
+		"addLayer",
+		"Initial Layer Creation",
+		{
+			id: state.defaultLayer.id,
+			name: state.defaultLayer.name,
+			key: "default",
+			deletable: false,
+		},
+		{recordHistory: false}
+	);
+
+	await commands.runCommand(
+		"deleteLayer",
+		"Deleted Layer",
+		{
+			layer: uil.layerIndex.tmp,
+		},
+		{recordHistory: false}
+	);
+
+	// Resize canvas to match original size
+	const sbb = new BoundingBox(state.bb);
+
+	const bb = imageCollection.bb;
+	let eleft = 0;
+	if (bb.x > sbb.x) eleft = bb.x - sbb.x;
+	let etop = 0;
+	if (bb.y > sbb.y) etop = bb.y - sbb.y;
+
+	let eright = 0;
+	if (bb.tr.x < sbb.tr.x) eright = sbb.tr.x - bb.tr.x;
+	let ebottom = 0;
+	if (bb.br.y < sbb.br.y) ebottom = sbb.br.y - bb.br.y;
+
+	imageCollection.expand(eleft, etop, eright, ebottom);
+
+	// Run commands in order
+	for (const command of state.history) {
+		await commands.import(command);
+	}
+}
+
+async function saveWorkspaceToFile() {
+	const workspace = await exportWorkspaceState();
+
+	const blob = new Blob([JSON.stringify(workspace)], {
+		type: "application/json",
+	});
+
+	const url = URL.createObjectURL(blob);
+	var link = document.createElement("a"); // Or maybe get it from the current document
+	link.href = url;
+	link.download = `${new Date().toISOString()}_openOutpaint_workspace.json`;
+	link.click();
 }
 
 async function getUpscalers() {
@@ -1167,11 +1284,6 @@ function loadSettings() {
 		localStorage.getItem("openoutpaint/mask_blur") == null
 			? 0
 			: localStorage.getItem("openoutpaint/mask_blur");
-	var _seed =
-		localStorage.getItem("openoutpaint/seed") == null
-			? -1
-			: localStorage.getItem("openoutpaint/seed");
-
 	let _enable_hr =
 		localStorage.getItem("openoutpaint/enable_hr") === null
 			? false
@@ -1202,7 +1314,7 @@ function loadSettings() {
 
 	// set the values into the UI
 	document.getElementById("maskBlur").value = Number(_mask_blur);
-	document.getElementById("seed").value = Number(_seed);
+	document.getElementById("seed").value = workspaces.current.settings.seed;
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
 	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =

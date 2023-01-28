@@ -1,0 +1,59 @@
+#workspace-select input.autocomplete-text {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+
+	padding-left: 5px;
+
+	border: none;
+
+	text-overflow: ellipsis;
+}
+
+#workspace-select-area .buttons > *:last-child {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.workspace-btn {
+	cursor: pointer;
+
+	border: 0;
+	width: 21px;
+	height: 21px;
+
+	background-color: var(--c-primary);
+}
+
+.workspace-btn:disabled {
+	cursor: default;
+	background-color: var(--c-disabled) !important;
+}
+
+.workspace-btn:hover {
+	background-color: var(--c-hover);
+}
+
+.workspace-btn:active {
+	background-color: var(--c-active);
+}
+
+.workspace-collapsible {
+	position: relative;
+
+	width: 0;
+	overflow: visible;
+}
+
+.workspace-collapsible > *:first-child {
+	display: flex;
+
+	width: fit-content;
+	height: 21px;
+
+	transition-duration: 50ms;
+}
+
+.workspace-collapsible.collapsed > *:first-child {
+	width: 0 !important;
+	overflow: hidden !important;
+}

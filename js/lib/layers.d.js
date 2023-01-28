@@ -38,7 +38,7 @@
  * @property {Point} inputOffset The offset for calculating layer coordinates from input element input information
  * @property {Point} origin The location of the origin ((0, 0) point) of the collection (If canvas goes from -64, -32 to 128, 512, it's (64, 32))
  * @property {BoundingBox} bb The current bounding box of the collection, in layer coordinates
- * @property {{[key: string]: Layer}} layers An object for quick access to named layers of the collection
+ * @property {{[key: string]: Layer}} layers An object for quick access to layers of the collection
  * @property {Size} size The size of the collection (CSS)
  * @property {Size} resolution The resolution of the collection (canvas)
  * @property {function} expand Expands the collection and its full layers by the specified amounts
