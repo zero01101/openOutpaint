@@ -227,11 +227,25 @@ body {
 	width: 100%;
 }
 
-.host-field-wrapper input {
-	flex-shrink: 0;
+.host-field-wrapper > .host-field {
+	display: flex;
 	width: calc(100% - 15px);
+}
 
+.host-field-wrapper > .host-field > .label {
+	padding-left: 5px;
+	padding-right: 5px;
+
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+
+	background-color: var(--c-primary);
+	color: var(--c-text);
+}
+
+.host-field-wrapper input {
 	display: block;
+	min-width: 0;
 
 	border: 0;
 }

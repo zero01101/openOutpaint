@@ -1,4 +1,20 @@
 (() => {
+	const historyLogBtn = document.getElementById("history-logs-btn");
+	historyLogBtn.addEventListener("click", () => {
+		let logs = "";
+		commands._history.forEach((entry) => {
+			if (entry.extra.log) logs += ` => ${entry.extra.log}\n`;
+		});
+
+		const blob = new Blob([logs], {type: "text/plain"});
+		const url = URL.createObjectURL(blob);
+
+		var link = document.createElement("a"); // Or maybe get it from the current document
+		link.href = url;
+		link.download = `${new Date().toISOString()}_openOutpaint_log.txt`;
+		link.click();
+	});
+
 	const historyView = document.getElementById("history");
 
 	const makeHistoryEntry = (index, id, title) => {
@@ -25,7 +41,7 @@
 	};
 
 	_commands_events.on((message) => {
-		if (message.action === "run") {
+		if (message.action === "run" || message.action === "clear") {
 			Array.from(historyView.children).forEach((child) => {
 				if (
 					!commands._history.find((entry) => `hist-${entry.id}` === child.id)

@@ -58,6 +58,44 @@ const commands = makeReadOnly(
 		},
 
 		/**
+		 * Clears the history
+		 */
+		async clear() {
+			await this.undo(this._history.length);
+
+			this._history.splice(0, this._history.length);
+
+			_commands_events.emit({
+				action: "clear",
+				state: {},
+				current: commands._current,
+			});
+		},
+
+		/**
+		 * Imports an exported command and runs it
+		 *
+		 * @param {{name: string, title: string, data: any}} exported Exported command
+		 */
+		async import(exported) {
+			await this.runCommand(
+				exported.command,
+				exported.title,
+				{},
+				{importData: exported.data}
+			);
+		},
+
+		/**
+		 * Exports all commands in the history
+		 */
+		async export() {
+			return Promise.all(
+				this._history.map(async (command) => command.export())
+			);
+		},
+
+		/**
 		 *	Creates a basic command, that can be done and undone
 		 *
 		 * They must contain a 'run' method that performs the action for the first time,
@@ -74,30 +112,56 @@ const commands = makeReadOnly(
 		 * @param {string} name Command identifier (name)
 		 * @param {CommandDoCallback} run A method that performs the action for the first time
 		 * @param {CommandUndoCallback} undo A method that reverses what the run method did
-		 * @param {object} options Extra options
-		 * @param {CommandDoCallback} options.redo A method that redoes the action after undone (default: run)
+		 * @param {object} opt Extra options
+		 * @param {CommandDoCallback} opt.redo A method that redoes the action after undone (default: run)
+		 * @param {(state: any) => any} opt.exportfn A method that exports a serializeable object
+		 * @param {(value: any, state: any) => any} opt.importfn A method that imports a serializeable object
 		 * @returns {Command}
 		 */
-		createCommand(name, run, undo, options = {}) {
-			defaultOpt(options, {
+		createCommand(name, run, undo, opt = {}) {
+			defaultOpt(opt, {
 				redo: run,
+				exportfn: null,
+				importfn: null,
 			});
 
-			const redo = options.redo;
-
-			const command = async function runWrapper(title, options, extra) {
+			const command = async function runWrapper(title, options, extra = {}) {
 				// Create copy of options and state object
 				const copy = {};
 				Object.assign(copy, options);
 				const state = {};
+
+				defaultOpt(extra, {
+					recordHistory: true,
+					importData: null,
+				});
+
+				const exportfn =
+					opt.exportfn ?? ((state) => Object.assign({}, state.serializeable));
+				const importfn =
+					opt.importfn ??
+					((value, state) => (state.serializeable = Object.assign({}, value)));
+				const redo = opt.redo;
 
 				/** @type {CommandEntry} */
 				const entry = {
 					id: guid(),
 					title,
 					state,
+					async export() {
+						return {
+							command: name,
+							title,
+							data: await exportfn(state),
+						};
+					},
 					extra: extra.extra,
 				};
+
+				if (extra.importData) {
+					await importfn(extra.importData, state);
+					state.imported = extra.importData;
+				}
 
 				// Attempt to run command
 				try {
@@ -209,47 +273,63 @@ commands.createCommand(
 	"drawImage",
 	(title, options, state) => {
 		if (
-			!options ||
-			options.image === undefined ||
-			options.x === undefined ||
-			options.y === undefined
+			!state.imported &&
+			(!options ||
+				options.image === undefined ||
+				options.x === undefined ||
+				options.y === undefined)
 		)
-			throw "Command drawImage requires options in the format: {image, x, y, w?, h?, ctx?}";
+			throw "Command drawImage requires options in the format: {image, x, y, w?, h?, layer?}";
 
 		// Check if we have state
-		if (!state.context) {
-			const context = options.ctx || uil.ctx;
-			state.context = context;
+		if (!state.layer) {
+			/** @type {Layer} */
+			let layer = options.layer;
+			if (!options.layer && state.layerId)
+				layer = imageCollection.layers[state.layerId];
 
-			// Saving what was in the canvas before the command
-			const imgData = context.getImageData(
-				options.x,
-				options.y,
-				options.w || options.image.width,
-				options.h || options.image.height
-			);
-			state.box = {
-				x: options.x,
-				y: options.y,
-				w: options.w || options.image.width,
-				h: options.h || options.image.height,
-			};
-			// Create Image
-			const cutout = document.createElement("canvas");
-			cutout.width = state.box.w;
-			cutout.height = state.box.h;
-			cutout.getContext("2d").putImageData(imgData, 0, 0);
-			state.original = new Image();
-			state.original.src = cutout.toDataURL();
+			if (!options.layer && !state.layerId) layer = uil.layer;
+
+			state.layer = layer;
+			state.context = layer.ctx;
+
+			if (!state.imported) {
+				const canvas = document.createElement("canvas");
+				canvas.width = options.image.width;
+				canvas.height = options.image.height;
+				canvas.getContext("2d").drawImage(options.image, 0, 0);
+
+				state.image = canvas;
+
+				// Saving what was in the canvas before the command
+				const imgData = state.context.getImageData(
+					options.x,
+					options.y,
+					options.w || options.image.width,
+					options.h || options.image.height
+				);
+				state.box = {
+					x: options.x,
+					y: options.y,
+					w: options.w || options.image.width,
+					h: options.h || options.image.height,
+				};
+				// Create Image
+				const cutout = document.createElement("canvas");
+				cutout.width = state.box.w;
+				cutout.height = state.box.h;
+				cutout.getContext("2d").putImageData(imgData, 0, 0);
+				state.original = cutout;
+			}
 		}
 
 		// Apply command
 		state.context.drawImage(
-			options.image,
+			state.image,
 			0,
 			0,
-			options.image.width,
-			options.image.height,
+			state.image.width,
+			state.image.height,
 			state.box.x,
 			state.box.y,
 			state.box.w,
@@ -261,6 +341,51 @@ commands.createCommand(
 		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
 		// Undo
 		state.context.drawImage(state.original, state.box.x, state.box.y);
+	},
+	{
+		exportfn: (state) => {
+			const canvas = document.createElement("canvas");
+			canvas.width = state.image.width;
+			canvas.height = state.image.height;
+			canvas.getContext("2d").drawImage(state.image, 0, 0);
+
+			const originalc = document.createElement("canvas");
+			originalc.width = state.original.width;
+			originalc.height = state.original.height;
+			originalc.getContext("2d").drawImage(state.original, 0, 0);
+
+			return {
+				image: canvas.toDataURL(),
+				original: originalc.toDataURL(),
+				box: state.box,
+				layer: state.layer.id,
+			};
+		},
+		importfn: async (value, state) => {
+			state.box = value.box;
+			state.layerId = value.layer;
+
+			const img = document.createElement("img");
+			img.src = value.image;
+			await img.decode();
+
+			const imagec = document.createElement("canvas");
+			imagec.width = state.box.w;
+			imagec.height = state.box.h;
+			imagec.getContext("2d").drawImage(img, 0, 0);
+
+			const orig = document.createElement("img");
+			orig.src = value.original;
+			await orig.decode();
+
+			const originalc = document.createElement("canvas");
+			originalc.width = state.box.w;
+			originalc.height = state.box.h;
+			originalc.getContext("2d").drawImage(orig, 0, 0);
+
+			state.image = imagec;
+			state.original = originalc;
+		},
 	}
 );
 
@@ -268,18 +393,26 @@ commands.createCommand(
 	"eraseImage",
 	(title, options, state) => {
 		if (
-			!options ||
-			options.x === undefined ||
-			options.y === undefined ||
-			options.w === undefined ||
-			options.h === undefined
+			!state.imported &&
+			(!options ||
+				options.x === undefined ||
+				options.y === undefined ||
+				options.w === undefined ||
+				options.h === undefined)
 		)
 			throw "Command eraseImage requires options in the format: {x, y, w, h, ctx?}";
 
+		if (state.imported) {
+			state.layer = imageCollection.layers[state.layerId];
+			state.context = state.layer.ctx;
+		}
+
 		// Check if we have state
-		if (!state.context) {
-			const context = options.ctx || uil.ctx;
-			state.context = context;
+		if (!state.layer) {
+			const layer = (options.layer || state.layerId) ?? uil.layer;
+			state.layer = layer;
+			state.mask = options.mask;
+			state.context = layer.ctx;
 
 			// Saving what was in the canvas before the command
 			state.box = {
@@ -295,7 +428,7 @@ commands.createCommand(
 			cutout
 				.getContext("2d")
 				.drawImage(
-					context.canvas,
+					state.context.canvas,
 					options.x,
 					options.y,
 					options.w,
@@ -316,9 +449,9 @@ commands.createCommand(
 		const op = state.context.globalCompositeOperation;
 		state.context.globalCompositeOperation = "destination-out";
 
-		if (options.mask)
+		if (state.mask)
 			state.context.drawImage(
-				options.mask,
+				state.mask,
 				state.box.x,
 				state.box.y,
 				state.box.w,
@@ -340,5 +473,59 @@ commands.createCommand(
 		state.context.clearRect(state.box.x, state.box.y, state.box.w, state.box.h);
 		// Undo
 		state.context.drawImage(state.original, state.box.x, state.box.y);
+	},
+	{
+		exportfn: (state) => {
+			let mask = null;
+
+			if (state.mask) {
+				const maskc = document.createElement("canvas");
+				maskc.width = state.mask.width;
+				maskc.height = state.mask.height;
+				maskc.getContext("2d").drawImage(state.mask, 0, 0);
+
+				mask = maskc.toDataURL();
+			}
+
+			const originalc = document.createElement("canvas");
+			originalc.width = state.original.width;
+			originalc.height = state.original.height;
+			originalc.getContext("2d").drawImage(state.original, 0, 0);
+
+			return {
+				original: originalc.toDataURL(),
+				mask,
+				box: state.box,
+				layer: state.layer.id,
+			};
+		},
+		importfn: async (value, state) => {
+			state.box = value.box;
+			state.layerId = value.layer;
+
+			if (value.mask) {
+				const mask = document.createElement("img");
+				mask.src = value.mask;
+				await mask.decode();
+
+				const maskc = document.createElement("canvas");
+				maskc.width = state.box.w;
+				maskc.height = state.box.h;
+				maskc.getContext("2d").drawImage(mask, 0, 0);
+
+				state.mask = maskc;
+			}
+
+			const orig = document.createElement("img");
+			orig.src = value.original;
+			await orig.decode();
+
+			const originalc = document.createElement("canvas");
+			originalc.width = state.box.w;
+			originalc.height = state.box.h;
+			originalc.getContext("2d").drawImage(orig, 0, 0);
+
+			state.original = originalc;
+		},
 	}
 );
