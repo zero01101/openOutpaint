@@ -29,14 +29,14 @@ class Workspace {
 	settings = new Proxy(
 		{},
 		{
-			get(t, name) {
+			get: (t, name) => {
 				if (t[name] === undefined)
 					t[name] =
 						JSON.parse(localStorage.getItem(`openoutpaint/${name}`)) ??
-						defaults[name];
+						this.defaults[name];
 				return t[name];
 			},
-			set(t, name, value) {
+			set: (t, name, value) => {
 				localStorage.setItem(`openoutpaint/${name}`, JSON.stringify(value));
 				t[name] = value;
 			},
@@ -77,7 +77,21 @@ class Workspace {
 	 */
 	constructor(name, options = {}) {
 		defaultOpt(options, {
-			defaults: {},
+			defaults: {
+				/** Default Prompt - REQ */
+				prompt: "ocean floor scientific expedition, underwater wildlife",
+				/** Default Negative Prompt - REQ */
+				neg_prompt:
+					"people, person, humans, human, divers, diver, glitch, error, text, watermark, bad quality, blurry",
+				/** Default Stable Diffusion Seed - REQ */
+				seed: -1,
+				/** Default CFG Scale - REQ */
+				cfg_scale: 7.0,
+				/** Default steps - REQ */
+				steps: 30,
+				/** Default Resolution */
+				resolution: 512,
+			},
 		});
 
 		this.name = name;
