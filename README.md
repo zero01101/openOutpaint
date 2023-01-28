@@ -24,6 +24,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - an [effectively infinite](https://github.com/zero01101/openOutpaint/pull/108), resizable, scalable canvas for you to paint all over
   - **_NOTE: v0.0.10 introduces a new "camera control" modifier key - hold [`CTRL`] and use the scrollwheel to zoom (scroll the wheel or use the two-finger vertical gesture on, uh, modern touchpads) and pan (hold the scrollwheel button, or if you don't have one, left-click button) around the canvas_**
 - a very nicely functional and familiar layer system
+- save, load, import, and export workspaces - includes all your layers, history, canvas size, you name it!
 - inpainting/touchup mask brush
 - prompt history panel
 - optional (visibly) inverted mask mode - red masks get mutated, blue masks stay the same, but you can't take both pills at once
