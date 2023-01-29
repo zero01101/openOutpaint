@@ -188,9 +188,13 @@ const uil = {
 		}
 
 		// Synchronizes with the layer lib
-		this.layers.forEach((uiLayer, index) => {
-			if (index === 0) uiLayer.layer.moveAfter(bgLayer);
-			else uiLayer.layer.moveAfter(copy[index - 1].layer);
+		const ids = this.layers.map((l) => l.id);
+		ids.forEach((id, index) => {
+			if (index === 0) this.layerIndex[id].layer.moveAfter(bgLayer);
+			else
+				this.layerIndex[id].layer.moveAfter(
+					this.layerIndex[ids[index - 1]].layer
+				);
 		});
 	},
 
@@ -401,6 +405,14 @@ class UILayer {
 			deletable: true,
 		});
 
+		console.debug(
+			"After",
+			(
+				(uil.layers.length > 0 && uil.layers[uil.layers.length - 1].layer) ||
+				bgLayer
+			).id
+		);
+
 		this.layer = imageCollection.registerLayer(extra.key, {
 			id: extra.id,
 			name,
@@ -451,10 +463,11 @@ commands.createCommand(
 	"addLayer",
 	(title, opt, state) => {
 		const options = Object.assign({}, opt) || {};
+		const id = guid();
 		defaultOpt(options, {
-			id: guid(),
+			id,
 			group: null,
-			name: "New Layer",
+			name: id,
 			key: null,
 			deletable: true,
 		});
