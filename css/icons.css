@@ -105,6 +105,12 @@
 	mask-image: url("../res/icons/paintbrush.svg");
 }
 
+.ui.inline-icon.icon-slice::after,
+.ui.icon > .icon-slice {
+	-webkit-mask-image: url("../res/icons/slice.svg");
+	mask-image: url("../res/icons/slice.svg");
+}
+
 .ui.inline-icon.icon-save::after,
 .ui.icon > .icon-save {
 	-webkit-mask-image: url("../res/icons/save.svg");

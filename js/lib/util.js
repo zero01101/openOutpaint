@@ -474,3 +474,55 @@ const makeElement = (
 
 	return el;
 };
+
+/**
+ * Subtracts identical (or damn close) pixels from new dreams
+ * @param {HTMLCanvasElement} canvas
+ * @param {BoundingBox} bb
+ * @param {HTMLImageElement} bgImg
+ * @param {number}} blur
+ * @returns {HTMLCanvasElement}
+ */
+
+const subtractBackground = (canvas, bb, bgImg, blur = 0) => {
+	// set up temp canvases
+	const bgCanvas = document.createElement("canvas");
+	const fgCanvas = document.createElement("canvas");
+	const returnCanvas = document.createElement("canvas");
+	bgCanvas.width = fgCanvas.width = returnCanvas.width = bb.w;
+	bgCanvas.height = fgCanvas.height = returnCanvas.height = bb.h;
+	const bgCtx = bgCanvas.getContext("2d");
+	const fgCtx = fgCanvas.getContext("2d");
+	const returnCtx = returnCanvas.getContext("2d");
+	returnCtx.rect(0, 0, bb.w, bb.h);
+	returnCtx.fill();
+	// draw previous "background" image
+	bgCtx.drawImage(bgImg, 0, 0, bb.w, bb.h);
+	bgCtx.filter = "blur(" + blur + "px)";
+	// ... turn that into base64
+	const bgImgData = bgCtx.getImageData(0, 0, bb.w, bb.h);
+	// draw new image
+	fgCtx.drawImage(canvas, 0, 0);
+	const fgImgData = fgCtx.getImageData(0, 0, bb.w, bb.h);
+	// const blendImgData = blendCtx.getImageData(0, 0, bb.w, bb.h);
+	for (var i = 0; i < bgImgData.data.length; i += 4) {
+		var bgr = bgImgData.data[i];
+		var bgg = bgImgData.data[i + 1];
+		var bgb = bgImgData.data[i + 2];
+
+		var fgr = fgImgData.data[i];
+		var fgb = fgImgData.data[i + 1];
+		var fgd = fgImgData.data[i + 2];
+
+		const dr = Math.abs(bgr - fgr) > 10 ? fgr : 0;
+		const dg = Math.abs(bgg - fgb) > 10 ? fgb : 0;
+		const db = Math.abs(bgb - fgd) > 10 ? fgd : 0;
+
+		const pxChanged = dr > 0 && dg > 0 && db > 0;
+
+		fgImgData.data[i + 3] = pxChanged ? 255 : 0;
+	}
+	returnCtx.putImageData(fgImgData, 0, 0);
+
+	return returnCanvas;
+};
