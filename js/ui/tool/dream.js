@@ -544,7 +544,8 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			addline(`        + Sampler = ${request.sampler_index}`);
 			addline(`        + Model   = ${modelAutoComplete.value}`);
 			addline(`        + +Prompt = ${request.prompt}`);
-			addline(`        + -Prompt = ${request.negative_prompt}`, false);
+			addline(`        + -Prompt = ${request.negative_prompt}`);
+			addline(`        + Styles = ${request.styles.join(", ")}`, false);
 
 			commands.runCommand(
 				"drawImage",
