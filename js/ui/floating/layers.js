@@ -405,14 +405,6 @@ class UILayer {
 			deletable: true,
 		});
 
-		console.debug(
-			"After",
-			(
-				(uil.layers.length > 0 && uil.layers[uil.layers.length - 1].layer) ||
-				bgLayer
-			).id
-		);
-
 		this.layer = imageCollection.registerLayer(extra.key, {
 			id: extra.id,
 			name,
