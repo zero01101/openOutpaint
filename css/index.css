@@ -130,6 +130,9 @@ body {
 
 	border-radius: 10px;
 
+	min-width: 300px;
+	width: 300px;
+
 	color: var(--c-text);
 
 	overflow: hidden;
@@ -179,7 +182,6 @@ body {
 #page-overlay {
 	border: 0;
 
-	max-width: 300px;
 	max-height: 400px;
 
 	width: 100%;
