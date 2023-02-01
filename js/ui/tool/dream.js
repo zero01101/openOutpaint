@@ -534,9 +534,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				endpoint == "img2img" &&
 				toolbar._current_tool.state.removeBackground
 			) {
-				//TODO SERIOUSLY CHECK FOR MORE THINGS HERE
 				canvas = subtractBackground(canvas, bb, dreamData.bgImg, 0);
-				// do something else too probably idunno
 			}
 
 			commands.runCommand("drawImage", "Image Dream", {

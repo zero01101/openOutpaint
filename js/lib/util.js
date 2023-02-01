@@ -483,7 +483,6 @@ const makeElement = (
  * @param {number}} blur
  * @returns {HTMLCanvasElement}
  */
-
 const subtractBackground = (canvas, bb, bgImg, blur = 0) => {
 	// set up temp canvases
 	const bgCanvas = document.createElement("canvas");
