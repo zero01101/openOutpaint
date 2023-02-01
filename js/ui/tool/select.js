@@ -735,9 +735,21 @@ const selectTransformTool = () =>
 					saveVisibleSelectionButton.textContent = "Save Vis.";
 					saveVisibleSelectionButton.title = "Saves Visible Selection";
 					saveVisibleSelectionButton.onclick = () => {
-						const canvas = uil.getVisible(state.selected, {
-							categories: ["image", "user", "select-display"],
-						});
+						const canvas = uil.getVisible(
+							{
+								x:
+									state._selected._position.x -
+									state._selected.canvas.width / 2,
+								y:
+									state._selected._position.y -
+									state._selected.canvas.height / 2,
+								w: state._selected.canvas.width,
+								h: state._selected.canvas.height,
+							},
+							{
+								categories: ["image", "user", "select-display"],
+							}
+						);
 						downloadCanvas({
 							cropToContent: false,
 							canvas,
@@ -751,9 +763,21 @@ const selectTransformTool = () =>
 					createVisibleResourceButton.title =
 						"Saves Visible Selection as a Resource";
 					createVisibleResourceButton.onclick = () => {
-						const canvas = uil.getVisible(state.selected, {
-							categories: ["image", "user", "select-display"],
-						});
+						const canvas = uil.getVisible(
+							{
+								x:
+									state._selected._position.x -
+									state._selected.canvas.width / 2,
+								y:
+									state._selected._position.y -
+									state._selected.canvas.height / 2,
+								w: state._selected.canvas.width,
+								h: state._selected.canvas.height,
+							},
+							{
+								categories: ["image", "user", "select-display"],
+							}
+						);
 						const image = document.createElement("img");
 						image.src = canvas.toDataURL();
 						image.onload = () => {
