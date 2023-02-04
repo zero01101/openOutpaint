@@ -1,7 +1,7 @@
 {
 	"defaultScripts": {
 		"Loopback": {
-			"titleText": "Params:\nloops (int) //def: 8\ndenoising_strength_change_factor (decimal, 0.90-1.10) //def: 0.99",
+			"titleText": "IMG2IMG ONLY\n\nParams:\nloops (int) //def: 8\ndenoising_strength_change_factor (decimal, 0.90-1.10) //def: 0.99",
 			"scriptValues": "[8, 0.99]"
 		},
 		"Prompt matrix": {
