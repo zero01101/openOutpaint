@@ -1,0 +1,6 @@
+{
+	"userScript1": {
+		"title": "template",
+		"scriptValues": "[1, 0.999, true, \"4-10 [3]\", \"test text\"]"
+	}
+}

@@ -144,6 +144,7 @@ var host = "";
 var url = "/sdapi/v1/";
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var focused = true;
+let defaultScripts = {};
 
 function startup() {
 	testHostConfiguration();
@@ -170,6 +171,7 @@ function startup() {
 	changeRestoreFaces();
 	changeSyncCursorSize();
 	checkFocus();
+	loadDefaultScripts();
 }
 
 function setFixedHost(h, changePromptMessage) {
@@ -1358,6 +1360,19 @@ function checkFocus() {
 	}
 }
 
+async function loadDefaultScripts() {
+	selector = document.getElementById("script-selector");
+	const response = await fetch("./defaultscripts.json");
+	const json = await response.json();
+	for (const key in json.defaultScripts) {
+		var opt = document.createElement("option");
+		opt.value = opt.innerHTML = key;
+		selector.appendChild(opt);
+	}
+	defaultScripts = json;
+	//return json;
+}
+
 function changeScript(evt) {
 	let enable = () => {
 		scriptName.disabled = false;
@@ -1371,63 +1386,6 @@ function changeScript(evt) {
 	scriptName.value = selected;
 	disable();
 	switch (selected) {
-		case "Loopback": {
-			scriptArgs.value = "[8, 0.99]";
-			scriptArgs.title =
-				"Params:\n" +
-				"loops (int) //def: 8\n" +
-				"denoising_strength_change_factor (decimal, 0.90-1.10) //def: 0.99";
-			break;
-		}
-		case "Prompt matrix": {
-			scriptArgs.value = "[false, false]";
-			scriptArgs.title =
-				"Params:\n" +
-				"put_at_start (bool): expect pipe (|) delimited options at start of prompt //def: false\n" +
-				"different_seeds (bool): use different seeds for each picture //def: false";
-			break;
-		}
-		case "X/Y/Z plot": {
-			scriptArgs.value =
-				'[3, "0.00-0.99 [4]", 4, "5-30 [4]", 6, "2.5-12.5 [4]", false, true, false, false]';
-			scriptArgs.title =
-				"Params:\n" +
-				"x_type (int): index of axis type (see below) //def: 3\n" +
-				'x_values (mixed, str) //def: "0.00-0.99 [4]"\n' +
-				"y_type (int) //def: 4\n" +
-				'y_values (mixed, str) //def: "5-30 [4]"\n' +
-				"z_type (int) //def: 5\n" +
-				'z_values (mixed, str) //def: "2.5-12.5 [4]"\n' +
-				"draw_legend (bool): return grid of all images //def: false\n" +
-				"include_lone_images (bool): return individual images //def: true\n" +
-				"include_subgrids (bool) //def: false\n" +
-				"no_fixed_seeds (bool): use different seeds for each picture //def: false\n\n" +
-				"Available axis types:\n" +
-				"0: Nothing\n" +
-				"1: Seed\n" +
-				"2: Var. seed\n" +
-				"3: Var. strength\n" +
-				"4: Steps\n" +
-				"5: Hires steps (txt2img only)\n" +
-				"6: CFG Scale\n" +
-				"7: Prompt S/R\n" +
-				"8: Prompt order\n" +
-				"9: Sampler (txt2img only)\n" +
-				"10: Sampler (img2img only)\n" +
-				"11: Checkpoint Name\n" +
-				"12: Sigma Churn\n" +
-				"13: Sigma min\n" +
-				"14: Sigma max\n" +
-				"15: Sigma noise\n" +
-				"16: Eta\n" +
-				"17: Clip skip\n" +
-				"18: Denoising\n" +
-				"19: Hires upscaler (txt2img only)\n" +
-				"20: Cond. Image Mask Weight (img2img only)\n" +
-				"21: VAE\n" +
-				"22: Styles";
-			break;
-		}
 		case "custom": {
 			scriptName.value = "";
 			scriptArgs.value = "";
@@ -1435,10 +1393,20 @@ function changeScript(evt) {
 			enable();
 			break;
 		}
-		case "":
-		default: {
+		case "": {
+			// specifically no selected script
 			scriptArgs.value = "";
 			scriptArgs.title = "";
+			break;
+		}
+		default: {
+			// check defaultScripts objects for selected script
+			scriptName.value = selected;
+			scriptArgs.value = defaultScripts.defaultScripts[selected].scriptValues;
+			scriptArgs.title = defaultScripts.defaultScripts[selected].titleText;
+			// if not found, check user scripts
+
+			// if not found, wtf
 		}
 	}
 }
