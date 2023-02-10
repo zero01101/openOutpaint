@@ -606,6 +606,13 @@ let modelAutoComplete = createAutoComplete(
 	"refreshable"
 );
 modelAutoComplete.onchange.on(({value}) => {
+	/**
+	 * TODO implement optional API call to check model unet channel count
+	 * extension users guaranteed to have it as of
+	 * https://github.com/zero01101/openOutpaint-webUI-extension/commit/1f22f5ea5b860c6e91f77edfb47743a124596dec
+	 * but still need a fallback check like below
+	 */
+
 	if (value.toLowerCase().includes("inpainting"))
 		document.querySelector(
 			"#models-ac-select input.autocomplete-text"
@@ -1408,5 +1415,24 @@ function changeScript(evt) {
 
 			// if not found, wtf
 		}
+	}
+}
+
+function togglePix2PixImgCfg(value) {
+	// super hacky
+	// actually doesn't work at all yet so i'm leaving it here to taunt and remind me of my failures
+
+	try {
+		if (value.toLowerCase().includes("pix2pix")) {
+			document
+				.querySelector(".instruct-pix2pix-img-cfg")
+				.classList.remove("invisible");
+		} else {
+			document
+				.querySelector(".instruct-pix2pix-img-cfg")
+				.classList.add("invisible");
+		}
+	} catch (e) {
+		// highly likely not currently using img2img tool, do nothing
 	}
 }

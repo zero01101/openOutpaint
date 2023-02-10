@@ -1087,6 +1087,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		);
 		request.mask = maskCanvas.toDataURL();
 		request.inpainting_fill = stableDiffusionData.outpainting_fill;
+		request.image_cfg_scale = stableDiffusionData.image_cfg_scale;
 
 		// Dream
 		_generate("img2img", request, bb, {
@@ -1167,6 +1168,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 
 	request.denoising_strength = state.denoisingStrength;
 	request.inpainting_fill = state.inpainting_fill ?? 1; //let's see how this works //1; // For img2img use original
+	request.image_cfg_scale = state.image_cfg_scale ?? 0.5; // what am i even doing
 
 	// Load prompt (maybe we should add some events so we don't have to do this)
 	request.prompt = document.getElementById("prompt").value;
@@ -2361,6 +2363,22 @@ const img2imgTool = () =>
 							textStep: 1,
 						}
 					).slider;
+
+					// img cfg scale slider for instruct-pix2pix
+					state.ctxmenu.instructPix2PixImgCfgLabel = _toolbar_input.slider(
+						state,
+						"image_cfg_scale",
+						"iP2P Image CFG Scale",
+						{
+							min: 0,
+							max: 30,
+							step: 1,
+							textStep: 0.1,
+						}
+					).slider;
+					state.ctxmenu.instructPix2PixImgCfgLabel.classList.add(
+						"instruct-pix2pix-img-cfg"
+					);
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2376,6 +2394,7 @@ const img2imgTool = () =>
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
+				menu.appendChild(state.ctxmenu.instructPix2PixImgCfgLabel);
 				const btnArray2 = document.createElement("div");
 				btnArray2.classList.add("checkbox-array");
 				btnArray2.appendChild(state.ctxmenu.fullResolutionLabel);
