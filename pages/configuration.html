@@ -6,8 +6,6 @@
 		<!-- CSS Variables -->
 		<link href="../css/colors.css?v=f732f19" rel="stylesheet" />
 		<link href="../css/icons.css?v=599e732" rel="stylesheet" />
-
-		<link href="../css/index.css?v=61e08f5" rel="stylesheet" />
 		<link href="../css/layers.css?v=92c0352" rel="stylesheet" />
 
 		<link href="../css/ui/generic.css?v=30837f8" rel="stylesheet" />
@@ -24,6 +22,12 @@
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
 
 		<style>
+			* {
+				font-size: 100%;
+				font-family: Arial, Helvetica, sans-serif;
+				user-select: none;
+			}
+
 			body {
 				color: var(--c-text);
 
@@ -33,6 +37,14 @@
 
 			label {
 				display: flex;
+			}
+			label > input {
+				justify-content: space-between;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
 			}
 
 			input.canvas-size-input {
@@ -45,55 +57,80 @@
 	</head>
 
 	<body>
-		<label style="display: flex">
-			Canvas Size:
-			<input
-				id="canvas-width"
-				class="canvas-size-input"
-				type="number"
-				step="1" />
-			x
-			<input
-				id="canvas-height"
-				class="canvas-size-input"
-				type="number"
-				step="1" />
-		</label>
-		<label style="display: flex">
-			Max Steps:
-			<input
-				id="max-steps"
-				class="canvas-size-input"
-				type="number"
-				step="1"
-				value="70" />
-		</label>
-		<label style="display: flex">
-			CFG minmax:
-			<input
-				id="min-cfg"
-				class="canvas-size-input"
-				type="number"
-				step="0.1"
-				value="-1.0" />
-			::
-			<input
-				id="max-cfg"
-				class="canvas-size-input"
-				type="number"
-				step="0.1"
-				value="30.0" />
-		</label>
-		<!-- <p>Refresh the page to apply aabove.</p> -->
-		<hr />
-		<label style="display: flex">
-			Lie to HRfix:
-			<input id="hrfix-liar" class="canvas-size-input" type="checkbox" />
-		</label>
-		<label style="display: flex">
-			New Layer per Dream:
-			<input id="autolayer" class="canvas-size-input" type="checkbox" />
-		</label>
+		<table>
+			<tr>
+				<td class="title">Canvas Size</td>
+				<td class="input">
+					<input
+						id="canvas-width"
+						class="canvas-size-input"
+						type="number"
+						step="1" />
+					x
+					<input
+						id="canvas-height"
+						class="canvas-size-input"
+						type="number"
+						step="1" />
+				</td>
+			</tr>
+
+			<tr>
+				<td class="title">Max Steps</td>
+				<td class="input">
+					<input
+						id="max-steps"
+						class="canvas-size-input"
+						type="number"
+						step="1"
+						value="70" />
+				</td>
+			</tr>
+
+			<tr>
+				<td class="title">CFG minmax</td>
+				<td class="input">
+					<input
+						id="min-cfg"
+						class="canvas-size-input"
+						type="number"
+						step="0.1"
+						value="1.0" />
+					::
+					<input
+						id="max-cfg"
+						class="canvas-size-input"
+						type="number"
+						step="0.1"
+						value="30.0" />
+				</td>
+			</tr>
+
+			<tr>
+				<td colspan="2">
+					<div
+						class="ui separator"
+						style="
+							width: 100% !important;
+							margin-top: 3px;
+							margin-bottom: 3px;
+						"></div>
+				</td>
+			</tr>
+
+			<tr>
+				<td class="title">Lie to HRfix</td>
+				<td class="input">
+					<input id="hrfix-liar" class="canvas-size-input" type="checkbox" />
+				</td>
+			</tr>
+			<tr>
+				<td class="title">New Layer per Dream</td>
+				<td class="input">
+					<input id="autolayer" class="canvas-size-input" type="checkbox" />
+				</td>
+			</tr>
+		</table>
 
 		<script>
 			const canvasWidth = document.getElementById("canvas-width");
