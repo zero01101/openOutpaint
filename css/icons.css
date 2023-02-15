@@ -46,6 +46,12 @@
 	mask-image: url("../res/icons/file-plus.svg");
 }
 
+.ui.inline-icon.icon-flip-horizontal::after,
+.ui.icon > .icon-flip-horizontal {
+	-webkit-mask-image: url("../res/icons/flip-horizontal.svg");
+	mask-image: url("../res/icons/flip-horizontal.svg");
+}
+
 .ui.icon > .icon-file-x {
 	-webkit-mask-image: url("../res/icons/file-x.svg");
 	mask-image: url("../res/icons/file-x.svg");
