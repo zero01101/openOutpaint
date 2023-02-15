@@ -1,0 +1,213 @@
+/** Notification area */
+.notification-area {
+	position: absolute;
+
+	width: 250px;
+	min-width: 200px;
+
+	z-index: 25;
+
+	pointer-events: none;
+
+	padding: 10px;
+}
+
+.notification-area > * {
+	pointer-events: all;
+}
+
+.notification-area.bottom-left {
+	left: 0px;
+	bottom: 0px;
+}
+
+/** Notifications */
+.notification-area .notification {
+	position: relative;
+
+	cursor: pointer;
+
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+
+	border-radius: 5px;
+	border: solid 1px;
+
+	padding: 5px;
+	margin-top: 5px;
+
+	color: white;
+}
+
+.notification-area .notification:hover {
+	filter: brightness(110%);
+}
+
+.notification-area .notification:active {
+	filter: brightness(90%);
+}
+
+.notification-area .notification-content {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	max-height: 100%;
+}
+
+.notification-area .notification.expanded .notification-content {
+	white-space: normal !important;
+}
+
+.notification .notification-closebtn {
+	position: relative;
+
+	flex: 0;
+
+	cursor: pointer;
+
+	padding: 0;
+	border: 0;
+
+	min-width: 20px;
+	max-width: 20px;
+	min-height: 20px;
+	max-height: 20px;
+
+	border-radius: 10px;
+
+	background-color: #0002;
+
+	transition-duration: 20ms;
+}
+
+.notification .notification-closebtn:hover {
+	background-color: #fff2;
+}
+
+.notification .notification-closebtn:active {
+	background-color: #fff4;
+}
+
+.notification .notification-closebtn::after {
+	content: "";
+	position: absolute;
+
+	cursor: pointer;
+
+	top: 0;
+	right: 0;
+
+	margin: 2px;
+
+	width: 16px;
+	height: 16px;
+
+	-webkit-mask-size: contain;
+	mask-size: contain;
+
+	-webkit-mask-image: url("../../res/icons/x.svg");
+	mask-image: url("../../res/icons/x.svg");
+
+	background-color: var(--c-text);
+}
+
+/** Notification Types */
+.notification-area .notification.info {
+	background-color: #3976b399;
+	border-color: #12375c;
+}
+
+.notification-area .notification.success {
+	background-color: #39b34999;
+	border-color: #1b5c12;
+}
+
+.notification-area .notification.error {
+	background-color: #b3393999;
+	border-color: #5c1212;
+}
+
+.notification-area .notification.warn {
+	background-color: #b3a13999;
+	border-color: #5c4e12;
+}
+
+/** Dialog */
+.dialog-bg {
+	position: fixed;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+
+	backdrop-filter: blur(5px);
+	background-color: #fff6;
+
+	z-index: 1000;
+}
+
+.dialog-bg .dialog {
+	background-color: var(--c-primary);
+	color: var(--c-text);
+
+	border-radius: 10px;
+
+	position: absolute;
+	margin: auto;
+
+	min-width: 200px;
+	min-height: 20px;
+
+	max-width: 400px;
+}
+
+.dialog .dialog-title {
+	margin: 10px;
+	font-weight: bold;
+}
+
+.dialog .dialog-content {
+	margin: 10px;
+}
+
+.dialog .dialog-choices {
+	display: flex;
+}
+
+.dialog .dialog-choices > *:first-child {
+	border-bottom-left-radius: 10px;
+}
+.dialog .dialog-choices > *:last-child {
+	border-bottom-right-radius: 10px;
+}
+
+.dialog .dialog-choices > * {
+	flex: 1;
+
+	cursor: pointer;
+
+	padding: 5px;
+
+	background-color: transparent;
+	color: var(--c-text);
+
+	border: 0px;
+	border-top: solid 1px var(--c-hover);
+
+	transition-duration: 50ms;
+}
+
+.dialog .dialog-choices > *:not(:first-child) {
+	border-left: solid 1px var(--c-hover);
+}
+
+.dialog .dialog-choices > *:hover {
+	background-color: var(--c-hover);
+}

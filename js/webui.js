@@ -104,7 +104,7 @@
 						if (data.host)
 							setFixedHost(
 								data.host,
-								`Are you sure you want to modify the host?\nThis configuration was provided by the hosting page\n - ${parentWindow.document.title} (${origin})`
+								`Are you sure you want to modify the host?<br>This configuration was provided by the hosting page:<br> - ${parentWindow.document.title} (${origin})`
 							);
 						if (data.destinations) webui.destinations = data.destinations;
 
