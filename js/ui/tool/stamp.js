@@ -57,6 +57,7 @@ const stampTool = () =>
 			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 
 			mouse.listen.world.onwheel.on(state.onwheelcb);
+			keyboard.onShortcut({key: "Equal"}, state.togglemirror);
 
 			// For calls from other tools to paste image
 			if (opt && opt.image) {
@@ -90,6 +91,7 @@ const stampTool = () =>
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
 			mouse.listen.world.onwheel.clear(state.onwheelcb);
+			keyboard.deleteShortcut(state.togglemirror, "Delete");
 
 			ovLayer.clear();
 		},
@@ -110,10 +112,17 @@ const stampTool = () =>
 				// Current Scale
 				state.scale = 1;
 
+				state.togglemirror = () => {
+					state.mirrorSetValue(!state.mirrorStamp);
+					state.redraw();
+				};
+
 				state.selectResource = (resource, nolock = true, deselect = true) => {
 					rotation = 0;
 					state.setScale(1);
 					if (nolock && state.ctxmenu.uploadButton.disabled) return;
+
+					state.mirrorSetValue(false);
 
 					console.debug(
 						`[stamp] Selecting Resource '${resource && resource.name}'[${
@@ -394,8 +403,11 @@ const stampTool = () =>
 					if (state.selected) {
 						ovCtx.save();
 						ovCtx.translate(px, py);
-						ovCtx.scale(state.scale, state.scale);
-						ovCtx.rotate(rotation);
+						ovCtx.scale(
+							state.scale * (state.mirrorStamp ? -1 : 1),
+							state.scale
+						);
+						ovCtx.rotate(rotation * (state.mirrorStamp ? -1 : 1));
 
 						ovCtx.drawImage(state.selected.image, 0, 0);
 						ovCtx.restore();
@@ -488,7 +500,19 @@ const stampTool = () =>
 							"icon-grid"
 						).checkbox
 					);
-					state.ctxmenu.snapToGridLabel = array;
+
+					// Mirror Stamp Checkbox
+					const {checkbox: mirrorCheckbox, setValue: mirrorSetValue} =
+						_toolbar_input.checkbox(
+							state,
+							"mirrorStamp",
+							"Mirror Stamp",
+							"icon-flip-horizontal"
+						);
+					array.appendChild(mirrorCheckbox);
+					state.mirrorSetValue = mirrorSetValue;
+
+					state.ctxmenu.buttonArray = array;
 
 					// Scale Slider
 					const scaleSlider = _toolbar_input.slider(state, "scale", "Scale", {
@@ -624,7 +648,7 @@ const stampTool = () =>
 				}
 			},
 			populateContextMenu: (menu, state) => {
-				menu.appendChild(state.ctxmenu.snapToGridLabel);
+				menu.appendChild(state.ctxmenu.buttonArray);
 				menu.appendChild(state.ctxmenu.scaleSlider);
 				menu.appendChild(state.ctxmenu.resourceManager);
 			},
