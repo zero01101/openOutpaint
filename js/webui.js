@@ -118,6 +118,19 @@
 									data.image.resourceName || "External Resource",
 									image
 								);
+								// Fit image on screen if too big
+								const wr = image.width / window.innerWidth;
+								const hr = image.height / window.innerHeight;
+								const mr = Math.max(wr, hr);
+
+								if (mr > viewport.zoom) {
+									viewport.zoom = mr * 1.3;
+									viewport.transform(imageCollection.element);
+
+									toolbar._current_tool.redrawui &&
+										toolbar._current_tool.redrawui();
+								}
+
 								tools.stamp.enable();
 							};
 						}
