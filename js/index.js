@@ -182,8 +182,8 @@ function setFixedHost(h, changePromptMessage) {
 	hostInput.readOnly = true;
 	hostInput.style.cursor = "default";
 	hostInput.style.backgroundColor = "#ddd";
-	hostInput.addEventListener("dblclick", () => {
-		if (confirm(changePromptMessage)) {
+	hostInput.addEventListener("dblclick", async () => {
+		if (await notifications.dialog("Host is Locked", changePromptMessage)) {
 			hostInput.style.backgroundColor = null;
 			hostInput.style.cursor = null;
 			hostInput.readOnly = false;
@@ -343,16 +343,24 @@ async function testHostConnection() {
 	) => {
 		const apiIssueResult = () => {
 			setConnectionStatus("apiissue");
-			const message = `The host is online, but the API seems to be disabled.\nHave you run the webui with the flag '--api', or is the flag '--gradio-debug' currently active?`;
+			const message = `The host is online, but the API seems to be disabled.<br>Have you run the webui with the flag '--api', or is the flag '--gradio-debug' currently active?`;
 			console.error(message);
-			if (notify) alert(message);
+			if (notify)
+				notifications.notify(message, {
+					type: NotificationType.ERROR,
+					timeout: config.notificationTimeout * 2,
+				});
 		};
 
 		const offlineResult = () => {
 			setConnectionStatus("offline");
 			const message = `The connection with the host returned an error: ${response.status} - ${response.statusText}`;
 			console.error(message);
-			if (notify) alert(message);
+			if (notify)
+				notifications.notify(message, {
+					type: NotificationType.ERROR,
+					timeout: config.notificationTimeout * 2,
+				});
 		};
 		if (checkInProgress)
 			throw new CheckInProgressError(
@@ -386,9 +394,13 @@ async function testHostConnection() {
 				);
 				const optionsdata = await response.json();
 				if (optionsdata["use_scale_latent_for_hires_fix"]) {
-					const message = `You are using an outdated version of A1111 webUI.\nThe HRfix options will not work until you update to at least commit ef27a18 or newer.\n(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)\nHRfix will fallback to half-resolution only.`;
+					const message = `You are using an outdated version of A1111 webUI.<br>The HRfix options will not work until you update to at least commit ef27a18 or newer.<br>(https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/ef27a18b6b7cb1a8eebdc9b2e88d25baf2c2414d)<br>HRfix will fallback to half-resolution only.`;
 					console.warn(message);
-					if (notify) alert(message);
+					if (notify)
+						notifications.notify(message, {
+							type: NotificationType.WARN,
+							timeout: config.notificationTimeout * 4,
+						});
 					// Hide all new hrfix options
 					document
 						.querySelectorAll(".hrfix")
@@ -430,14 +442,22 @@ async function testHostConnection() {
 				setConnectionStatus("corsissue");
 				const message = `CORS is blocking our requests. Try running the webui with the flag '--cors-allow-origins=${window.location.protocol}//${window.location.host}/'`;
 				console.error(message);
-				if (notify) alert(message);
+				if (notify)
+					notifications.notify(message, {
+						type: NotificationType.ERROR,
+						timeout: config.notificationTimeout * 2,
+					});
 			} catch (e) {
 				setConnectionStatus("offline");
 				const message = `The server seems to be offline. Is host '${
 					document.getElementById("host").value
 				}' correct?`;
 				console.error(message);
-				if (notify) alert(message);
+				if (notify)
+					notifications.notify(message, {
+						type: NotificationType.ERROR,
+						timeout: config.notificationTimeout * 2,
+					});
 			}
 		}
 		checkInProgress = false;
@@ -1071,13 +1091,17 @@ async function getModels(refresh = false) {
 					body: JSON.stringify(payload),
 				});
 
-				alert(`Model changed to [${value}]`);
+				notifications.notify(`Model changed to [${value}]`, {type: "success"});
 			} catch (e) {
 				console.warn("[index] Error changing model");
 				console.warn(e);
 
-				alert(
-					"Error changing model, please check console for additional information"
+				notifications.notify(
+					"Error changing model, please check console for additional information",
+					{
+						type: NotificationType.ERROR,
+						timeout: config.notificationTimeout * 2,
+					}
 				);
 			}
 		});
@@ -1091,13 +1115,16 @@ async function getModels(refresh = false) {
 			These are highlighted as green in the model selector.";
 
 		if (inpainting) {
-			message += `\n\nWe have found the inpainting model\n\n - ${inpainting.name}\n\navailable in the webui. Do you want to switch to it?`;
-			if (confirm(message)) {
+			message += `<br><br>We have found the inpainting model<br><br> - ${inpainting.name}<br><br>available in the webui. Do you want to switch to it?`;
+			if (await notifications.dialog("Automatic Model Switch", message)) {
 				modelAutoComplete.value = inpainting.value;
 			}
 		} else {
-			message += `\n\nNo inpainting model seems to be available in the webui. It is recommended that you download an inpainting model, or outpainting results may not be optimal.`;
-			alert(message);
+			message += `<br><br>No inpainting model seems to be available in the webui. It is recommended that you download an inpainting model, or outpainting results may not be optimal.`;
+			notifications.notify(message, {
+				type: NotificationType.WARN,
+				timeout: null,
+			});
 		}
 	}
 }
@@ -1118,16 +1145,17 @@ async function getConfig() {
 		// Check if img2img color correction is disabled and inpainting mask weight is set to one
 		// TODO: API Seems bugged for retrieving inpainting mask weight - returning 0 for all values different than 1.0
 		if (data.img2img_color_correction) {
-			message += "\n - Image to Image Color Correction: false recommended";
+			message += "<br> - Image to Image Color Correction: false recommended";
 			wrong = true;
 		}
 
 		if (data.inpainting_mask_weight < 1.0) {
-			message += `\n - Inpainting Conditioning Mask Strength: 1.0 recommended`;
+			message += `<br> - Inpainting Conditioning Mask Strength: 1.0 recommended`;
 			wrong = true;
 		}
 
-		message += "\n\nShould these values be changed to the recommended ones?";
+		message +=
+			"<br><br>Should these values be changed to the recommended ones?";
 
 		if (!wrong) {
 			console.info("[index] WebUI Settings set as recommended.");
@@ -1138,7 +1166,7 @@ async function getConfig() {
 			"[index] WebUI Settings not set as recommended. Prompting for changing settings automatically."
 		);
 
-		if (!confirm(message)) return;
+		if (!(await notifications.dialog("Recommended Settings", message))) return;
 
 		try {
 			await fetch(url, {
@@ -1340,8 +1368,13 @@ imageCollection.element.addEventListener(
 	{passive: false}
 );
 
-function resetToDefaults() {
-	if (confirm("Are you sure you want to clear your settings?")) {
+async function resetToDefaults() {
+	if (
+		await notifications.dialog(
+			"Clear Settings",
+			"Are you sure you want to clear your settings?"
+		)
+	) {
 		localStorage.clear();
 	}
 }

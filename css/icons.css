@@ -46,6 +46,18 @@
 	mask-image: url("../res/icons/file-plus.svg");
 }
 
+.ui.inline-icon.icon-flip-horizontal::after,
+.ui.icon > .icon-flip-horizontal {
+	-webkit-mask-image: url("../res/icons/flip-horizontal.svg");
+	mask-image: url("../res/icons/flip-horizontal.svg");
+}
+
+.ui.inline-icon.icon-flip-vertical::after,
+.ui.icon > .icon-flip-vertical {
+	-webkit-mask-image: url("../res/icons/flip-vertical.svg");
+	mask-image: url("../res/icons/flip-vertical.svg");
+}
+
 .ui.icon > .icon-file-x {
 	-webkit-mask-image: url("../res/icons/file-x.svg");
 	mask-image: url("../res/icons/file-x.svg");

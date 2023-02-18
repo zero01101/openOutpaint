@@ -173,7 +173,16 @@ const _toolbar_input = {
 		label.appendChild(checkbox);
 		label.appendChild(new Text(text));
 
-		return {checkbox, label};
+		return {
+			checkbox,
+			label,
+			setValue(v) {
+				checkbox.checked = v;
+				state[dataKey] = checkbox.checked;
+				cb && cb();
+				return checkbox.checked;
+			},
+		};
 	},
 
 	slider: (state, dataKey, text, options = {}) => {

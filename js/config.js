@@ -38,6 +38,9 @@ const config = makeReadOnly(
 
 		// Endpoint
 		api: makeReadOnly({path: "/sdapi/v1/"}),
+
+		// Default notification timeout
+		notificationTimeout: 8000,
 	},
 	"config"
 );

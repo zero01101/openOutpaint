@@ -459,8 +459,12 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		stopDrawingStatus = true;
 		at = 1;
 	} catch (e) {
-		alert(
-			`Error generating images. Please try again or see console for more details`
+		notifications.notify(
+			`Error generating images. Please try again or see console for more details`,
+			{
+				type: NotificationType.ERROR,
+				timeout: config.notificationTimeout * 2,
+			}
 		);
 		console.warn(`[dream] Error generating images:`);
 		console.warn(e);
@@ -614,8 +618,12 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			imageindextxt.textContent = `${at}/${images.length - 1}`;
 		} catch (e) {
 			if (alertCount < 2) {
-				alert(
-					`Error generating images. Please try again or see console for more details`
+				notifications.notify(
+					`Error generating images. Please try again or see console for more details`,
+					{
+						type: NotificationType.ERROR,
+						timeout: config.notificationTimeout * 2,
+					}
 				);
 			} else {
 				eagerGenerateCount = 0;

@@ -85,7 +85,9 @@
 				id = guid();
 				workspaces.add({id, name, workspace}).onsuccess = () => {
 					listWorkspaces(id);
-					alert(`Workspace saved as '${name}'`);
+					notifications.notify(`Workspace saved as '${name}'`, {
+						type: "success",
+					});
 				};
 			}
 		} else {
@@ -93,7 +95,9 @@
 				const ws = e.target.result;
 				if (ws) {
 					workspaces.put({id, workspace}).onsuccess = () => {
-						alert(`Workspace saved as '${ws.value.name}'`);
+						notifications.notify(`Workspace saved as '${ws.value.name}'`, {
+							type: "success",
+						});
 						listWorkspaces();
 					};
 				}
@@ -137,7 +141,7 @@
 			workspaces.get(id).onsuccess = (e) => {
 				const workspace = e.target.result;
 				const name = prompt(
-					`Please enter the new workspace name.\nOriginal is '${workspace.name}'`
+					`Please enter the new workspace name.<br>Original is '${workspace.name}'`
 				).trim();
 
 				if (!name) return;
@@ -157,11 +161,12 @@
 
 			let id = workspaceAutocomplete.value;
 
-			workspaces.get(id).onsuccess = (e) => {
+			workspaces.get(id).onsuccess = async (e) => {
 				const workspace = e.target.result;
 
 				if (
-					confirm(
+					await notifications.dialog(
+						"Delete Workspace",
 						`Do you really want to delete the workspace '${workspace.name}'?`
 					)
 				) {

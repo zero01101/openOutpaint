@@ -104,7 +104,7 @@
 						if (data.host)
 							setFixedHost(
 								data.host,
-								`Are you sure you want to modify the host?\nThis configuration was provided by the hosting page\n - ${parentWindow.document.title} (${origin})`
+								`Are you sure you want to modify the host?<br>This configuration was provided by the hosting page:<br> - ${parentWindow.document.title} (${origin})`
 							);
 						if (data.destinations) webui.destinations = data.destinations;
 
@@ -118,6 +118,19 @@
 									data.image.resourceName || "External Resource",
 									image
 								);
+								// Fit image on screen if too big
+								const wr = image.width / window.innerWidth;
+								const hr = image.height / window.innerHeight;
+								const mr = Math.max(wr, hr);
+
+								if (mr > viewport.zoom) {
+									viewport.zoom = mr * 1.3;
+									viewport.transform(imageCollection.element);
+
+									toolbar._current_tool.redrawui &&
+										toolbar._current_tool.redrawui();
+								}
+
 								tools.stamp.enable();
 							};
 						}
