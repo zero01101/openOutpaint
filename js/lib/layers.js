@@ -603,11 +603,11 @@ const layers = {
 
 							// Hides this layer (don't draw)
 							hide() {
-								this.canvas.style.display = "none";
+								this.state.visible = false;
 							},
 							// Hides this layer (don't draw)
 							unhide() {
-								this.canvas.style.display = "block";
+								this.state.visible = true;
 							},
 						},
 						_layerlogpath
