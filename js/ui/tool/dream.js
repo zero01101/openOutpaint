@@ -538,7 +538,13 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				endpoint == "img2img" &&
 				toolbar._current_tool.state.removeBackground
 			) {
-				canvas = subtractBackground(canvas, bb, dreamData.bgImg, 0);
+				canvas = subtractBackground(
+					canvas,
+					bb,
+					dreamData.bgImg,
+					toolbar._current_tool.state.carve_blur,
+					toolbar._current_tool.state.carve_threshold
+				);
 			}
 
 			commands.runCommand("drawImage", "Image Dream", {
@@ -1760,7 +1766,16 @@ const dreamTool = () =>
 						state,
 						"removeBackground",
 						"Remove Identical/BG Pixels",
-						"icon-slice"
+						"icon-slice",
+						() => {
+							if (state.removeBackground) {
+								state.ctxmenu.carveBlurLabel.classList.remove("invisible");
+								state.ctxmenu.carveThresholdLabel.classList.remove("invisible");
+							} else {
+								state.ctxmenu.carveBlurLabel.classList.add("invisible");
+								state.ctxmenu.carveThresholdLabel.classList.add("invisible");
+							}
+						}
 					).checkbox;
 
 					// Overmasking Slider
@@ -1788,6 +1803,32 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
+					// bg carve blur
+					state.ctxmenu.carveBlurLabel = _toolbar_input.slider(
+						state,
+						"carve_blur",
+						"BG Remove Blur",
+						{
+							min: 0,
+							max: 30,
+							step: 2,
+							textStep: 1,
+						}
+					).slider;
+					state.ctxmenu.carveBlurLabel.classList.add("invisible");
+					// bg carve threshold
+					state.ctxmenu.carveThresholdLabel = _toolbar_input.slider(
+						state,
+						"carve_threshold",
+						"BG Remove Threshold",
+						{
+							min: 0,
+							max: 255,
+							step: 5,
+							textStep: 1,
+						}
+					).slider;
+					state.ctxmenu.carveThresholdLabel.classList.add("invisible");
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -1805,6 +1846,8 @@ const dreamTool = () =>
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
+				menu.appendChild(state.ctxmenu.carveBlurLabel);
+				menu.appendChild(state.ctxmenu.carveThresholdLabel);
 				menu.appendChild(state.ctxmenu.outpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
@@ -2326,7 +2369,16 @@ const img2imgTool = () =>
 						state,
 						"removeBackground",
 						"Remove Identical/BG Pixels",
-						"icon-slice"
+						"icon-slice",
+						() => {
+							if (state.removeBackground) {
+								state.ctxmenu.carveBlurLabel.classList.remove("invisible");
+								state.ctxmenu.carveThresholdLabel.classList.remove("invisible");
+							} else {
+								state.ctxmenu.carveBlurLabel.classList.add("invisible");
+								state.ctxmenu.carveThresholdLabel.classList.add("invisible");
+							}
+						}
 					).checkbox;
 
 					// Border Mask Size Slider
@@ -2387,6 +2439,34 @@ const img2imgTool = () =>
 					state.ctxmenu.instructPix2PixImgCfgLabel.classList.add(
 						"instruct-pix2pix-img-cfg"
 					);
+
+					// bg carve blur
+					state.ctxmenu.carveBlurLabel = _toolbar_input.slider(
+						state,
+						"carve_blur",
+						"BG Remove Blur",
+						{
+							min: 0,
+							max: 30,
+							step: 2,
+							textStep: 1,
+						}
+					).slider;
+					state.ctxmenu.carveBlurLabel.classList.add("invisible");
+
+					// bg carve threshold
+					state.ctxmenu.carveThresholdLabel = _toolbar_input.slider(
+						state,
+						"carve_threshold",
+						"BG Remove Threshold",
+						{
+							min: 0,
+							max: 255,
+							step: 5,
+							textStep: 1,
+						}
+					).slider;
+					state.ctxmenu.carveThresholdLabel.classList.add("invisible");
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2400,6 +2480,8 @@ const img2imgTool = () =>
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
+				menu.appendChild(state.ctxmenu.carveBlurLabel);
+				menu.appendChild(state.ctxmenu.carveThresholdLabel);
 				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.instructPix2PixImgCfgLabel);

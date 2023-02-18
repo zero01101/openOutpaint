@@ -483,7 +483,7 @@ const makeElement = (
  * @param {number}} blur
  * @returns {HTMLCanvasElement}
  */
-const subtractBackground = (canvas, bb, bgImg, blur = 0) => {
+const subtractBackground = (canvas, bb, bgImg, blur = 0, threshold = 10) => {
 	// set up temp canvases
 	const bgCanvas = document.createElement("canvas");
 	const fgCanvas = document.createElement("canvas");
@@ -503,19 +503,22 @@ const subtractBackground = (canvas, bb, bgImg, blur = 0) => {
 	// draw new image
 	fgCtx.drawImage(canvas, 0, 0);
 	const fgImgData = fgCtx.getImageData(0, 0, bb.w, bb.h);
-	// const blendImgData = blendCtx.getImageData(0, 0, bb.w, bb.h);
 	for (var i = 0; i < bgImgData.data.length; i += 4) {
+		// one of these days i'm gonna learn how to use map reduce or whatever and stop iterating in for loops :(
+		// a la https://adamwathan.me/refactoring-to-collections/
+
+		// background rgb
 		var bgr = bgImgData.data[i];
 		var bgg = bgImgData.data[i + 1];
 		var bgb = bgImgData.data[i + 2];
-
+		// foreground rgb
 		var fgr = fgImgData.data[i];
 		var fgb = fgImgData.data[i + 1];
 		var fgd = fgImgData.data[i + 2];
-
-		const dr = Math.abs(bgr - fgr) > 10 ? fgr : 0;
-		const dg = Math.abs(bgg - fgb) > 10 ? fgb : 0;
-		const db = Math.abs(bgb - fgd) > 10 ? fgd : 0;
+		// delta rgb
+		const dr = Math.abs(bgr - fgr) > threshold ? fgr : 0;
+		const dg = Math.abs(bgg - fgb) > threshold ? fgb : 0;
+		const db = Math.abs(bgb - fgd) > threshold ? fgd : 0;
 
 		const pxChanged = dr > 0 && dg > 0 && db > 0;
 
