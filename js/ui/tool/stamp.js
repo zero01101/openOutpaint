@@ -91,7 +91,7 @@ const stampTool = () =>
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 
 			mouse.listen.world.onwheel.clear(state.onwheelcb);
-			keyboard.deleteShortcut(state.togglemirror, "Delete");
+			keyboard.deleteShortcut(state.togglemirror, "Equal");
 
 			ovLayer.clear();
 		},
