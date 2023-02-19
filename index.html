@@ -371,9 +371,16 @@
 			<div class="menu-container" style="min-width: 200px">
 				<div id="script-select" class="script-select">
 					<select id="script-selector" onchange="changeScript(event)">
-						<option id="no_selected_script" value="">Select a script...</option>
-						<option id="custom" value="custom">Other</option>
+						<!-- <option id="no_selected_script" value="">Select a script...</option>
+						<option id="custom" value="custom">Custom</option> -->
 					</select>
+					<button
+						id="save-custom-script"
+						disabled="disabled"
+						title="Save custom script"
+						onclick="saveCustomScript()">
+						<image src="./res/icons/save.svg" width="60%"></image>
+					</button>
 				</div>
 				<div id="script-name" class="script-name">
 					<label for="script-name-input">Script Name:</label>
@@ -451,7 +458,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=c9b95ae" type="text/javascript"></script>
+		<script src="js/index.js?v=ef5a869" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=4f29db4"
@@ -465,7 +472,7 @@
 			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=00fdfe4" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=5330f89" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=e9bd0eb"
 			type="text/javascript"></script>

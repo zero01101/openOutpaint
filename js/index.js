@@ -145,6 +145,7 @@ var url = "/sdapi/v1/";
 const basePixelCount = 64; //64 px - ALWAYS 64 PX
 var focused = true;
 let defaultScripts = {};
+let userScripts = {};
 
 function startup() {
 	testHostConfiguration();
@@ -171,7 +172,7 @@ function startup() {
 	changeRestoreFaces();
 	changeSyncCursorSize();
 	checkFocus();
-	loadDefaultScripts();
+	refreshScripts();
 }
 
 function setFixedHost(h, changePromptMessage) {
@@ -1400,6 +1401,28 @@ function checkFocus() {
 	}
 }
 
+function refreshScripts() {
+	selector = document.getElementById("script-selector");
+	selector.innerHTML = "";
+	createBaseScriptOptions();
+	loadDefaultScripts();
+	loadUserScripts();
+}
+
+function createBaseScriptOptions() {
+	selector = document.getElementById("script-selector");
+	var noScript = document.createElement("option");
+	noScript.id = "no_selected_script";
+	noScript.value = "";
+	noScript.innerHTML = "Select a script...";
+	selector.appendChild(noScript);
+	var customScript = document.createElement("option");
+	customScript.id = "custom";
+	customScript.value = "custom";
+	customScript.innerHTML = "Custom";
+	selector.appendChild(customScript);
+}
+
 async function loadDefaultScripts() {
 	selector = document.getElementById("script-selector");
 	const response = await fetch("./defaultscripts.json");
@@ -1413,17 +1436,33 @@ async function loadDefaultScripts() {
 	//return json;
 }
 
-function changeScript(evt) {
+async function loadUserScripts() {
+	selector = document.getElementById("script-selector");
+	const response = await fetch("./userdefinedscripts.json");
+	const json = await response.json();
+	for (const key in json.userScripts) {
+		var opt = document.createElement("option");
+		opt.value = opt.innerHTML = key;
+		selector.appendChild(opt);
+	}
+	userScripts = json;
+}
+
+function changeScript(event) {
 	let enable = () => {
 		scriptName.disabled = false;
+		saveScriptButton.disabled = false;
 	};
 	let disable = () => {
 		scriptName.disabled = true;
+		saveScriptButton.disabled = true;
 	};
-	let selected = evt.target.value;
+	let selected = event.target.value;
 	let scriptName = document.getElementById("script-name-input");
 	let scriptArgs = document.getElementById("script-args-input");
+	let saveScriptButton = document.getElementById("save-custom-script");
 	scriptName.value = selected;
+	scriptArgs.title = "";
 	disable();
 	switch (selected) {
 		case "custom": {
@@ -1436,17 +1475,34 @@ function changeScript(evt) {
 		case "": {
 			// specifically no selected script
 			scriptArgs.value = "";
-			scriptArgs.title = "";
 			break;
 		}
 		default: {
-			// check defaultScripts objects for selected script
 			scriptName.value = selected;
-			scriptArgs.value = defaultScripts.defaultScripts[selected].scriptValues;
-			scriptArgs.title = defaultScripts.defaultScripts[selected].titleText;
+			// check default scripts for selected script
+			if (selected in defaultScripts.defaultScripts) {
+				scriptArgs.value = defaultScripts.defaultScripts[selected].scriptValues;
+				scriptArgs.title = defaultScripts.defaultScripts[selected].titleText;
+			}
 			// if not found, check user scripts
-
+			// TODO yknow what check userscripts first; if customizations have been made load those instead of defaults, i'm too stupid to do that right now
+			else if (selected in userScripts.userScripts) {
+				scriptArgs.value = userScripts.userScripts[selected].scriptValues;
+				enable();
+			}
 			// if not found, wtf
+		}
+	}
+}
+
+async function saveCustomScript() {
+	let selector = document.getElementById("script-name-input");
+	let selected = selector.value;
+	let args = document.getElementById("script-args-input").value;
+	if (selected.trim() != "") {
+		if (selected in userScripts.userScripts) {
+			userScripts.userScripts[selected].scriptValues = args;
+		} else {
 		}
 	}
 }

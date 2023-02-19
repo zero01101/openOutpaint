@@ -1449,6 +1449,8 @@ const dreamTool = () =>
 				state.overMaskPx = 20;
 				state.preserveMasks = false;
 				state.eagerGenerateCount = 0;
+				state.carve_blur = 0;
+				state.carve_threshold = 10;
 
 				state.carve_blur = 0;
 				state.carve_threshold = 10;
@@ -1700,7 +1702,7 @@ const dreamTool = () =>
 						}
 					).checkbox;
 
-					// Keep Masked Content Checkbox
+					// Keep Unmasked Content Checkbox
 					state.ctxmenu.keepUnmaskedLabel = _toolbar_input.checkbox(
 						state,
 						"openoutpaint/dream-keepunmasked",
@@ -1724,7 +1726,7 @@ const dreamTool = () =>
 						}
 					).checkbox;
 
-					// Keep Masked Content Blur Slider
+					// Keep Unmasked Content Blur Slider
 					state.ctxmenu.keepUnmaskedBlurSlider = _toolbar_input.slider(
 						state,
 						"openoutpaint/dream-keepunmaskedblur",
@@ -1780,11 +1782,13 @@ const dreamTool = () =>
 						"icon-slice",
 						() => {
 							if (state.removeBackground) {
-								state.ctxmenu.carveBlurLabel.classList.remove("invisible");
-								state.ctxmenu.carveThresholdLabel.classList.remove("invisible");
+								state.ctxmenu.carveBlurSlider.classList.remove("invisible");
+								state.ctxmenu.carveThresholdSlider.classList.remove(
+									"invisible"
+								);
 							} else {
-								state.ctxmenu.carveBlurLabel.classList.add("invisible");
-								state.ctxmenu.carveThresholdLabel.classList.add("invisible");
+								state.ctxmenu.carveBlurSlider.classList.add("invisible");
+								state.ctxmenu.carveThresholdSlider.classList.add("invisible");
 							}
 						}
 					).checkbox;
@@ -1817,7 +1821,7 @@ const dreamTool = () =>
 						}
 					).slider;
 					// bg carve blur
-					state.ctxmenu.carveBlurLabel = _toolbar_input.slider(
+					state.ctxmenu.carveBlurSlider = _toolbar_input.slider(
 						state,
 						"openoutpaint/dream-carveblur",
 						"carve_blur",
@@ -1829,9 +1833,9 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
-					state.ctxmenu.carveBlurLabel.classList.add("invisible");
+					state.ctxmenu.carveBlurSlider.classList.add("invisible");
 					// bg carve threshold
-					state.ctxmenu.carveThresholdLabel = _toolbar_input.slider(
+					state.ctxmenu.carveThresholdSlider = _toolbar_input.slider(
 						state,
 						"openoutpaint/dream-carvethreshold",
 						"carve_threshold",
@@ -1843,7 +1847,7 @@ const dreamTool = () =>
 							textStep: 1,
 						}
 					).slider;
-					state.ctxmenu.carveThresholdLabel.classList.add("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -1854,12 +1858,12 @@ const dreamTool = () =>
 				array.appendChild(state.ctxmenu.invertMaskLabel);
 				array.appendChild(state.ctxmenu.preserveMasksLabel);
 				//menu.appendChild(document.createElement("br"));
-				array.appendChild(state.ctxmenu.removeBackgroundLabel);
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
+				array.appendChild(state.ctxmenu.removeBackgroundLabel);
 				menu.appendChild(array);
-				menu.appendChild(state.ctxmenu.carveBlurLabel);
-				menu.appendChild(state.ctxmenu.carveThresholdLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.carveBlurSlider);
+				menu.appendChild(state.ctxmenu.carveThresholdSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
@@ -1951,6 +1955,8 @@ const img2imgTool = () =>
 				state.fullResolution = false;
 				state.preserveMasks = false;
 				state.eagerGenerateCount = 0;
+				state.carve_blur = 0;
+				state.carve_threshold = 10;
 
 				state.denoisingStrength = 0.7;
 
@@ -2306,7 +2312,7 @@ const img2imgTool = () =>
 						}
 					).checkbox;
 
-					// Keep Masked Content Checkbox
+					// Keep Unmasked Content Checkbox
 					state.ctxmenu.keepUnmaskedLabel = _toolbar_input.checkbox(
 						state,
 						"openoutpaint/img2img-keepunmasked",
@@ -2330,7 +2336,7 @@ const img2imgTool = () =>
 						}
 					).checkbox;
 
-					// Keep Masked Content Blur Slider
+					// Keep Unmasked Content Blur Slider
 					state.ctxmenu.keepUnmaskedBlurSlider = _toolbar_input.slider(
 						state,
 						"openoutpaint/img2img-unmaskedblur",
@@ -2400,11 +2406,13 @@ const img2imgTool = () =>
 						"icon-slice",
 						() => {
 							if (state.removeBackground) {
-								state.ctxmenu.carveBlurLabel.classList.remove("invisible");
-								state.ctxmenu.carveThresholdLabel.classList.remove("invisible");
+								state.ctxmenu.carveBlurSlider.classList.remove("invisible");
+								state.ctxmenu.carveThresholdSlider.classList.remove(
+									"invisible"
+								);
 							} else {
-								state.ctxmenu.carveBlurLabel.classList.add("invisible");
-								state.ctxmenu.carveThresholdLabel.classList.add("invisible");
+								state.ctxmenu.carveBlurSlider.classList.add("invisible");
+								state.ctxmenu.carveThresholdSlider.classList.add("invisible");
 							}
 						}
 					).checkbox;
@@ -2473,7 +2481,7 @@ const img2imgTool = () =>
 					);
 
 					// bg carve blur
-					state.ctxmenu.carveBlurLabel = _toolbar_input.slider(
+					state.ctxmenu.carveBlurSlider = _toolbar_input.slider(
 						state,
 						"openoutpaint/img2img-carveblur",
 						"carve_blur",
@@ -2485,10 +2493,10 @@ const img2imgTool = () =>
 							textStep: 1,
 						}
 					).slider;
-					state.ctxmenu.carveBlurLabel.classList.add("invisible");
+					state.ctxmenu.carveBlurSlider.classList.add("invisible");
 
 					// bg carve threshold
-					state.ctxmenu.carveThresholdLabel = _toolbar_input.slider(
+					state.ctxmenu.carveThresholdSlider = _toolbar_input.slider(
 						state,
 						"openoutpaint/img2img-carvethreshold",
 						"carve_threshold",
@@ -2500,7 +2508,7 @@ const img2imgTool = () =>
 							textStep: 1,
 						}
 					).slider;
-					state.ctxmenu.carveThresholdLabel.classList.add("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2509,12 +2517,12 @@ const img2imgTool = () =>
 				array.appendChild(state.ctxmenu.snapToGridLabel);
 				array.appendChild(state.ctxmenu.invertMaskLabel);
 				array.appendChild(state.ctxmenu.preserveMasksLabel);
-				array.appendChild(state.ctxmenu.removeBackgroundLabel);
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
+				array.appendChild(state.ctxmenu.removeBackgroundLabel);
 				menu.appendChild(array);
-				menu.appendChild(state.ctxmenu.carveBlurLabel);
-				menu.appendChild(state.ctxmenu.carveThresholdLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
+				menu.appendChild(state.ctxmenu.carveBlurSlider);
+				menu.appendChild(state.ctxmenu.carveThresholdSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
