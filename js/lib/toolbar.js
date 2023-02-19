@@ -151,18 +151,24 @@ const toolbar = {
  * Premade inputs for populating the context menus
  */
 const _toolbar_input = {
-	checkbox: (state, dataKey, text, classes, cb = null) => {
+	checkbox: (state, lsKey, dataKey, text, classes, cb = null) => {
 		if (state[dataKey] === undefined) state[dataKey] = false;
+
+		const savedValueStr = lsKey && localStorage.getItem(lsKey);
+		const savedValue = savedValueStr && JSON.parse(savedValueStr);
 
 		const checkbox = document.createElement("input");
 		checkbox.type = "checkbox";
 		checkbox.classList.add("oo-checkbox", "ui", "inline-icon");
+
+		if (savedValue !== null) state[dataKey] = checkbox.checked = savedValue;
 
 		if (typeof classes === "string") classes = [classes];
 
 		if (classes) checkbox.classList.add(...classes);
 		checkbox.checked = state[dataKey];
 		checkbox.onchange = () => {
+			if (lsKey) localStorage.setItem(lsKey, JSON.stringify(checkbox.checked));
 			state[dataKey] = checkbox.checked;
 			cb && cb();
 		};
@@ -185,21 +191,27 @@ const _toolbar_input = {
 		};
 	},
 
-	slider: (state, dataKey, text, options = {}) => {
+	slider: (state, lsKey, dataKey, text, options = {}) => {
 		defaultOpt(options, {min: 0, max: 1, step: 0.1, textStep: null, cb: null});
 		const slider = document.createElement("div");
+
+		const savedValueStr = lsKey && localStorage.getItem(lsKey);
+		const savedValue = savedValueStr && JSON.parse(savedValueStr);
 
 		const value = createSlider(text, slider, {
 			min: options.min,
 			max: options.max,
 			step: options.step,
 			valuecb: (v) => {
+				if (lsKey) localStorage.setItem(lsKey, JSON.stringify(v));
 				state[dataKey] = v;
 				options.cb && options.cb(v);
 			},
 			defaultValue: state[dataKey],
 			textStep: options.textStep,
 		});
+
+		if (savedValue !== null) value.value = savedValue;
 
 		return {
 			slider,
@@ -213,12 +225,16 @@ const _toolbar_input = {
 
 	selectlist: (
 		state,
+		lsKey,
 		dataKey,
 		text,
 		options = {value, text},
 		defaultOptionValue,
 		cb = null
 	) => {
+		const savedValueStr = lsKey && localStorage.getItem(lsKey);
+		const savedValue = savedValueStr && JSON.parse(savedValueStr);
+
 		const selectlist = document.createElement("select");
 		selectlist.classList.add("bareselector");
 		Object.entries(options).forEach((opt) => {
@@ -228,7 +244,13 @@ const _toolbar_input = {
 			selectlist.options.add(option);
 		});
 		selectlist.selectedIndex = defaultOptionValue;
+
+		if (savedValue !== null)
+			state[dataKey] = selectlist.selectedIndex = savedValue;
+
 		selectlist.onchange = () => {
+			if (lsKey)
+				localStorage.setItem(lsKey, JSON.stringify(selectlist.selectedIndex));
 			state[dataKey] = selectlist.selectedIndex;
 			cb && cb();
 		};

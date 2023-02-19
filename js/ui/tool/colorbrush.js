@@ -373,6 +373,7 @@ const colorBrushTool = () =>
 					const array = document.createElement("div");
 					const affectMaskCheckbox = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/colorbrush-affectmask",
 						"affectMask",
 						"Affect Mask",
 						"icon-venetian-mask"
@@ -384,6 +385,7 @@ const colorBrushTool = () =>
 					// Brush size slider
 					const brushSizeSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/colorbrush-brushsize",
 						"brushSize",
 						"Brush Size",
 						{
@@ -399,6 +401,7 @@ const colorBrushTool = () =>
 					// Brush opacity slider
 					const brushOpacitySlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/colorbrush-brushopacity",
 						"brushOpacity",
 						"Brush Opacity",
 						{
@@ -413,6 +416,7 @@ const colorBrushTool = () =>
 					// Brush blur slider
 					const brushBlurSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/colorbrush-brushblur",
 						"brushBlur",
 						"Brush Blur",
 						{

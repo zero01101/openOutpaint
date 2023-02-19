@@ -186,6 +186,7 @@ const maskBrushTool = () =>
 					// Brush size slider
 					const brushSizeSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/maskbrush-brushsize",
 						"brushSize",
 						"Brush Size",
 						{
@@ -206,6 +207,7 @@ const maskBrushTool = () =>
 					// Brush opacity slider
 					const brushOpacitySlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/maskbrush-brushopacity",
 						"brushOpacity",
 						"Brush Opacity",
 						{
@@ -220,6 +222,7 @@ const maskBrushTool = () =>
 					// Brush blur slider
 					const brushBlurSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/maskbrush-brushblur",
 						"brushBlur",
 						"Brush Blur",
 						{
