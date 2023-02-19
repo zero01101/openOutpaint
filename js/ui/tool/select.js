@@ -652,6 +652,7 @@ const selectTransformTool = () =>
 					// Snap To Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/select-snaptogrid",
 						"snapToGrid",
 						"Snap To Grid",
 						"icon-grid"
@@ -660,6 +661,7 @@ const selectTransformTool = () =>
 					// Keep Aspect Ratio
 					state.ctxmenu.keepAspectRatioLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/select-keepaspectratio",
 						"keepAspectRatio",
 						"Keep Aspect Ratio",
 						"icon-maximize"
@@ -668,6 +670,7 @@ const selectTransformTool = () =>
 					// Use Clipboard
 					const clipboardCheckbox = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/select-useclipboard",
 						"useClipboard",
 						"Use clipboard",
 						"icon-clipboard-list"
@@ -679,6 +682,7 @@ const selectTransformTool = () =>
 					// Selection Peek Opacity
 					state.ctxmenu.selectionPeekOpacitySlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/select-peekopacity",
 						"selectionPeekOpacity",
 						"Peek Opacity",
 						{

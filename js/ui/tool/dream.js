@@ -1649,6 +1649,7 @@ const dreamTool = () =>
 					// Cursor Size Slider
 					const cursorSizeSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/dream-cursorsize",
 						"cursorSize",
 						"Cursor Size",
 						{
@@ -1681,6 +1682,7 @@ const dreamTool = () =>
 					// Snap to Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/dream-snaptogrid",
 						"snapToGrid",
 						"Snap To Grid",
 						"icon-grid"
@@ -1689,6 +1691,7 @@ const dreamTool = () =>
 					// Invert Mask Checkbox
 					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/dream-invertmask",
 						"invertMask",
 						"Invert Mask",
 						["icon-venetian-mask", "invert-mask-checkbox"],
@@ -1700,6 +1703,7 @@ const dreamTool = () =>
 					// Keep Masked Content Checkbox
 					state.ctxmenu.keepUnmaskedLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/dream-keepunmasked",
 						"keepUnmasked",
 						"Keep Unmasked",
 						"icon-pin",
@@ -1723,6 +1727,7 @@ const dreamTool = () =>
 					// Keep Masked Content Blur Slider
 					state.ctxmenu.keepUnmaskedBlurSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/dream-keepunmaskedblur",
 						"keepUnmaskedBlur",
 						"Keep Unmasked Blur",
 						{
@@ -1742,6 +1747,7 @@ const dreamTool = () =>
 					// outpaint fill type select list
 					state.ctxmenu.outpaintTypeSelect = _toolbar_input.selectlist(
 						state,
+						"openoutpaint/dream-outpainttype",
 						"outpainting_fill",
 						"Outpaint Type",
 						{
@@ -1759,6 +1765,7 @@ const dreamTool = () =>
 					// Preserve Brushed Masks Checkbox
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/dream-preservemasks",
 						"preserveMasks",
 						"Preserve Brushed Masks",
 						"icon-paintbrush"
@@ -1767,6 +1774,7 @@ const dreamTool = () =>
 					// Remove Identical/Background Pixels Checkbox
 					state.ctxmenu.removeBackgroundLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/dream-removebg",
 						"removeBackground",
 						"Remove Identical/BG Pixels",
 						"icon-slice",
@@ -1784,6 +1792,7 @@ const dreamTool = () =>
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/dream-overmaskpx",
 						"overMaskPx",
 						"Overmask px",
 						{
@@ -1797,6 +1806,7 @@ const dreamTool = () =>
 					// Eager generation Slider
 					state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/dream-eagergeneratecount",
 						"eagerGenerateCount",
 						"Generate-ahead count",
 						{
@@ -1809,6 +1819,7 @@ const dreamTool = () =>
 					// bg carve blur
 					state.ctxmenu.carveBlurLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/dream-carveblur",
 						"carve_blur",
 						"BG Remove Blur",
 						{
@@ -1822,6 +1833,7 @@ const dreamTool = () =>
 					// bg carve threshold
 					state.ctxmenu.carveThresholdLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/dream-carvethreshold",
 						"carve_threshold",
 						"BG Remove Threshold",
 						{
@@ -2246,6 +2258,7 @@ const img2imgTool = () =>
 					// Cursor Size Slider
 					const cursorSizeSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-cursorsize",
 						"cursorSize",
 						"Cursor Size",
 						{
@@ -2275,6 +2288,7 @@ const img2imgTool = () =>
 					// Snap To Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-snaptogrid",
 						"snapToGrid",
 						"Snap To Grid",
 						"icon-grid"
@@ -2283,6 +2297,7 @@ const img2imgTool = () =>
 					// Invert Mask Checkbox
 					state.ctxmenu.invertMaskLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-invertmask",
 						"invertMask",
 						"Invert Mask",
 						["icon-venetian-mask", "invert-mask-checkbox"],
@@ -2294,6 +2309,7 @@ const img2imgTool = () =>
 					// Keep Masked Content Checkbox
 					state.ctxmenu.keepUnmaskedLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-keepunmasked",
 						"keepUnmasked",
 						"Keep Unmasked",
 						"icon-pin",
@@ -2317,6 +2333,7 @@ const img2imgTool = () =>
 					// Keep Masked Content Blur Slider
 					state.ctxmenu.keepUnmaskedBlurSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-unmaskedblur",
 						"keepUnmaskedBlur",
 						"Keep Unmasked Blur",
 						{
@@ -2336,6 +2353,7 @@ const img2imgTool = () =>
 					// Preserve Brushed Masks Checkbox
 					state.ctxmenu.preserveMasksLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-preservemasks",
 						"preserveMasks",
 						"Preserve Brushed Masks",
 						"icon-paintbrush"
@@ -2344,6 +2362,7 @@ const img2imgTool = () =>
 					// Inpaint Full Resolution Checkbox
 					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-fullresolution",
 						"fullResolution",
 						"Inpaint Full Resolution",
 						"icon-expand"
@@ -2352,6 +2371,7 @@ const img2imgTool = () =>
 					// Denoising Strength Slider
 					state.ctxmenu.denoisingStrengthSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-denoisingstrength",
 						"denoisingStrength",
 						"Denoising Strength",
 						{
@@ -2365,6 +2385,7 @@ const img2imgTool = () =>
 					// Border Mask Gradient Checkbox
 					state.ctxmenu.borderMaskGradientCheckbox = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-gradient",
 						"gradient",
 						"Border Mask Gradient",
 						"icon-box-select"
@@ -2373,6 +2394,7 @@ const img2imgTool = () =>
 					// Remove Identical/Background Pixels Checkbox
 					state.ctxmenu.removeBackgroundLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/img2img-removebg",
 						"removeBackground",
 						"Remove Identical/BG Pixels",
 						"icon-slice",
@@ -2390,6 +2412,7 @@ const img2imgTool = () =>
 					// Border Mask Size Slider
 					state.ctxmenu.borderMaskSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-keepbordersize",
 						"keepBorderSize",
 						"Keep Border Size",
 						{
@@ -2403,6 +2426,7 @@ const img2imgTool = () =>
 					// inpaint fill type select list
 					state.ctxmenu.inpaintTypeSelect = _toolbar_input.selectlist(
 						state,
+						"openoutpaint/img2img-inpaintingtype",
 						"inpainting_fill",
 						"Inpaint Type",
 						{
@@ -2420,6 +2444,7 @@ const img2imgTool = () =>
 					// Eager generation Slider
 					state.ctxmenu.eagerGenerateCountLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-eagergeneratecount",
 						"eagerGenerateCount",
 						"Generate-ahead count",
 						{
@@ -2433,6 +2458,7 @@ const img2imgTool = () =>
 					// img cfg scale slider for instruct-pix2pix
 					state.ctxmenu.instructPix2PixImgCfgLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-ip2pcfg",
 						"image_cfg_scale",
 						"iP2P Image CFG Scale",
 						{
@@ -2449,6 +2475,7 @@ const img2imgTool = () =>
 					// bg carve blur
 					state.ctxmenu.carveBlurLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-carveblur",
 						"carve_blur",
 						"BG Remove Blur",
 						{
@@ -2463,6 +2490,7 @@ const img2imgTool = () =>
 					// bg carve threshold
 					state.ctxmenu.carveThresholdLabel = _toolbar_input.slider(
 						state,
+						"openoutpaint/img2img-carvethreshold",
 						"carve_threshold",
 						"BG Remove Threshold",
 						{

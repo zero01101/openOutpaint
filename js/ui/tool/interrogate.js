@@ -80,6 +80,7 @@ const interrogateTool = () =>
 					// Cursor Size Slider
 					const cursorSizeSlider = _toolbar_input.slider(
 						state,
+						"openoutpaint/interrogate-cursorsize",
 						"cursorSize",
 						"Cursor Size",
 						{
@@ -96,6 +97,7 @@ const interrogateTool = () =>
 					// Snap to Grid Checkbox
 					state.ctxmenu.snapToGridLabel = _toolbar_input.checkbox(
 						state,
+						"openoutpaint/interrogate-snaptogrid",
 						"snapToGrid",
 						"Snap To Grid",
 						"icon-grid"

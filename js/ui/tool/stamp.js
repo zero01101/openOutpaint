@@ -508,6 +508,7 @@ const stampTool = () =>
 					array.appendChild(
 						_toolbar_input.checkbox(
 							state,
+							"openoutpaint/stamp-snaptogrid",
 							"snapToGrid",
 							"Snap To Grid",
 							"icon-grid"
@@ -539,12 +540,18 @@ const stampTool = () =>
 					state.ctxmenu.buttonArray = array;
 
 					// Scale Slider
-					const scaleSlider = _toolbar_input.slider(state, "scale", "Scale", {
-						min: 0.01,
-						max: 10,
-						step: 0.1,
-						textStep: 0.001,
-					});
+					const scaleSlider = _toolbar_input.slider(
+						state,
+						null,
+						"scale",
+						"Scale",
+						{
+							min: 0.01,
+							max: 10,
+							step: 0.1,
+							textStep: 0.001,
+						}
+					);
 					state.ctxmenu.scaleSlider = scaleSlider.slider;
 					state.setScale = scaleSlider.setValue;
 
