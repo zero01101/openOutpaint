@@ -1845,12 +1845,12 @@ const dreamTool = () =>
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(array);
+				menu.appendChild(state.ctxmenu.carveBlurLabel);
+				menu.appendChild(state.ctxmenu.carveThresholdLabel);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
-				menu.appendChild(state.ctxmenu.carveBlurLabel);
-				menu.appendChild(state.ctxmenu.carveThresholdLabel);
 				menu.appendChild(state.ctxmenu.outpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
@@ -2484,10 +2484,10 @@ const img2imgTool = () =>
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				menu.appendChild(array);
-				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
-				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.carveBlurLabel);
 				menu.appendChild(state.ctxmenu.carveThresholdLabel);
+				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
+				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
 				menu.appendChild(state.ctxmenu.instructPix2PixImgCfgLabel);
