@@ -1428,7 +1428,7 @@ function changeScript(evt) {
 	switch (selected) {
 		case "custom": {
 			scriptName.value = "";
-			scriptArgs.value = "";
+			scriptArgs.value = "[]";
 			scriptArgs.title = "";
 			enable();
 			break;

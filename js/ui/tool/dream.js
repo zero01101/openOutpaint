@@ -1450,6 +1450,9 @@ const dreamTool = () =>
 				state.preserveMasks = false;
 				state.eagerGenerateCount = 0;
 
+				state.carve_blur = 0;
+				state.carve_threshold = 10;
+
 				state.erasePrevCursor = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 				state.erasePrevReticle = () =>
@@ -1941,6 +1944,9 @@ const img2imgTool = () =>
 
 				state.keepBorderSize = 64;
 				state.gradient = true;
+
+				state.carve_blur = 0;
+				state.carve_threshold = 10;
 
 				state.erasePrevCursor = () =>
 					uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
