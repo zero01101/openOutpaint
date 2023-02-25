@@ -519,6 +519,7 @@ const stampTool = () =>
 					const {checkbox: flipCheckbox, setValue: flipSetValue} =
 						_toolbar_input.checkbox(
 							state,
+							"openoutpaint/stamp-flip",
 							"flipStamp",
 							"Flip Stamp",
 							"icon-flip-vertical"
@@ -530,6 +531,7 @@ const stampTool = () =>
 					const {checkbox: mirrorCheckbox, setValue: mirrorSetValue} =
 						_toolbar_input.checkbox(
 							state,
+							"openoutpaint/stamp-mirror",
 							"mirrorStamp",
 							"Mirror Stamp",
 							"icon-flip-horizontal"

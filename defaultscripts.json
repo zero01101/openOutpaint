@@ -1,8 +1,8 @@
 {
 	"defaultScripts": {
 		"Loopback": {
-			"titleText": "IMG2IMG ONLY\n\nParams:\nloops (int) //def: 8\ndenoising_strength_change_factor (decimal, 0.90-1.10) //def: 0.99",
-			"scriptValues": "[8, 0.99]"
+			"titleText": "IMG2IMG ONLY\n\nParams:\nloops (int) //def: 8\ndenoising_strength_change_factor (decimal, 0.90-1.10) //def: 0.99\nappend_interrogation (enum, str: [\"None\",\"CLIP\",\"DeepBooru\"]) //def: None",
+			"scriptValues": "[8, 0.99, \"None\"]"
 		},
 		"Prompt matrix": {
 			"titleText": "Params:\nput_at_start (bool): expect pipe (|) delimited options at start of prompt //def: false\ndifferent_seeds (bool): use different seeds for each picture //def: false\nprompt_type (enum, str: [\"positive\",\"negative\"]) //def: \"positive\"\nvariations_delimiter (enum, str [\"comma\", \"space\"] //def: \"comma\"\nmargin_size (int): px margin value //def: 2",

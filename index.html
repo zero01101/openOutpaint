@@ -374,24 +374,29 @@
 						<!-- <option id="no_selected_script" value="">Select a script...</option>
 						<option id="custom" value="custom">Custom</option> -->
 					</select>
-					<button
+					<!-- <button
 						id="save-custom-script"
 						disabled="disabled"
 						title="Save custom script"
 						onclick="saveCustomScript()">
 						<image src="./res/icons/save.svg" width="60%"></image>
-					</button>
+					</button> -->
 				</div>
 				<div id="script-name" class="script-name">
-					<label for="script-name-input">Script Name:</label>
+					<label for="scrip-name-input">Script Name:</label>
 					<br />
-					<input id="script-name-input" disabled="disabled" />
+					<input
+						id="script-name-input"
+						disabled="disabled"
+						onfocusout="storeUserscriptVal(event, 'name')" />
 					<br />
 				</div>
 				<div id="script-args" class="script-args">
 					<label for="script-args-input">Script Args List:</label>
 					<br />
-					<textarea id="script-args-input"></textarea>
+					<textarea
+						id="script-args-input"
+						onfocusout="storeUserscriptVal(event, 'args')"></textarea>
 					<br />
 				</div>
 			</div>

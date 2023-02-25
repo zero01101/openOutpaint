@@ -1406,7 +1406,7 @@ function refreshScripts() {
 	selector.innerHTML = "";
 	createBaseScriptOptions();
 	loadDefaultScripts();
-	loadUserScripts();
+	// loadUserScripts();
 }
 
 function createBaseScriptOptions() {
@@ -1433,41 +1433,48 @@ async function loadDefaultScripts() {
 		selector.appendChild(opt);
 	}
 	defaultScripts = json;
-	//return json;
 }
 
-async function loadUserScripts() {
-	selector = document.getElementById("script-selector");
-	const response = await fetch("./userdefinedscripts.json");
-	const json = await response.json();
-	for (const key in json.userScripts) {
-		var opt = document.createElement("option");
-		opt.value = opt.innerHTML = key;
-		selector.appendChild(opt);
-	}
-	userScripts = json;
-}
+// async function loadUserScripts() {
+// 	selector = document.getElementById("script-selector");
+// 	const response = await fetch("./userdefinedscripts.json");
+// 	const json = await response.json();
+// 	for (const key in json.userScripts) {
+// 		var opt = document.createElement("option");
+// 		opt.value = opt.innerHTML = key;
+// 		selector.appendChild(opt);
+// 	}
+// 	userScripts = json;
+// }
 
 function changeScript(event) {
 	let enable = () => {
 		scriptName.disabled = false;
-		saveScriptButton.disabled = false;
+		// saveScriptButton.disabled = false;
 	};
 	let disable = () => {
 		scriptName.disabled = true;
-		saveScriptButton.disabled = true;
+		// saveScriptButton.disabled = true;
 	};
 	let selected = event.target.value;
 	let scriptName = document.getElementById("script-name-input");
 	let scriptArgs = document.getElementById("script-args-input");
-	let saveScriptButton = document.getElementById("save-custom-script");
+	// let saveScriptButton = document.getElementById("save-custom-script");
 	scriptName.value = selected;
 	scriptArgs.title = "";
 	disable();
 	switch (selected) {
 		case "custom": {
-			scriptName.value = "";
-			scriptArgs.value = "[]";
+			let _script_name_input =
+				localStorage.getItem("openoutpaint/script_name_input") === null
+					? ""
+					: localStorage.getItem("openoutpaint/script_name_input");
+			let _script_args_input =
+				localStorage.getItem("openoutpaint/script_args_input") === null
+					? "[]"
+					: localStorage.getItem("openoutpaint/script_args_input");
+			scriptName.value = _script_name_input;
+			scriptArgs.value = _script_args_input;
 			scriptArgs.title = "";
 			enable();
 			break;
@@ -1484,44 +1491,58 @@ function changeScript(event) {
 				scriptArgs.value = defaultScripts.defaultScripts[selected].scriptValues;
 				scriptArgs.title = defaultScripts.defaultScripts[selected].titleText;
 			}
+			// FURTHER TODO see if this is even plausible as i don't think JS can arbitrarily save data to files without downloading
+
 			// if not found, check user scripts
 			// TODO yknow what check userscripts first; if customizations have been made load those instead of defaults, i'm too stupid to do that right now
-			else if (selected in userScripts.userScripts) {
-				scriptArgs.value = userScripts.userScripts[selected].scriptValues;
-				enable();
-			}
+			// else if (selected in userScripts.userScripts) {
+			// 	scriptArgs.value = userScripts.userScripts[selected].scriptValues;
+			// 	enable();
+			// }
 			// if not found, wtf
 		}
 	}
 }
 
-async function saveCustomScript() {
-	let selector = document.getElementById("script-name-input");
-	let selected = selector.value;
-	let args = document.getElementById("script-args-input").value;
-	if (selected.trim() != "") {
-		if (selected in userScripts.userScripts) {
-			userScripts.userScripts[selected].scriptValues = args;
-		} else {
-		}
-	}
-}
+// async function saveCustomScript() {
+// 	let selector = document.getElementById("script-name-input");
+// 	let selected = selector.value;
+// 	let args = document.getElementById("script-args-input").value;
+// 	if (selected.trim() != "") {
+// 		if (selected in userScripts.userScripts) {
+// 			userScripts.userScripts[selected].scriptValues = args;
+// 		} else {
+// 		}
+// 	}
+// }
 
 function togglePix2PixImgCfg(value) {
 	// super hacky
 	// actually doesn't work at all yet so i'm leaving it here to taunt and remind me of my failures
+	// try {
+	// 	if (value.toLowerCase().includes("pix2pix")) {
+	// 		document
+	// 			.querySelector(".instruct-pix2pix-img-cfg")
+	// 			.classList.remove("invisible");
+	// 	} else {
+	// 		document
+	// 			.querySelector(".instruct-pix2pix-img-cfg")
+	// 			.classList.add("invisible");
+	// 	}
+	// } catch (e) {
+	// 	// highly likely not currently using img2img tool, do nothing
+	// }
+}
 
-	try {
-		if (value.toLowerCase().includes("pix2pix")) {
-			document
-				.querySelector(".instruct-pix2pix-img-cfg")
-				.classList.remove("invisible");
-		} else {
-			document
-				.querySelector(".instruct-pix2pix-img-cfg")
-				.classList.add("invisible");
-		}
-	} catch (e) {
-		// highly likely not currently using img2img tool, do nothing
+function storeUserscriptVal(evt, type) {
+	let currentScript = document.getElementById("script-selector").value;
+	if (currentScript === "custom") {
+		console.log(type);
+		console.log(evt);
+		let val = (currentScript = document.getElementById(
+			"script-" + type + "-input"
+		).value);
+
+		localStorage.setItem("openoutpaint/script_" + type + "_input", val);
 	}
 }
