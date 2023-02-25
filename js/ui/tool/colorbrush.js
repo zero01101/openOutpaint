@@ -25,7 +25,12 @@ const _color_brush_erase_callback = (evn, state, ctx) => {
 	ctx.save();
 	ctx.strokeStyle = "black";
 
-	ctx.filter = "blur(" + state.brushBlur + "px)";
+	ctx.filter =
+		"blur(" +
+		state.brushBlur +
+		"px) opacity(" +
+		state.brushOpacity * 100 +
+		"%)";
 	ctx.lineWidth = state.brushSize;
 	ctx.beginPath();
 	ctx.moveTo(
