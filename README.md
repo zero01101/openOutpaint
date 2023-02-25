@@ -26,6 +26,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - a very nicely functional and familiar layer system
 - save, load, import, and export workspaces - includes all your layers, history, canvas size, you name it!
 - inpainting/touchup mask brush
+- webUI script support (but you gotta [_find it_](https://github.com/zero01101/openOutpaint/wiki/Manual))
 - prompt history panel
 - optional (visibly) inverted mask mode - red masks get mutated, blue masks stay the same, but you can't take both pills at once
 - inpainting color brush to bring out your inner vincent van bob ross
