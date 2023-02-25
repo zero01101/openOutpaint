@@ -343,6 +343,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	/** @type {Array<string|null>} */
 	const images = [null];
 	const seeds = [-1];
+	const markedImages=[null]; //A sparse array of booleans indicating which images have been marked, by index
 	/** @type {HTMLDivElement} */
 	let imageSelectMenu = null;
 	// Layer for the images
@@ -471,11 +472,16 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		at--;
 		if (at < 0) at = images.length - 1;
 
-		imageindextxt.textContent = `${at}/${images.length - 1}`;
-		var seed = seeds[at];
-		seedbtn.title = "Use seed " + seed;
-		redraw();
+		activateImgAt(at);
 	};
+
+	const prevImgEvent = (evn) => {
+		if (evn.shiftKey) {
+			prevMarkedImg();
+		} else {
+			prevImg();
+		}
+	}
 
 	const nextImg = () => {
 		at++;
@@ -483,15 +489,29 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 		highestNavigatedImageIndex = Math.max(at, highestNavigatedImageIndex);
 
-		imageindextxt.textContent = `${at}/${images.length - 1}`;
-		var seed = seeds[at];
-		seedbtn.title = "Use seed " + seed;
-		redraw();
-
+		activateImgAt(at);
+	
 		if (needMoreGenerations() && !isGenerationPending()) {
 			makeMore();
 		}
 	};
+
+	const nextImgEvent = (evn) => {
+		if (evn.shiftKey) {
+			nextMarkedImg();
+		} else {
+			nextImg();
+		}
+	}
+
+	const activateImgAt = (at) => {
+		updateImageIndexText();
+		var seed = seeds[at];
+		seedbtn.title = "Use seed " + seed;
+		redraw();
+	}
+
+	
 
 	const applyImg = async () => {
 		if (!images[at]) return;
@@ -555,13 +575,78 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		if (!images[at]) return;
 		images.splice(at, 1);
 		seeds.splice(at, 1);
+		markedImages.splice(at,1);
 		if (at > images.length - 1) prevImg();
 		if (images.length - 1 === 0) discardImg();
-		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		updateImageIndexText();
 		var seed = seeds[at];
 		seedbtn.title = "Use seed " + seed;
 		redraw();
 	};
+
+	const toggleMarkedImg = async () => {
+		markedImages[at] = markedImages[at] == true ? null : true;
+		activateImgAt(at); //redraw just to update caption
+	};
+
+	const nextMarkedImg = () => {
+		var nextIndex = getNextMarkedImage(at);
+		if (nextIndex == null) {
+			//If no next marked image, and we're not currently on a marked image, then return the last marked image in the list, if any, rather than doing nothing
+			if (markedImages[at] == true) {
+				return;
+			} else {
+				nextIndex = getPrevMarkedImage(at);
+				if (nextIndex == null) {
+					return;
+				}
+			}
+		}
+		at = nextIndex;
+		activateImgAt(at);
+	}
+
+	const prevMarkedImg = () => {
+		var nextIndex = getPrevMarkedImage(at);
+		if (nextIndex == null) {
+			//If no previous marked image, and we're not currently on a marked image, then return the next image in the list, if any, rather than doing nothing
+			if (markedImages[at] == true) {
+				return;
+			} else {
+				nextIndex = getNextMarkedImage(at);
+				if (nextIndex == null) {
+					return;
+				}
+			}
+		}
+		at = nextIndex;
+		activateImgAt(at);
+	}
+
+	const getNextMarkedImage = (at) => {
+		for (let i = at+1; i < markedImages.length; i++) {
+		  if (markedImages[i] != null) {
+			return i;
+		  }
+		}
+		return null;
+	  
+	};
+	  
+	const getPrevMarkedImage = (at) => {
+		for (let i = at-1; i >= 0; --i) {
+		  if (markedImages[i] != null) {
+			return i;
+		  }
+		}
+		return null;
+	};
+
+	const updateImageIndexText = () => {
+		var markedImageIndicator = markedImages[at] == true ? "*" : "";
+		imageindextxt.textContent = `${markedImageIndicator}${at}/${images.length - 1}`;
+	}
+	  
 
 	const makeMore = async () => {
 		const moreQ = await waitQueue();
@@ -577,7 +662,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			dreamData = await _dream(endpoint, requestCopy);
 			images.push(...dreamData.images);
 			seeds.push(...dreamData.seeds);
-			imageindextxt.textContent = `${at}/${images.length - 1}`;
+			updateImageIndexText();
 		} catch (e) {
 			if (alertCount < 2) {
 				notifications.notify(
@@ -649,13 +734,16 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 			case "-":
 				removeImg();
 				break;
+			case "*":
+				toggleMarkedImg();
+
 			default:
 				switch (evn.code) {
 					case "ArrowRight":
-						nextImg();
+						nextImgEvent(evn.evn);
 						break;
 					case "ArrowLeft":
-						prevImg();
+						prevImgEvent(evn.evn);
 						break;
 					case "Enter":
 						applyImg();
@@ -737,8 +825,10 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	const onwheelhandler = mouse.listen.world.onwheel.on(
 		(evn, state) => {
 			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
-				if (evn.delta < 0) nextImg();
-				else prevImg();
+
+				if (evn.delta < 0) {
+					nextImgEvent(evn.evn);
+				} else prevImgEvent(evn.evn);
 				state.dream_processed = true;
 			}
 		},
@@ -773,25 +863,25 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	imageSelectMenu = makeElement("div", bb.x, bb.y + bb.h);
 
 	const imageindextxt = document.createElement("button");
-	imageindextxt.textContent = `${at}/${images.length - 1}`;
+	updateImageIndexText();
+	
 	imageindextxt.addEventListener("click", () => {
 		at = 0;
-
-		imageindextxt.textContent = `${at}/${images.length - 1}`;
+		updateImageIndexText();
 		redraw();
 	});
 
 	const backbtn = document.createElement("button");
 	backbtn.textContent = "<";
 	backbtn.title = "Previous Image";
-	backbtn.addEventListener("click", prevImg);
+	backbtn.addEventListener("click", prevImgEvent);
 	imageSelectMenu.appendChild(backbtn);
 	imageSelectMenu.appendChild(imageindextxt);
 
 	const nextbtn = document.createElement("button");
 	nextbtn.textContent = ">";
 	nextbtn.title = "Next Image";
-	nextbtn.addEventListener("click", nextImg);
+	nextbtn.addEventListener("click", nextImgEvent);
 	imageSelectMenu.appendChild(nextbtn);
 
 	const morebtn = document.createElement("button");
@@ -853,6 +943,12 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		sendSeed(seeds[at]);
 	});
 	imageSelectMenu.appendChild(seedbtn);
+
+	const toggleMarkedButton = document.createElement("button");
+	toggleMarkedButton.textContent = "*";
+	toggleMarkedButton.title = "Mark/Unmark";
+	toggleMarkedButton.addEventListener("click", toggleMarkedImg);
+	imageSelectMenu.appendChild(toggleMarkedButton);
 
 	nextQueue(initialQ);
 
