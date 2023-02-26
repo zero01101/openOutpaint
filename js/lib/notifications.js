@@ -52,16 +52,20 @@ const notifications = {
 	 *
 	 * @param {string | HTMLElement} message Message to display to the user.
 	 * @param {Object} options Extra options for the notification.
-	 * @param {NotificationType} type Notification type
+	 * @param {NotificationType} options.type Notification type
+	 * @param {boolean} options.collapsed Whether notification is collapsed by default
+	 * @param {number} options.timeout Timeout for the notification
 	 */
 	notify(message, options = {}) {
 		defaultOpt(options, {
 			type: NotificationType.INFO,
+			collapsed: false,
 			timeout: config.notificationTimeout,
 		});
 
 		const notificationEl = document.createElement("div");
-		notificationEl.classList.add("notification", "expanded", options.type);
+		notificationEl.classList.add("notification", options.type);
+		if (!options.collapsed) notificationEl.classList.add("expanded");
 		notificationEl.title = new Date().toISOString();
 		notificationEl.addEventListener("click", () =>
 			notificationEl.classList.toggle("expanded")
@@ -78,6 +82,23 @@ const notifications = {
 		closeBtn.addEventListener("click", () => notificationEl.remove());
 
 		notificationEl.append(closeBtn);
+
+		if (
+			config.notificationHighlightAnimationDuration &&
+			config.notificationHighlightAnimationDuration > 0
+		) {
+			const notificationHighlightEl = document.createElement("div");
+			notificationHighlightEl.style.animationDuration = `${config.notificationHighlightAnimationDuration}ms`;
+			notificationHighlightEl.classList.add(
+				"notification-highlight",
+				`notification-${options.type}`
+			);
+
+			document.body.appendChild(notificationHighlightEl);
+			setTimeout(() => {
+				notificationHighlightEl.remove();
+			}, config.notificationHighlightAnimationDuration);
+		}
 
 		this._areaEl.prepend(notificationEl);
 		if (options.timeout)

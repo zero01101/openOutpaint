@@ -39,8 +39,11 @@
 			console.debug("[workspace.populate] Loading workspace");
 
 			const res = e.target.result;
-			const {workspace} = res;
+			const {name, workspace} = res;
 			importWorkspaceState(workspace);
+			notifications.notify(`Loaded workspace '${name}'`, {
+				type: NotificationType.SUCCESS,
+			});
 		};
 	});
 
@@ -149,6 +152,10 @@
 				workspace.name = name;
 
 				workspaces.put(workspace).onsuccess = () => {
+					notifications.notify(
+						`Workspace name was updated to '${workspace.name}'`,
+						{type: NotificationType.SUCCESS}
+					);
 					listWorkspaces();
 				};
 			};

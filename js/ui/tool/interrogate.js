@@ -149,6 +149,10 @@ const interrogate_callback = async (evn, state) => {
 				"\n\nDo you want to replace your prompt with this? You can change it down below:",
 			result
 		);
+		notifications.notify(`Interrogation returned '${result}'`, {
+			collapsed: true,
+			timeout: config.interrogateToolNotificationTimeout,
+		});
 		if (text) {
 			document.getElementById("prompt").value = text;
 			tools.dream.enable();

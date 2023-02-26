@@ -41,6 +41,12 @@ const config = makeReadOnly(
 
 		// Default notification timeout
 		notificationTimeout: 8000,
+		notificationHighlightAnimationDuration: 200,
+
+		/**
+		 * Interrogate Tool
+		 */
+		interrogateToolNotificationTimeout: 120000, // Default is two minutes
 	},
 	"config"
 );
