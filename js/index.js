@@ -1414,7 +1414,7 @@ function createBaseScriptOptions() {
 	var noScript = document.createElement("option");
 	noScript.id = "no_selected_script";
 	noScript.value = "";
-	noScript.innerHTML = "Select a script...";
+	noScript.innerHTML = "(disabled)";
 	selector.appendChild(noScript);
 	var customScript = document.createElement("option");
 	customScript.id = "custom";
