@@ -98,7 +98,9 @@ const stampTool = () =>
 			ovLayer.clear();
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
+
 				state.loaded = false;
 				state.snapToGrid = true;
 				state.resources = [];
@@ -679,6 +681,8 @@ const stampTool = () =>
 					if (db) loadResources();
 					else ondatabaseload.on(loadResources);
 				}
+
+				return state;
 			},
 			populateContextMenu: (menu, state) => {
 				menu.appendChild(state.ctxmenu.buttonArray);

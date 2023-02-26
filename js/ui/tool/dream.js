@@ -1529,7 +1529,8 @@ const dreamTool = () =>
 			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
 				state.config = {
 					cursorSizeScrollSpeed: 1,
 				};
@@ -1736,6 +1737,8 @@ const dreamTool = () =>
 					);
 					dream_erase_callback(bb, state);
 				};
+
+				return state;
 			},
 			populateContextMenu: (menu, state, tool) => {
 				if (!state.ctxmenu) {
@@ -2035,7 +2038,8 @@ const img2imgTool = () =>
 			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
 				state.config = {
 					cursorSizeScrollSpeed: 1,
 				};
@@ -2349,6 +2353,7 @@ const img2imgTool = () =>
 					);
 					dream_erase_callback(bb, state);
 				};
+				return state;
 			},
 			populateContextMenu: (menu, state, tool) => {
 				if (!state.ctxmenu) {

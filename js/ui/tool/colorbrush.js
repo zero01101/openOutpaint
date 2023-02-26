@@ -135,7 +135,8 @@ const colorBrushTool = () =>
 			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
 				state.config = {
 					brushScrollSpeed: 1 / 5,
 					minBrushSize: 2,
@@ -369,6 +370,8 @@ const colorBrushTool = () =>
 
 					ctx.clearRect(bb.x, bb.y, bb.w, bb.h);
 				};
+
+				return state;
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {

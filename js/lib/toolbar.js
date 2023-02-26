@@ -42,13 +42,15 @@ const thetoolbar = {
 	/**
 	 * A function to register a new tool in the toolbar
 	 *
+	 * @template S Template for the state object type
+	 *
 	 * @param {string} icon Relative path to the icon to be used for the tool
 	 * @param {string} toolname The name of the tool
-	 * @param {(state, opt) => void} enable Runs on tool selection
-	 * @param {(state, opt) => void} disable Runs on tool exit
+	 * @param {(state: S | {redrawui?: () => void, redraw?: () => void}, opt) => void} enable Runs on tool selection
+	 * @param {(state: S | {redrawui?: () => void, redraw?: () => void}, opt) => void} disable Runs on tool exit
 	 * @param {object} options Extra options
-	 * @param {(state) => void} options.init Runs on tool creation (single run on openOutpaint boot)
-	 * @param {(menu: HTMLElement, state) => void} options.populateContextMenu Populates the context menu for the tool
+	 * @param {() => S} options.init Runs on tool creation (single run on openOutpaint boot)
+	 * @param {(menu: HTMLElement, state: S | {redrawui?: () => void, redraw?: () => void}) => void} options.populateContextMenu Populates the context menu for the tool
 	 * @param {string} options.description A simple description of the tool. For now, used for nothing
 	 * @param {string} options.shortcut Text describing the shortcut to access the tool
 	 * @returns
@@ -104,9 +106,8 @@ const thetoolbar = {
 			name: toolname,
 			enabled: false,
 			_element: null,
-			state: {
-				redrawui: () => tool.state.redraw && tool.state.redraw(),
-			},
+			/** @type {S | {redrawui?: () => void, redraw?: () => void}} */
+			state: null,
 			options,
 			/**
 			 * If the tool has a redraw() function in its state, then run it
@@ -143,7 +144,11 @@ const thetoolbar = {
 		};
 
 		// Initalize
-		options.init && options.init(tool.state, tool);
+		/** @type {S} */
+		const state = (options.init && options.init(tool)) || {
+			redrawui: () => tool.state.redraw && tool.state.redraw(),
+		};
+		tool.state = state;
 
 		this.tools.push(tool);
 

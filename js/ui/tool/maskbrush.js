@@ -97,7 +97,8 @@ const maskBrushTool = () =>
 			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
 				state.config = {
 					brushScrollSpeed: 1 / 4,
 					minBrushSize: 10,
@@ -178,6 +179,7 @@ const maskBrushTool = () =>
 					_mask_brush_draw_callback(evn, state, state.brushOpacity * 100);
 				state.erasecb = (evn) =>
 					_mask_brush_erase_callback(evn, state, state.brushOpacity * 100);
+				return state;
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {

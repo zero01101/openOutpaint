@@ -76,7 +76,8 @@ const selectTransformTool = () =>
 			state.originalDisplayLayer = null;
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
 				state.clipboard = {};
 
 				state.snapToGrid = true;
@@ -644,6 +645,8 @@ const selectTransformTool = () =>
 				state.ctrlxcb = (evn) => {
 					state.ctrlccb(evn, true);
 				};
+
+				return state;
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {

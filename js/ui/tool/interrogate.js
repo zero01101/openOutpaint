@@ -24,7 +24,8 @@ const interrogateTool = () =>
 			uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 		},
 		{
-			init: (state) => {
+			init: () => {
+				const state = {};
 				state.config = {
 					cursorSizeScrollSpeed: 1,
 				};
@@ -72,6 +73,7 @@ const interrogateTool = () =>
 				state.interrogatecb = (evn) => {
 					interrogate_callback(evn, state);
 				};
+				return state;
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
