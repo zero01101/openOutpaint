@@ -1,5 +1,5 @@
 const interrogateTool = () =>
-	toolbar.registerTool(
+	thetoolbar.registerTool(
 		"./res/icons/microscope.svg",
 		"Interrogate",
 		(state, opt) => {

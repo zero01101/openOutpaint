@@ -1,5 +1,5 @@
 const selectTransformTool = () =>
-	toolbar.registerTool(
+	thetoolbar.registerTool(
 		"./res/icons/box-select.svg",
 		"Select Image",
 		(state, opt) => {

@@ -9,7 +9,7 @@ tools.img2img = img2imgTool();
 /**
  * Mask Editing tools
  */
-toolbar.addSeparator();
+thetoolbar.addSeparator();
 
 /**
  * Mask Brush tool
@@ -20,7 +20,7 @@ tools.colorbrush = colorBrushTool();
 /**
  * Image Editing tools
  */
-toolbar.addSeparator();
+thetoolbar.addSeparator();
 
 tools.selecttransform = selectTransformTool();
 tools.stamp = stampTool();
@@ -28,6 +28,6 @@ tools.stamp = stampTool();
 /**
  * Interrogator tool
  */
-toolbar.addSeparator();
+thetoolbar.addSeparator();
 tools.interrogate = interrogateTool();
-toolbar.tools[0].enable();
+thetoolbar.tools[0].enable();

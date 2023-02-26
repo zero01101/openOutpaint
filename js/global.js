@@ -13,10 +13,10 @@ const global = {
 	set connection(v) {
 		this._connection = v;
 
-		toolbar &&
-			toolbar.currentTool &&
-			toolbar.currentTool.state.redraw &&
-			toolbar.currentTool.state.redraw();
+		thetoolbar &&
+			thetoolbar.currentTool &&
+			thetoolbar.currentTool.state.redraw &&
+			thetoolbar.currentTool.state.redraw();
 	},
 	get connection() {
 		return this._connection;

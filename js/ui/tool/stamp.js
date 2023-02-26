@@ -37,7 +37,7 @@ const _stamp_onwheel = (evn, state) => {
 };
 
 const stampTool = () =>
-	toolbar.registerTool(
+	thetoolbar.registerTool(
 		"./res/icons/file-up.svg",
 		"Stamp Image",
 		(state, opt) => {
@@ -70,7 +70,7 @@ const stampTool = () =>
 				);
 				state.ctxmenu.uploadButton.disabled = true;
 				state.back = opt.back || null;
-				toolbar.lock();
+				thetoolbar.lock();
 			} else if (opt) {
 				throw Error(
 					"Pasting from other tools must be in format {image, name?, temporary?, back?}"
@@ -480,7 +480,7 @@ const stampTool = () =>
 					}
 
 					if (state.back) {
-						toolbar.unlock();
+						thetoolbar.unlock();
 						const backfn = state.back;
 						state.back = null;
 						backfn({message: "Returning from stamp", pasted: true});
@@ -490,7 +490,7 @@ const stampTool = () =>
 					state.selectResource(null);
 
 					if (state.back) {
-						toolbar.unlock();
+						thetoolbar.unlock();
 						const backfn = state.back;
 						state.back = null;
 						backfn({message: "Returning from stamp", pasted: false});

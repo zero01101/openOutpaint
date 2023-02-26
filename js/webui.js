@@ -127,8 +127,8 @@
 									viewport.zoom = mr * 1.3;
 									viewport.transform(imageCollection.element);
 
-									toolbar._current_tool.redrawui &&
-										toolbar._current_tool.redrawui();
+									thetoolbar._current_tool.redrawui &&
+										thetoolbar._current_tool.redrawui();
 								}
 
 								tools.stamp.enable();

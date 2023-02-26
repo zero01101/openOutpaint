@@ -2,7 +2,7 @@
  * Toolbar
  */
 
-const toolbar = {
+const thetoolbar = {
 	_locked: false,
 	_toolbar: document.getElementById("ui-toolbar"),
 	_toolbar_lock_indicator: document.getElementById("toolbar-lock-indicator"),
@@ -14,12 +14,12 @@ const toolbar = {
 	},
 
 	lock() {
-		toolbar._locked = true;
-		toolbar._toolbar_lock_indicator.style.display = "block";
+		thetoolbar._locked = true;
+		thetoolbar._toolbar_lock_indicator.style.display = "block";
 	},
 	unlock() {
-		toolbar._locked = false;
-		toolbar._toolbar_lock_indicator.style.display = "none";
+		thetoolbar._locked = false;
+		thetoolbar._toolbar_lock_indicator.style.display = "none";
 	},
 
 	_makeToolbarEntry: (tool) => {
@@ -105,7 +105,7 @@ const toolbar = {
 				tool.state.redrawui && tool.state.redrawui();
 			},
 			enable: (opt = null) => {
-				if (toolbar._locked) return;
+				if (thetoolbar._locked) return;
 
 				this.tools.filter((t) => t.enabled).forEach((t) => t.disable());
 

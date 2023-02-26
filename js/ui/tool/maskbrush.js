@@ -60,7 +60,7 @@ const _mask_brush_erase_callback = (evn, state, opacity = 100) => {
 };
 
 const maskBrushTool = () =>
-	toolbar.registerTool(
+	thetoolbar.registerTool(
 		"./res/icons/paintbrush.svg",
 		"Mask Brush",
 		(state, opt) => {

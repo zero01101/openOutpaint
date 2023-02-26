@@ -296,9 +296,9 @@ mouse.registerContext(
 		const activeInput = DOM.hasActiveInput();
 		if (global.hasActiveInput !== activeInput) {
 			global.hasActiveInput = activeInput;
-			toolbar.currentTool &&
-				toolbar.currentTool.state.redraw &&
-				toolbar.currentTool.state.redraw();
+			thetoolbar.currentTool &&
+				thetoolbar.currentTool.state.redraw &&
+				thetoolbar.currentTool.state.redraw();
 		}
 	});
 })();
@@ -329,7 +329,7 @@ mouse.listen.camera.onwheel.on((evn) => {
 
 	viewport.transform(imageCollection.element);
 
-	toolbar._current_tool.redrawui && toolbar._current_tool.redrawui();
+	thetoolbar._current_tool.redrawui && thetoolbar._current_tool.redrawui();
 });
 
 const cameraPaintStart = (evn) => {
@@ -355,8 +355,8 @@ const cameraPaint = (evn) => {
 	}
 
 	viewport.transform(imageCollection.element);
-	toolbar._current_tool.state.redrawui &&
-		toolbar._current_tool.state.redrawui();
+	thetoolbar._current_tool.state.redrawui &&
+		thetoolbar._current_tool.state.redrawui();
 
 	if (global.debug) {
 		debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);

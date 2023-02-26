@@ -44,7 +44,7 @@ const _color_brush_erase_callback = (evn, state, ctx) => {
 };
 
 const colorBrushTool = () =>
-	toolbar.registerTool(
+	thetoolbar.registerTool(
 		"./res/icons/brush.svg",
 		"Color Brush",
 		(state, opt) => {

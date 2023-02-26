@@ -676,9 +676,9 @@ const resSlider = makeSlider(
 	(v) => {
 		stableDiffusionData.width = stableDiffusionData.height = v;
 
-		toolbar.currentTool &&
-			toolbar.currentTool.redraw &&
-			toolbar.currentTool.redraw();
+		thetoolbar.currentTool &&
+			thetoolbar.currentTool.redraw &&
+			thetoolbar.currentTool.redraw();
 	}
 );
 makeSlider(
