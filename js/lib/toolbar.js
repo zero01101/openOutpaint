@@ -39,6 +39,20 @@ const thetoolbar = {
 		return toolEl;
 	},
 
+	/**
+	 * A function to register a new tool in the toolbar
+	 *
+	 * @param {string} icon Relative path to the icon to be used for the tool
+	 * @param {string} toolname The name of the tool
+	 * @param {(state, opt) => void} enable Runs on tool selection
+	 * @param {(state, opt) => void} disable Runs on tool exit
+	 * @param {object} options Extra options
+	 * @param {(state) => void} options.init Runs on tool creation (single run on openOutpaint boot)
+	 * @param {(menu: HTMLElement, state) => void} options.populateContextMenu Populates the context menu for the tool
+	 * @param {string} options.description A simple description of the tool. For now, used for nothing
+	 * @param {string} options.shortcut Text describing the shortcut to access the tool
+	 * @returns
+	 */
 	registerTool(
 		icon,
 		toolname,
