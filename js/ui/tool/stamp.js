@@ -372,7 +372,11 @@ const stampTool = () =>
 
 				state.dragcb = (evn) => {
 					if (rotating) {
-						rotation = Math.atan2(rotating.x - evn.x, evn.y - rotating.y);
+						if (state.flipStamp) {
+							rotation = Math.atan2(evn.x - rotating.x, evn.y - rotating.y);
+						} else {
+							rotation = Math.atan2(rotating.x - evn.x, evn.y - rotating.y);
+						}
 
 						if (evn.evn.shiftKey)
 							rotation =
