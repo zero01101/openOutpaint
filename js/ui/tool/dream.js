@@ -363,7 +363,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	/** @type {Array<string|null>} */
 	const images = [null];
 	const seeds = [-1];
-	const markedImages=[null]; //A sparse array of booleans indicating which images have been marked, by index
+	const markedImages = [null]; //A sparse array of booleans indicating which images have been marked, by index
 	/** @type {HTMLDivElement} */
 	let imageSelectMenu = null;
 	// Layer for the images
@@ -501,7 +501,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		} else {
 			prevImg();
 		}
-	}
+	};
 
 	const nextImg = () => {
 		at++;
@@ -510,7 +510,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		highestNavigatedImageIndex = Math.max(at, highestNavigatedImageIndex);
 
 		activateImgAt(at);
-	
+
 		if (needMoreGenerations() && !isGenerationPending()) {
 			makeMore();
 		}
@@ -522,16 +522,14 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		} else {
 			nextImg();
 		}
-	}
+	};
 
 	const activateImgAt = (at) => {
 		updateImageIndexText();
 		var seed = seeds[at];
 		seedbtn.title = "Use seed " + seed;
 		redraw();
-	}
-
-	
+	};
 
 	const applyImg = async () => {
 		if (!images[at]) return;
@@ -619,7 +617,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		if (!images[at]) return;
 		images.splice(at, 1);
 		seeds.splice(at, 1);
-		markedImages.splice(at,1);
+		markedImages.splice(at, 1);
 		if (at > images.length - 1) prevImg();
 		if (images.length - 1 === 0) discardImg();
 		updateImageIndexText();
@@ -648,7 +646,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		}
 		at = nextIndex;
 		activateImgAt(at);
-	}
+	};
 
 	const prevMarkedImg = () => {
 		var nextIndex = getPrevMarkedImage(at);
@@ -665,32 +663,32 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 		}
 		at = nextIndex;
 		activateImgAt(at);
-	}
+	};
 
 	const getNextMarkedImage = (at) => {
-		for (let i = at+1; i < markedImages.length; i++) {
-		  if (markedImages[i] != null) {
-			return i;
-		  }
+		for (let i = at + 1; i < markedImages.length; i++) {
+			if (markedImages[i] != null) {
+				return i;
+			}
 		}
 		return null;
-	  
 	};
-	  
+
 	const getPrevMarkedImage = (at) => {
-		for (let i = at-1; i >= 0; --i) {
-		  if (markedImages[i] != null) {
-			return i;
-		  }
+		for (let i = at - 1; i >= 0; --i) {
+			if (markedImages[i] != null) {
+				return i;
+			}
 		}
 		return null;
 	};
 
 	const updateImageIndexText = () => {
 		var markedImageIndicator = markedImages[at] == true ? "*" : "";
-		imageindextxt.textContent = `${markedImageIndicator}${at}/${images.length - 1}`;
-	}
-	  
+		imageindextxt.textContent = `${markedImageIndicator}${at}/${
+			images.length - 1
+		}`;
+	};
 
 	const makeMore = async () => {
 		const moreQ = await waitQueue();
@@ -869,7 +867,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 	const onwheelhandler = mouse.listen.world.onwheel.on(
 		(evn, state) => {
 			if (!state.dream_processed && bb.contains(evn.x, evn.y)) {
-
 				if (evn.delta < 0) {
 					nextImgEvent(evn.evn);
 				} else prevImgEvent(evn.evn);
@@ -908,7 +905,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 
 	const imageindextxt = document.createElement("button");
 	updateImageIndexText();
-	
+
 	imageindextxt.addEventListener("click", () => {
 		at = 0;
 		updateImageIndexText();
