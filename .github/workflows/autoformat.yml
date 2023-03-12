@@ -17,6 +17,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Prettify
-        uses: creyD/prettier_action@v4.2
+        uses: creyD/prettier_action@v4.3
         with:
           prettier_options: --write **/*.{js,html,css,md}
