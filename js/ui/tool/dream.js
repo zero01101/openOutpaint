@@ -565,13 +565,6 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 				);
 			}
 
-			commands.runCommand("drawImage", "Image Dream", {
-				x: bb.x,
-				y: bb.y,
-				w: bb.w,
-				h: bb.h,
-				image: canvas,
-			});
 			let commandLog = "";
 
 			const addline = (v, newline = true) => {
