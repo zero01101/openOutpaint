@@ -844,7 +844,7 @@ function changeSyncCursorSize() {
 
 function changeSmoothRendering() {
 	const layers = document.getElementById("layer-render");
-	if (document.getElementById("cbxSmooth").checked) {
+	if (localStorage.getItem("openoutpaint/settings.smooth") === "true") {
 		layers.classList.remove("pixelated");
 	} else {
 		layers.classList.add("pixelated");
