@@ -470,6 +470,7 @@ const selectTransformTool = () =>
 						selection.dragendcb(evn);
 
 						const bb = selection.bb;
+						state.backupBB = bb;
 
 						state.reset();
 
@@ -741,7 +742,11 @@ const selectTransformTool = () =>
 					saveVisibleSelectionButton.onclick = () => {
 						console.debug(state.selected);
 						console.debug(state.selected.bb);
-						const canvas = uil.getVisible(state._selected.bb, {
+						var selectBB =
+							state.selected.bb != undefined
+								? state.selected.bb
+								: state.backupBB;
+						const canvas = uil.getVisible(selectBB, {
 							categories: ["image", "user", "select-display"],
 						});
 						downloadCanvas({
@@ -757,7 +762,11 @@ const selectTransformTool = () =>
 					createVisibleResourceButton.title =
 						"Saves Visible Selection as a Resource";
 					createVisibleResourceButton.onclick = () => {
-						const canvas = uil.getVisible(state._selected.bb, {
+						var selectBB =
+							state.selected.bb != undefined
+								? state.selected.bb
+								: state.backupBB;
+						const canvas = uil.getVisible(selectBB, {
 							categories: ["image", "user", "select-display"],
 						});
 						const image = document.createElement("img");

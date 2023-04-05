@@ -5,7 +5,7 @@
 		<title>openOutpaint 🐠</title>
 		<!-- CSS Variables -->
 		<link href="css/colors.css?v=f732f19" rel="stylesheet" />
-		<link href="css/icons.css?v=e907764" rel="stylesheet" />
+		<link href="css/icons.css?v=a8ec439" rel="stylesheet" />
 
 		<link href="css/index.css?v=aaad3e5" rel="stylesheet" />
 		<link href="css/layers.css?v=92c0352" rel="stylesheet" />
@@ -244,7 +244,7 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							Alpha release v0.0.15.1 (20230330.001)
+							Alpha release v0.0.15.2 (20230405.001)
 						</a>
 						<br />
 						<a
@@ -305,7 +305,17 @@
 			id="ui-layers"
 			class="floating-window"
 			style="right: 10px; bottom: 10px">
-			<div class="draggable floating-window-title">Layers</div>
+			<div class="draggable floating-window-title">
+				Layers
+				<div style="flex: 1"></div>
+				<button
+					id="unzoom-btn"
+					class="ui icon header-button"
+					title="Reset Zoom to 1x"
+					onclick="unzoom()">
+					<div class="icon-unzoom"></div>
+				</button>
+			</div>
 			<div class="menu-container" style="min-width: 200px">
 				<div class="layer-manager">
 					<div id="layer-list" class="layer-list"></div>
@@ -359,7 +369,7 @@
 		<div
 			id="ui-script"
 			class="floating-window"
-			style="right: 10px; top: 400px; display: none">
+			style="right: 10px; top: 330px; display: none">
 			<div class="draggable floating-window-title">Script</div>
 			<div class="menu-container" style="min-width: 200px">
 				<div id="script-select" class="script-select">
@@ -462,7 +472,7 @@
 			src="js/ui/floating/history.js?v=4f29db4"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/floating/layers.js?v=cf1089d"
+			src="js/ui/floating/layers.js?v=3f5807f"
 			type="text/javascript"></script>
 
 		<!-- Load Tools -->
@@ -478,7 +488,7 @@
 			src="js/ui/tool/colorbrush.js?v=84ff9fa"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/select.js?v=b84bf02"
+			src="js/ui/tool/select.js?v=044d8f3"
 			type="text/javascript"></script>
 		<script src="js/ui/tool/stamp.js?v=4494df6" type="text/javascript"></script>
 		<script

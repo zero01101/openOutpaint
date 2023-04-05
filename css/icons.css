@@ -93,6 +93,11 @@
 	mask-image: url("../res/icons/settings.svg");
 }
 
+.ui.icon > .icon-unzoom {
+	-webkit-mask-image: url("../res/icons/scaling.svg");
+	mask-image: url("../res/icons/scaling.svg");
+}
+
 .ui.inline-icon.icon-grid::after,
 .ui.icon > .icon-grid {
 	-webkit-mask-image: url("../res/icons/grid.svg");

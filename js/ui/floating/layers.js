@@ -2,6 +2,13 @@
  * The layering UI window
  */
 
+function unzoom() {
+	viewport.zoom = 1;
+	viewport.transform(imageCollection.element);
+	//toolbar._current_tool.redrawui && toolbar._current_tool.redrawui();
+	notifications.notify("Zoom reset to 1x");
+}
+
 const uil = {
 	/** @type {Observer<{uilayer: UILayer}>} */
 	onactive: new Observer(),
