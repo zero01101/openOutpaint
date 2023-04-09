@@ -391,7 +391,7 @@ async function testHostConnection() {
 			} else {
 				// Check if API is available
 				const response = await fetch(
-					document.getElementById("host").value + "/sdapi/v1/options"
+					"/sdapi/v1/options"
 				);
 				const optionsdata = await response.json();
 				if (optionsdata["use_scale_latent_for_hires_fix"]) {
