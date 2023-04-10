@@ -33,7 +33,9 @@ const selectTransformTool = () =>
 			keyboard.onShortcut({ctrl: true, key: "KeyC"}, state.ctrlccb);
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
+			keyboard.onShortcut({key: "Equal"}, state.togglemirror);
 
+			state.ctxmenu.mirrorSelectionCheckbox.disabled = true;
 			state.selected = null;
 
 			// Register Layer
@@ -59,6 +61,7 @@ const selectTransformTool = () =>
 			keyboard.deleteShortcut(state.ctrlccb, "KeyC");
 			keyboard.deleteShortcut(state.ctrlvcb, "KeyV");
 			keyboard.deleteShortcut(state.ctrlxcb, "KeyX");
+			keyboard.deleteShortcut(state.togglemirror, "Equal");
 
 			uil.onactive.clear(state.uilayeractivecb);
 
@@ -134,8 +137,12 @@ const selectTransformTool = () =>
 					}
 
 					if (state.dragging) state.dragging = null;
-					else state.selected = null;
+					else {
+						state.ctxmenu.mirrorSelectionCheckbox.disabled = true;
+						state.selected = null;
+					}
 
+					state.mirrorSetValue(false);
 					state.rotation = 0;
 					state.original = null;
 					moving = null;
@@ -171,6 +178,11 @@ const selectTransformTool = () =>
 							viewport.c2v
 						);
 					}
+				};
+
+				// Mirroring
+				state.togglemirror = () => {
+					state.mirrorSetValue(!state.mirrorSelection);
 				};
 
 				// Mouse Move Handler
@@ -247,6 +259,7 @@ const selectTransformTool = () =>
 							state.selected.scale.y === 1 &&
 							state.selected.position.x === state.original.sx &&
 							state.selected.position.y === state.original.sy &&
+							!state.mirrorSelection &&
 							state.original.layer === uil.layer
 						) &&
 						!isCanvasBlank(
@@ -409,11 +422,17 @@ const selectTransformTool = () =>
 						const xs = lscursor.x / scaling.handle.x;
 						const xy = lscursor.y / scaling.handle.y;
 
-						if (!state.keepAspectRatio) state.selected.scale = {x: xs, y: xy};
-						else {
-							const scale = Math.max(xs, xy);
-							state.selected.scale = {x: scale, y: scale};
+						let xscale = 1;
+						let yscale = 1;
+
+						if (!state.keepAspectRatio) {
+							xscale = xs;
+							yscale = ys;
+						} else {
+							xscale = yscale = Math.max(xs, xy);
 						}
+
+						state.selected.scale = {x: xscale, y: yscale};
 					}
 
 					if (rotating) {
@@ -459,6 +478,8 @@ const selectTransformTool = () =>
 						layer: uil.layer,
 					};
 					state.selected = new _tool.MarqueeSelection(canvas, bb.center);
+
+					state.ctxmenu.mirrorSelectionCheckbox.disabled = false;
 
 					state.redraw();
 				};
@@ -511,6 +532,7 @@ const selectTransformTool = () =>
 										},
 									}
 								);
+							state.ctxmenu.mirrorSelectionCheckbox.disabled = true;
 							state.selected = null;
 							state.redraw();
 					}
@@ -668,6 +690,37 @@ const selectTransformTool = () =>
 						"icon-maximize"
 					).checkbox;
 
+					// Mirroring
+					state.onMirror = () => {
+						if (state.selected) {
+							const scale = state.selected.scale;
+							scale.x *= -1;
+							state.selected.scale = scale;
+
+							state.redraw();
+						}
+					};
+					const {checkbox: mirrorCheckbox, setValue: _mirrorSetValue} =
+						_toolbar_input.checkbox(
+							state,
+							"openoutpaint/select-mirror",
+							"mirrorSelection",
+							"Mirror Selection",
+							"icon-flip-horizontal",
+							(v) => {
+								state.onMirror();
+							}
+						);
+					state.ctxmenu.mirrorSelectionCheckbox = mirrorCheckbox;
+					state.ctxmenu.mirrorSelectionCheckbox.disabled = true;
+					_mirrorSetValue(false);
+					state.mirrorSetValue = (v) => {
+						_mirrorSetValue(v);
+						if (v !== state.mirrorSelection) {
+							state.onMirror();
+						}
+					};
+
 					// Use Clipboard
 					const clipboardCheckbox = _toolbar_input.checkbox(
 						state,
@@ -817,6 +870,7 @@ const selectTransformTool = () =>
 				array.classList.add("checkbox-array");
 				array.appendChild(state.ctxmenu.snapToGridLabel);
 				array.appendChild(state.ctxmenu.keepAspectRatioLabel);
+				array.appendChild(state.ctxmenu.mirrorSelectionCheckbox);
 				array.appendChild(state.ctxmenu.useClipboardLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);
