@@ -1014,7 +1014,125 @@ const dream_generate_callback = async (bb, resolution, state) => {
 	const visibleCanvas = uil.getVisible(bb);
 
 	// Use txt2img if canvas is blank
-	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
+	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas) || state.controlNet) {
+		//TODO 20230630 - controlnet literally broken right before i implement it??? https://github.com/Mikubill/sd-webui-controlnet/issues/1719
+		//TODO why doesn't smooth rendering toggle persist/localstorage? why am i putting this here? because i'm lazy
+
+		//TODO this logic seems crappy, fix it
+		if (!isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
+			// get input image
+			//TODO make this DRY from below img2img code
+			// Temporary canvas for init image and mask generation
+			const bbCanvas = document.createElement("canvas");
+			bbCanvas.width = bb.w;
+			bbCanvas.height = bb.h;
+			const bbCtx = bbCanvas.getContext("2d");
+
+			const maskCanvas = document.createElement("canvas");
+			maskCanvas.width = request.width;
+			maskCanvas.height = request.height;
+			const maskCtx = maskCanvas.getContext("2d");
+
+			const initCanvas = document.createElement("canvas");
+			initCanvas.width = request.width;
+			initCanvas.height = request.height;
+			const initCtx = initCanvas.getContext("2d");
+
+			bbCtx.fillStyle = "#000F";
+
+			// Get init image
+			initCtx.fillRect(0, 0, request.width, request.height);
+			initCtx.drawImage(
+				visibleCanvas,
+				0,
+				0,
+				bb.w,
+				bb.h,
+				0,
+				0,
+				request.width,
+				request.height
+			);
+
+			// Get mask image
+			bbCtx.fillStyle = "#000F";
+			bbCtx.fillRect(0, 0, bb.w, bb.h);
+			if (state.invertMask) {
+				// overmasking by definition is entirely pointless with an inverted mask outpaint
+				// since it should explicitly avoid brushed masks too, we just won't even bother
+				bbCtx.globalCompositeOperation = "destination-in";
+				bbCtx.drawImage(
+					maskPaintCanvas,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h,
+					0,
+					0,
+					bb.w,
+					bb.h
+				);
+
+				bbCtx.globalCompositeOperation = "destination-in";
+				bbCtx.drawImage(visibleCanvas, 0, 0);
+			} else {
+				bbCtx.globalCompositeOperation = "destination-in";
+				bbCtx.drawImage(visibleCanvas, 0, 0);
+				// here's where to overmask to avoid including the brushed mask
+				// 99% of my issues were from failing to set source-over for the overmask blotches
+				if (state.overMaskPx > 0) {
+					// transparent to white first
+					bbCtx.globalCompositeOperation = "destination-atop";
+					bbCtx.fillStyle = "#FFFF";
+					bbCtx.fillRect(0, 0, bb.w, bb.h);
+					applyOvermask(bbCanvas, bbCtx, state.overMaskPx);
+				}
+
+				bbCtx.globalCompositeOperation = "destination-out"; // ???
+				bbCtx.drawImage(
+					maskPaintCanvas,
+					bb.x,
+					bb.y,
+					bb.w,
+					bb.h,
+					0,
+					0,
+					bb.w,
+					bb.h
+				);
+			}
+
+			bbCtx.globalCompositeOperation = "destination-atop";
+			bbCtx.fillStyle = "#FFFF";
+			bbCtx.fillRect(0, 0, bb.w, bb.h);
+
+			maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+			maskCtx.drawImage(
+				bbCanvas,
+				0,
+				0,
+				bb.w,
+				bb.h,
+				0,
+				0,
+				request.width,
+				request.height
+			);
+
+			if (state.controlNet) {
+				state.alwayson_scripts.controlnet.args = [
+					{
+						input_image: initCanvas.toDataURL(),
+						mask: maskCanvas.toDataURL(),
+						module: "inpaint_only+lama", //TODO make this a variable with API supplied options
+						model: "control_v11p_sd15_inpaint [ebff9138]", //TODO make this a variable with API supplied options
+					},
+				];
+			}
+		}
+
+		request.alwayson_scripts = state.alwayson_scripts;
+
 		if (!global.isOldHRFix && request.enable_hr) {
 			/**
 			 * try and make the new HRfix method useful for our purposes
@@ -1550,6 +1668,15 @@ const dreamTool = () =>
 					...mouse.coords.world.pos,
 				};
 
+				state.alwayson_scripts = {};
+				state.alwayson_scripts.controlnet = {};
+				state.alwayson_scripts.controlnet.args = [
+					{
+						module: "none",
+						model: "None", //docs have this casing, is that necessary?
+					},
+				];
+
 				/**
 				 * Selection handlers
 				 */
@@ -1879,6 +2006,15 @@ const dreamTool = () =>
 						}
 					).checkbox;
 
+					// controlnet checkbox
+					state.ctxmenu.controlNetLabel = _toolbar_input.checkbox(
+						state,
+						"openoutpaint/dream-controlnet",
+						"controlNet",
+						"Toggle ControlNet In/Outpainting",
+						"icon-question"
+					).checkbox;
+
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
@@ -1946,6 +2082,7 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
+				array.appendChild(state.ctxmenu.controlNetLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
