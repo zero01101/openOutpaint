@@ -1120,6 +1120,8 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			);
 
 			if (state.controlNet) {
+				state.alwayson_scripts = {};
+				state.alwayson_scripts.controlnet = {};
 				state.alwayson_scripts.controlnet.args = [
 					{
 						input_image: initCanvas.toDataURL(),
@@ -1128,10 +1130,11 @@ const dream_generate_callback = async (bb, resolution, state) => {
 						model: "control_v11p_sd15_inpaint [ebff9138]", //TODO make this a variable with API supplied options
 					},
 				];
+				request.alwayson_scripts = state.alwayson_scripts;
 			}
 		}
 
-		request.alwayson_scripts = state.alwayson_scripts;
+		// request.alwayson_scripts = state.alwayson_scripts;
 
 		if (!global.isOldHRFix && request.enable_hr) {
 			/**
@@ -1668,14 +1671,14 @@ const dreamTool = () =>
 					...mouse.coords.world.pos,
 				};
 
-				state.alwayson_scripts = {};
-				state.alwayson_scripts.controlnet = {};
-				state.alwayson_scripts.controlnet.args = [
-					{
-						module: "none",
-						model: "None", //docs have this casing, is that necessary?
-					},
-				];
+				// state.alwayson_scripts = {};
+				// state.alwayson_scripts.controlnet = {};
+				// state.alwayson_scripts.controlnet.args = [
+				// 	{
+				// 		module: "none",
+				// 		model: "None", //docs have this casing, is that necessary?
+				// 	},
+				// ];
 
 				/**
 				 * Selection handlers
