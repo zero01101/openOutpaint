@@ -7,6 +7,8 @@ const extensions = {
 	alwaysOnScripts: false,
 	controlNetEnabled: false,
 	controlNetActive: false,
+	selectedControlNetModel: null,
+	selectedControlNetModule: null,
 	dynamicPromptsEnabled: false,
 	dynamicPromptsActive: false,
 	dynamicPromptsAlwaysonScriptName: null, //GRUMBLE GRUMBLE
@@ -142,7 +144,7 @@ const extensions = {
 
 		let opt = null;
 		opt = this.controlNetModules.module_list
-			.filter((m) => m.includes("inpaint_")) // why is there just "inpaint" in the modules
+			.filter((m) => m.includes("inpaint_")) // why is there just "inpaint" in the modules if it's not in the ui
 			.map((option) => ({
 				name: option,
 				value: option,

@@ -1001,6 +1001,7 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 const dream_generate_callback = async (bb, resolution, state) => {
 	// Build request to the API
 	const request = {};
+	const canvasTransport = {}; //this is the worst idea but i hate myself so i'm doing it anyway
 	Object.assign(request, stableDiffusionData);
 
 	request.width = resolution.w;
@@ -1017,17 +1018,16 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		buildAlwaysOnScripts(state);
 	}
 
-	// Use txt2img if canvas is blank
+	// Use txt2img if canvas is blank or if controlnet is active because "Allow inpaint in txt2img. This is necessary because txt2img has high-res fix" as per https://github.com/Mikubill/sd-webui-controlnet/discussions/1464
 	if (
 		isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas) ||
-		(state.controlNet && global.controlnetAPI)
+		(extensions.controlNetActive && toolbar._current_tool.name === "Dream")
 	) {
 		//TODO why doesn't smooth rendering toggle persist/localstorage? why am i putting this here? because i'm lazy
 
 		//TODO this logic seems crappy, fix it
 		if (!isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) {
 			// get input image
-			//TODO make this DRY from below img2img code
 			// Temporary canvas for init image and mask generation
 			const bbCanvas = document.createElement("canvas");
 			bbCanvas.width = bb.w;
@@ -1059,6 +1059,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				request.width,
 				request.height
 			);
+			// request.init_images = [initCanvas.toDataURL()];
 
 			// Get mask image
 			bbCtx.fillStyle = "#000F";
@@ -1124,6 +1125,10 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				request.width,
 				request.height
 			);
+			canvasTransport.initCanvas = initCanvas;
+			canvasTransport.maskCanvas = maskCanvas;
+
+			// getImageAndMask(visibleCanvas, bb, request, state); //FFFFF
 		}
 
 		// request.alwayson_scripts = state.alwayson_scripts;
@@ -1196,15 +1201,29 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				? stableDiffusionData.hr_denoising_strength
 				: 1;
 
-		// add dynamic prompts stuff if it's enabled
-		if (extensions.dynamicPromptsActive) {
+		// add dynamic prompts stuff if it exists because it needs to be explicitly disabled if we don't want it
+		if (extensions.dynamicPromptsEnabled) {
 			addDynamicPromptsToAlwaysOnScripts(state);
 		}
-		if (extensions.controlNetActive) {
-			addControlNetToAlwaysOnScripts(state);
+		if (
+			extensions.controlNetActive &&
+			!isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)
+		) {
+			addControlNetToAlwaysOnScripts(
+				state,
+				canvasTransport.initCanvas,
+				canvasTransport.maskCanvas
+			);
+		} else {
+			console.warn(
+				"[dream] controlnet inpaint/outpaint enabled for null image, defaulting to normal txt2img dream"
+			);
 		}
+
 		if (extensions.alwaysOnScripts) {
 			// check again just to be sure because i'm an idiot?
+			// addControlNetToAlwaysOnScripts(state);
+			// addDynamicPromptsToAlwaysOnScripts(state);
 			request.alwayson_scripts = state.alwayson_scripts;
 		}
 		// Dream
@@ -1309,19 +1328,22 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			request.width,
 			request.height
 		);
+		// getImageAndMask(visibleCanvas, bb, request, state); // why is not working ffff
 		request.mask = maskCanvas.toDataURL();
 		request.inpainting_fill = stableDiffusionData.outpainting_fill;
 		request.image_cfg_scale = stableDiffusionData.image_cfg_scale;
 
 		// add dynamic prompts stuff if it's enabled
-		if (extensions.dynamicPromptsActive) {
+		if (extensions.dynamicPromptsEnabled) {
 			addDynamicPromptsToAlwaysOnScripts(state);
 		}
 		if (extensions.controlNetActive) {
-			addControlNetToAlwaysOnScripts(state);
+			addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas);
 		}
 		if (extensions.alwaysOnScripts) {
 			// check again just to be sure because i'm an idiot?
+			// addControlNetToAlwaysOnScripts(state);
+			// addDynamicPromptsToAlwaysOnScripts(state);
 			request.alwayson_scripts = state.alwayson_scripts;
 		}
 
@@ -2790,15 +2812,10 @@ const sendSeed = (seed) => {
 function buildAlwaysOnScripts(state) {
 	if (extensions.alwaysOnScripts) {
 		state.alwayson_scripts = {};
-		addControlNetToAlwaysOnScripts(state);
-		addDynamicPromptsToAlwaysOnScripts(state);
 	}
-
-	//TODO find way to remove alwayson_scripts if not active?
 }
 
 function addDynamicPromptsToAlwaysOnScripts(state) {
-	//TODO ok seriously does this even NEED TO BE HERE?!?!?! it's like dynamic scripts is always on no matter what i fucking say...
 	if (extensions.dynamicPromptsEnabled) {
 		state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName] = {};
 		state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName].args = [
@@ -2807,21 +2824,103 @@ function addDynamicPromptsToAlwaysOnScripts(state) {
 	}
 }
 
-function addControlNetToAlwaysOnScripts(state) {
-	// if (state.controlNet) {
-	// 	state.alwayson_scripts = {};
-	// 	state.alwayson_scripts.controlnet = {};
-	// 	state.alwayson_scripts.controlnet.args = [
-	// 		{
-	// 			input_image: initCanvas.toDataURL(),
-	// 			mask: maskCanvas.toDataURL(),
-	// 			module: "inpaint_only+lama", //TODO make this a variable with API supplied options - inpaint_global_harmonious good for img2img for POC?
-	// 			model: "control_v11p_sd15_inpaint [ebff9138]", //TODO make this a variable with API supplied options
-	// 			// control mode?
-	// 			// resize mode?
-	// 			// weights / steps?
-	// 		},
-	// 	];
+function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
+	if (extensions.controlNetEnabled && extensions.controlNetActive) {
+		state.alwayson_scripts.controlnet = {};
+		state.alwayson_scripts.controlnet.args = [
+			{
+				input_image: initCanvas.toDataURL(),
+				mask: maskCanvas.toDataURL(),
+				module: extensions.selectedControlNetModule,
+				model: extensions.selectedControlNetModel,
+				control_mode: document.getElementById("controlNetMode-select").value,
+				// resize mode?
+				// weights / steps?
+			},
+		];
+	}
+
 	// 	request.alwayson_scripts = state.alwayson_scripts;
 	// }
 }
+
+// function getImageAndMask(visibleCanvas, bb, request, state) {
+// 	// get input image
+// 	// Temporary canvas for init image and mask generation
+// 	const bbCanvas = document.createElement("canvas");
+// 	bbCanvas.width = bb.w;
+// 	bbCanvas.height = bb.h;
+// 	const bbCtx = bbCanvas.getContext("2d");
+
+// 	const maskCanvas = document.createElement("canvas");
+// 	maskCanvas.width = request.width;
+// 	maskCanvas.height = request.height;
+// 	const maskCtx = maskCanvas.getContext("2d");
+
+// 	const initCanvas = document.createElement("canvas");
+// 	initCanvas.width = request.width;
+// 	initCanvas.height = request.height;
+// 	const initCtx = initCanvas.getContext("2d");
+
+// 	bbCtx.fillStyle = "#000F";
+
+// 	// Get init image
+// 	initCtx.fillRect(0, 0, request.width, request.height);
+// 	initCtx.drawImage(
+// 		visibleCanvas,
+// 		0,
+// 		0,
+// 		bb.w,
+// 		bb.h,
+// 		0,
+// 		0,
+// 		request.width,
+// 		request.height
+// 	);
+// 	// request.init_images = [initCanvas.toDataURL()];
+
+// 	// Get mask image
+// 	bbCtx.fillStyle = "#000F";
+// 	bbCtx.fillRect(0, 0, bb.w, bb.h);
+// 	if (state.invertMask) {
+// 		// overmasking by definition is entirely pointless with an inverted mask outpaint
+// 		// since it should explicitly avoid brushed masks too, we just won't even bother
+// 		bbCtx.globalCompositeOperation = "destination-in";
+// 		bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+
+// 		bbCtx.globalCompositeOperation = "destination-in";
+// 		bbCtx.drawImage(visibleCanvas, 0, 0);
+// 	} else {
+// 		bbCtx.globalCompositeOperation = "destination-in";
+// 		bbCtx.drawImage(visibleCanvas, 0, 0);
+// 		// here's where to overmask to avoid including the brushed mask
+// 		// 99% of my issues were from failing to set source-over for the overmask blotches
+// 		if (state.overMaskPx > 0) {
+// 			// transparent to white first
+// 			bbCtx.globalCompositeOperation = "destination-atop";
+// 			bbCtx.fillStyle = "#FFFF";
+// 			bbCtx.fillRect(0, 0, bb.w, bb.h);
+// 			applyOvermask(bbCanvas, bbCtx, state.overMaskPx);
+// 		}
+
+// 		bbCtx.globalCompositeOperation = "destination-out"; // ???
+// 		bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+// 	}
+
+// 	bbCtx.globalCompositeOperation = "destination-atop";
+// 	bbCtx.fillStyle = "#FFFF";
+// 	bbCtx.fillRect(0, 0, bb.w, bb.h);
+
+// 	maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+// 	maskCtx.drawImage(
+// 		bbCanvas,
+// 		0,
+// 		0,
+// 		bb.w,
+// 		bb.h,
+// 		0,
+// 		0,
+// 		request.width,
+// 		request.height
+// 	);
+// }

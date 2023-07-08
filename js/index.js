@@ -667,15 +667,23 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 	document.getElementById("hrFixUpscaler")
 );
 
-const controlNetModelAutoComplete = createAutoComplete(
+let controlNetModelAutoComplete = createAutoComplete(
 	"ControlNet Model",
 	document.getElementById("controlNetModel-ac-select")
 );
 
-const controlNetModuleAutoComplete = createAutoComplete(
+controlNetModelAutoComplete.onchange.on(({value}) => {
+	extensions.selectedControlNetModel = value;
+});
+
+let controlNetModuleAutoComplete = createAutoComplete(
 	"ControlNet Module",
 	document.getElementById("controlNetModule-ac-select")
 );
+
+controlNetModuleAutoComplete.onchange.on(({value}) => {
+	extensions.selectedControlNetModule = value;
+});
 
 // const extensionsAutoComplete = createAutoComplete(
 // 	"Extension",
