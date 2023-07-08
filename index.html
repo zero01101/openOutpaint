@@ -218,13 +218,22 @@
 					<div id="controlNetModule-ac-select" class="controlnetElement"></div>
 					<label id="cnModelLabel" class="controlnetElement">Model</label>
 					<div id="controlNetModel-ac-select" class="controlnetElement"></div>
-					<label id="cnModelLabel" class="controlnetElement">
+					<label id="cnControlLabel" class="controlnetElement">
 						Control Mode
 					</label>
 					<select id="controlNetMode-select" class="controlnetElement">
-						<option value="Balanced">prompt &Equal; CN</option>
-						<option value="My prompt is more important">prompt &GT; CN</option>
-						<option value="ControlNet is more important">prompt &LT; CN</option>
+						<option value="Balanced">balanced</option>
+						<option value="My prompt is more important">+prompt</option>
+						<option value="ControlNet is more important">+CN</option>
+					</select>
+					<br />
+					<label id="cnResizeLabel" class="controlnetElement">
+						Resize Mode
+					</label>
+					<select id="controlNetResize-select" class="controlnetElement">
+						<option value="Just Resize">resize</option>
+						<option value="Crop and Resize">+crop</option>
+						<option value="Resize and Fill">+fill</option>
 					</select>
 					<!-- <div id="referenceStyleFidelity" class="controlnetElement"></div> -->
 				</div>

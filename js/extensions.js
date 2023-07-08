@@ -144,7 +144,7 @@ const extensions = {
 
 		let opt = null;
 		opt = this.controlNetModules.module_list
-			.filter((m) => m.includes("inpaint_")) // why is there just "inpaint" in the modules if it's not in the ui
+			.filter((m) => m.includes("inpaint")) // why is there just "inpaint" in the modules if it's not in the ui
 			.map((option) => ({
 				name: option,
 				value: option,
@@ -152,7 +152,7 @@ const extensions = {
 
 		opt.push({
 			name: "inpaint_global_harmonious",
-			value: "inpaint_global_harmonious", // WTF WHY IS THIS ONE NOT LISTED IN MODULES BUT DISTINCT IN THE API CALL?!?!?!??!??!
+			value: "inpaint_global_harmonious", // WTF WHY IS THIS ONE NOT LISTED IN MODULES BUT DISTINCT IN THE API CALL?!?!?!??!??! it is slightly different from "inpaint" from what i can tell
 		});
 
 		controlNetModuleAutoComplete.options = opt;

@@ -2853,6 +2853,7 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 					model: extensions.selectedControlNetModel,
 					control_mode: document.getElementById("controlNetMode-select").value,
 					processor_res: 64,
+					resize_mode: document.getElementById("controlNetResize-select").value,
 					// resize mode?
 					// weights / steps?
 				},
@@ -2866,6 +2867,7 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 					input_image: initCanvas.toDataURL(),
 					mask: maskCanvas.toDataURL(),
 					processor_res: 64,
+					resize_mode: document.getElementById("controlNetResize-select").value,
 					// resize mode?
 					// weights / steps?
 				},
