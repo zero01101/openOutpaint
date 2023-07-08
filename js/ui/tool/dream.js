@@ -1313,6 +1313,18 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		request.inpainting_fill = stableDiffusionData.outpainting_fill;
 		request.image_cfg_scale = stableDiffusionData.image_cfg_scale;
 
+		// add dynamic prompts stuff if it's enabled
+		if (extensions.dynamicPromptsActive) {
+			addDynamicPromptsToAlwaysOnScripts(state);
+		}
+		if (extensions.controlNetActive) {
+			addControlNetToAlwaysOnScripts(state);
+		}
+		if (extensions.alwaysOnScripts) {
+			// check again just to be sure because i'm an idiot?
+			request.alwayson_scripts = state.alwayson_scripts;
+		}
+
 		// Dream
 		_generate("img2img", request, bb, {
 			keepUnmask: state.keepUnmasked ? bbCanvas : null,
@@ -2778,6 +2790,8 @@ const sendSeed = (seed) => {
 function buildAlwaysOnScripts(state) {
 	if (extensions.alwaysOnScripts) {
 		state.alwayson_scripts = {};
+		addControlNetToAlwaysOnScripts(state);
+		addDynamicPromptsToAlwaysOnScripts(state);
 	}
 
 	//TODO find way to remove alwayson_scripts if not active?
@@ -2785,15 +2799,12 @@ function buildAlwaysOnScripts(state) {
 
 function addDynamicPromptsToAlwaysOnScripts(state) {
 	//TODO ok seriously does this even NEED TO BE HERE?!?!?! it's like dynamic scripts is always on no matter what i fucking say...
-	// if (extensions.dynamicPromptsActive) {
-	// 	state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName] = {};
-	// 	var dynval = document.getElementById("cbxDynPrompts").checked;
-	// 	state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName].args = [
-	// 		{
-	// 			0: dynval,
-	// 		},
-	// 	];
-	// }
+	if (extensions.dynamicPromptsEnabled) {
+		state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName] = {};
+		state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName].args = [
+			extensions.dynamicPromptsActive,
+		];
+	}
 }
 
 function addControlNetToAlwaysOnScripts(state) {

@@ -198,13 +198,13 @@
 				<!-- Extensions section -->
 				<button type="button" class="collapsible">Extensions</button>
 				<div class="content">
-					<!-- <input
+					<input
 						type="checkbox"
 						id="cbxDynPrompts"
 						onchange="changeDynamicPromptsExtension()"
 						disabled="disabled" />
 					<label for="cbxDynPrompts">Dynamic Prompts</label>
-					<br /> -->
+					<br />
 					<input
 						type="checkbox"
 						id="cbxControlNet"
@@ -213,11 +213,19 @@
 					<label for="cbxControlNet">ControlNet In/Outpainting</label>
 					<br class="controlnetElement" />
 					<label id="cnModuleLabel" class="controlnetElement">
-						CN Preprocessor
+						Preprocessor
 					</label>
-					<div id="controlNetModule" class="controlnetElement"></div>
-					<label id="cnModelLabel" class="controlnetElement">CN Model</label>
-					<div id="controlNetModel" class="controlnetElement"></div>
+					<div id="controlNetModule-ac-select" class="controlnetElement"></div>
+					<label id="cnModelLabel" class="controlnetElement">Model</label>
+					<div id="controlNetModel-ac-select" class="controlnetElement"></div>
+					<label id="cnModelLabel" class="controlnetElement">
+						Control Mode
+					</label>
+					<select id="controlNetMode-select" class="controlnetElement">
+						<option value="Balanced">prompt &Equal; CN</option>
+						<option value="My prompt is more important">prompt &GT; CN</option>
+						<option value="ControlNet is more important">prompt &LT; CN</option>
+					</select>
 					<!-- <div id="referenceStyleFidelity" class="controlnetElement"></div> -->
 				</div>
 				<!-- Save/load image section -->
@@ -268,7 +276,8 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							Alpha release v0.0.15.3 (20230410.001)
+							<s>Alpha release v0.0.16</s>
+							v20230708.001
 						</a>
 						<br />
 						<a

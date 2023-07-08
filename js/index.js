@@ -422,7 +422,10 @@ async function testHostConnection() {
 							getSamplers();
 							getUpscalers();
 							getModels();
-							extensions.getExtensions();
+							extensions.getExtensions(
+								controlNetModelAutoComplete,
+								controlNetModuleAutoComplete
+							);
 							// getLoras();
 							// getTIEmbeddings();
 							// getHypernets();
@@ -664,6 +667,16 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 	document.getElementById("hrFixUpscaler")
 );
 
+const controlNetModelAutoComplete = createAutoComplete(
+	"ControlNet Model",
+	document.getElementById("controlNetModel-ac-select")
+);
+
+const controlNetModuleAutoComplete = createAutoComplete(
+	"ControlNet Module",
+	document.getElementById("controlNetModule-ac-select")
+);
+
 // const extensionsAutoComplete = createAutoComplete(
 // 	"Extension",
 // 	document.getElementById("extension-ac-select")
@@ -809,8 +822,8 @@ function changeHRFY() {
 }
 
 function changeDynamicPromptsExtension() {
-	// extensions.dynamicPromptsActive =
-	// 	document.getElementById("cbxDynPrompts").checked;
+	extensions.dynamicPromptsActive =
+		document.getElementById("cbxDynPrompts").checked;
 }
 
 function changeControlNetExtension() {
