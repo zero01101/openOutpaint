@@ -1414,6 +1414,10 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	// Get visible pixels
 	const visibleCanvas = uil.getVisible(bb);
 
+	if (extensions.alwaysOnScripts) {
+		buildAlwaysOnScripts(state);
+	}
+
 	// Do nothing if no image exists
 	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)) return;
 
@@ -1557,6 +1561,20 @@ const dream_img2img_callback = (bb, resolution, state) => {
 
 	request.mask = reqCanvas.toDataURL();
 	request.inpaint_full_res = state.fullResolution;
+
+	// add dynamic prompts stuff if it's enabled
+	if (extensions.dynamicPromptsEnabled) {
+		addDynamicPromptsToAlwaysOnScripts(state);
+	}
+	if (extensions.controlNetActive) {
+		addControlNetToAlwaysOnScripts(state, null, null);
+	}
+	if (extensions.alwaysOnScripts) {
+		// check again just to be sure because i'm an idiot?
+		// addControlNetToAlwaysOnScripts(state);
+		// addDynamicPromptsToAlwaysOnScripts(state);
+		request.alwayson_scripts = state.alwayson_scripts;
+	}
 
 	// Dream
 	_generate("img2img", request, bb, {
@@ -2827,17 +2845,32 @@ function addDynamicPromptsToAlwaysOnScripts(state) {
 function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 	if (extensions.controlNetEnabled && extensions.controlNetActive) {
 		state.alwayson_scripts.controlnet = {};
-		state.alwayson_scripts.controlnet.args = [
-			{
-				input_image: initCanvas.toDataURL(),
-				mask: maskCanvas.toDataURL(),
-				module: extensions.selectedControlNetModule,
-				model: extensions.selectedControlNetModel,
-				control_mode: document.getElementById("controlNetMode-select").value,
-				// resize mode?
-				// weights / steps?
-			},
-		];
+		if (initCanvas == null && maskCanvas == null) {
+			//img2img?
+			state.alwayson_scripts.controlnet.args = [
+				{
+					module: extensions.selectedControlNetModule,
+					model: extensions.selectedControlNetModel,
+					control_mode: document.getElementById("controlNetMode-select").value,
+					processor_res: 64,
+					// resize mode?
+					// weights / steps?
+				},
+			];
+		} else {
+			state.alwayson_scripts.controlnet.args = [
+				{
+					module: extensions.selectedControlNetModule,
+					model: extensions.selectedControlNetModel,
+					control_mode: document.getElementById("controlNetMode-select").value,
+					input_image: initCanvas.toDataURL(),
+					mask: maskCanvas.toDataURL(),
+					processor_res: 64,
+					// resize mode?
+					// weights / steps?
+				},
+			];
+		}
 	}
 
 	// 	request.alwayson_scripts = state.alwayson_scripts;
