@@ -171,6 +171,7 @@ function startup() {
 	changeHiResSquare();
 	changeRestoreFaces();
 	changeSyncCursorSize();
+	changeControlNetExtension();
 	checkFocus();
 	refreshScripts();
 }
@@ -421,6 +422,10 @@ async function testHostConnection() {
 							getSamplers();
 							getUpscalers();
 							getModels();
+							extensions.getExtensions();
+							// getLoras();
+							// getTIEmbeddings();
+							// getHypernets();
 							firstTimeOnline = false;
 						}
 						break;
@@ -659,6 +664,11 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 	document.getElementById("hrFixUpscaler")
 );
 
+// const extensionsAutoComplete = createAutoComplete(
+// 	"Extension",
+// 	document.getElementById("extension-ac-select")
+// );
+
 hrFixUpscalerAutoComplete.onchange.on(({value}) => {
 	stableDiffusionData.hr_upscaler = value;
 	localStorage.setItem(`openoutpaint/hr_upscaler`, value);
@@ -796,6 +806,25 @@ function changeHRFX() {
 function changeHRFY() {
 	stableDiffusionData.hr_resize_y =
 		document.getElementById("hr_resize_y").value;
+}
+
+function changeDynamicPromptsExtension() {
+	// extensions.dynamicPromptsActive =
+	// 	document.getElementById("cbxDynPrompts").checked;
+}
+
+function changeControlNetExtension() {
+	extensions.controlNetActive =
+		document.getElementById("cbxControlNet").checked;
+	if (extensions.controlNetActive) {
+		document
+			.querySelectorAll(".controlnetElement")
+			.forEach((el) => el.classList.remove("invisible"));
+	} else {
+		document
+			.querySelectorAll(".controlnetElement")
+			.forEach((el) => el.classList.add("invisible"));
+	}
 }
 
 function changeHiResFix() {
@@ -1247,6 +1276,7 @@ async function getSamplers() {
 		console.warn(e);
 	}
 }
+
 async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 

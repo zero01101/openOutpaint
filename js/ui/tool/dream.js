@@ -1013,9 +1013,15 @@ const dream_generate_callback = async (bb, resolution, state) => {
 	// Get visible pixels
 	const visibleCanvas = uil.getVisible(bb);
 
+	if (extensions.alwaysOnScripts) {
+		buildAlwaysOnScripts(state);
+	}
+
 	// Use txt2img if canvas is blank
-	if (isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas) || state.controlNet) {
-		//TODO 20230630 - controlnet literally broken right before i implement it??? https://github.com/Mikubill/sd-webui-controlnet/issues/1719
+	if (
+		isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas) ||
+		(state.controlNet && global.controlnetAPI)
+	) {
 		//TODO why doesn't smooth rendering toggle persist/localstorage? why am i putting this here? because i'm lazy
 
 		//TODO this logic seems crappy, fix it
@@ -1118,20 +1124,6 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				request.width,
 				request.height
 			);
-
-			if (state.controlNet) {
-				state.alwayson_scripts = {};
-				state.alwayson_scripts.controlnet = {};
-				state.alwayson_scripts.controlnet.args = [
-					{
-						input_image: initCanvas.toDataURL(),
-						mask: maskCanvas.toDataURL(),
-						module: "inpaint_only+lama", //TODO make this a variable with API supplied options
-						model: "control_v11p_sd15_inpaint [ebff9138]", //TODO make this a variable with API supplied options
-					},
-				];
-				request.alwayson_scripts = state.alwayson_scripts;
-			}
 		}
 
 		// request.alwayson_scripts = state.alwayson_scripts;
@@ -1204,6 +1196,17 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				? stableDiffusionData.hr_denoising_strength
 				: 1;
 
+		// add dynamic prompts stuff if it's enabled
+		if (extensions.dynamicPromptsActive) {
+			addDynamicPromptsToAlwaysOnScripts(state);
+		}
+		if (extensions.controlNetActive) {
+			addControlNetToAlwaysOnScripts(state);
+		}
+		if (extensions.alwaysOnScripts) {
+			// check again just to be sure because i'm an idiot?
+			request.alwayson_scripts = state.alwayson_scripts;
+		}
 		// Dream
 		_generate("txt2img", request, bb);
 	} else {
@@ -2015,7 +2018,7 @@ const dreamTool = () =>
 						"openoutpaint/dream-controlnet",
 						"controlNet",
 						"Toggle ControlNet In/Outpainting",
-						"icon-question"
+						"icon-joystick"
 					).checkbox;
 
 					// Overmasking Slider
@@ -2085,7 +2088,10 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
-				array.appendChild(state.ctxmenu.controlNetLabel);
+				//TODO: if (global.controlnetAPI) { //but figure out how to update the UI after doing so
+				// never mind i think i'm using an extension menu instead
+				// array.appendChild(state.ctxmenu.controlNetLabel);
+				//}
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
@@ -2768,3 +2774,43 @@ const img2imgTool = () =>
 const sendSeed = (seed) => {
 	stableDiffusionData.seed = document.getElementById("seed").value = seed;
 };
+
+function buildAlwaysOnScripts(state) {
+	if (extensions.alwaysOnScripts) {
+		state.alwayson_scripts = {};
+	}
+
+	//TODO find way to remove alwayson_scripts if not active?
+}
+
+function addDynamicPromptsToAlwaysOnScripts(state) {
+	//TODO ok seriously does this even NEED TO BE HERE?!?!?! it's like dynamic scripts is always on no matter what i fucking say...
+	// if (extensions.dynamicPromptsActive) {
+	// 	state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName] = {};
+	// 	var dynval = document.getElementById("cbxDynPrompts").checked;
+	// 	state.alwayson_scripts[extensions.dynamicPromptsAlwaysonScriptName].args = [
+	// 		{
+	// 			0: dynval,
+	// 		},
+	// 	];
+	// }
+}
+
+function addControlNetToAlwaysOnScripts(state) {
+	// if (state.controlNet) {
+	// 	state.alwayson_scripts = {};
+	// 	state.alwayson_scripts.controlnet = {};
+	// 	state.alwayson_scripts.controlnet.args = [
+	// 		{
+	// 			input_image: initCanvas.toDataURL(),
+	// 			mask: maskCanvas.toDataURL(),
+	// 			module: "inpaint_only+lama", //TODO make this a variable with API supplied options - inpaint_global_harmonious good for img2img for POC?
+	// 			model: "control_v11p_sd15_inpaint [ebff9138]", //TODO make this a variable with API supplied options
+	// 			// control mode?
+	// 			// resize mode?
+	// 			// weights / steps?
+	// 		},
+	// 	];
+	// 	request.alwayson_scripts = state.alwayson_scripts;
+	// }
+}
