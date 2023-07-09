@@ -97,10 +97,13 @@
 			workspaces.get(id).onsuccess = (e) => {
 				const ws = e.target.result;
 				if (ws) {
-					workspaces.put({id, workspace}).onsuccess = () => {
-						notifications.notify(`Workspace saved as '${ws.value.name}'`, {
-							type: "success",
-						});
+					var name = ws.name;
+					workspaces.delete(id).onsuccess = () => {
+						workspaces.add({id, name, workspace}).onsuccess = () => {
+							notifications.notify(`Workspace saved as '${name}'`, {
+								type: "success",
+							});
+						}; //workspaces.put is failing, delete and re-add?
 						listWorkspaces();
 					};
 				}
