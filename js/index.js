@@ -426,7 +426,7 @@ async function testHostConnection() {
 								controlNetModelAutoComplete,
 								controlNetModuleAutoComplete
 							);
-							// getLoras();
+							getLoras();
 							// getTIEmbeddings();
 							// getHypernets();
 							firstTimeOnline = false;
@@ -650,6 +650,18 @@ modelAutoComplete.onchange.on(({value}) => {
 		document.querySelector(
 			"#models-ac-select input.autocomplete-text"
 		).style.backgroundColor = "#fcc";
+});
+
+let loraAutoComplete = createAutoComplete(
+	"LoRa",
+	document.getElementById("lora-ac-select")
+);
+loraAutoComplete.onchange.on(({value}) => {
+	// add selected lora to the end of the prompt
+	let passVal = "  <lora:" + value + ":1>";
+	let promptInput = document.getElementById("prompt");
+	promptInput.value += passVal;
+	let promptThing = prompt;
 });
 
 const samplerAutoComplete = createAutoComplete(
@@ -1177,6 +1189,24 @@ async function getModels(refresh = false) {
 				timeout: null,
 			});
 		}
+	}
+}
+
+async function getLoras() {
+	var url = document.getElementById("host").value + "/sdapi/v1/loras";
+	let opt = null;
+
+	try {
+		const response = await fetch(url);
+		const data = await response.json();
+
+		loraAutoComplete.options = data.map((lora) => ({
+			name: lora.name,
+			value: lora.name,
+		}));
+	} catch (e) {
+		console.warn("[index] Failed to fetch loras");
+		console.warn(e);
 	}
 }
 
