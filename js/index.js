@@ -171,6 +171,7 @@ function startup() {
 	changeHiResSquare();
 	changeRestoreFaces();
 	changeSyncCursorSize();
+	changeControlNetExtension();
 	checkFocus();
 	refreshScripts();
 }
@@ -421,6 +422,13 @@ async function testHostConnection() {
 							getSamplers();
 							getUpscalers();
 							getModels();
+							extensions.getExtensions(
+								controlNetModelAutoComplete,
+								controlNetModuleAutoComplete
+							);
+							getLoras();
+							// getTIEmbeddings();
+							// getHypernets();
 							firstTimeOnline = false;
 						}
 						break;
@@ -644,6 +652,18 @@ modelAutoComplete.onchange.on(({value}) => {
 		).style.backgroundColor = "#fcc";
 });
 
+let loraAutoComplete = createAutoComplete(
+	"LoRa",
+	document.getElementById("lora-ac-select")
+);
+loraAutoComplete.onchange.on(({value}) => {
+	// add selected lora to the end of the prompt
+	let passVal = "  <lora:" + value + ":1>";
+	let promptInput = document.getElementById("prompt");
+	promptInput.value += passVal;
+	let promptThing = prompt;
+});
+
 const samplerAutoComplete = createAutoComplete(
 	"Sampler",
 	document.getElementById("sampler-ac-select")
@@ -658,6 +678,29 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 	"HRfix Upscaler",
 	document.getElementById("hrFixUpscaler")
 );
+
+let controlNetModelAutoComplete = createAutoComplete(
+	"ControlNet Model",
+	document.getElementById("controlNetModel-ac-select")
+);
+
+controlNetModelAutoComplete.onchange.on(({value}) => {
+	extensions.selectedControlNetModel = value;
+});
+
+let controlNetModuleAutoComplete = createAutoComplete(
+	"ControlNet Module",
+	document.getElementById("controlNetModule-ac-select")
+);
+
+controlNetModuleAutoComplete.onchange.on(({value}) => {
+	extensions.selectedControlNetModule = value;
+});
+
+// const extensionsAutoComplete = createAutoComplete(
+// 	"Extension",
+// 	document.getElementById("extension-ac-select")
+// );
 
 hrFixUpscalerAutoComplete.onchange.on(({value}) => {
 	stableDiffusionData.hr_upscaler = value;
@@ -796,6 +839,25 @@ function changeHRFX() {
 function changeHRFY() {
 	stableDiffusionData.hr_resize_y =
 		document.getElementById("hr_resize_y").value;
+}
+
+function changeDynamicPromptsExtension() {
+	extensions.dynamicPromptsActive =
+		document.getElementById("cbxDynPrompts").checked;
+}
+
+function changeControlNetExtension() {
+	extensions.controlNetActive =
+		document.getElementById("cbxControlNet").checked;
+	if (extensions.controlNetActive) {
+		document
+			.querySelectorAll(".controlnetElement")
+			.forEach((el) => el.classList.remove("invisible"));
+	} else {
+		document
+			.querySelectorAll(".controlnetElement")
+			.forEach((el) => el.classList.add("invisible"));
+	}
 }
 
 function changeHiResFix() {
@@ -1130,6 +1192,24 @@ async function getModels(refresh = false) {
 	}
 }
 
+async function getLoras() {
+	var url = document.getElementById("host").value + "/sdapi/v1/loras";
+	let opt = null;
+
+	try {
+		const response = await fetch(url);
+		const data = await response.json();
+
+		loraAutoComplete.options = data.map((lora) => ({
+			name: lora.name,
+			value: lora.name,
+		}));
+	} catch (e) {
+		console.warn("[index] Failed to fetch loras");
+		console.warn(e);
+	}
+}
+
 async function getConfig() {
 	var url = document.getElementById("host").value + "/sdapi/v1/options";
 
@@ -1247,6 +1327,7 @@ async function getSamplers() {
 		console.warn(e);
 	}
 }
+
 async function upscaleAndDownload() {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 

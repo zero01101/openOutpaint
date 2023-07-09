@@ -5,7 +5,7 @@
 		<title>openOutpaint 🐠</title>
 		<!-- CSS Variables -->
 		<link href="css/colors.css?v=f732f19" rel="stylesheet" />
-		<link href="css/icons.css?v=a8ec439" rel="stylesheet" />
+		<link href="css/icons.css?v=e6f94af" rel="stylesheet" />
 
 		<link href="css/index.css?v=aaad3e5" rel="stylesheet" />
 		<link href="css/layers.css?v=92c0352" rel="stylesheet" />
@@ -143,10 +143,12 @@
 						id="seed"
 						onchange="changeSeed()"
 						min="-1"
-						max="9999999999"
+						max="99999999999999999999"
 						value="-1"
 						step="1" />
 					<br />
+					<label>Lora:</label>
+					<div id="lora-ac-select"></div>
 					<input type="checkbox" id="cbxHRFix" onchange="changeHiResFix()" />
 					<label for="cbxHRFix">Apply Txt2Img HRfix</label>
 					<br />
@@ -195,7 +197,48 @@
 						step="1"
 						onchange="changeMaskBlur()" />
 				</div>
-
+				<!-- Extensions section -->
+				<button type="button" class="collapsible">Extensions</button>
+				<div class="content">
+					<input
+						type="checkbox"
+						id="cbxDynPrompts"
+						onchange="changeDynamicPromptsExtension()"
+						disabled="disabled" />
+					<label for="cbxDynPrompts">Dynamic Prompts</label>
+					<br />
+					<input
+						type="checkbox"
+						id="cbxControlNet"
+						onchange="changeControlNetExtension()"
+						disabled="disabled" />
+					<label for="cbxControlNet">ControlNet In/Outpainting</label>
+					<br class="controlnetElement" />
+					<label id="cnModuleLabel" class="controlnetElement">
+						Preprocessor
+					</label>
+					<div id="controlNetModule-ac-select" class="controlnetElement"></div>
+					<label id="cnModelLabel" class="controlnetElement">Model</label>
+					<div id="controlNetModel-ac-select" class="controlnetElement"></div>
+					<label id="cnControlLabel" class="controlnetElement">
+						Control Mode
+					</label>
+					<select id="controlNetMode-select" class="controlnetElement">
+						<option value="Balanced">balanced</option>
+						<option value="My prompt is more important">+prompt</option>
+						<option value="ControlNet is more important">+CN</option>
+					</select>
+					<br />
+					<label id="cnResizeLabel" class="controlnetElement">
+						Resize Mode
+					</label>
+					<select id="controlNetResize-select" class="controlnetElement">
+						<option value="Just Resize">resize</option>
+						<option value="Crop and Resize">+crop</option>
+						<option value="Resize and Fill">+fill</option>
+					</select>
+					<!-- <div id="referenceStyleFidelity" class="controlnetElement"></div> -->
+				</div>
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>
 				<div class="content">
@@ -244,7 +287,8 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							Alpha release v0.0.15.3 (20230410.001)
+							<s>Alpha release v0.0.16</s>
+							v20230708.001
 						</a>
 						<br />
 						<a
@@ -441,6 +485,7 @@
 		<!-- Basics -->
 		<script src="js/global.js?v=ac30d16" type="text/javascript"></script>
 		<script src="js/defaults.js?v=5b06818" type="text/javascript"></script>
+		<script src="js/extensions.js?v=fec7579" type="text/javascript"></script>
 
 		<!-- Base Libs -->
 		<script src="js/lib/util.js?v=379aef7" type="text/javascript"></script>
@@ -466,7 +511,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=e10fcb1" type="text/javascript"></script>
+		<script src="js/index.js?v=31d52e7" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=4f29db4"
@@ -480,7 +525,7 @@
 			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=97e4806" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=45b8acd" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=e9bd0eb"
 			type="text/javascript"></script>

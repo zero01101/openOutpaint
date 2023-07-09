@@ -128,6 +128,12 @@
 	mask-image: url("../res/icons/slice.svg");
 }
 
+.ui.inline-icon.icon-joystick::after,
+.ui.icon > .icon-joystick {
+	-webkit-mask-image: url("../res/icons/joystick.svg");
+	mask-image: url("../res/icons/joystick.svg");
+}
+
 .ui.inline-icon.icon-save::after,
 .ui.icon > .icon-save {
 	-webkit-mask-image: url("../res/icons/save.svg");
