@@ -217,6 +217,7 @@
 				localStorage.getItem("openoutpaint/settings.smooth") === null
 					? true
 					: localStorage.getItem("openoutpaint/settings.smooth") === "true";
+			smoothRendering.checked = _enable_smooth;
 
 			writeToLocalStorage();
 
