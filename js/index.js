@@ -172,6 +172,7 @@ function startup() {
 	changeRestoreFaces();
 	changeSyncCursorSize();
 	changeControlNetExtension();
+	changeControlNetReference();
 	checkFocus();
 	refreshScripts();
 }
@@ -424,7 +425,8 @@ async function testHostConnection() {
 							getModels();
 							extensions.getExtensions(
 								controlNetModelAutoComplete,
-								controlNetModuleAutoComplete
+								controlNetModuleAutoComplete,
+								controlNetReferenceModuleAutoComplete
 							);
 							getLoras();
 							// getTIEmbeddings();
@@ -680,7 +682,7 @@ const hrFixUpscalerAutoComplete = createAutoComplete(
 );
 
 let controlNetModelAutoComplete = createAutoComplete(
-	"ControlNet Model",
+	"Inpaint Model",
 	document.getElementById("controlNetModel-ac-select")
 );
 
@@ -689,12 +691,21 @@ controlNetModelAutoComplete.onchange.on(({value}) => {
 });
 
 let controlNetModuleAutoComplete = createAutoComplete(
-	"ControlNet Module",
+	"Inpaint Preprocessor",
 	document.getElementById("controlNetModule-ac-select")
 );
 
 controlNetModuleAutoComplete.onchange.on(({value}) => {
 	extensions.selectedControlNetModule = value;
+});
+
+let controlNetReferenceModuleAutoComplete = createAutoComplete(
+	"Reference Preprocessor",
+	document.getElementById("controlNetReferenceModule-ac-select")
+);
+
+controlNetReferenceModuleAutoComplete.onchange.on(({value}) => {
+	extensions.selectedCNReferenceModule = value;
 });
 
 // const extensionsAutoComplete = createAutoComplete(
@@ -724,6 +735,25 @@ const resSlider = makeSlider(
 			toolbar.currentTool.redraw();
 	}
 );
+
+const refSlider = makeSlider(
+	"Reference Fidelity",
+	document.getElementById("controlNetReferenceFidelity"),
+	"cn_reference_fidelity",
+	0.0,
+	1.0,
+	0.1,
+	0.5,
+	0.01,
+	(v) => {
+		extensions.controlNetReferenceFidelity = v;
+
+		toolbar.currentTool &&
+			toolbar.currentTool.redraw &&
+			toolbar.currentTool.redraw();
+	}
+);
+
 makeSlider(
 	"CFG Scale",
 	document.getElementById("cfgScale"),
@@ -851,11 +881,26 @@ function changeControlNetExtension() {
 		document.getElementById("cbxControlNet").checked;
 	if (extensions.controlNetActive) {
 		document
-			.querySelectorAll(".controlnetElement")
+			.querySelectorAll(".controlNetElement")
 			.forEach((el) => el.classList.remove("invisible"));
 	} else {
 		document
-			.querySelectorAll(".controlnetElement")
+			.querySelectorAll(".controlNetElement")
+			.forEach((el) => el.classList.add("invisible"));
+	}
+}
+
+function changeControlNetReference() {
+	extensions.controlNetReferenceActive = document.getElementById(
+		"cbxControlNetReferenceLayer"
+	).checked;
+	if (extensions.controlNetReferenceActive) {
+		document
+			.querySelectorAll(".controlNetReferenceElement")
+			.forEach((el) => el.classList.remove("invisible"));
+	} else {
+		document
+			.querySelectorAll(".controlNetReferenceElement")
 			.forEach((el) => el.classList.add("invisible"));
 	}
 }

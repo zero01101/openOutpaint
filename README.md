@@ -16,6 +16,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 ## features
 
+- SDXL "support"! (please check outpaint/inpaint fill types in the context menus and fiddle with denoising a LOT for img2img, it's touchy)
 - [now available as an extension for webUI!](https://github.com/zero01101/openOutpaint-webUI-extension) you can find it under the default "available" section in the webUI _extensions_ tab
   - **_NOTE: extension still requires `--api` flag in webui-user launch script_**
 - intuitive, convenient outpainting - that's like the whole point right
@@ -23,7 +24,8 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 - arbitrary dream reticle size - draw the rectangle of your dreams
 - an [effectively infinite](https://github.com/zero01101/openOutpaint/pull/108), resizable, scalable canvas for you to paint all over
   - **_NOTE: v0.0.10 introduces a new "camera control" modifier key - hold [`CTRL`] and use the scrollwheel to zoom (scroll the wheel or use the two-finger vertical gesture on, uh, modern touchpads) and pan (hold the scrollwheel button, or if you don't have one, left-click button) around the canvas_**
-- extremely limited, janky support for a shockingly restrictive list of A1111 extensions including controlnet inpainting for legitimately [magic](https://github.com/Mikubill/sd-webui-controlnet/discussions/1464) [promptless inpainting](https://github.com/Mikubill/sd-webui-controlnet/discussions/1143) and [outpainting](https://github.com/Mikubill/sd-webui-controlnet/discussions/1597)
+- extremely limited, janky support for a shockingly restrictive list of A1111 extensions including controlnet inpainting for legitimately [magic](https://github.com/Mikubill/sd-webui-controlnet/discussions/1464) [promptless inpainting](https://github.com/Mikubill/sd-webui-controlnet/discussions/1143) and [outpainting](https://github.com/Mikubill/sd-webui-controlnet/discussions/1597) and in-line reference preprocessors for keeping existing style while replacing things (reference requires at least 2 controlnet units enabled in A1111 settings), as well as a very very basic dynamic-prompts-on-or-off toggle
+  - **_NOTE: this is_ JANKY, _pull requests greatly welcomed lol_**
 - a very nicely functional and familiar layer system
 - save, load, import, and export workspaces - includes all your layers, history, canvas size, you name it!
 - inpainting/touchup mask brush

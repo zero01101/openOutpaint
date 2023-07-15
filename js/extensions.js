@@ -7,8 +7,12 @@ const extensions = {
 	alwaysOnScripts: false,
 	controlNetEnabled: false,
 	controlNetActive: false,
+	controlNetReferenceActive: false,
+	controlNetReferenceFidelity: 0.5,
 	selectedControlNetModel: null,
 	selectedControlNetModule: null,
+	selectedCNReferenceModule: null,
+	controlNetModelCount: 0,
 	dynamicPromptsEnabled: false,
 	dynamicPromptsActive: false,
 	dynamicPromptsAlwaysonScriptName: null, //GRUMBLE GRUMBLE
@@ -18,7 +22,8 @@ const extensions = {
 
 	async getExtensions(
 		controlNetModelAutoComplete,
-		controlNetModuleAutoComplete
+		controlNetModuleAutoComplete,
+		controlNetReferenceModuleAutoComplete
 	) {
 		const allowedExtensions = [
 			"controlnet",
@@ -51,7 +56,8 @@ const extensions = {
 		this.checkForDynamicPrompts();
 		this.checkForControlNet(
 			controlNetModelAutoComplete,
-			controlNetModuleAutoComplete
+			controlNetModuleAutoComplete,
+			controlNetReferenceModuleAutoComplete
 		);
 		//checkForSAM(); //or inpaintAnything or something i dunno
 		//checkForADetailer(); //? this one seems iffy
@@ -78,7 +84,8 @@ const extensions = {
 
 	async checkForControlNet(
 		controlNetModelAutoComplete,
-		controlNetModuleAutoComplete
+		controlNetModuleAutoComplete,
+		controlNetReferenceModuleAutoComplete
 	) {
 		var url = document.getElementById("host").value + "/controlnet/version";
 
@@ -97,8 +104,23 @@ const extensions = {
 				document.getElementById("cbxControlNet").disabled = false;
 				// ok cool so now we can get the models and modules
 				this.getModels(controlNetModelAutoComplete);
-				this.getModules(controlNetModuleAutoComplete);
+				this.getModules(
+					controlNetModuleAutoComplete,
+					controlNetReferenceModuleAutoComplete
+				);
 			}
+			url = document.getElementById("host").value + "/controlnet/settings";
+			try {
+				const response2 = await fetch(url);
+				const data2 = await response2.json();
+				if (data2.control_net_max_models_num < 2) {
+					document.getElementById("cbxControlNetReferenceLayer").disabled =
+						"disabled";
+					console.warn(
+						"[extensions] ControlNet reference layer disabled due to insufficient units enabled in settings - cannot be enabled via API, please increase to at least 2 units manually"
+					);
+				}
+			} catch (ex) {}
 		} catch (e) {
 			// ??
 			global.controlnetAPI = false;
@@ -128,7 +150,10 @@ const extensions = {
 
 		controlNetModelAutoComplete.options = opt;
 	},
-	async getModules(controlNetModuleAutoComplete) {
+	async getModules(
+		controlNetModuleAutoComplete,
+		controlNetReferenceModuleAutoComplete
+	) {
 		const allowedModules = ["reference", "inpaint"];
 		var url = document.getElementById("host").value + "/controlnet/module_list";
 
@@ -156,5 +181,14 @@ const extensions = {
 		});
 
 		controlNetModuleAutoComplete.options = opt;
+
+		opt = this.controlNetModules.module_list
+			.filter((m) => m.includes("reference"))
+			.map((option) => ({
+				name: option,
+				value: option,
+			}));
+
+		controlNetReferenceModuleAutoComplete.options = opt;
 	},
 };

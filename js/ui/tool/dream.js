@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -1217,7 +1214,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				canvasTransport.initCanvas,
 				canvasTransport.maskCanvas
 			);
-		} else {
+		} else if (extensions.controlNetActive) {
 			console.warn(
 				"[dream] controlnet inpaint/outpaint enabled for null image, defaulting to normal txt2img dream"
 			);
@@ -1570,7 +1567,15 @@ const dream_img2img_callback = (bb, resolution, state) => {
 		addDynamicPromptsToAlwaysOnScripts(state);
 	}
 	if (extensions.controlNetActive) {
-		addControlNetToAlwaysOnScripts(state, null, null);
+		if (extensions.controlNetReferenceActive) {
+			addControlNetToAlwaysOnScripts(
+				state,
+				request.init_images[0],
+				request.mask
+			);
+		} else {
+			addControlNetToAlwaysOnScripts(state, null, null); // //WTF???
+		}
 	}
 	if (extensions.alwaysOnScripts) {
 		// check again just to be sure because i'm an idiot?
@@ -2846,6 +2851,10 @@ function addDynamicPromptsToAlwaysOnScripts(state) {
 }
 
 function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
+	var initimg =
+		toolbar._current_tool.name == "Dream" ? initCanvas.toDataURL() : initCanvas;
+	var maskimg =
+		toolbar._current_tool.name == "Dream" ? maskCanvas.toDataURL() : maskCanvas;
 	if (extensions.controlNetEnabled && extensions.controlNetActive) {
 		state.alwayson_scripts.controlnet = {};
 		if (initCanvas == null && maskCanvas == null) {
@@ -2867,8 +2876,8 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 					module: extensions.selectedControlNetModule,
 					model: extensions.selectedControlNetModel,
 					control_mode: document.getElementById("controlNetMode-select").value,
-					input_image: initCanvas.toDataURL(),
-					mask: maskCanvas.toDataURL(),
+					input_image: initimg, //initCanvas.toDataURL(),
+					mask: maskimg, //maskCanvas.toDataURL(),
 					processor_res: 64,
 					resize_mode: document.getElementById("controlNetResize-select").value,
 					// resize mode?
@@ -2876,7 +2885,24 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 				},
 			];
 		}
+		if (extensions.controlNetReferenceActive) {
+			state.alwayson_scripts.controlnet.args.unshift({
+				enabled: true,
+				module: extensions.selectedCNReferenceModule,
+				model: "None",
+				control_mode: document.getElementById("controlNetReferenceMode-select")
+					.value,
+				image: initimg, //initCanvas.toDataURL(),
+				processor_res: 64,
+				threshold_a: extensions.controlNetReferenceFidelity,
+				threshold_b: 64,
+				resize_mode: document.getElementById("controlNetResize-select").value,
+			});
+		}
 	}
+
+	var deleteme = 2463;
+	var ok = deleteme / 36;
 
 	// 	request.alwayson_scripts = state.alwayson_scripts;
 	// }
