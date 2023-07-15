@@ -62,9 +62,12 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(() => {
-			if (running) _checkProgress();
-		}, Math.max(0, minDelay - timeSpent));
+		setTimeout(
+			() => {
+				if (running) _checkProgress();
+			},
+			Math.max(0, minDelay - timeSpent)
+		);
 	};
 
 	_checkProgress();
@@ -2025,11 +2028,11 @@ const dreamTool = () =>
 						"Outpaint Type",
 						{
 							0: "fill",
-							1: "original (AVOID)",
-							2: "latent noise (suggested)",
+							1: "original (SDXL)",
+							2: "latent noise (SD1.x/2.x)",
 							3: "latent nothing",
 						},
-						2, // AVOID ORIGINAL FOR OUTPAINT OR ELSE but we still give you the option because we love you
+						2, // AVOID ORIGINAL FOR OUTPAINT OR ELSE but we still give you the option because we love you and because it seems to work better for SDXL
 						() => {
 							stableDiffusionData.outpainting_fill = state.outpainting_fill;
 						}
