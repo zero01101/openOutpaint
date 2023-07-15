@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-US">
 	<head>
 		<meta charset="utf-8" />
@@ -213,31 +213,59 @@
 						onchange="changeControlNetExtension()"
 						disabled="disabled" />
 					<label for="cbxControlNet">ControlNet In/Outpainting</label>
-					<br class="controlnetElement" />
-					<label id="cnModuleLabel" class="controlnetElement">
-						Preprocessor
+					<br class="controlNetElement" />
+					<label id="cnModuleLabel" class="controlNetElement">
+						Inpaint Preprocessor
 					</label>
-					<div id="controlNetModule-ac-select" class="controlnetElement"></div>
-					<label id="cnModelLabel" class="controlnetElement">Model</label>
-					<div id="controlNetModel-ac-select" class="controlnetElement"></div>
-					<label id="cnControlLabel" class="controlnetElement">
-						Control Mode
+					<div id="controlNetModule-ac-select" class="controlNetElement"></div>
+					<label id="cnModelLabel" class="controlNetElement">Model</label>
+					<div id="controlNetModel-ac-select" class="controlNetElement"></div>
+					<label id="cnControlLabel" class="controlNetElement">
+						Inpaint Mode
 					</label>
-					<select id="controlNetMode-select" class="controlnetElement">
+					<select id="controlNetMode-select" class="controlNetElement">
 						<option value="Balanced">balanced</option>
 						<option value="My prompt is more important">+prompt</option>
 						<option value="ControlNet is more important">+CN</option>
 					</select>
-					<br />
-					<label id="cnResizeLabel" class="controlnetElement">
+					<br class="controlNetElement" />
+					<label id="cnResizeLabel" class="controlNetElement">
 						Resize Mode
 					</label>
-					<select id="controlNetResize-select" class="controlnetElement">
+					<select id="controlNetResize-select" class="controlNetElement">
 						<option value="Just Resize">resize</option>
 						<option value="Crop and Resize">+crop</option>
 						<option value="Resize and Fill">+fill</option>
 					</select>
-					<!-- <div id="referenceStyleFidelity" class="controlnetElement"></div> -->
+					<br class="controlNetElement" />
+					<input
+						type="checkbox"
+						id="cbxControlNetReferenceLayer"
+						onchange="changeControlNetReference()"
+						class="controlNetElement" />
+					<label for="cbxControlNetReferenceLayer" class="controlNetElement">
+						Reference as 1st CN Unit
+					</label>
+					<br class="controlNetReferenceElement" />
+					<label id="cnReferenceModuleLabel" class="controlNetReferenceElement">
+						Reference Preprocessor
+					</label>
+					<div
+						id="controlNetReferenceModule-ac-select"
+						class="controlNetReferenceElement"></div>
+					<div
+						id="controlNetReferenceFidelity"
+						class="controlNetReferenceElement"></div>
+					<label id="cnResizeLabel" class="controlNetReferenceElement">
+						Reference Mode
+					</label>
+					<select
+						id="controlNetReferenceMode-select"
+						class="controlNetReferenceElement">
+						<option value="Balanced">balanced</option>
+						<option value="My prompt is more important">+prompt</option>
+						<option value="ControlNet is more important">+CN</option>
+					</select>
 				</div>
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>
@@ -287,8 +315,8 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							<s>Alpha release v0.0.16.2</s>
-							v20230715.001
+							<s>Alpha release v0.0.16.3</s>
+							v20230715.002
 						</a>
 						<br />
 						<a
@@ -485,7 +513,7 @@
 		<!-- Basics -->
 		<script src="js/global.js?v=ac30d16" type="text/javascript"></script>
 		<script src="js/defaults.js?v=5b06818" type="text/javascript"></script>
-		<script src="js/extensions.js?v=abb882a" type="text/javascript"></script>
+		<script src="js/extensions.js?v=1fca0fc" type="text/javascript"></script>
 
 		<!-- Base Libs -->
 		<script src="js/lib/util.js?v=379aef7" type="text/javascript"></script>
@@ -511,7 +539,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=31d52e7" type="text/javascript"></script>
+		<script src="js/index.js?v=7debf82" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=4f29db4"
@@ -525,7 +553,7 @@
 			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=ac1643d" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=06e0164" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=e9bd0eb"
 			type="text/javascript"></script>
