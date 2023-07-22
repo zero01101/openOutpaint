@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -1335,6 +1332,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		request.mask = maskCanvas.toDataURL();
 		request.inpainting_fill = stableDiffusionData.outpainting_fill;
 		request.image_cfg_scale = stableDiffusionData.image_cfg_scale;
+		request.inpaint_full_res = state.fullResolution;
 
 		// add dynamic prompts stuff if it's enabled
 		if (extensions.dynamicPromptsEnabled) {
@@ -2075,15 +2073,6 @@ const dreamTool = () =>
 						}
 					).checkbox;
 
-					// controlnet checkbox
-					state.ctxmenu.controlNetLabel = _toolbar_input.checkbox(
-						state,
-						"openoutpaint/dream-controlnet",
-						"controlNet",
-						"Toggle ControlNet In/Outpainting",
-						"icon-joystick"
-					).checkbox;
-
 					// Overmasking Slider
 					state.ctxmenu.overMaskPxLabel = _toolbar_input.slider(
 						state,
@@ -2139,6 +2128,14 @@ const dreamTool = () =>
 						}
 					).slider;
 					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
+					// Inpaint Full Resolution Checkbox
+					state.ctxmenu.fullResolutionLabel = _toolbar_input.checkbox(
+						state,
+						"openoutpaint/dream-fullresolution",
+						"fullResolution",
+						"Outpaint Full Resolution (SDXL)",
+						"icon-expand"
+					).checkbox;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2151,10 +2148,7 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
-				//TODO: if (global.controlnetAPI) { //but figure out how to update the UI after doing so
-				// never mind i think i'm using an extension menu instead
-				// array.appendChild(state.ctxmenu.controlNetLabel);
-				//}
+				array.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
@@ -2910,84 +2904,3 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 	// 	request.alwayson_scripts = state.alwayson_scripts;
 	// }
 }
-
-// function getImageAndMask(visibleCanvas, bb, request, state) {
-// 	// get input image
-// 	// Temporary canvas for init image and mask generation
-// 	const bbCanvas = document.createElement("canvas");
-// 	bbCanvas.width = bb.w;
-// 	bbCanvas.height = bb.h;
-// 	const bbCtx = bbCanvas.getContext("2d");
-
-// 	const maskCanvas = document.createElement("canvas");
-// 	maskCanvas.width = request.width;
-// 	maskCanvas.height = request.height;
-// 	const maskCtx = maskCanvas.getContext("2d");
-
-// 	const initCanvas = document.createElement("canvas");
-// 	initCanvas.width = request.width;
-// 	initCanvas.height = request.height;
-// 	const initCtx = initCanvas.getContext("2d");
-
-// 	bbCtx.fillStyle = "#000F";
-
-// 	// Get init image
-// 	initCtx.fillRect(0, 0, request.width, request.height);
-// 	initCtx.drawImage(
-// 		visibleCanvas,
-// 		0,
-// 		0,
-// 		bb.w,
-// 		bb.h,
-// 		0,
-// 		0,
-// 		request.width,
-// 		request.height
-// 	);
-// 	// request.init_images = [initCanvas.toDataURL()];
-
-// 	// Get mask image
-// 	bbCtx.fillStyle = "#000F";
-// 	bbCtx.fillRect(0, 0, bb.w, bb.h);
-// 	if (state.invertMask) {
-// 		// overmasking by definition is entirely pointless with an inverted mask outpaint
-// 		// since it should explicitly avoid brushed masks too, we just won't even bother
-// 		bbCtx.globalCompositeOperation = "destination-in";
-// 		bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-
-// 		bbCtx.globalCompositeOperation = "destination-in";
-// 		bbCtx.drawImage(visibleCanvas, 0, 0);
-// 	} else {
-// 		bbCtx.globalCompositeOperation = "destination-in";
-// 		bbCtx.drawImage(visibleCanvas, 0, 0);
-// 		// here's where to overmask to avoid including the brushed mask
-// 		// 99% of my issues were from failing to set source-over for the overmask blotches
-// 		if (state.overMaskPx > 0) {
-// 			// transparent to white first
-// 			bbCtx.globalCompositeOperation = "destination-atop";
-// 			bbCtx.fillStyle = "#FFFF";
-// 			bbCtx.fillRect(0, 0, bb.w, bb.h);
-// 			applyOvermask(bbCanvas, bbCtx, state.overMaskPx);
-// 		}
-
-// 		bbCtx.globalCompositeOperation = "destination-out"; // ???
-// 		bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-// 	}
-
-// 	bbCtx.globalCompositeOperation = "destination-atop";
-// 	bbCtx.fillStyle = "#FFFF";
-// 	bbCtx.fillRect(0, 0, bb.w, bb.h);
-
-// 	maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-// 	maskCtx.drawImage(
-// 		bbCanvas,
-// 		0,
-// 		0,
-// 		bb.w,
-// 		bb.h,
-// 		0,
-// 		0,
-// 		request.width,
-// 		request.height
-// 	);
-// }

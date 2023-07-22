@@ -578,20 +578,25 @@ function drawMarchingAnts(ctx, bb, offset, options) {
 	ctx.clearRect(0, 0, bb.w + 2, bb.h + 2);
 
 	// Draw Tool Name
-	if (bb.h > 40 && options.title) {
-		ctx.font = `bold 20px Open Sans`;
+	// this is erroring a ton recently so it's getting a try/catch that does nothing
+	try {
+		if (bb.h > 40 && options.title) {
+			ctx.font = `bold 20px Open Sans`;
 
-		ctx.textAlign = "left";
-		ctx.fillStyle = options.titleStyle;
-		ctx.fillText(options.title, 10, 30, bb.w);
+			ctx.textAlign = "left";
+			ctx.fillStyle = options.titleStyle;
+			ctx.fillText(options.title, 10, 30, bb.w);
+		}
+
+		ctx.strokeStyle = options.style;
+		ctx.strokeWidth = options.width;
+		ctx.filter = options.filter;
+		ctx.setLineDash([4, 2]);
+		ctx.lineDashOffset = -offset;
+		ctx.strokeRect(1, 1, bb.w, bb.h);
+	} catch (e) {
+		// do nothing
 	}
-
-	ctx.strokeStyle = options.style;
-	ctx.strokeWidth = options.width;
-	ctx.filter = options.filter;
-	ctx.setLineDash([4, 2]);
-	ctx.lineDashOffset = -offset;
-	ctx.strokeRect(1, 1, bb.w, bb.h);
 
 	ctx.restore();
 }
