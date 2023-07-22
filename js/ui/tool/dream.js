@@ -2032,8 +2032,8 @@ const dreamTool = () =>
 						"outpainting_fill",
 						"Outpaint Type",
 						{
-							0: "fill",
-							1: "original (SDXL)",
+							0: "fill (SDXL?)",
+							1: "original (SDXL?)",
 							2: "latent noise (SD1.x/2.x)",
 							3: "latent nothing",
 						},
