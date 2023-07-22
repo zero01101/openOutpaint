@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -2035,8 +2032,8 @@ const dreamTool = () =>
 						"outpainting_fill",
 						"Outpaint Type",
 						{
-							0: "fill",
-							1: "original (SDXL)",
+							0: "fill (SDXL?)",
+							1: "original (SDXL?)",
 							2: "latent noise (SD1.x/2.x)",
 							3: "latent nothing",
 						},

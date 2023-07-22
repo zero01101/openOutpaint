@@ -1172,7 +1172,17 @@ async function getModels(refresh = false) {
 			);
 			const optData = await optResponse.json();
 
-			const model = optData.sd_model_checkpoint;
+			var model = optData.sd_model_checkpoint;
+			// 20230722 - sigh so this key is now removed https://github.com/AUTOMATIC1111/stable-diffusion-webui/commit/66c5f1bb1556a2d86d9f11aeb92f83d4a09832cc
+			// no idea why but time to deal with it
+			if (model === undefined) {
+				const modelHash = optData.sd_checkpoint_hash;
+				const hashMap = data.map((option) => ({
+					hash: option.sha256,
+					title: option.title,
+				}));
+				model = hashMap.find((option) => option.hash === modelHash).title;
+			}
 			console.log("Current model: " + model);
 			if (modelAutoComplete.value !== model) modelAutoComplete.value = model;
 		} catch (e) {
