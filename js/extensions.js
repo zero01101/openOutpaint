@@ -89,40 +89,42 @@ const extensions = {
 	) {
 		var url = document.getElementById("host").value + "/controlnet/version";
 
-		try {
-			const response = await fetch(url);
-			const data = await response.json();
-
-			if (
-				data.version > 0 &&
-				this.enabledExtensions.filter((e) => e.includes("controlnet")).length >
-					0
-			) {
-				// ControlNet found
-				this.alwaysOnScripts = true;
-				this.controlNetEnabled = true;
-				document.getElementById("cbxControlNet").disabled = false;
-				// ok cool so now we can get the models and modules
-				this.getModels(controlNetModelAutoComplete);
-				this.getModules(
-					controlNetModuleAutoComplete,
-					controlNetReferenceModuleAutoComplete
-				);
-			}
-			url = document.getElementById("host").value + "/controlnet/settings";
+		if (
+			this.enabledExtensions.filter((e) => e.includes("controlnet")).length > 0
+		) {
 			try {
-				const response2 = await fetch(url);
-				const data2 = await response2.json();
-				if (data2.control_net_max_models_num < 2) {
-					document.getElementById("cbxControlNetReferenceLayer").disabled =
-						"disabled";
-					console.warn(
-						"[extensions] ControlNet reference layer disabled due to insufficient units enabled in settings - cannot be enabled via API, please increase to at least 2 units manually"
+				const response = await fetch(url);
+				const data = await response.json();
+
+				if (data.version > 0) {
+					// ControlNet found
+					this.alwaysOnScripts = true;
+					this.controlNetEnabled = true;
+					document.getElementById("cbxControlNet").disabled = false;
+					// ok cool so now we can get the models and modules
+					this.getModels(controlNetModelAutoComplete);
+					this.getModules(
+						controlNetModuleAutoComplete,
+						controlNetReferenceModuleAutoComplete
 					);
 				}
-			} catch (ex) {}
-		} catch (e) {
-			// ??
+				url = document.getElementById("host").value + "/controlnet/settings";
+				try {
+					const response2 = await fetch(url);
+					const data2 = await response2.json();
+					if (data2.control_net_max_models_num < 2) {
+						document.getElementById("cbxControlNetReferenceLayer").disabled =
+							"disabled";
+						console.warn(
+							"[extensions] ControlNet reference layer disabled due to insufficient units enabled in settings - cannot be enabled via API, please increase to at least 2 units manually"
+						);
+					}
+				} catch (ex) {}
+			} catch (e) {
+				// ??
+				global.controlnetAPI = false;
+			}
+		} else {
 			global.controlnetAPI = false;
 		}
 	},

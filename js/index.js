@@ -888,13 +888,14 @@ function changeControlNetExtension() {
 			.querySelectorAll(".controlNetElement")
 			.forEach((el) => el.classList.add("invisible"));
 	}
+	changeControlNetReference();
 }
 
 function changeControlNetReference() {
 	extensions.controlNetReferenceActive = document.getElementById(
 		"cbxControlNetReferenceLayer"
 	).checked;
-	if (extensions.controlNetReferenceActive) {
+	if (extensions.controlNetReferenceActive && extensions.controlNetActive) {
 		document
 			.querySelectorAll(".controlNetReferenceElement")
 			.forEach((el) => el.classList.remove("invisible"));
