@@ -1044,7 +1044,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			initCanvas.height = request.height;
 			const initCtx = initCanvas.getContext("2d");
 
-			bbCtx.fillStyle = "#000F";
+			bbCtx.fillStyle = state.transparentOutpaintCanvas ? "#0000" : "#000F"; //???????????? does sdxl need TRANSPARENT pixels to outpaint against instead of black??? original just sucks out loud suddenly when it worked great about a week ago :disapproval:
 
 			// Get init image
 			initCtx.fillRect(0, 0, request.width, request.height);
@@ -1062,7 +1062,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			// request.init_images = [initCanvas.toDataURL()];
 
 			// Get mask image
-			bbCtx.fillStyle = "#000F";
+			bbCtx.fillStyle = state.transparentOutpaintCanvas ? "#0000" : "#000F";
 			bbCtx.fillRect(0, 0, bb.w, bb.h);
 			if (state.invertMask) {
 				// overmasking by definition is entirely pointless with an inverted mask outpaint
@@ -2136,6 +2136,15 @@ const dreamTool = () =>
 						"Outpaint Full Resolution (SDXL)",
 						"icon-expand"
 					).checkbox;
+					// black/transparent nullspace checkbox
+					state.ctxmenu.transparentOutpaintCanvasLabel =
+						_toolbar_input.checkbox(
+							state,
+							"openoutpaint/dream-transparentOutpaintCanvas",
+							"transparentOutpaintCanvas",
+							"Transparent (SDXL)/Black (SD1.x/2.x) Outpaint Canvas",
+							"icon-eraser"
+						).checkbox;
 				}
 
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
@@ -2148,7 +2157,6 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
-				array.appendChild(state.ctxmenu.fullResolutionLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
@@ -2157,6 +2165,11 @@ const dreamTool = () =>
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
 				menu.appendChild(state.ctxmenu.outpaintTypeSelect);
+				const btnArray2 = document.createElement("div");
+				btnArray2.classList.add("checkbox-array");
+				btnArray2.appendChild(state.ctxmenu.fullResolutionLabel);
+				btnArray2.appendChild(state.ctxmenu.transparentOutpaintCanvasLabel);
+				menu.appendChild(btnArray2);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 			},

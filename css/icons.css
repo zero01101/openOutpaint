@@ -196,3 +196,15 @@
 	-webkit-mask-image: url("../res/icons/clipboard-list.svg");
 	mask-image: url("../res/icons/clipboard-list.svg");
 }
+
+.ui.inline-icon.icon-paint-bucket::after,
+.ui.icon > .icon-paint-bucket {
+	-webkit-mask-image: url("../res/icons/paint-bucket.svg");
+	mask-image: url("../res/icons/paint-bucket.svg");
+}
+
+.ui.inline-icon.icon-eraser::after,
+.ui.icon > .icon-eraser {
+	-webkit-mask-image: url("../res/icons/eraser.svg");
+	mask-image: url("../res/icons/eraser.svg");
+}
