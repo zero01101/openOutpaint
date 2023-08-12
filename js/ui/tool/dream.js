@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -697,10 +694,29 @@ const _generate = async (endpoint, request, bb, options = {}) => {
 					parseInt(requestCopy.seed) +
 					requestCopy.batch_size * requestCopy.n_iter;
 			}
+
+			if (
+				localStorage.getItem(
+					"openoutpaint/settings.update-prompt-on-more-button"
+				) == "true"
+			) {
+				requestCopy.prompt = document.getElementById("prompt").value;
+				requestCopy.negative_prompt =
+					document.getElementById("negPrompt").value;
+			}
 			dreamData = await _dream(endpoint, requestCopy);
 			images.push(...dreamData.images);
 			seeds.push(...dreamData.seeds);
-			updateImageIndexText();
+			if (
+				localStorage.getItem(
+					"openoutpaint/settings.jump-to-1st-new-on-more-button"
+				) == "true"
+			) {
+				at = images.length - requestCopy.n_iter * requestCopy.batch_size;
+				activateImgAt(at);
+			} else {
+				updateImageIndexText();
+			}
 		} catch (e) {
 			if (alertCount < 2) {
 				notifications.notify(
@@ -2035,9 +2051,9 @@ const dreamTool = () =>
 						"outpainting_fill",
 						"Outpaint Type",
 						{
-							0: "fill (SDXL?)",
-							1: "original (SDXL?)",
-							2: "latent noise (SD1.x/2.x)",
+							0: "fill",
+							1: "original",
+							2: "latent noise (suggested)",
 							3: "latent nothing",
 						},
 						2, // AVOID ORIGINAL FOR OUTPAINT OR ELSE but we still give you the option because we love you and because it seems to work better for SDXL

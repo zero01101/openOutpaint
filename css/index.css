@@ -82,9 +82,7 @@ body {
 	max-height: 0;
 	overflow-y: clip;
 	overflow-x: visible;
-	transition:
-		max-height 0.2s ease-out,
-		height 0s ease-out;
+	transition: max-height 0.2s ease-out, height 0s ease-out;
 }
 
 .menu-container {
@@ -132,9 +130,10 @@ body {
 
 	border-radius: 10px;
 
-	min-width: 360px;
-	width: 360px;
-	/* min-height: 250px; */
+	min-width: 400px;
+	width: 400px;
+	min-height: 260px;
+	height: 260px;
 
 	color: var(--c-text);
 
