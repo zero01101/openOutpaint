@@ -82,7 +82,9 @@ body {
 	max-height: 0;
 	overflow-y: clip;
 	overflow-x: visible;
-	transition: max-height 0.2s ease-out, height 0s ease-out;
+	transition:
+		max-height 0.2s ease-out,
+		height 0s ease-out;
 }
 
 .menu-container {

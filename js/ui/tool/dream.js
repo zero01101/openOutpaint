@@ -62,9 +62,12 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(() => {
-			if (running) _checkProgress();
-		}, Math.max(0, minDelay - timeSpent));
+		setTimeout(
+			() => {
+				if (running) _checkProgress();
+			},
+			Math.max(0, minDelay - timeSpent)
+		);
 	};
 
 	_checkProgress();
