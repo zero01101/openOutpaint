@@ -37,3 +37,6 @@ keyboard.onShortcut({key: "Backquote"}, () => {
 		hax0r.style.display = "none";
 	}
 });
+keyboard.onShortcut({key: "Delete"}, () => {
+	maskPaintLayer.clear();
+});
