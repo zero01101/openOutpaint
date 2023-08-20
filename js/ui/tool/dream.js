@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -2922,91 +2919,4 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 			});
 		}
 	}
-
-	var deleteme = 2463;
-	var ok = deleteme / 36;
-
-	// 	request.alwayson_scripts = state.alwayson_scripts;
-	// }
 }
-
-// function getImageAndMask(visibleCanvas, bb, request, state) {
-// 	// get input image
-// 	// Temporary canvas for init image and mask generation
-// 	const bbCanvas = document.createElement("canvas");
-// 	bbCanvas.width = bb.w;
-// 	bbCanvas.height = bb.h;
-// 	const bbCtx = bbCanvas.getContext("2d");
-
-// 	const maskCanvas = document.createElement("canvas");
-// 	maskCanvas.width = request.width;
-// 	maskCanvas.height = request.height;
-// 	const maskCtx = maskCanvas.getContext("2d");
-
-// 	const initCanvas = document.createElement("canvas");
-// 	initCanvas.width = request.width;
-// 	initCanvas.height = request.height;
-// 	const initCtx = initCanvas.getContext("2d");
-
-// 	bbCtx.fillStyle = "#000F";
-
-// 	// Get init image
-// 	initCtx.fillRect(0, 0, request.width, request.height);
-// 	initCtx.drawImage(
-// 		visibleCanvas,
-// 		0,
-// 		0,
-// 		bb.w,
-// 		bb.h,
-// 		0,
-// 		0,
-// 		request.width,
-// 		request.height
-// 	);
-// 	// request.init_images = [initCanvas.toDataURL()];
-
-// 	// Get mask image
-// 	bbCtx.fillStyle = "#000F";
-// 	bbCtx.fillRect(0, 0, bb.w, bb.h);
-// 	if (state.invertMask) {
-// 		// overmasking by definition is entirely pointless with an inverted mask outpaint
-// 		// since it should explicitly avoid brushed masks too, we just won't even bother
-// 		bbCtx.globalCompositeOperation = "destination-in";
-// 		bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-
-// 		bbCtx.globalCompositeOperation = "destination-in";
-// 		bbCtx.drawImage(visibleCanvas, 0, 0);
-// 	} else {
-// 		bbCtx.globalCompositeOperation = "destination-in";
-// 		bbCtx.drawImage(visibleCanvas, 0, 0);
-// 		// here's where to overmask to avoid including the brushed mask
-// 		// 99% of my issues were from failing to set source-over for the overmask blotches
-// 		if (state.overMaskPx > 0) {
-// 			// transparent to white first
-// 			bbCtx.globalCompositeOperation = "destination-atop";
-// 			bbCtx.fillStyle = "#FFFF";
-// 			bbCtx.fillRect(0, 0, bb.w, bb.h);
-// 			applyOvermask(bbCanvas, bbCtx, state.overMaskPx);
-// 		}
-
-// 		bbCtx.globalCompositeOperation = "destination-out"; // ???
-// 		bbCtx.drawImage(maskPaintCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-// 	}
-
-// 	bbCtx.globalCompositeOperation = "destination-atop";
-// 	bbCtx.fillStyle = "#FFFF";
-// 	bbCtx.fillRect(0, 0, bb.w, bb.h);
-
-// 	maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-// 	maskCtx.drawImage(
-// 		bbCanvas,
-// 		0,
-// 		0,
-// 		bb.w,
-// 		bb.h,
-// 		0,
-// 		0,
-// 		request.width,
-// 		request.height
-// 	);
-// }
