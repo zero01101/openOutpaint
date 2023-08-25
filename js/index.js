@@ -167,6 +167,7 @@ function startup() {
 	changeMaskBlur();
 	changeSmoothRendering();
 	changeSeed();
+	changeRefinerEnabled();
 	changeHiResFix();
 	changeHiResSquare();
 	changeRestoreFaces();
@@ -654,6 +655,11 @@ modelAutoComplete.onchange.on(({value}) => {
 		).style.backgroundColor = "#fcc";
 });
 
+let refinerAutoComplete = createAutoComplete(
+	"Refiner",
+	document.getElementById("refiner-ac-select")
+);
+
 let loraAutoComplete = createAutoComplete(
 	"LoRa",
 	document.getElementById("lora-ac-select")
@@ -734,6 +740,17 @@ const resSlider = makeSlider(
 			toolbar.currentTool.redraw &&
 			toolbar.currentTool.redraw();
 	}
+);
+
+const refinerSlider = makeSlider(
+	"Refiner Change At",
+	document.getElementById("refinerChangeAt"),
+	"refiner_change_at",
+	0.0,
+	1.0,
+	0.1,
+	0.8,
+	0.01
 );
 
 const refSlider = makeSlider(
@@ -902,6 +919,25 @@ function changeControlNetReference() {
 	} else {
 		document
 			.querySelectorAll(".controlNetReferenceElement")
+			.forEach((el) => el.classList.add("invisible"));
+	}
+}
+
+function changeRefinerEnabled() {
+	stableDiffusionData.enable_refiner = Boolean(
+		document.getElementById("cbxRefiner").checked
+	);
+	localStorage.setItem(
+		"openoutpaint/enable_refiner",
+		stableDiffusionData.enable_refiner
+	);
+	if (stableDiffusionData.enable_refiner) {
+		document
+			.querySelectorAll(".refiner")
+			.forEach((el) => el.classList.remove("invisible"));
+	} else {
+		document
+			.querySelectorAll(".refiner")
 			.forEach((el) => el.classList.add("invisible"));
 	}
 }
@@ -1164,7 +1200,7 @@ async function getModels(refresh = false) {
 			},
 		}));
 
-		modelAutoComplete.options = opt;
+		refinerAutoComplete.options = modelAutoComplete.options = opt;
 
 		try {
 			const optResponse = await fetch(
