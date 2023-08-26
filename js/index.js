@@ -659,6 +659,9 @@ let refinerAutoComplete = createAutoComplete(
 	"Refiner",
 	document.getElementById("refiner-ac-select")
 );
+refinerAutoComplete.onchange.on(({value}) => {
+	stableDiffusionData.refiner_checkpoint = value;
+});
 
 let loraAutoComplete = createAutoComplete(
 	"LoRa",
@@ -743,14 +746,17 @@ const resSlider = makeSlider(
 );
 
 const refinerSlider = makeSlider(
-	"Refiner Change At",
-	document.getElementById("refinerChangeAt"),
-	"refiner_change_at",
+	"Refiner Switch At",
+	document.getElementById("refinerSwitchAt"),
+	"refiner_switch_at",
 	0.0,
 	1.0,
 	0.1,
 	0.8,
-	0.01
+	0.01,
+	(v) => {
+		stableDiffusionData.refiner_switch_at = v;
+	}
 );
 
 const refSlider = makeSlider(
@@ -935,10 +941,14 @@ function changeRefinerEnabled() {
 		document
 			.querySelectorAll(".refiner")
 			.forEach((el) => el.classList.remove("invisible"));
+		stableDiffusionData.refiner_checkpoint = refinerAutoComplete.value;
+		stableDiffusionData.refiner_switch_at = refinerSlider.value;
 	} else {
 		document
 			.querySelectorAll(".refiner")
 			.forEach((el) => el.classList.add("invisible"));
+		delete stableDiffusionData.refiner_checkpoint;
+		delete stableDiffusionData.refiner_switch_at;
 	}
 }
 
