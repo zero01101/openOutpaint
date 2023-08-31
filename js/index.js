@@ -855,7 +855,7 @@ const lockPxSlider = makeSlider(
 	document.getElementById("hrFixLockPx"),
 	"hr_fix_lock_px",
 	0,
-	1024,
+	2048,
 	256,
 	0,
 	1
