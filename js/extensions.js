@@ -32,6 +32,7 @@ const extensions = {
 			"dynamic prompts", //seriously >:( why put version in the name, now i have to fuzzy match it - just simply enabled or not? no API but so so good
 			//"segment anything", // ... API lets me get model but not processor?!?!?!
 			//"self attention guidance", // no API but useful, just enabled button, scale and threshold sliders?
+			"cfg rescale extension",
 		];
 		// check http://127.0.0.1:7860/sdapi/v1/scripts for extensions
 		// if any of the allowed extensions are found, add them to the list
@@ -59,6 +60,7 @@ const extensions = {
 			controlNetModuleAutoComplete,
 			controlNetReferenceModuleAutoComplete
 		);
+		this.checkForCFGRescale();
 		//checkForSAM(); //or inpaintAnything or something i dunno
 		//checkForADetailer(); //? this one seems iffy
 		//checkForSAG(); //??
@@ -192,5 +194,23 @@ const extensions = {
 			}));
 
 		controlNetReferenceModuleAutoComplete.options = opt;
+	},
+
+	async checkForCFGRescale() {
+		if (
+			this.enabledExtensions.filter((e) => e.includes("cfg rescale extension"))
+				.length > 0
+		) {
+			// CFG Rescale found, enable checkbox
+			this.alwaysOnScripts = true;
+			this.CFGRescaleAlwaysonScriptName =
+				this.enabledExtensions[
+					this.enabledExtensions.findIndex((e) => e.includes("cfg rescale extension"))
+				];
+			// this.alwaysOnScriptsData[this.CFGRescaleAlwaysonScriptName] = {};
+			this.CFGRescaleEnabled = true;
+			document.getElementById("cbxCFGRescale").disabled = false;
+		}
+		// basically param 0 is true for on, false for off, that's it
 	},
 };

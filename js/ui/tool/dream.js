@@ -1241,6 +1241,9 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				"[dream] controlnet inpaint/outpaint enabled for null image, defaulting to normal txt2img dream"
 			);
 		}
+		if (extensions.CFGRescaleEnabled) {
+			addCFGRescaleToAlwaysOnScripts(state);
+		}
 
 		if (extensions.alwaysOnScripts) {
 			// check again just to be sure because i'm an idiot?
@@ -1361,6 +1364,9 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		}
 		if (extensions.controlNetActive) {
 			addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas);
+		}
+		if (extensions.CFGRescaleEnabled) {
+			addCFGRescaleToAlwaysOnScripts(state);
 		}
 		if (extensions.alwaysOnScripts) {
 			// check again just to be sure because i'm an idiot?
@@ -1598,6 +1604,9 @@ const dream_img2img_callback = (bb, resolution, state) => {
 		} else {
 			addControlNetToAlwaysOnScripts(state, null, null); // //WTF???
 		}
+	}
+	if (extensions.CFGRescaleEnabled) {
+		addCFGRescaleToAlwaysOnScripts(state);
 	}
 	if (extensions.alwaysOnScripts) {
 		// check again just to be sure because i'm an idiot?
@@ -2923,3 +2932,23 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 		}
 	}
 }
+
+function addCFGRescaleToAlwaysOnScripts(state) {
+	if (extensions.CFGRescaleEnabled) {
+		state.alwayson_scripts[extensions.CFGRescaleAlwaysonScriptName] = {};
+		if (extensions.CFGRescaleActive) {
+		    state.alwayson_scripts[extensions.CFGRescaleAlwaysonScriptName].args = [
+			    stableDiffusionData.cfg_rescale || 0.0,
+			    document.getElementById("cbxDDIMTrailing").checked,
+		    ];
+	    } else {
+	        state.alwayson_scripts[extensions.CFGRescaleAlwaysonScriptName].args = [
+			    0.0,
+			    false,
+			    "random data",
+		    ];
+	    }
+	    console.log('CFGRescaleAlwaysonScriptName: %O', state.alwayson_scripts );
+	}
+}
+

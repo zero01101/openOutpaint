@@ -285,6 +285,19 @@
 						<option value="My prompt is more important">+prompt</option>
 						<option value="ControlNet is more important">+CN</option>
 					</select>
+					<input
+						type="checkbox"
+						id="cbxCFGRescale"
+						onchange="changeCFGRescaleExtension()"
+						disabled="disabled" />
+					<label for="cbxCFGRescale">CFG Rescale</label>
+					<br class="CFGRescaleElement" />
+					<div id="CFGRescale" class="CFGRescaleElement"></div>
+					<input
+						type="checkbox"
+						id="cbxDDIMTrailing"
+						class="CFGRescaleElement" />
+					<label for="cbxDDIMTrailing" class="CFGRescaleElement">DDIM Trailing</label>
 				</div>
 				<!-- Save/load image section -->
 				<button type="button" class="collapsible">Save/Upscaling</button>

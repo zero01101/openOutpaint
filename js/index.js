@@ -116,6 +116,7 @@ var stableDiffusionData = {
 	hr_resize_y: 0,
 	hr_square_aspect: false,
 	styles: [],
+	cfg_rescale: null, // CFG Rescale extention
 	// here's some more fields that might be useful
 
 	// ---txt2img specific:
@@ -174,6 +175,7 @@ function startup() {
 	changeSyncCursorSize();
 	changeControlNetExtension();
 	changeControlNetReference();
+	changeCFGRescaleExtension();
 	checkFocus();
 	refreshScripts();
 }
@@ -925,6 +927,31 @@ function changeControlNetReference() {
 	} else {
 		document
 			.querySelectorAll(".controlNetReferenceElement")
+			.forEach((el) => el.classList.add("invisible"));
+	}
+}
+
+makeSlider(
+	"CFG Rescale",
+	document.getElementById("CFGRescale"),
+	"cfg_rescale",
+	0.0,
+	1.0,
+	0.01,
+	0.0,
+	0.01
+);
+
+function changeCFGRescaleExtension() {
+	extensions.CFGRescaleActive =
+		document.getElementById("cbxCFGRescale").checked;
+	if (extensions.CFGRescaleActive) {
+		document
+			.querySelectorAll(".CFGRescaleElement")
+			.forEach((el) => el.classList.remove("invisible"));
+	} else {
+		document
+			.querySelectorAll(".CFGRescaleElement")
 			.forEach((el) => el.classList.add("invisible"));
 	}
 }
