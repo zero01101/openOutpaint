@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-US">
 	<head>
 		<meta charset="utf-8" />
@@ -259,6 +259,7 @@
 					: localStorage.getItem(
 							"openoutpaint/settings.update-prompt-on-more-button"
 					  ) === "true";
+			updatePromptOnMoreButton.checked = _enable_update_prompt_on_more_button;
 
 			let _enable_jump_to_1st_new_on_more_button =
 				localStorage.getItem(
@@ -268,6 +269,7 @@
 					: localStorage.getItem(
 							"openoutpaint/settings.jump-to-1st-new-on-more-button"
 					  ) === "true";
+			jumpTo1stNewOnMoreButton.checked = _enable_jump_to_1st_new_on_more_button;
 
 			writeToLocalStorage();
 
