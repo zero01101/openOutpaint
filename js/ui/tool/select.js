@@ -420,7 +420,7 @@ const selectTransformTool = () =>
 						const lscursor = m.transformPoint({x: sx, y: sy});
 
 						const xs = lscursor.x / scaling.handle.x;
-						const xy = lscursor.y / scaling.handle.y;
+						const ys = lscursor.y / scaling.handle.y;
 
 						let xscale = 1;
 						let yscale = 1;
@@ -429,7 +429,7 @@ const selectTransformTool = () =>
 							xscale = xs;
 							yscale = ys;
 						} else {
-							xscale = yscale = Math.max(xs, xy);
+							xscale = yscale = Math.max(xs, ys);
 						}
 
 						state.selected.scale = {x: xscale, y: yscale};
