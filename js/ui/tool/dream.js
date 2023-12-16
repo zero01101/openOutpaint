@@ -2015,12 +2015,12 @@ const dreamTool = () =>
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.remove(
 									"invisible"
 								);
-								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove(
 									"invisible"
 								);
 							} else {
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
-								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove(
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
 									"invisible"
 								);
 							}
@@ -2184,6 +2184,21 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.outpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
+				
+				if (localStorage.getItem("openoutpaint/dream-keepunmasked") == "true") {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
+				}
+
+				if (localStorage.getItem("openoutpaint/dream-removebg") == "true") {
+					state.ctxmenu.carveBlurSlider.classList.remove("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.carveBlurSlider.classList.add("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
+				}
+				
 			},
 			shortcut: "D",
 		}
@@ -2848,6 +2863,21 @@ const img2imgTool = () =>
 				menu.appendChild(btnArray2);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
+
+				if (localStorage.getItem("openoutpaint/img2img-keepunmasked") == "true") {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
+				}
+
+				if (localStorage.getItem("openoutpaint/img2img-removebg") == "true") {
+					state.ctxmenu.carveBlurSlider.classList.remove("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.carveBlurSlider.classList.add("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
+				}
+
 			},
 			shortcut: "I",
 		}
