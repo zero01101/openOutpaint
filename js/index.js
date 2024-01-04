@@ -1430,7 +1430,7 @@ async function getSamplers() {
 	}
 }
 
-async function upscaleAndDownload() {
+async function upscaleAndDownload(download = false, add_resource = false) {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
@@ -1481,7 +1481,17 @@ async function upscaleAndDownload() {
 					upscale_factor +
 					".png";
 				link.href = "data:image/png;base64," + data["image"];
-				link.click();
+
+				if (add_resource == true) {
+					console.log("Add upscaled to resource")
+					const img = new Image();
+					img.src = link.href;
+					tools.stamp.state.addResource("Upscaled image", img);
+				}
+				if (download == true){
+					console.log("Download upscaled")
+					link.click();
+				}
 			});
 	}
 }
