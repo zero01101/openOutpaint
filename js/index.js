@@ -1187,7 +1187,7 @@ async function getUpscalers() {
 	});
 
 	upscalerAutoComplete.value = 
-		localStorage.getItem("openoutpaint/hr_upscaler") === null
+		localStorage.getItem("openoutpaint/upscaler") === null
 		? upscalers[0]
 		: localStorage.getItem("openoutpaint/upscaler");
 
