@@ -1186,7 +1186,11 @@ async function getUpscalers() {
 		return {name: u, value: u};
 	});
 
-	upscalerAutoComplete.value = upscalers[0];
+	upscalerAutoComplete.value = 
+		localStorage.getItem("openoutpaint/hr_upscaler") === null
+		? upscalers[0]
+		: localStorage.getItem("openoutpaint/upscaler");
+
 	hrFixUpscalerAutoComplete.value =
 		localStorage.getItem("openoutpaint/hr_upscaler") === null
 			? "None"
@@ -1440,6 +1444,7 @@ async function upscaleAndDownload(download = false, add_resource = false, aCanva
 	var upscaler = upscalerAutoComplete.value;
 	var croppedCanvas = null;
 	var imgdata = null;
+	localStorage.setItem("openoutpaint/upscaler", upscaler);
 
 	if (aCanvas == null) {
 		console.log("Upscaling main canvas.");
@@ -1550,8 +1555,7 @@ function loadSettings() {
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
 	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
-	document.getElementById("cbxSyncCursorSize").checked =
-		Boolean(_sync_cursor_size);
+	document.getElementById("cbxSyncCursorSize").checked = Boolean(_sync_cursor_size);
 	document.getElementById("hrFixScale").value = Number(_hrfix_scale);
 	document.getElementById("hrDenoising").value = Number(_hrfix_denoising);
 	document.getElementById("hrFixLockPx").value = Number(_hrfix_lock_px);
