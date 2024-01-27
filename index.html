@@ -294,8 +294,11 @@
 					<label>Choose upscaler</label>
 					<div id="upscaler-ac-select"></div>
 					<div id="upscaleX"></div>
-					<button onclick="upscaleAndDownload()">
-						Upscale (might take a sec)
+					<button onclick="upscaleAndDownload(true,false)">
+						Upscale (and download)
+					</button>
+					<button onclick="upscaleAndDownload(false,true)">
+						Upscale (to resource)
 					</button>
 					<br />
 
