@@ -1186,10 +1186,10 @@ async function getUpscalers() {
 		return {name: u, value: u};
 	});
 
-	upscalerAutoComplete.value = 
+	upscalerAutoComplete.value =
 		localStorage.getItem("openoutpaint/upscaler") === null
-		? upscalers[0]
-		: localStorage.getItem("openoutpaint/upscaler");
+			? upscalers[0]
+			: localStorage.getItem("openoutpaint/upscaler");
 
 	hrFixUpscalerAutoComplete.value =
 		localStorage.getItem("openoutpaint/hr_upscaler") === null
@@ -1434,7 +1434,11 @@ async function getSamplers() {
 	}
 }
 
-async function upscaleAndDownload(download = false, add_resource = false, aCanvas = null) {
+async function upscaleAndDownload(
+	download = false,
+	add_resource = false,
+	aCanvas = null
+) {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
@@ -1458,7 +1462,7 @@ async function upscaleAndDownload(download = false, add_resource = false, aCanva
 		);
 		imgdata = croppedCanvas.canvas.toDataURL("image/png");
 	} else {
-		console.log("Upscaling recourse canvas.");
+		console.log("Upscaling resource canvas.");
 		imgdata = aCanvas.toDataURL("image/png");
 	}
 
@@ -1499,13 +1503,13 @@ async function upscaleAndDownload(download = false, add_resource = false, aCanva
 				link.href = "data:image/png;base64," + data["image"];
 
 				if (add_resource == true) {
-					console.log("Add upscaled to resource")
+					console.log("Add upscaled to resource");
 					const img = new Image();
 					img.src = link.href;
-					tools.stamp.state.addResource(guid()+" (upscaled)", img);
+					tools.stamp.state.addResource(guid() + " (upscaled)", img);
 				}
-				if (download == true){
-					console.log("Download upscaled")
+				if (download == true) {
+					console.log("Download upscaled");
 					link.click();
 				}
 			});
@@ -1555,7 +1559,8 @@ function loadSettings() {
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
 	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
-	document.getElementById("cbxSyncCursorSize").checked = Boolean(_sync_cursor_size);
+	document.getElementById("cbxSyncCursorSize").checked =
+		Boolean(_sync_cursor_size);
 	document.getElementById("hrFixScale").value = Number(_hrfix_scale);
 	document.getElementById("hrDenoising").value = Number(_hrfix_denoising);
 	document.getElementById("hrFixLockPx").value = Number(_hrfix_lock_px);
