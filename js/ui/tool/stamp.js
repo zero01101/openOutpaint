@@ -294,7 +294,7 @@ const stampTool = () =>
 									canvas.height = resource.image.height;
 									canvas.getContext("2d").drawImage(resource.image, 0, 0);
 									console.log("[Stamp]", canvas);
-									upscaleAndDownload(false,true,canvas);
+									upscaleAndDownload(false, true, canvas);
 
 									/*
 									downloadCanvas({
@@ -309,7 +309,6 @@ const stampTool = () =>
 							upscaleButton.title = "Upscale Resource";
 							upscaleButton.appendChild(document.createElement("div"));
 							upscaleButton.classList.add("upscale-btn");
-
 
 							const trashButton = document.createElement("button");
 							trashButton.addEventListener(
