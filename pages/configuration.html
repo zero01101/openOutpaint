@@ -10,7 +10,7 @@
 		<link href="../css/index.css?v=cf6b502" rel="stylesheet" />
 		<link href="../css/layers.css?v=92c0352" rel="stylesheet" />
 
-		<link href="../css/ui/generic.css?v=30837f8" rel="stylesheet" />
+		<link href="../css/ui/generic.css?v=ed024fe" rel="stylesheet" />
 
 		<link href="../css/ui/history.css?v=0b03861" rel="stylesheet" />
 		<link href="../css/ui/layers.css?v=1d66c2b" rel="stylesheet" />
@@ -258,7 +258,8 @@
 					? true
 					: localStorage.getItem(
 							"openoutpaint/settings.update-prompt-on-more-button"
-					  ) === "true";
+						) === "true";
+			updatePromptOnMoreButton.checked = _enable_update_prompt_on_more_button;
 
 			let _enable_jump_to_1st_new_on_more_button =
 				localStorage.getItem(
@@ -267,7 +268,8 @@
 					? true
 					: localStorage.getItem(
 							"openoutpaint/settings.jump-to-1st-new-on-more-button"
-					  ) === "true";
+						) === "true";
+			jumpTo1stNewOnMoreButton.checked = _enable_jump_to_1st_new_on_more_button;
 
 			writeToLocalStorage();
 

@@ -284,6 +284,32 @@ const stampTool = () =>
 							saveButton.appendChild(document.createElement("div"));
 							saveButton.classList.add("download-btn");
 
+							const upscaleButton = document.createElement("button");
+							upscaleButton.addEventListener(
+								"click",
+								(evn) => {
+									evn.stopPropagation();
+									const canvas = document.createElement("canvas");
+									canvas.width = resource.image.width;
+									canvas.height = resource.image.height;
+									canvas.getContext("2d").drawImage(resource.image, 0, 0);
+									console.log("[Stamp]", canvas);
+									upscaleAndDownload(false, true, canvas);
+
+									/*
+									downloadCanvas({
+										canvas,
+										filename: `openOutpaint - resource '${resource.name}'.png`,
+								
+									});
+									*/
+								},
+								{passive: false}
+							);
+							upscaleButton.title = "Upscale Resource";
+							upscaleButton.appendChild(document.createElement("div"));
+							upscaleButton.classList.add("upscale-btn");
+
 							const trashButton = document.createElement("button");
 							trashButton.addEventListener(
 								"click",
@@ -300,6 +326,7 @@ const stampTool = () =>
 
 							actionArray.appendChild(saveButton);
 							actionArray.appendChild(trashButton);
+							actionArray.appendChild(upscaleButton);
 							resourceWrapper.appendChild(actionArray);
 							state.ctxmenu.resourceList.appendChild(resourceWrapper);
 							resource.dom = {wrapper: resourceWrapper};

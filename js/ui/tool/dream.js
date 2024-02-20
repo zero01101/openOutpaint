@@ -62,9 +62,12 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(() => {
-			if (running) _checkProgress();
-		}, Math.max(0, minDelay - timeSpent));
+		setTimeout(
+			() => {
+				if (running) _checkProgress();
+			},
+			Math.max(0, minDelay - timeSpent)
+		);
 	};
 
 	_checkProgress();
@@ -1838,8 +1841,8 @@ const dreamTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+									? "#BFB5"
+									: "#FFF5";
 
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
@@ -1866,8 +1869,8 @@ const dreamTool = () =>
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
-							? "#BFB5"
-							: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 					state.erasePrevReticle = _tool._reticle_draw(
 						getBoundingBox(
 							evn.x,
@@ -2012,12 +2015,12 @@ const dreamTool = () =>
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.remove(
 									"invisible"
 								);
-								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove(
 									"invisible"
 								);
 							} else {
 								state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
-								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.remove(
+								state.ctxmenu.keepUnmaskedBlurSliderLinebreak.classList.add(
 									"invisible"
 								);
 							}
@@ -2181,6 +2184,20 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.outpaintTypeSelect);
 				menu.appendChild(state.ctxmenu.overMaskPxLabel);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
+
+				if (localStorage.getItem("openoutpaint/dream-keepunmasked") == "true") {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
+				}
+
+				if (localStorage.getItem("openoutpaint/dream-removebg") == "true") {
+					state.ctxmenu.carveBlurSlider.classList.remove("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.carveBlurSlider.classList.add("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
+				}
 			},
 			shortcut: "D",
 		}
@@ -2368,8 +2385,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+									? "#BFB5"
+									: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -2406,8 +2423,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+									? "#BFB5"
+									: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -2845,6 +2862,22 @@ const img2imgTool = () =>
 				menu.appendChild(btnArray2);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
+
+				if (
+					localStorage.getItem("openoutpaint/img2img-keepunmasked") == "true"
+				) {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.keepUnmaskedBlurSlider.classList.add("invisible");
+				}
+
+				if (localStorage.getItem("openoutpaint/img2img-removebg") == "true") {
+					state.ctxmenu.carveBlurSlider.classList.remove("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.remove("invisible");
+				} else {
+					state.ctxmenu.carveBlurSlider.classList.add("invisible");
+					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
+				}
 			},
 			shortcut: "I",
 		}

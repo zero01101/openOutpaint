@@ -10,7 +10,7 @@
 		<link href="css/index.css?v=cf6b502" rel="stylesheet" />
 		<link href="css/layers.css?v=92c0352" rel="stylesheet" />
 
-		<link href="css/ui/generic.css?v=30837f8" rel="stylesheet" />
+		<link href="css/ui/generic.css?v=ed024fe" rel="stylesheet" />
 
 		<link href="css/ui/notifications.css?v=7b152de" rel="stylesheet" />
 		<link href="css/ui/workspace.css?v=2a9fdf7" rel="stylesheet" />
@@ -294,8 +294,11 @@
 					<label>Choose upscaler</label>
 					<div id="upscaler-ac-select"></div>
 					<div id="upscaleX"></div>
-					<button onclick="upscaleAndDownload()">
-						Upscale (might take a sec)
+					<button onclick="upscaleAndDownload(true,false)">
+						Upscale (and download)
+					</button>
+					<button onclick="upscaleAndDownload(false,true)">
+						Upscale (to resource)
 					</button>
 					<br />
 
@@ -334,8 +337,7 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							<s>Alpha release v0.0.16.6</s>
-							v2023xxxx.001 //TODO update
+							v20240127.001
 						</a>
 						<br />
 						<a
@@ -558,7 +560,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=425e27d" type="text/javascript"></script>
+		<script src="js/index.js?v=70af18f" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=4f29db4"
@@ -572,7 +574,7 @@
 			src="js/ui/tool/generic.js?v=3e678e0"
 			type="text/javascript"></script>
 
-		<script src="js/ui/tool/dream.js?v=aa8c906" type="text/javascript"></script>
+		<script src="js/ui/tool/dream.js?v=be5099a" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/maskbrush.js?v=e9bd0eb"
 			type="text/javascript"></script>
@@ -580,9 +582,9 @@
 			src="js/ui/tool/colorbrush.js?v=84ff9fa"
 			type="text/javascript"></script>
 		<script
-			src="js/ui/tool/select.js?v=dfacef5"
+			src="js/ui/tool/select.js?v=76df58e"
 			type="text/javascript"></script>
-		<script src="js/ui/tool/stamp.js?v=4494df6" type="text/javascript"></script>
+		<script src="js/ui/tool/stamp.js?v=fdca5bc" type="text/javascript"></script>
 		<script
 			src="js/ui/tool/interrogate.js?v=dd45b4a"
 			type="text/javascript"></script>

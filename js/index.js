@@ -1186,7 +1186,11 @@ async function getUpscalers() {
 		return {name: u, value: u};
 	});
 
-	upscalerAutoComplete.value = upscalers[0];
+	upscalerAutoComplete.value =
+		localStorage.getItem("openoutpaint/upscaler") === null
+			? upscalers[0]
+			: localStorage.getItem("openoutpaint/upscaler");
+
 	hrFixUpscalerAutoComplete.value =
 		localStorage.getItem("openoutpaint/hr_upscaler") === null
 			? "None"
@@ -1430,7 +1434,11 @@ async function getSamplers() {
 	}
 }
 
-async function upscaleAndDownload() {
+async function upscaleAndDownload(
+	download = false,
+	add_resource = false,
+	aCanvas = null
+) {
 	// Future improvements: some upscalers take a while to upscale, so we should show a loading bar or something, also a slider for the upscale amount
 
 	// get cropped canvas, send it to upscaler, download result
@@ -1438,18 +1446,30 @@ async function upscaleAndDownload() {
 		? localStorage.getItem("openoutpaint/upscale_x")
 		: 2;
 	var upscaler = upscalerAutoComplete.value;
-	var croppedCanvas = cropCanvas(
-		uil.getVisible({
-			x: 0,
-			y: 0,
-			w: imageCollection.size.w,
-			h: imageCollection.size.h,
-		})
-	);
-	if (croppedCanvas != null) {
+	var croppedCanvas = null;
+	var imgdata = null;
+	localStorage.setItem("openoutpaint/upscaler", upscaler);
+
+	if (aCanvas == null) {
+		console.log("Upscaling main canvas.");
+		croppedCanvas = cropCanvas(
+			uil.getVisible({
+				x: 0,
+				y: 0,
+				w: imageCollection.size.w,
+				h: imageCollection.size.h,
+			})
+		);
+		imgdata = croppedCanvas.canvas.toDataURL("image/png");
+	} else {
+		console.log("Upscaling resource canvas.");
+		imgdata = aCanvas.toDataURL("image/png");
+	}
+
+	if (imgdata != null) {
 		var url =
 			document.getElementById("host").value + "/sdapi/v1/extra-single-image/";
-		var imgdata = croppedCanvas.canvas.toDataURL("image/png");
+
 		var data = {
 			"resize-mode": 0, // 0 = just resize, 1 = crop and resize, 2 = resize and fill i assume based on theimg2img tabs options
 			upscaling_resize: upscale_factor,
@@ -1481,7 +1501,17 @@ async function upscaleAndDownload() {
 					upscale_factor +
 					".png";
 				link.href = "data:image/png;base64," + data["image"];
-				link.click();
+
+				if (add_resource == true) {
+					console.log("Add upscaled to resource");
+					const img = new Image();
+					img.src = link.href;
+					tools.stamp.state.addResource(guid() + " (upscaled)", img);
+				}
+				if (download == true) {
+					console.log("Download upscaled");
+					link.click();
+				}
 			});
 	}
 }

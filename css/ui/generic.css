@@ -449,3 +449,8 @@ select > option:checked::after {
 	-webkit-mask-image: url("../../res/icons/download.svg");
 	mask-image: url("../../res/icons/download.svg");
 }
+
+.list .actions > .upscale-btn > *:first-child {
+	-webkit-mask-image: url("../../res/icons/scaling.svg");
+	mask-image: url("../../res/icons/scaling.svg");
+}
