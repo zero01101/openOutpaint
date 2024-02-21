@@ -53,6 +53,7 @@ const extensions = {
 			console.warn("[index] Failed to fetch extensions");
 			console.warn(e);
 		}
+		this.checkForSoftInpainting();
 		this.checkForDynamicPrompts();
 		this.checkForControlNet(
 			controlNetModelAutoComplete,
@@ -62,6 +63,11 @@ const extensions = {
 		//checkForSAM(); //or inpaintAnything or something i dunno
 		//checkForADetailer(); //? this one seems iffy
 		//checkForSAG(); //??
+	},
+
+	async checkForSoftInpainting() {
+		this.alwaysOnScripts = true;
+		//TODO implement, inpaint/img2img only
 	},
 
 	async checkForDynamicPrompts() {
