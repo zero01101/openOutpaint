@@ -5,6 +5,7 @@
 const extensions = {
 	// alwaysOnScriptsData: {},
 	alwaysOnScripts: false,
+	// softInpaintingEnabled: false, //???
 	controlNetEnabled: false,
 	controlNetActive: false,
 	controlNetReferenceActive: false,

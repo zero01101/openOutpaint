@@ -170,7 +170,7 @@ function startup() {
 	changeRefinerEnabled();
 	changeHiResFix();
 	changeHiResSquare();
-	changeRestoreFaces();
+	// changeRestoreFaces();
 	changeSyncCursorSize();
 	changeControlNetExtension();
 	changeControlNetReference();
@@ -1558,7 +1558,7 @@ function loadSettings() {
 	document.getElementById("maskBlur").value = Number(_mask_blur);
 	document.getElementById("seed").value = Number(_seed);
 	document.getElementById("cbxHRFix").checked = Boolean(_enable_hr);
-	document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
+	// document.getElementById("cbxRestoreFaces").checked = Boolean(_restore_faces);
 	document.getElementById("cbxSyncCursorSize").checked =
 		Boolean(_sync_cursor_size);
 	document.getElementById("hrFixScale").value = Number(_hrfix_scale);

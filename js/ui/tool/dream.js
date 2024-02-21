@@ -1585,6 +1585,7 @@ const dream_img2img_callback = (bb, resolution, state) => {
 	if (extensions.dynamicPromptsEnabled) {
 		addDynamicPromptsToAlwaysOnScripts(state);
 	}
+	// and controlnet
 	if (extensions.controlNetActive) {
 		if (extensions.controlNetReferenceActive) {
 			addControlNetToAlwaysOnScripts(
@@ -1596,6 +1597,12 @@ const dream_img2img_callback = (bb, resolution, state) => {
 			addControlNetToAlwaysOnScripts(state, null, null); // //WTF???
 		}
 	}
+	// and soft inpainting
+	if (state.softInpaint) {
+		addSoftInpaintingToAlwaysOnScripts(state);
+		// TODO build always on scripts entry for soft inpaint
+	}
+
 	if (extensions.alwaysOnScripts) {
 		// check again just to be sure because i'm an idiot?
 		// addControlNetToAlwaysOnScripts(state);
@@ -2751,6 +2758,7 @@ const img2imgTool = () =>
 						"icon-squircle",
 						() => {
 							if (state.softInpaint) {
+								extensions.checkForSoftInpainting();
 								state.ctxmenu.softInpaintScheduleBiasSlider.classList.remove(
 									"invisible"
 								);
@@ -3082,8 +3090,26 @@ const sendSeed = (seed) => {
 };
 
 function buildAlwaysOnScripts(state) {
+	//todo make sure soft inpainting works
+
 	if (extensions.alwaysOnScripts) {
 		state.alwayson_scripts = {};
+	}
+}
+
+function addSoftInpaintingToAlwaysOnScripts(state) {
+	if (extensions.alwaysOnScripts) {
+		//?????
+		state.alwayson_scripts["Soft Inpainting"] = {};
+		state.alwayson_scripts["Soft Inpainting"].args = [
+			state.softInpaint,
+			state.softInpaintScheduleBias,
+			state.softInpaintPreservationStrength,
+			state.softInpaintTransitionContrastBoost,
+			state.softInpaintMaskInfluence,
+			state.softInpaintDifferenceThreshold,
+			state.softInpaintDifferenceContrast,
+		];
 	}
 }
 
