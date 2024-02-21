@@ -3098,7 +3098,7 @@ function buildAlwaysOnScripts(state) {
 }
 
 function addSoftInpaintingToAlwaysOnScripts(state) {
-	if (extensions.alwaysOnScripts) {
+	if (extensions.alwaysOnScripts && toolbar._current_tool.name == "Img2Img") {
 		//?????
 		state.alwayson_scripts["Soft Inpainting"] = {};
 		state.alwayson_scripts["Soft Inpainting"].args = [
