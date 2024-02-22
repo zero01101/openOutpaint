@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -1227,6 +1224,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		if (extensions.dynamicPromptsEnabled) {
 			addDynamicPromptsToAlwaysOnScripts(state);
 		}
+		// and controlnet stuff
 		if (
 			extensions.controlNetActive &&
 			!isCanvasBlank(0, 0, bb.w, bb.h, visibleCanvas)
@@ -1358,9 +1356,14 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		// add dynamic prompts stuff if it's enabled
 		if (extensions.dynamicPromptsEnabled) {
 			addDynamicPromptsToAlwaysOnScripts(state);
-		}
+		} // and controlnet stuff
 		if (extensions.controlNetActive) {
 			addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas);
+		}
+		// and soft inpainting
+		if (state.softInpaint) {
+			addSoftInpaintingToAlwaysOnScripts(state);
+			// TODO build always on scripts entry for soft inpaint
 		}
 		if (extensions.alwaysOnScripts) {
 			// check again just to be sure because i'm an idiot?
@@ -1848,8 +1851,8 @@ const dreamTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
@@ -1876,8 +1879,8 @@ const dreamTool = () =>
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+							? "#BFB5"
+							: "#FFF5";
 					state.erasePrevReticle = _tool._reticle_draw(
 						getBoundingBox(
 							evn.x,
@@ -2167,6 +2170,153 @@ const dreamTool = () =>
 					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
 				}
 
+				// soft inpainting checkbox - arg 0
+				state.ctxmenu.softInpaintLabel = _toolbar_input.checkbox(
+					state,
+					"openoutpaint/img2img-softinpaint",
+					"softInpaint",
+					"Soft Inpainting",
+					"icon-squircle",
+					() => {
+						if (state.softInpaint) {
+							extensions.checkForSoftInpainting();
+							state.ctxmenu.softInpaintScheduleBiasSlider.classList.remove(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintMaskInfluenceSlider.classList.remove(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintDifferenceContrastSlider.classList.remove(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintDifferenceThresholdSlider.classList.remove(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintPreservationStrengthSlider.classList.remove(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintTransitionContrastBoostSlider.classList.remove(
+								"invisible"
+							);
+							// state.ctxmenu.softInpaintSliderLinebreak.classList.add(
+							// 	"invisible"
+							// );
+						} else {
+							state.ctxmenu.softInpaintScheduleBiasSlider.classList.add(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintMaskInfluenceSlider.classList.add(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintDifferenceContrastSlider.classList.add(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintDifferenceThresholdSlider.classList.add(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintPreservationStrengthSlider.classList.add(
+								"invisible"
+							);
+							state.ctxmenu.softInpaintTransitionContrastBoostSlider.classList.add(
+								"invisible"
+							);
+							// state.ctxmenu.softInpaintSliderLinebreak.classList.remove(
+							// 	"invisible"
+							// );
+						}
+					}
+				).checkbox;
+
+				// soft inpainting schedule bias - arg 1, def 1
+				state.ctxmenu.softInpaintScheduleBiasSlider = _toolbar_input.slider(
+					state,
+					"openoutpaint/img2img-softinpaintschedulebias",
+					"softInpaintScheduleBias",
+					"Schedule Bias",
+					{
+						min: 0,
+						max: 8,
+						step: 0.25,
+						textStep: 0.01,
+					}
+				).slider;
+
+				// soft inpainting preservation strength - arg 2, def 0.5
+				state.ctxmenu.softInpaintPreservationStrengthSlider =
+					_toolbar_input.slider(
+						state,
+						"openoutpaint/img2img-softinpaintpreservationstrength",
+						"softInpaintPreservationStrength",
+						"Preservation Strength",
+						{
+							min: 0,
+							max: 8,
+							step: 0.25,
+							textStep: 0.01,
+						}
+					).slider;
+
+				// soft inpainting transition contrast boost - arg 3, def 4
+				state.ctxmenu.softInpaintTransitionContrastBoostSlider =
+					_toolbar_input.slider(
+						state,
+						"openoutpaint/img2img-softinpainttransitioncontrastboost",
+						"softInpaintTransitionContrastBoost",
+						"Transition Contrast Boost",
+						{
+							min: 0,
+							max: 32,
+							step: 0.5,
+							textStep: 0.01,
+						}
+					).slider;
+
+				//0.5 2
+
+				// soft inpainting mask influence - arg 4, def 0
+				state.ctxmenu.softInpaintMaskInfluenceSlider = _toolbar_input.slider(
+					state,
+					"openoutpaint/img2img-softinpaintmaskinfluence",
+					"softInpaintMaskInfluence",
+					"Mask Influence",
+					{
+						min: 0,
+						max: 1,
+						step: 0.1,
+						textStep: 0.01,
+					}
+				).slider;
+
+				// soft inpainting difference threshold - arg 5, def 0.5
+				state.ctxmenu.softInpaintDifferenceThresholdSlider =
+					_toolbar_input.slider(
+						state,
+						"openoutpaint/img2img-softinpaintdifferencethreshold",
+						"softInpaintDifferenceThreshold",
+						"Difference Threshold",
+						{
+							min: 0,
+							max: 8,
+							step: 0.25,
+							textStep: 0.01,
+						}
+					).slider;
+
+				// soft inpainting difference contrast - arg 6, def 2
+				state.ctxmenu.softInpaintDifferenceContrastSlider =
+					_toolbar_input.slider(
+						state,
+						"openoutpaint/img2img-softinpaintdifferenceContrast",
+						"softInpaintDifferenceContrast",
+						"Difference Contrast",
+						{
+							min: 0,
+							max: 8,
+							step: 0.25,
+							textStep: 0.01,
+						}
+					).slider;
+
 				menu.appendChild(state.ctxmenu.cursorSizeSlider);
 				const array = document.createElement("div");
 				array.classList.add("checkbox-array");
@@ -2177,6 +2327,7 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
+				array.appendChild(state.ctxmenu.softInpaintLabel);
 				//TODO: if (global.controlnetAPI) { //but figure out how to update the UI after doing so
 				// never mind i think i'm using an extension menu instead
 				// array.appendChild(state.ctxmenu.controlNetLabel);
@@ -2185,6 +2336,14 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
 				menu.appendChild(state.ctxmenu.carveThresholdSlider);
+				menu.appendChild(state.ctxmenu.softInpaintScheduleBiasSlider);
+				menu.appendChild(state.ctxmenu.softInpaintPreservationStrengthSlider);
+				menu.appendChild(
+					state.ctxmenu.softInpaintTransitionContrastBoostSlider
+				);
+				menu.appendChild(state.ctxmenu.softInpaintMaskInfluenceSlider);
+				menu.appendChild(state.ctxmenu.softInpaintDifferenceThresholdSlider);
+				menu.appendChild(state.ctxmenu.softInpaintDifferenceContrastSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
@@ -2204,6 +2363,48 @@ const dreamTool = () =>
 				} else {
 					state.ctxmenu.carveBlurSlider.classList.add("invisible");
 					state.ctxmenu.carveThresholdSlider.classList.add("invisible");
+				}
+
+				if (
+					localStorage.getItem("openoutpaint/img2img-softinpaint") == "true"
+				) {
+					state.ctxmenu.softInpaintScheduleBiasSlider.classList.remove(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintMaskInfluenceSlider.classList.remove(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintDifferenceContrastSlider.classList.remove(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintDifferenceThresholdSlider.classList.remove(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintPreservationStrengthSlider.classList.remove(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintTransitionContrastBoostSlider.classList.remove(
+						"invisible"
+					);
+				} else {
+					state.ctxmenu.softInpaintScheduleBiasSlider.classList.add(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintMaskInfluenceSlider.classList.add(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintDifferenceContrastSlider.classList.add(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintDifferenceThresholdSlider.classList.add(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintPreservationStrengthSlider.classList.add(
+						"invisible"
+					);
+					state.ctxmenu.softInpaintTransitionContrastBoostSlider.classList.add(
+						"invisible"
+					);
 				}
 			},
 			shortcut: "D",
@@ -2392,8 +2593,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -2430,8 +2631,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -3001,20 +3202,11 @@ const img2imgTool = () =>
 				array.appendChild(state.ctxmenu.preserveMasksLabel);
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
+				array.appendChild(state.ctxmenu.softInpaintLabel);
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
 				menu.appendChild(state.ctxmenu.carveThresholdSlider);
-				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
-				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
-				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
-				menu.appendChild(state.ctxmenu.instructPix2PixImgCfgLabel);
-				const btnArray2 = document.createElement("div");
-				btnArray2.classList.add("checkbox-array");
-				btnArray2.appendChild(state.ctxmenu.fullResolutionLabel);
-				btnArray2.appendChild(state.ctxmenu.borderMaskGradientLabel);
-				btnArray2.appendChild(state.ctxmenu.softInpaintLabel);
-				menu.appendChild(btnArray2);
 				menu.appendChild(state.ctxmenu.softInpaintScheduleBiasSlider);
 				menu.appendChild(state.ctxmenu.softInpaintPreservationStrengthSlider);
 				menu.appendChild(
@@ -3023,6 +3215,15 @@ const img2imgTool = () =>
 				menu.appendChild(state.ctxmenu.softInpaintMaskInfluenceSlider);
 				menu.appendChild(state.ctxmenu.softInpaintDifferenceThresholdSlider);
 				menu.appendChild(state.ctxmenu.softInpaintDifferenceContrastSlider);
+				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
+				menu.appendChild(state.ctxmenu.inpaintTypeSelect);
+				menu.appendChild(state.ctxmenu.denoisingStrengthSlider);
+				menu.appendChild(state.ctxmenu.instructPix2PixImgCfgLabel);
+				const btnArray2 = document.createElement("div");
+				btnArray2.classList.add("checkbox-array");
+				btnArray2.appendChild(state.ctxmenu.fullResolutionLabel);
+				btnArray2.appendChild(state.ctxmenu.borderMaskGradientLabel);
+				menu.appendChild(btnArray2);
 				menu.appendChild(state.ctxmenu.borderMaskSlider);
 				menu.appendChild(state.ctxmenu.eagerGenerateCountLabel);
 
@@ -3101,8 +3302,7 @@ function buildAlwaysOnScripts(state) {
 }
 
 function addSoftInpaintingToAlwaysOnScripts(state) {
-	if (extensions.alwaysOnScripts && toolbar._current_tool.name == "Img2Img") {
-		//?????
+	if (extensions.alwaysOnScripts) {
 		state.alwayson_scripts["Soft Inpainting"] = {};
 		state.alwayson_scripts["Soft Inpainting"].args = [
 			state.softInpaint,
