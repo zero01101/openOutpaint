@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -1110,7 +1107,35 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				// here's where to overmask to avoid including the brushed mask
 				// 99% of my issues were from failing to set source-over for the overmask blotches
 				if (state.overMaskPx > 0) {
-					// transparent to white first
+					// check for overmask vs mosaic stretch
+					// if mosaic, find edge between transparent and non-transparent and stretch border
+
+					/**
+					 * find the border between transparent and non-transparent pixels
+					 * select the amount of non-transparent pixels to overmask specified by the slider
+					 * stretch selected non-transparent in applicable directions to the edge of the bounding box
+					 * prioritized up, down, left, right
+					 * repeat per direction until all overmasking is done
+					 */
+
+					// https://stackoverflow.com/questions/47149462/how-to-draw-mosaic-by-javascript-in-a-canvas-like-ffmpeg-style ???????
+
+					// var canvas2, ctx2; // why not
+					// var img = new Image();
+					// img.onload = mosaic;
+					// img.src = canvas.toDataURL();
+					// function mosaic() {
+					// 	canvas2 = document.createElement("canvas");
+					// 	canvas2.width = canvas.width;
+					// 	canvas2.height = canvas.height;
+					// 	ctx2 = canvas2.getContext("2d");
+					// 	ctx2.drawImage(this, 0, 0);
+					// 	ctx2.drawImage(this);
+					// }
+
+					var what = findContentBorders(visibleCanvas, {border: 0}, true);
+
+					// otherwise if overmask, convert transparent to white first
 					bbCtx.globalCompositeOperation = "destination-atop";
 					bbCtx.fillStyle = "#FFFF";
 					bbCtx.fillRect(0, 0, bb.w, bb.h);
@@ -1314,7 +1339,35 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			// here's where to overmask to avoid including the brushed mask
 			// 99% of my issues were from failing to set source-over for the overmask blotches
 			if (state.overMaskPx > 0) {
-				// transparent to white first
+				// check for overmask vs mosaic stretch
+				// if mosaic, find edge between transparent and non-transparent and stretch border
+
+				/**
+				 * find the border between transparent and non-transparent pixels
+				 * select the amount of non-transparent pixels to overmask specified by the slider
+				 * stretch selected non-transparent in applicable directions to the edge of the bounding box
+				 * prioritized up, down, left, right
+				 * repeat per direction until all overmasking is done
+				 */
+
+				// https://stackoverflow.com/questions/47149462/how-to-draw-mosaic-by-javascript-in-a-canvas-like-ffmpeg-style ???????
+
+				// var canvas2, ctx2; // why not
+				// var img = new Image();
+				// img.onload = mosaic;
+				// img.src = canvas.toDataURL();
+				// function mosaic() {
+				// 	canvas2 = document.createElement("canvas");
+				// 	canvas2.width = canvas.width;
+				// 	canvas2.height = canvas.height;
+				// 	ctx2 = canvas2.getContext("2d");
+				// 	ctx2.drawImage(this, 0, 0);
+				// 	ctx2.drawImage(this);
+				// }
+
+				var what = findContentBorders(visibleCanvas, {border: 0}, true);
+
+				// otherwise if overmase, convert transparent to white first
 				bbCtx.globalCompositeOperation = "destination-atop";
 				bbCtx.fillStyle = "#FFFF";
 				bbCtx.fillRect(0, 0, bb.w, bb.h);
@@ -1854,8 +1907,8 @@ const dreamTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
@@ -1882,8 +1935,8 @@ const dreamTool = () =>
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+							? "#BFB5"
+							: "#FFF5";
 					state.erasePrevReticle = _tool._reticle_draw(
 						getBoundingBox(
 							evn.x,
@@ -2596,8 +2649,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -2634,8 +2687,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",

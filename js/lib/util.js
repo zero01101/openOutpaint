@@ -362,6 +362,18 @@ class NoContentError extends Error {}
  */
 function cropCanvas(sourceCanvas, options = {}) {
 	defaultOpt(options, {border: 0});
+	var bb = findContentBorders(sourceCanvas, options);
+	var cutCanvas = document.createElement("canvas");
+	cutCanvas.width = bb.w;
+	cutCanvas.height = bb.h;
+	cutCanvas
+		.getContext("2d")
+		.drawImage(sourceCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+	return {canvas: cutCanvas, bb};
+}
+
+function findContentBorders(sourceCanvas, options = {}, maxvals = false) {
+	defaultOpt(options, {border: 0});
 
 	const w = sourceCanvas.width;
 	const h = sourceCanvas.height;
@@ -393,21 +405,25 @@ function cropCanvas(sourceCanvas, options = {}) {
 		}
 	}
 
+	// THIS IS WHAT I NEED TO USE TO FIND THE FUCKING BORDERS FOR MOSAICING
 	bb.x = minx - options.border;
 	bb.y = miny - options.border;
 	bb.w = maxx - minx + 1 + 2 * options.border;
 	bb.h = maxy - miny + 1 + 2 * options.border;
 
-	if (!Number.isFinite(maxx))
-		throw new NoContentError("Canvas has no content to crop");
+	if (!Number.isFinite(maxx)) throw new NoContentError("Canvas has no content");
+	if (maxvals) {
+		let outputs = {};
+		outputs.minx = minx;
+		outputs.miny = miny;
+		outputs.maxx = maxx; // keep in mind maxes are 0-indexed and are the last pixel, not the transparency/mask
+		outputs.maxy = maxy;
+		outputs.bb = bb;
 
-	var cutCanvas = document.createElement("canvas");
-	cutCanvas.width = bb.w;
-	cutCanvas.height = bb.h;
-	cutCanvas
-		.getContext("2d")
-		.drawImage(sourceCanvas, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-	return {canvas: cutCanvas, bb};
+		return outputs;
+	}
+
+	return bb;
 }
 
 /**
