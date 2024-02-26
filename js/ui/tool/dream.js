@@ -1133,7 +1133,11 @@ const dream_generate_callback = async (bb, resolution, state) => {
 					// 	ctx2.drawImage(this);
 					// }
 
-					var what = findContentBorders(visibleCanvas, {border: 0}, true);
+					var existingImageBorders = findContentBorders(
+						visibleCanvas,
+						{border: 0},
+						true
+					);
 
 					// otherwise if overmask, convert transparent to white first
 					bbCtx.globalCompositeOperation = "destination-atop";
@@ -1341,33 +1345,34 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			if (state.overMaskPx > 0) {
 				// check for overmask vs mosaic stretch
 				// if mosaic, find edge between transparent and non-transparent and stretch border
-
-				/**
-				 * find the border between transparent and non-transparent pixels
-				 * select the amount of non-transparent pixels to overmask specified by the slider
-				 * stretch selected non-transparent in applicable directions to the edge of the bounding box
-				 * prioritized up, down, left, right
-				 * repeat per direction until all overmasking is done
-				 */
-
 				// https://stackoverflow.com/questions/47149462/how-to-draw-mosaic-by-javascript-in-a-canvas-like-ffmpeg-style ???????
 
-				// var canvas2, ctx2; // why not
-				// var img = new Image();
-				// img.onload = mosaic;
-				// img.src = canvas.toDataURL();
-				// function mosaic() {
-				// 	canvas2 = document.createElement("canvas");
-				// 	canvas2.width = canvas.width;
-				// 	canvas2.height = canvas.height;
-				// 	ctx2 = canvas2.getContext("2d");
-				// 	ctx2.drawImage(this, 0, 0);
-				// 	ctx2.drawImage(this);
-				// }
+				var existingImageBorders = findContentBorders(
+					visibleCanvas,
+					{border: 0},
+					true
+				);
+				var selectedRegion = findContentBorders(initCanvas, {border: 0}, true);
+				/// what am i even doing
 
-				var what = findContentBorders(visibleCanvas, {border: 0}, true);
+				/// oh god
+				//var img = new Image();
+				//img.onload =
+				var whatthefuck = applyMosaicStretch(
+					//TODO ensure this is toggleable and only fires on outpainting
+					//this,
+					initCanvas,
+					initCtx,
+					existingImageBorders.minx,
+					existingImageBorders.miny,
+					existingImageBorders.maxx,
+					existingImageBorders.maxy,
+					selectedRegion.bb,
+					state.overMaskPx
+				);
+				//img.src = initCanvas.toDataURL();
 
-				// otherwise if overmase, convert transparent to white first
+				// otherwise if overmask, convert transparent to white first
 				bbCtx.globalCompositeOperation = "destination-atop";
 				bbCtx.fillStyle = "#FFFF";
 				bbCtx.fillRect(0, 0, bb.w, bb.h);
@@ -1404,7 +1409,6 @@ const dream_generate_callback = async (bb, resolution, state) => {
 			request.width,
 			request.height
 		);
-		// getImageAndMask(visibleCanvas, bb, request, state); // why is not working ffff
 		request.mask = maskCanvas.toDataURL();
 		request.inpainting_fill = stableDiffusionData.outpainting_fill;
 		request.image_cfg_scale = stableDiffusionData.image_cfg_scale;
@@ -1419,7 +1423,6 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		// and soft inpainting
 		if (state.softInpaint) {
 			addSoftInpaintingToAlwaysOnScripts(state);
-			// TODO build always on scripts entry for soft inpaint
 		}
 		if (extensions.alwaysOnScripts) {
 			// check again just to be sure because i'm an idiot?
@@ -1448,6 +1451,103 @@ const dream_erase_callback = (bb) => {
 		},
 	});
 };
+
+function applyMosaicStretch(
+	//img, //??
+	canvasToStretch,
+	context,
+	startX,
+	startY,
+	stopX,
+	stopY,
+	bb,
+	pixelsToBackInto,
+	topToBottom = false,
+	leftToRight = false
+) {
+	//this is a disaster
+	//TODO implement ttb/ltr toggles? or just remove them
+	var ctx = canvasToStretch.getContext("2d"); // same as $context?
+	var origimgdataurl = canvasToStretch.toDataURL();
+	var pixelsToStretchUp = startY > 0 ? startY : 0;
+	var pixelsToStretchDown = bb.h - stopY - 2 > 0 ? bb.h - stopY - 2 : 0;
+	var pixelsToStretchLeft = startX > 0 ? startX : 0;
+	var pixelsToStretchRight = bb.w - stopX - 2 > 0 ? bb.w - stopX - 2 : 0;
+	var stretchedVert = false;
+	var img = new Image();
+	img.onload = function () {
+		ctx.drawImage(img, 0, 0);
+		if (pixelsToStretchUp > 0) {
+			ctx.drawImage(
+				img, //?????????
+				bb.x,
+				startY,
+				bb.w,
+				3, // * (1 / pixelsToBackInto), //??????????????????? // replace with slider val or something idunno
+				bb.x,
+				bb.y,
+				bb.w,
+				pixelsToStretchUp
+			);
+			stretchedVert = true;
+		}
+		if (pixelsToStretchDown > 0) {
+			ctx.drawImage(
+				img, //?????????
+				bb.x,
+				stopY + 1,
+				bb.w,
+				-3, // replace with slider val or something idunno
+				bb.x,
+				stopY + 1,
+				bb.w,
+				pixelsToStretchDown + 1
+			);
+			stretchedVert = true;
+		}
+		if (pixelsToStretchRight > 0) {
+			if (stretchedVert) {
+				//ctx.globalAlpha = 0.5;
+			}
+			ctx.drawImage(
+				img, //?????????
+				stopX + 1,
+				startY,
+				-3, // replace with slider val or something idunno
+				bb.h,
+				stopX + 1,
+				bb.y,
+				pixelsToStretchRight + 1,
+				bb.h
+			);
+		}
+		if (pixelsToStretchLeft > 0) {
+			if (stretchedVert) {
+				//ctx.globalAlpha = 0.5;
+			}
+			ctx.drawImage(
+				img, //?????????
+				startX,
+				startY,
+				3, // replace with slider val or something idunno
+				bb.h,
+				bb.x,
+				bb.y,
+				pixelsToStretchLeft,
+				bb.h
+			);
+		}
+
+		var help2 = canvasToStretch.toDataURL();
+		var thing2 = 2;
+		var thing22 = thing2 / 3;
+	};
+	img.src = origimgdataurl;
+
+	var help = canvasToStretch.toDataURL();
+	var thing = 2;
+	var thing2 = thing / 3;
+}
 
 function applyOvermask(canvas, ctx, px) {
 	// :badpokerface: look it might be all placebo but i like overmask lol
