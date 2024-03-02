@@ -1340,6 +1340,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 		} else {
 			bbCtx.globalCompositeOperation = "destination-in";
 			bbCtx.drawImage(visibleCanvas, 0, 0);
+
 			// here's where to overmask to avoid including the brushed mask
 			// 99% of my issues were from failing to set source-over for the overmask blotches
 			if (state.overMaskPx > 0) {
@@ -1372,7 +1373,7 @@ const dream_generate_callback = async (bb, resolution, state) => {
 				);
 				//img.src = initCanvas.toDataURL();
 
-				// otherwise if overmask, convert transparent to white first
+				// if overmask, convert transparent to white first
 				bbCtx.globalCompositeOperation = "destination-atop";
 				bbCtx.fillStyle = "#FFFF";
 				bbCtx.fillRect(0, 0, bb.w, bb.h);
@@ -1474,61 +1475,69 @@ function applyMosaicStretch(
 	var pixelsToStretchLeft = startX > 0 ? startX : 0;
 	var pixelsToStretchRight = bb.w - stopX - 2 > 0 ? bb.w - stopX - 2 : 0;
 	var stretchedVert = false;
+	var tempimg;
 	var img = new Image();
 	img.onload = function () {
 		ctx.drawImage(img, 0, 0);
 		if (pixelsToStretchUp > 0) {
+			//just stretch actual image content, ignore blank sides
 			ctx.drawImage(
 				img, //?????????
-				bb.x,
+				startX,
 				startY,
-				bb.w,
+				stopX + 1 - startX,
 				3, // * (1 / pixelsToBackInto), //??????????????????? // replace with slider val or something idunno
-				bb.x,
-				bb.y,
-				bb.w,
-				pixelsToStretchUp
+				startX,
+				startY,
+				stopX + 1 - startX,
+				-pixelsToStretchUp - 3
 			);
 			stretchedVert = true;
+			tempimg = canvasToStretch.toDataURL();
 		}
 		if (pixelsToStretchDown > 0) {
+			//just stretch actual image content, ignore blank sides
 			ctx.drawImage(
 				img, //?????????
 				bb.x,
-				stopY + 1,
-				bb.w,
+				stopY,
+				stopX, //bb.w,
 				-3, // replace with slider val or something idunno
 				bb.x,
 				stopY + 1,
 				bb.w,
-				pixelsToStretchDown + 1
+				(pixelsToStretchDown + 1) * -1
 			);
 			stretchedVert = true;
+			tempimg = canvasToStretch.toDataURL();
 		}
 		if (pixelsToStretchRight > 0) {
+			//stretch expanded vertical content too if it exists
 			if (stretchedVert) {
 				//ctx.globalAlpha = 0.5;
 			}
 			ctx.drawImage(
 				img, //?????????
-				stopX + 1,
-				startY,
+				stopX,
+				bb.y, //startY, ///?????
 				-3, // replace with slider val or something idunno
 				bb.h,
-				stopX + 1,
+				bb.w, //stopX + 1,
 				bb.y,
-				pixelsToStretchRight + 1,
+				(pixelsToStretchRight + 1) * -1,
 				bb.h
 			);
+			tempimg = canvasToStretch.toDataURL();
 		}
 		if (pixelsToStretchLeft > 0) {
+			//stretch expanded vertical content too if it exists
 			if (stretchedVert) {
 				//ctx.globalAlpha = 0.5;
 			}
 			ctx.drawImage(
 				img, //?????????
 				startX,
-				startY,
+				bb.y, //startY, ////?????
 				3, // replace with slider val or something idunno
 				bb.h,
 				bb.x,
@@ -1536,6 +1545,7 @@ function applyMosaicStretch(
 				pixelsToStretchLeft,
 				bb.h
 			);
+			tempimg = canvasToStretch.toDataURL();
 		}
 
 		var help2 = canvasToStretch.toDataURL();
