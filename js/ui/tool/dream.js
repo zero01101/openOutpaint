@@ -62,9 +62,12 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(() => {
-			if (running) _checkProgress();
-		}, Math.max(0, minDelay - timeSpent));
+		setTimeout(
+			() => {
+				if (running) _checkProgress();
+			},
+			Math.max(0, minDelay - timeSpent)
+		);
 	};
 
 	_checkProgress();
@@ -1851,8 +1854,8 @@ const dreamTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+									? "#BFB5"
+									: "#FFF5";
 
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
@@ -1879,8 +1882,8 @@ const dreamTool = () =>
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
-							? "#BFB5"
-							: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 					state.erasePrevReticle = _tool._reticle_draw(
 						getBoundingBox(
 							evn.x,
@@ -2593,8 +2596,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+									? "#BFB5"
+									: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -2631,8 +2634,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+									? "#BFB5"
+									: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
