@@ -16,6 +16,7 @@ this is a completely vanilla javascript and html canvas outpainting convenience 
 
 ## features
 
+- [soft inpainting](https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/14208) support
 - SDXL "support"! (please check outpaint/inpaint fill types in the context menus and fiddle with denoising a LOT for img2img, it's touchy)
 - [now available as an extension for webUI!](https://github.com/zero01101/openOutpaint-webUI-extension) you can find it under the default "available" section in the webUI _extensions_ tab
   - **_NOTE: extension still requires `--api` flag in webui-user launch script_**

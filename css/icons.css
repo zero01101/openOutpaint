@@ -196,3 +196,9 @@
 	-webkit-mask-image: url("../res/icons/clipboard-list.svg");
 	mask-image: url("../res/icons/clipboard-list.svg");
 }
+
+.ui.inline-icon.icon-squircle::after,
+.ui.icon > .icon-squircle {
+	-webkit-mask-image: url("../res/icons/squircle.svg");
+	mask-image: url("../res/icons/squircle.svg");
+}
