@@ -62,12 +62,9 @@ const _monitorProgress = (bb, oncheck = null) => {
 		}
 
 		const timeSpent = performance.now() - init;
-		setTimeout(
-			() => {
-				if (running) _checkProgress();
-			},
-			Math.max(0, minDelay - timeSpent)
-		);
+		setTimeout(() => {
+			if (running) _checkProgress();
+		}, Math.max(0, minDelay - timeSpent));
 	};
 
 	_checkProgress();
@@ -1854,8 +1851,8 @@ const dreamTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
@@ -1882,8 +1879,8 @@ const dreamTool = () =>
 						state.cursorSize > stableDiffusionData.width
 							? "#FBB5"
 							: state.cursorSize < stableDiffusionData.width
-								? "#BFB5"
-								: "#FFF5";
+							? "#BFB5"
+							: "#FFF5";
 					state.erasePrevReticle = _tool._reticle_draw(
 						getBoundingBox(
 							evn.x,
@@ -2330,7 +2327,7 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
-				array.appendChild(state.ctxmenu.softInpaintLabel);
+				// array.appendChild(state.ctxmenu.softInpaintLabel);
 				//TODO: if (global.controlnetAPI) { //but figure out how to update the UI after doing so
 				// never mind i think i'm using an extension menu instead
 				// array.appendChild(state.ctxmenu.controlNetLabel);
@@ -2339,14 +2336,14 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
 				menu.appendChild(state.ctxmenu.carveThresholdSlider);
-				menu.appendChild(state.ctxmenu.softInpaintScheduleBiasSlider);
-				menu.appendChild(state.ctxmenu.softInpaintPreservationStrengthSlider);
-				menu.appendChild(
-					state.ctxmenu.softInpaintTransitionContrastBoostSlider
-				);
-				menu.appendChild(state.ctxmenu.softInpaintMaskInfluenceSlider);
-				menu.appendChild(state.ctxmenu.softInpaintDifferenceThresholdSlider);
-				menu.appendChild(state.ctxmenu.softInpaintDifferenceContrastSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintScheduleBiasSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintPreservationStrengthSlider);
+				// menu.appendChild(
+				// 	state.ctxmenu.softInpaintTransitionContrastBoostSlider
+				// );
+				// menu.appendChild(state.ctxmenu.softInpaintMaskInfluenceSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintDifferenceThresholdSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintDifferenceContrastSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
@@ -2596,8 +2593,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
@@ -2634,8 +2631,8 @@ const img2imgTool = () =>
 							state.cursorSize > stableDiffusionData.width
 								? "#FBB5"
 								: state.cursorSize < stableDiffusionData.width
-									? "#BFB5"
-									: "#FFF5";
+								? "#BFB5"
+								: "#FFF5";
 						state.erasePrevReticle = _tool._reticle_draw(
 							bb,
 							"Img2Img",
