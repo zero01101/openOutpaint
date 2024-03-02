@@ -2493,7 +2493,7 @@ const dreamTool = () =>
 				//menu.appendChild(document.createElement("br"));
 				array.appendChild(state.ctxmenu.keepUnmaskedLabel);
 				array.appendChild(state.ctxmenu.removeBackgroundLabel);
-				array.appendChild(state.ctxmenu.softInpaintLabel);
+				// array.appendChild(state.ctxmenu.softInpaintLabel);
 				//TODO: if (global.controlnetAPI) { //but figure out how to update the UI after doing so
 				// never mind i think i'm using an extension menu instead
 				// array.appendChild(state.ctxmenu.controlNetLabel);
@@ -2502,14 +2502,14 @@ const dreamTool = () =>
 				menu.appendChild(state.ctxmenu.keepUnmaskedBlurSlider);
 				menu.appendChild(state.ctxmenu.carveBlurSlider);
 				menu.appendChild(state.ctxmenu.carveThresholdSlider);
-				menu.appendChild(state.ctxmenu.softInpaintScheduleBiasSlider);
-				menu.appendChild(state.ctxmenu.softInpaintPreservationStrengthSlider);
-				menu.appendChild(
-					state.ctxmenu.softInpaintTransitionContrastBoostSlider
-				);
-				menu.appendChild(state.ctxmenu.softInpaintMaskInfluenceSlider);
-				menu.appendChild(state.ctxmenu.softInpaintDifferenceThresholdSlider);
-				menu.appendChild(state.ctxmenu.softInpaintDifferenceContrastSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintScheduleBiasSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintPreservationStrengthSlider);
+				// menu.appendChild(
+				// 	state.ctxmenu.softInpaintTransitionContrastBoostSlider
+				// );
+				// menu.appendChild(state.ctxmenu.softInpaintMaskInfluenceSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintDifferenceThresholdSlider);
+				// menu.appendChild(state.ctxmenu.softInpaintDifferenceContrastSlider);
 				// menu.appendChild(state.ctxmenu.keepUnmaskedBlurSliderLinebreak);
 				// menu.appendChild(state.ctxmenu.preserveMasksLabel);
 				// menu.appendChild(document.createElement("br"));
