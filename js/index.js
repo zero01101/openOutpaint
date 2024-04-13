@@ -1403,6 +1403,13 @@ function changeStyles() {
 	stableDiffusionData.styles = selectedString;
 }
 
+function changeScheduler() {
+	const schedulerSelectEl = document.getElementById("schedulerSelect");
+	var selectedString = schedulerSelectEl.value;
+
+	stableDiffusionData.scheduler = selectedString;
+}
+
 async function getSamplers() {
 	var url = document.getElementById("host").value + "/sdapi/v1/samplers";
 
