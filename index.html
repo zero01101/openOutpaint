@@ -137,20 +137,7 @@
 					<label>Sampler:</label>
 					<div id="sampler-ac-select"></div>
 					<label>Scheduler:</label>
-					<br />
-					<select
-						id="schedulerSelect"
-						name="schedulerSelect"
-						onchange="changeScheduler()">
-						<option value="Automatic" selected="selected">Automatic</option>
-						<option value="Uniform">Uniform</option>
-						<option value="Karras">Karras</option>
-						<option value="Exponential">Exponential</option>
-						<option value="Polyexponential">Polyexponential</option>
-						<option value="SGM Uniform">SGM Uniform</option>
-					</select>
-					<!-- TODO scheduler isn't exposed via API that i can tell, un-hardcode when that's changed, add to localstorage settings, turn into magic type search autocomplete selectbox, disable selected attribute, all the stuff -->
-					<br />
+					<div id="scheduler-ac-select"></div>
 					<label for="seed">Seed (-1 for random):</label>
 					<br />
 					<input
@@ -352,7 +339,7 @@
 					<br />
 					<span id="version">
 						<a href="https://github.com/zero01101/openOutpaint" target="_blank">
-							v20240413.001
+							v20240427.001
 						</a>
 						<br />
 						<a
@@ -575,7 +562,7 @@
 
 		<!-- Content -->
 		<script src="js/prompt.js?v=7a1c68c" type="text/javascript"></script>
-		<script src="js/index.js?v=6e33053" type="text/javascript"></script>
+		<script src="js/index.js?v=5fc4006" type="text/javascript"></script>
 
 		<script
 			src="js/ui/floating/history.js?v=4f29db4"

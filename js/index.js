@@ -424,6 +424,7 @@ async function testHostConnection() {
 							getSamplers();
 							getUpscalers();
 							getModels();
+							getSchedulers();
 							extensions.getExtensions(
 								controlNetModelAutoComplete,
 								controlNetModuleAutoComplete,
@@ -678,6 +679,11 @@ loraAutoComplete.onchange.on(({value}) => {
 const samplerAutoComplete = createAutoComplete(
 	"Sampler",
 	document.getElementById("sampler-ac-select")
+);
+
+const schedulerAutoComplete = createAutoComplete(
+	"Scheduler",
+	document.getElementById("scheduler-ac-select")
 );
 
 const upscalerAutoComplete = createAutoComplete(
@@ -1437,6 +1443,41 @@ async function getSamplers() {
 		stableDiffusionData.sampler_index = samplerAutoComplete.value;
 	} catch (e) {
 		console.warn("[index] Failed to fetch samplers");
+		console.warn(e);
+	}
+}
+
+async function getSchedulers() {
+	var url = document.getElementById("host").value + "/sdapi/v1/schedulers";
+
+	try {
+		const response = await fetch(url);
+		const data = await response.json();
+
+		schedulerAutoComplete.onchange.on(({value}) => {
+			stableDiffusionData.scheduler = value;
+			localStorage.setItem("openoutpaint/scheduler", value);
+		});
+
+		schedulerAutoComplete.options = data.map((scheduler) => ({
+			name: scheduler.label,
+			value: scheduler.label,
+		}));
+
+		if (localStorage.getItem("openoutpaint/scheduler") != null) {
+			schedulerAutoComplete.value = localStorage.getItem(
+				"openoutpaint/scheduler"
+			);
+		} else {
+			schedulerAutoComplete.value = data[0].name;
+			localStorage.setItem(
+				"openoutpaint/scheduler",
+				schedulerAutoComplete.value
+			);
+		}
+		stableDiffusionData.scheduler = schedulerAutoComplete.value;
+	} catch (e) {
+		console.warn("[index] Failed to fetch schedulers");
 		console.warn(e);
 	}
 }
