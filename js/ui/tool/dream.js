@@ -3502,6 +3502,7 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 			//img2img?
 			state.alwayson_scripts.controlnet.args = [
 				{
+					enabled: true,
 					module: extensions.selectedControlNetModule,
 					model: extensions.selectedControlNetModel,
 					control_mode: document.getElementById("controlNetMode-select").value,
@@ -3514,10 +3515,11 @@ function addControlNetToAlwaysOnScripts(state, initCanvas, maskCanvas) {
 		} else {
 			state.alwayson_scripts.controlnet.args = [
 				{
+					enabled: true,
 					module: extensions.selectedControlNetModule,
 					model: extensions.selectedControlNetModel,
 					control_mode: document.getElementById("controlNetMode-select").value,
-					input_image: initimg, //initCanvas.toDataURL(),
+					image: initimg, //initCanvas.toDataURL(),
 					mask: maskimg, //maskCanvas.toDataURL(),
 					processor_res: 64,
 					resize_mode: document.getElementById("controlNetResize-select").value,
