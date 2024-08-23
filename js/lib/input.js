@@ -660,6 +660,9 @@ window.onkeyup = (evn) => {
 		});
 	}
 
+	if (keyboard.keys[evn.code]._hold_to)
+		clearTimeout(keyboard.keys[evn.code]._hold_to);
+
 	keyboard.keys[evn.code] = {
 		pressed: false,
 		held: false,
