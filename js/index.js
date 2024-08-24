@@ -1534,7 +1534,7 @@ async function upscaleAndDownload(
 			body: JSON.stringify(data),
 		})
 			.then((response) => response.json())
-			.then((data) => {
+			.then(async (data) => {
 				console.log(data);
 				var link = document.createElement("a");
 				link.download =
@@ -1554,6 +1554,7 @@ async function upscaleAndDownload(
 					console.log("Add upscaled to resource");
 					const img = new Image();
 					img.src = link.href;
+					await img.decode();
 					tools.stamp.state.addResource(guid() + " (upscaled)", img);
 				}
 				if (download == true) {
