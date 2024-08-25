@@ -23,6 +23,9 @@ const selectTransformTool = () =>
 
 			// Layer system handlers
 			uil.onactive.on(state.uilayeractivecb);
+			
+			commands.onundo.on(state.undocb);
+			commands.onredo.on(state.redocb);
 
 			// Registers keyboard shortcuts
 			keyboard.onShortcut({ctrl: true, key: "KeyA"}, state.ctrlacb);
@@ -65,6 +68,9 @@ const selectTransformTool = () =>
 
 			uil.onactive.clear(state.uilayeractivecb);
 
+			commands.onundo.clear(state.undocb);
+			commands.onredo.clear(state.redocb);
+			
 			// Clear any selections
 			state.reset();
 
@@ -179,6 +185,17 @@ const selectTransformTool = () =>
 						);
 					}
 				};
+				
+				// Undo/Redo Handling, reset state before Undo/Redo
+				state.undocb= (undo)=>{
+					if (state.selected){
+						if (undo.n<=1) undo.cancel();
+						state.reset(false);
+					}
+				}				
+				state.redocb= (redo)=>{
+					if (state.selected){ state.reset(false); }
+				}
 
 				// Mirroring
 				state.togglemirror = () => {
