@@ -557,6 +557,7 @@ const selectTransformTool = () =>
 
 				// Register Ctrl-A Shortcut
 				state.ctrlacb = () => {
+					state.reset(false); // Reset to preserve selected content
 					try {
 						const {bb} = cropCanvas(uil.canvas);
 						select(bb);
@@ -566,6 +567,8 @@ const selectTransformTool = () =>
 				};
 
 				state.ctrlsacb = () => {
+					state.reset(false); // Reset to preserve selected content
+
 					// Shift Key selects based on all visible layer information
 					const tl = {x: Infinity, y: Infinity};
 					const br = {x: -Infinity, y: -Infinity};
