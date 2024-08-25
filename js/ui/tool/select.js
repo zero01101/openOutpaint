@@ -37,6 +37,14 @@ const selectTransformTool = () =>
 			keyboard.onShortcut({ctrl: true, key: "KeyV"}, state.ctrlvcb);
 			keyboard.onShortcut({ctrl: true, key: "KeyX"}, state.ctrlxcb);
 			keyboard.onShortcut({key: "Equal"}, state.togglemirror);
+			
+			keyboard.onShortcut({key: "Enter"}, state.entercb);
+			keyboard.onShortcut({shift: true, key: "Enter"}, state.sentercb);
+			keyboard.onShortcut({ctrl: true, key: "Enter"}, state.ctentercb);
+			keyboard.onShortcut({key: "Delete"}, state.delcb);
+			keyboard.onShortcut({shift: true, key: "Delete"}, state.sdelcb);
+			
+			keyboard.onShortcut({key: "Escape"}, state.escapecb);
 
 			state.ctxmenu.mirrorSelectionCheckbox.disabled = true;
 			state.selected = null;
@@ -65,7 +73,13 @@ const selectTransformTool = () =>
 			keyboard.deleteShortcut(state.ctrlvcb, "KeyV");
 			keyboard.deleteShortcut(state.ctrlxcb, "KeyX");
 			keyboard.deleteShortcut(state.togglemirror, "Equal");
-
+			keyboard.deleteShortcut(state.entercb,"Enter");
+			keyboard.deleteShortcut(state.sentercb,"Enter");
+			keyboard.deleteShortcut(state.ctentercb,"Enter");
+			keyboard.deleteShortcut(state.delcb,"Delete");
+			keyboard.deleteShortcut(state.sdelcb,"Delete");
+			keyboard.deleteShortcut(state.escapecb,"Escape");
+			
 			uil.onactive.clear(state.uilayeractivecb);
 
 			commands.onundo.clear(state.undocb);
@@ -91,6 +105,10 @@ const selectTransformTool = () =>
 				state.snapToGrid = true;
 				state.keepAspectRatio = true;
 				state.block_res_change = true;
+				
+				state.toNewLayer = false;
+				state.preserveOriginal = false;
+				
 				state.useClipboard = !!(
 					navigator.clipboard && navigator.clipboard.write
 				); // Use it by default if supported
@@ -278,80 +296,9 @@ const selectTransformTool = () =>
 							state.selected.position.y === state.original.sy &&
 							!state.mirrorSelection &&
 							state.original.layer === uil.layer
-						) &&
-						!isCanvasBlank(
-							0,
-							0,
-							state.selected.canvas.width,
-							state.selected.canvas.height,
-							state.selected.canvas
 						)
 					) {
-						// Put original image back
-						state.original.layer.ctx.drawImage(
-							state.selected.canvas,
-							state.original.x,
-							state.original.y
-						);
-
-						// Erase Original Selection Area
-						commands.runCommand(
-							"eraseImage",
-							"Transform Tool Erase",
-							{
-								layer: state.original.layer,
-								x: state.original.x,
-								y: state.original.y,
-								w: state.selected.canvas.width,
-								h: state.selected.canvas.height,
-							},
-							{
-								extra: {
-									log: `Erased original selection area at x: ${state.original.x}, y: ${state.original.y}, width: ${state.selected.canvas.width}, height: ${state.selected.canvas.height} from layer ${state.original.layer.id}`,
-								},
-							}
-						);
-
-						// Draw Image
-						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas, {
-							border: 10,
-						});
-
-						let commandLog = "";
-						const addline = (v, newline = true) => {
-							commandLog += v;
-							if (newline) commandLog += "\n";
-						};
-
-						addline(
-							`Draw selected area to x: ${bb.x}, y: ${bb.y}, width: ${bb.w}, height: ${bb.h} to layer ${state.original.layer.id}`
-						);
-						addline(
-							`    - translation: (x: ${state.selected.position.x}, y: ${state.selected.position.y})`
-						);
-						addline(
-							`    - rotation   : ${
-								Math.round(1000 * ((180 * state.selected.rotation) / Math.PI)) /
-								1000
-							} degrees`,
-							false
-						);
-
-						commands.runCommand(
-							"drawImage",
-							"Transform Tool Apply",
-							{
-								image: canvas,
-								...bb,
-							},
-							{
-								extra: {
-									log: commandLog,
-								},
-							}
-						);
-
-						state.reset(true);
+						state.applyTransform();
 					} else {
 						state.reset();
 					}
@@ -530,30 +477,30 @@ const selectTransformTool = () =>
 				state.cancelcb = (evn) => {
 					state.reset();
 				};
-
+				
+				state.keydowncb = (evn) => { };
+				
 				// Keyboard callbacks (For now, they just handle the "delete" key)
-				state.keydowncb = (evn) => {};
-
-				state.keyclickcb = (evn) => {
-					switch (evn.code) {
-						case "Delete":
-							// Deletes selected area
-							state.selected &&
-								commands.runCommand(
-									"eraseImage",
-									"Erase Area",
-									state.selected,
-									{
-										extra: {
-											log: `[Placeholder] Delete selected area. TODO it's also broken`,
-										},
-									}
-								);
-							state.ctxmenu.mirrorSelectionCheckbox.disabled = true;
-							state.selected = null;
-							state.redraw();
-					}
-				};
+				state.keyclickcb = async(evn) => { };				
+				
+				// Register Delete Shortcut
+				state.delcb = async(evn) => { state.applyTransform(true,false,false,false); };
+				
+				// Register Escape Shortcut
+				state.escapecb = async(evn) => { state.reset(false); };
+				
+				// Register Shift-Delete Shortcut
+				state.sdelcb = async(evn) => { state.applyTransform(false,true,false,false); };
+								
+				// Register Enter Shortcut (Delegates to clickcb)
+				state.entercb = async(evn) => { clickcb(evn); };
+								
+				// Register Ctrl-Enter Shortcut
+				state.ctentercb = async(evn) => { state.applyTransform(false,false,true,true); };
+								
+				// Register Shift-Enter Shortcut
+				state.sentercb = async(evn) => { state.applyTransform(false,false,true,false); };
+								
 
 				// Register Ctrl-A Shortcut
 				state.ctrlacb = () => {
@@ -687,6 +634,117 @@ const selectTransformTool = () =>
 				state.ctrlxcb = (evn) => {
 					state.ctrlccb(evn, true);
 				};
+				
+				// Apply Transform and Reset State, optionally erase Selection or Clear Original Layer				
+				// newLayer and keepOriginal default to null, overriding the forced variants if explicitly set to false
+				// Only checks if Selection exists and content has been selected
+				// Does not check if content has been transformed, eg for deletion/applying to new layer
+				state.applyTransform = (eraseSelected = false, clearLayer = false, newLayer = null, keepOriginal = null) => {
+						// Just reset state if nothing is selected, unless Clearing layer
+						if (!state.selected || state.original.layer.hidden ||
+								!clearLayer && 
+								isCanvasBlank(
+									0,
+									0,
+									state.selected.canvas.width,
+									state.selected.canvas.height,
+									state.selected.canvas
+								)
+							){								
+							state.reset(false);
+							return;
+						}
+						
+						// Put original image back
+						state.original.layer.ctx.drawImage(
+							state.selected.canvas,
+							state.original.x,
+							state.original.y
+						);
+						
+						// Erase Entire Layer
+						if (clearLayer) commands.runCommand(
+							"eraseImage",
+							"Transform Tool Erase",
+							{
+								...state.original.layer.bb,
+								layer: state.original.layer,
+							},
+							{
+								extra: {
+									log: `Erased layer ${state.original.layer.id}`,
+								},
+							}
+						);						
+						// Erase Original Selection Area
+						else if (eraseSelected || !state.preserveOriginal && (keepOriginal==null || !keepOriginal) ) commands.runCommand(
+							"eraseImage",
+							"Transform Tool Erase",
+							{
+								layer: state.original.layer,
+								x: state.original.x,
+								y: state.original.y,
+								w: state.selected.canvas.width,
+								h: state.selected.canvas.height,
+							},
+							{
+								extra: {
+									log: `Erased original selection area at x: ${state.original.x}, y: ${state.original.y}, width: ${state.selected.canvas.width}, height: ${state.selected.canvas.height} from layer ${state.original.layer.id}`,
+								},
+							}
+						);
+						
+						// Selection erased, no need to draw anything
+						if (eraseSelected){
+							 state.reset(true);
+							 return;
+						}
+						
+						// Draw Image
+						const {canvas, bb} = cropCanvas(state.originalDisplayLayer.canvas, {
+							border: 10,
+						});
+						
+						if ( (newLayer || state.toNewLayer && newLayer==null) && !clearLayer)
+							commands.runCommand("addLayer", "Added Layer", {name: "Copy-"+state.original.layer.name});
+
+						let commandLog = "";
+						const addline = (v, newline = true) => {
+							commandLog += v;
+							if (newline) commandLog += "\n";
+						};
+
+						addline(
+							`Draw selected area to x: ${bb.x}, y: ${bb.y}, width: ${bb.w}, height: ${bb.h} to layer ${state.original.layer.id}`
+						);
+						addline(
+							`    - translation: (x: ${state.selected.position.x}, y: ${state.selected.position.y})`
+						);
+						addline(
+							`    - rotation   : ${
+								Math.round(1000 * ((180 * state.selected.rotation) / Math.PI)) /
+								1000
+							} degrees`,
+							false
+						);
+
+						commands.runCommand(
+							"drawImage",
+							"Transform Tool Apply",
+							{
+								image: canvas,
+								...bb,
+							},
+							{
+								extra: {
+									log: commandLog,
+								},
+							}
+						);
+
+						state.reset(true);
+				}
+				
 			},
 			populateContextMenu: (menu, state) => {
 				if (!state.ctxmenu) {
@@ -752,6 +810,24 @@ const selectTransformTool = () =>
 					state.ctxmenu.useClipboardLabel = clipboardCheckbox.checkbox;
 					if (!(navigator.clipboard && navigator.clipboard.write))
 						clipboardCheckbox.checkbox.disabled = true; // Disable if not available
+					
+					// toNewLayer
+					state.ctxmenu.toNewLayerLabel = _toolbar_input.checkbox(
+						state,
+						"openoutpaint/select-toNewLayer",
+						"toNewLayer",
+						"Always Create New Layer",
+						"icon-file-plus"
+					).checkbox;
+					
+					// preserveOriginal
+					state.ctxmenu.preserveOriginalLabel = _toolbar_input.checkbox(
+						state,
+						"openoutpaint/select-preserveOriginal",
+						"preserveOriginal",
+						"Preserve Original Image - Restore original content after transforming selection",
+						"icon-lock"
+					).checkbox;
 
 					// Selection Peek Opacity
 					state.ctxmenu.selectionPeekOpacitySlider = _toolbar_input.slider(
@@ -853,12 +929,59 @@ const selectTransformTool = () =>
 					visibleActionArray.appendChild(saveVisibleSelectionButton);
 					visibleActionArray.appendChild(createVisibleResourceButton);
 
+
+					// Some useful actions to do with selection
+					const actionArrayRow3 = document.createElement("div");
+					actionArrayRow3.classList.add("button-array");
+
+					// Apply To New Layer button
+					const applyNewLayerButton = document.createElement("button");
+					applyNewLayerButton.classList.add("button", "tool");
+					applyNewLayerButton.textContent = "Move to Layer";
+					applyNewLayerButton.title = "Moves Selection to a New Layer (Shift+Enter)";
+					applyNewLayerButton.onclick = () => { state.applyTransform(false,false,true,false); };
+
+					// Copy To Layer Buttons
+					const copyNewLayerButton = document.createElement("button");
+					copyNewLayerButton.classList.add("button", "tool");
+					copyNewLayerButton.textContent = "Copy to Layer";
+					copyNewLayerButton.title = "Copies selection to a new Layer (Ctrl+Enter)";
+					copyNewLayerButton.onclick = () => { state.applyTransform(false,false,true,true); };
+					
+					actionArrayRow3.appendChild(applyNewLayerButton);
+					actionArrayRow3.appendChild(copyNewLayerButton);
+
+					const actionArrayRow4 = document.createElement("div");
+					actionArrayRow4.classList.add("button-array");
+					
+					// Clear Button
+					const applyClearButton = document.createElement("button");
+					applyClearButton.classList.add("button", "tool");
+					applyClearButton.textContent = "Clear and Apply";
+					applyClearButton.title = "Erases everything in the current layer other than the selection (Shift+Delete)";
+					applyClearButton.onclick = () => { state.applyTransform(false,true,false,false); };
+					
+					// Erase Button
+					const eraseSelectionButton = document.createElement("button");					
+					eraseSelectionButton.classList.add("button", "tool");
+					eraseSelectionButton.textContent = "Erase";
+					eraseSelectionButton.title = "Erases current selection (Delete)";
+					eraseSelectionButton.onclick = () => { state.applyTransform(true,false,false,false); };
+					
+					actionArrayRow4.appendChild(applyClearButton);
+					actionArrayRow4.appendChild(eraseSelectionButton);
+
+
 					// Disable buttons (if nothing is selected)
 					state.ctxmenu.disableButtons = () => {
 						saveSelectionButton.disabled = true;
 						createResourceButton.disabled = true;
 						saveVisibleSelectionButton.disabled = true;
 						createVisibleResourceButton.disabled = true;
+						applyNewLayerButton.disabled = true;
+						copyNewLayerButton.disabled = true;
+						applyClearButton.disabled = true;
+						eraseSelectionButton.disabled = true;
 					};
 
 					// Enable buttons (if something is selected)
@@ -867,9 +990,17 @@ const selectTransformTool = () =>
 						createResourceButton.disabled = "";
 						saveVisibleSelectionButton.disabled = "";
 						createVisibleResourceButton.disabled = "";
+						applyNewLayerButton.disabled = "";
+						copyNewLayerButton.disabled = "";
+						applyClearButton.disabled = "";
+						eraseSelectionButton.disabled = "";
 					};
+					
 					state.ctxmenu.actionArray = actionArray;
 					state.ctxmenu.visibleActionArray = visibleActionArray;
+					
+					state.ctxmenu.actionArrayRow3 = actionArrayRow3;
+					state.ctxmenu.actionArrayRow4 = actionArrayRow4;
 
 					// Send Selection to Destination
 					state.ctxmenu.sendSelected = document.createElement("select");
@@ -892,10 +1023,17 @@ const selectTransformTool = () =>
 				array.appendChild(state.ctxmenu.keepAspectRatioLabel);
 				array.appendChild(state.ctxmenu.mirrorSelectionCheckbox);
 				array.appendChild(state.ctxmenu.useClipboardLabel);
+				
+				array.appendChild(state.ctxmenu.toNewLayerLabel);
+				array.appendChild(state.ctxmenu.preserveOriginalLabel);
+				 
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);
 				menu.appendChild(state.ctxmenu.actionArray);
 				menu.appendChild(state.ctxmenu.visibleActionArray);
+				menu.appendChild(state.ctxmenu.actionArrayRow3);
+				menu.appendChild(state.ctxmenu.actionArrayRow4);
+				
 				if (global.webui && global.webui.destinations) {
 					while (state.ctxmenu.sendSelected.lastChild.value !== "None") {
 						state.ctxmenu.sendSelected.removeChild(
