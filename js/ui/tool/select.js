@@ -957,8 +957,8 @@ const selectTransformTool = () =>
 					// Clear Button
 					const applyClearButton = document.createElement("button");
 					applyClearButton.classList.add("button", "tool");
-					applyClearButton.textContent = "Clear and Apply";
-					applyClearButton.title = "Erases everything in the current layer other than the selection (Shift+Delete)";
+					applyClearButton.textContent = "Erase Outside";
+					applyClearButton.title = "Erases everything in the current layer outside the selection (Shift+Delete)";
 					applyClearButton.onclick = () => { state.applyTransform(false,true,false,false); };
 					
 					// Erase Button
