@@ -117,7 +117,6 @@ const selectTransformTool = () =>
 				state.block_res_change = true;
 				
 				state.toNewLayer = false;
-				state.preserveOriginal = false;
 				
 				state.useClipboard = !!(
 					navigator.clipboard && navigator.clipboard.write
@@ -336,18 +335,30 @@ const selectTransformTool = () =>
 				};
 
 				// Handles right mouse double clicks - Select topmost layer with content under pointer 
-				// Holding shift key selects bottommost layer
+				// Holding shift key Selects the next topmost if current layer has visible content under pointer.
 				state.drclickcb = (evn) => {
 					if (state.selected) return;
-					for (let l of (evn.evn.shiftKey ? uil.layers : uil.layers.toReversed()) ) {
-						if (!l.hidden && !isCanvasBlank(evn.x,evn.y,2,2,l.canvas)) {
-							uil.active=l;
-							state.dclickcb_timeout = state.dclickcb_timeout ?? window.setTimeout(async ()=>{
-								state.dclickcb_timeout = null;
-								if (!state.selected && !selection.exists) { state.ctrlacb(evn); }
-							},300);
-							return;
+					// If shift key is held, and current layer is has visible pixels under pointer
+					//		select topmost visible layer beneath the active layer
+					let shift = evn.evn.shiftKey 
+									&& !uil.active.hidden 
+									&& !isCanvasBlank(evn.x,evn.y,2,2,uil.active.canvas);
+					let layer = shift ? uil.active : null;
+					for (let l of uil.layers.toReversed()) {
+						if (shift) {
+							if (layer==l) shift = false;
 						}
+						else if (!l.hidden && !isCanvasBlank(evn.x,evn.y,2,2,l.canvas)){					
+							layer = l;
+							break;
+						}
+					}					
+					if (layer) {
+						uil.active=layer;
+						state.dclickcb_timeout = state.dclickcb_timeout ?? window.setTimeout(async ()=>{
+							state.dclickcb_timeout = null;
+							if (!state.selected && !selection.exists) { state.ctrlacb(evn); }
+						},300);
 					}
 				};
 
@@ -527,7 +538,7 @@ const selectTransformTool = () =>
 				
 				state.keydowncb = (evn) => { };
 				
-				// Keyboard callbacks (For now, they just handle the "delete" key)
+				// Keyboard callbacks
 				state.keyclickcb = (evn) => { };				
 				
 				// Register Delete Shortcut
@@ -536,19 +547,19 @@ const selectTransformTool = () =>
 				// Register Escape Shortcut
 				state.escapecb = (evn) => { state.reset(false); };
 				
-				// Register Shift-Delete Shortcut
+				// Register Shift-Delete Shortcut - Delete Outside Selection and Apply
 				state.sdelcb = (evn) => { state.applyTransform(false,true,false,false); };
 
-				// Register Enter Shortcut (Delegates to clickcb)
+				// Register Enter Shortcut - Apply Transform (Delegates to clickcb)
 				state.entercb = (evn) => { state.clickcb(evn); };
 
-				// Register Ctrl-Enter Shortcut
+				// Register Ctrl-Enter Shortcut - Copy Selection to new layer, restore original
 				state.ctentercb = (evn) => { state.applyTransform(false,false,true,true); };
 				
-				// Register Shift-Enter Shortcut				
+				// Register Shift-Enter Shortcut - Move Selection to new layer
 				state.sentercb = (evn) => { state.applyTransform(false,false,true,false); };
 				
-				// Register Ctrl-Shift-Enter Shortcut
+				// Register Ctrl-Shift-Enter Shortcut - Copy Visible Selection to new layer
 				state.sctentercb = async (evn) => {
 					var selectBB =
 						state.selected.bb != undefined
@@ -703,10 +714,10 @@ const selectTransformTool = () =>
 				};
 				
 				// Apply Transform and Reset State, optionally erase Selection or Clear Original Layer				
-				// newLayer and keepOriginal default to null, overriding the forced variants if explicitly set to false
+				// newLayer defaults to null, overriding the forced variants if explicitly set to false
 				// Only checks if Selection exists and content has been selected
 				// Does not check if content has been transformed, eg for deletion/applying to new layer
-				state.applyTransform = async (eraseSelected = false, clearLayer = false, newLayer = null, keepOriginal = null) => {
+				state.applyTransform = async (eraseSelected = false, clearLayer = false, newLayer = null, keepOriginal = false) => {
 						const isBlank = 
 							isCanvasBlank( 0, 0, state.selected.canvas.width, state.selected.canvas.height, state.selected.canvas);
 							
@@ -738,7 +749,7 @@ const selectTransformTool = () =>
 							}
 						);
 						// Erase Original Selection Area
-						else if (eraseSelected || !(keepOriginal ?? state.preserveOriginal)) await commands.runCommand(
+						else if (eraseSelected || !keepOriginal) await commands.runCommand(
 							"eraseImage",
 							"Transform Tool Erase",
 							{
@@ -880,15 +891,6 @@ const selectTransformTool = () =>
 						"Always Create New Layer",
 						"icon-file-plus"
 					).checkbox;
-					
-					// preserveOriginal
-					state.ctxmenu.preserveOriginalLabel = _toolbar_input.checkbox(
-						state,
-						"openoutpaint/select-preserveOriginal",
-						"preserveOriginal",
-						"Preserve Original Image - Restore original content after transforming selection",
-						"icon-lock"
-					).checkbox;
 
 					// Selection Peek Opacity
 					state.ctxmenu.selectionPeekOpacitySlider = _toolbar_input.slider(
@@ -947,7 +949,7 @@ const selectTransformTool = () =>
 					const ActiveSelectionButton = document.createElement("button");
 					ActiveSelectionButton.classList.add("button", "tool");
 					ActiveSelectionButton.textContent = "📄";
-					ActiveSelectionButton.title = "Commands Applied to the visible Selection";
+					ActiveSelectionButton.title = "Commands Applied to the Current Selection";
 					ActiveSelectionButton.disabled = true;
 					
 					
@@ -1014,7 +1016,7 @@ const selectTransformTool = () =>
 					const VisibleSelectionButton = document.createElement("button");
 					VisibleSelectionButton.classList.add("button", "tool");
 					VisibleSelectionButton.textContent = "👁";
-					VisibleSelectionButton.title = "Commands Applied to the visible Selection";
+					VisibleSelectionButton.title = "Commands Applied to All Visible Content In the Selected Area";
 					VisibleSelectionButton.disabled = true;					
 
 					visibleActionArray.appendChild(saveVisibleSelectionButton);
@@ -1104,7 +1106,6 @@ const selectTransformTool = () =>
 				array.appendChild(state.ctxmenu.useClipboardLabel);
 				
 				array.appendChild(state.ctxmenu.toNewLayerLabel);
-				array.appendChild(state.ctxmenu.preserveOriginalLabel);
 				 
 				menu.appendChild(array);
 				menu.appendChild(state.ctxmenu.selectionPeekOpacitySlider);

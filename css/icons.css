@@ -208,9 +208,3 @@
 	-webkit-mask-image: url("../res/icons/file-plus.svg");
 	mask-image: url("../res/icons/file-plus.svg");
 }
-
-.ui.inline-icon.icon-lock::after,
-.ui.icon > .icon-lock {
-	-webkit-mask-image: url("../res/icons/lock.svg");
-	mask-image: url("../res/icons/lock.svg");
-}
