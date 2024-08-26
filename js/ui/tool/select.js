@@ -14,7 +14,8 @@ const selectTransformTool = () =>
 			mouse.listen.world.btn.left.ondrag.on(state.dragcb);
 			mouse.listen.world.btn.left.ondragend.on(state.dragendcb);
 			
-			mouse.listen.world.btn.left.ondclick.on(state.dclickcb);			
+			mouse.listen.world.btn.left.ondclick.on(state.dclickcb);
+			mouse.listen.world.btn.right.ondclick.on(state.drclickcb);
 
 			// Canvas right mouse handler
 			mouse.listen.world.btn.right.onclick.on(state.cancelcb);
@@ -68,6 +69,7 @@ const selectTransformTool = () =>
 			mouse.listen.world.btn.left.ondragend.clear(state.dragendcb);
 			
 			mouse.listen.world.btn.left.ondclick.clear(state.dclickcb);
+			mouse.listen.world.btn.right.ondclick.clear(state.drclickcb);
 
 			mouse.listen.world.btn.right.onclick.clear(state.cancelcb);
 
@@ -215,10 +217,12 @@ const selectTransformTool = () =>
 				// Undo/Redo Handling, reset state before Undo/Redo
 				state.undocb= (undo)=>{
 					if (state.selected){
-						if (undo.n<=1) undo.cancel();
+						// Cancel so undo shortcut effectively undoes the current transform, unless requesting multiple steps
+						if (state.selectionTransformed() && undo.n<=1) 
+							undo.cancel();
 						state.reset(false);
 					}
-				}				
+				}
 				state.redocb= (redo)=>{
 					if (state.selected){ state.reset(false); }
 				}
@@ -294,35 +298,57 @@ const selectTransformTool = () =>
 
 				// Handles left mouse clicks
 				state.clickcb = (evn) => {
-					if (
-						state.selected &&
-						!(
-							state.selected.rotation === 0 &&
-							state.selected.scale.x === 1 &&
-							state.selected.scale.y === 1 &&
-							state.selected.position.x === state.original.sx &&
-							state.selected.position.y === state.original.sy &&
-							!state.mirrorSelection &&
-							state.original.layer === uil.layer
-						)
-					) {
+					if (state.selectionTransformed()) {
 						state.applyTransform();
 					} else {
 						state.reset();
 					}
 				};
+				
+				// Check if selection has been transformed in any way.
+				state.selectionTransformed = ()=>{
+					return state.selected &&
+					!(
+						state.selected.rotation === 0 &&
+						state.selected.scale.x === 1 &&
+						state.selected.scale.y === 1 &&
+						state.selected.position.x === state.original.sx &&
+						state.selected.position.y === state.original.sy &&
+						!state.mirrorSelection &&
+						state.original.layer === uil.layer
+					);
+				}
 
-				// Handles left mouse double clicks - Select All
+				// Handles left mouse double clicks - Select All Ctrl-A
+				// Holding shift key - Ctrl-Shift-A
 				state.dclickcb = (evn) => {
-					if (state.selected) return;
+					// Do nothing if Ctrl Key is held for panning
+					if (state.selected || evn.evn.ctrlKey) return;
+					let shift = evn.evn.shiftKey;
 					// Wait so clickcb doesn't immediately deselect.
 					state.dclickcb_timeout = state.dclickcb_timeout ?? window.setTimeout(async ()=>{
 						state.dclickcb_timeout = null;
 						if (!state.selected && !selection.exists) {
-							try { select(cropCanvas(uil.canvas)?.bb); } 
-							catch (e) { }// Ignore errors
-						}						
+							if (shift) state.ctrlsacb(evn);
+							else state.ctrlacb(evn);
+						}
 					},300);
+				};
+
+				// Handles right mouse double clicks - Select topmost layer with content under pointer 
+				// Holding shift key selects bottommost layer
+				state.drclickcb = (evn) => {
+					if (state.selected) return;
+					for (let l of (evn.evn.shiftKey ? uil.layers : uil.layers.toReversed()) ) {
+						if (!l.hidden && !isCanvasBlank(evn.x,evn.y,2,2,l.canvas)) {
+							uil.active=l;
+							state.dclickcb_timeout = state.dclickcb_timeout ?? window.setTimeout(async ()=>{
+								state.dclickcb_timeout = null;
+								if (!state.selected && !selection.exists) { state.ctrlacb(evn); }
+							},300);
+							return;
+						}
+					}
 				};
 
 				// Handles left mouse drag start events
@@ -545,7 +571,7 @@ const selectTransformTool = () =>
 
 				// Register Ctrl-A Shortcut
 				state.ctrlacb = () => {
-					// state.reset(false); // Reset to preserve selected content
+					state.reset(false); // Reset to preserve selected content
 					try {
 						const {bb} = cropCanvas(uil.canvas);
 						select(bb);
