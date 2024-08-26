@@ -718,7 +718,7 @@ const selectTransformTool = () =>
 				// Only checks if Selection exists and content has been selected
 				// Does not check if content has been transformed, eg for deletion/applying to new layer
 				state.applyTransform = async (eraseSelected = false, clearLayer = false, newLayer = null, keepOriginal = false) => {
-						const isBlank = 
+						const isBlank = !state.selected ||
 							isCanvasBlank( 0, 0, state.selected.canvas.width, state.selected.canvas.height, state.selected.canvas);
 							
 						// Just reset state if nothing is selected, unless Clearing layer
