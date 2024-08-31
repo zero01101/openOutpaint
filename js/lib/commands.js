@@ -21,6 +21,14 @@ const commands = makeReadOnly(
 		_history: [],
 		/** The types of commands we can run (private) */
 		_types: {},
+		
+		/** @type {Observer<{n: int, cancel: function}>} */
+		get onundo() { return this._onundo; },
+		_onundo: new Observer(),
+		
+		/** @type {Observer<{n: int, cancel: function}>} */
+		get onredo() { return this._onredo; },
+		_onredo: new Observer(),
 
 		/**
 		 * Undoes the last commands in the history
@@ -28,6 +36,12 @@ const commands = makeReadOnly(
 		 * @param {number} [n] Number of actions to undo
 		 */
 		async undo(n = 1) {
+			var cancelled = false;
+			await this._onundo.emit({
+				n:n,
+				cancel: ()=>{cancelled=true;},
+			});
+			if (cancelled) return;
 			for (var i = 0; i < n && this.current > -1; i++) {
 				try {
 					await this._history[this._current--].undo();
@@ -45,6 +59,12 @@ const commands = makeReadOnly(
 		 * @param {number} [n] Number of actions to redo
 		 */
 		async redo(n = 1) {
+			let cancelled = false;
+			await this._onredo.emit({
+				n:n,
+				cancel: ()=>{cancelled=true;},
+			});
+			if (cancelled) return;
 			for (var i = 0; i < n && this.current + 1 < this._history.length; i++) {
 				try {
 					await this._history[++this._current].redo();
