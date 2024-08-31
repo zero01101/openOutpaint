@@ -202,3 +202,9 @@
 	-webkit-mask-image: url("../res/icons/squircle.svg");
 	mask-image: url("../res/icons/squircle.svg");
 }
+
+.ui.inline-icon.icon-file-plus::after,
+.ui.icon > .icon-file-plus {
+	-webkit-mask-image: url("../res/icons/file-plus.svg");
+	mask-image: url("../res/icons/file-plus.svg");
+}
